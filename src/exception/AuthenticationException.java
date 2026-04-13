@@ -1,7 +1,7 @@
 package exception;
 
-public class AuctionClosedException extends RuntimeException {
-    public AuctionClosedException(String message) {
+public class AuthenticationException extends RuntimeException {
+    public AuthenticationException(String message) {
         super(message);
     }
 }

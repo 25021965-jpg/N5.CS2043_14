@@ -1,7 +1,7 @@
 package exception;
 
-public class InvalidBidException extends RuntimeException {
-    public InvalidBidException(String message) {
+public class AuctionClosedException extends RuntimeException {
+    public AuctionClosedException(String message) {
         super(message);
     }
 }

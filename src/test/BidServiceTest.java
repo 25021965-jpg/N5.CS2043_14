@@ -1,38 +1,63 @@
-package service;
-
+package test;
 import model.*;
+import service.*;
 import exception.*;
 
+import org.junit.jupiter.api.Test;
+
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.util.List;
 
-public class BidService {
+import static org.junit.jupiter.api.Assertions.*;
 
-    public Bid placeBid(User user, Auction auction, BigDecimal amount) {
+public class BidServiceTest {
 
-        if (!user.hasRole(Role.BIDDER)) {
-            throw new AuthenticationException("User is not bidder");
-        }
+    @Test
+    void testValidBid() {
+        User user = new User();
+        user.setRoles(List.of(Role.BIDDER));
 
-        if (auction.getStatus() != AuctionStatus.ACTIVE) {
-            throw new AuctionClosedException("Auction is not active");
-        }
+        Auction auction = new Auction();
+        auction.setCurrentPrice(BigDecimal.valueOf(100));
+        auction.setMinIncrement(BigDecimal.valueOf(10));
+        auction.setStatus(AuctionStatus.ACTIVE);
 
-        BigDecimal minPrice = auction.getCurrentPrice()
-                .add(auction.getMinIncrement());
+        BidService service = new BidService();
 
-        if (amount.compareTo(minPrice) < 0) {
-            throw new InvalidBidException("Bid too low");
-        }
+        Bid bid = service.placeBid(user, auction, BigDecimal.valueOf(120));
 
-        Bid bid = new Bid();
-        bid.setAmount(amount);
-        bid.setBidder(user);
-        bid.setAuction(auction);
-        bid.setTimestamp(LocalDateTime.now());
+        assertEquals(120, bid.getAmount().intValue());
+    }
 
-        auction.setCurrentPrice(amount);
+    @Test
+    void testBidTooLow() {
+        User user = new User();
+        user.setRoles(List.of(Role.BIDDER));
 
-        return bid;
+        Auction auction = new Auction();
+        auction.setCurrentPrice(BigDecimal.valueOf(100));
+        auction.setMinIncrement(BigDecimal.valueOf(10));
+        auction.setStatus(AuctionStatus.ACTIVE);
+
+        BidService service = new BidService();
+
+        assertThrows(InvalidBidException.class, () -> {
+            service.placeBid(user, auction, BigDecimal.valueOf(105));
+        });
+    }
+
+    @Test
+    void testAuctionClosed() {
+        User user = new User();
+        user.setRoles(List.of(Role.BIDDER));
+
+        Auction auction = new Auction();
+        auction.setStatus(AuctionStatus.ENDED);
+
+        BidService service = new BidService();
+
+        assertThrows(AuctionClosedException.class, () -> {
+            service.placeBid(user, auction, BigDecimal.valueOf(200));
+        });
     }
 }
