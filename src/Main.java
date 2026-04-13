@@ -10,8 +10,6 @@ public class Main {
         User user = new User();
         user.setRoles(List.of(Role.BIDDER));
 
-        Item item = new Item();
-
         Auction auction = new Auction();
         auction.setCurrentPrice(BigDecimal.valueOf(100));
         auction.setMinIncrement(BigDecimal.valueOf(10));
@@ -19,12 +17,15 @@ public class Main {
 
         BidService bidService = new BidService();
 
-        Bid bid = bidService.placeBid(
-                user,
-                auction,
-                BigDecimal.valueOf(120)
-        );
-
-        System.out.println("Bid placed: " + bid.getAmount());
+        try {
+            Bid bid = bidService.placeBid(
+                    user,
+                    auction,
+                    BigDecimal.valueOf(105)
+            );
+            System.out.println("Bid placed: " + bid.getAmount());
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+        }
     }
 }
