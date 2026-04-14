@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 
 public class BidService {
 
-    public Bid placeBid(User user, Auction auction, BigDecimal amount) {
+    public synchronized Bid placeBid(User user, Auction auction, BigDecimal amount) {
 
         if (!user.hasRole(Role.BIDDER)) {
             throw new AuthenticationException("User is not bidder");
