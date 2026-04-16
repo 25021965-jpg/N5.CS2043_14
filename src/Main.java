@@ -1,31 +1,24 @@
-import model.*;
-import service.*;
+import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
 
-import java.math.BigDecimal;
-import java.util.List;
+public class Main extends Application {
 
-public class Main {
+    @Override
+    public void start(Stage stage) throws Exception {
+        FXMLLoader loader = new FXMLLoader(
+                getClass().getResource("auction.fxml")
+        );
+
+        Scene scene = new Scene(loader.load(), 300, 300);
+
+        stage.setTitle("Auction App");
+        stage.setScene(scene);
+        stage.show();
+    }
+
     public static void main(String[] args) {
-
-        User user = new User();
-        user.setRoles(List.of(Role.BIDDER));
-
-        Auction auction = new Auction();
-        auction.setCurrentPrice(BigDecimal.valueOf(100));
-        auction.setMinIncrement(BigDecimal.valueOf(10));
-        auction.setStatus(AuctionStatus.ACTIVE);
-
-        BidService bidService = new BidService();
-
-        try {
-            Bid bid = bidService.placeBid(
-                    user,
-                    auction,
-                    BigDecimal.valueOf(105)
-            );
-            System.out.println("Bid placed: " + bid.getAmount());
-        } catch (Exception e) {
-            System.out.println("Error: " + e.getMessage());
-        }
+        launch();
     }
 }

@@ -1,7 +1,5 @@
 package server;
 
-import java.util.ArrayList;
-import java.util.List;
 import model.*;
 import service.*;
 
@@ -9,22 +7,19 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.math.BigDecimal;
-
-import static java.lang.System.out;
+import java.util.*;
 
 public class AuctionServer {
 
     private static List<PrintWriter> clients = new ArrayList<>();
+    private static AuthService authService = new AuthService();
 
     public static void main(String[] args) throws Exception {
 
         ServerSocket server = new ServerSocket(9999);
-        out.println("Server running on port 9999...");
+        System.out.println("Server running on port 9999...");
 
-        // fake data (test)
-        User user = new User();
-        user.setRoles(List.of(Role.BIDDER));
-
+        // fake auction
         Auction auction = new Auction();
         auction.setCurrentPrice(BigDecimal.valueOf(100));
         auction.setMinIncrement(BigDecimal.valueOf(10));
@@ -34,75 +29,89 @@ public class AuctionServer {
 
         while (true) {
             Socket client = server.accept();
+            String clientId = client.getInetAddress() + ":" + client.getPort();
 
-            new Thread(() -> {
-                try {
-                    BufferedReader in = new BufferedReader(
-                            new InputStreamReader(client.getInputStream())
-                    );
+            System.out.println("Client " + clientId + " connected");
 
-                    PrintWriter out = new PrintWriter(
-                            client.getOutputStream(), true
-                    );
+            new Thread(() -> handleClient(client, clientId, auction, bidService)).start();
+        }
+    }
 
-                    String request = in.readLine();
+    private static void handleClient(Socket client, String clientId,
+                                     Auction auction, BidService bidService) {
 
-                    try {
-                        BigDecimal amount = new BigDecimal(request);
+        PrintWriter out = null;
 
-                        System.out.println("Client " + client + " bid: " + amount);
-
-                        Bid bid = bidService.placeBid(user, auction, amount);
-
-                        out.println("SUCCESS: " + bid.getAmount());
-
-                    } catch (Exception e) {
-                        out.println("ERROR: " + e.getMessage());
-                    }
-
-                    client.close();
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                } finally {
-                    clients.remove(out);
-                    try {
-                        client.close();
-                    } catch (Exception e) {}
-                }
-            }).start();
-
-            System.out.println("Client " + client.getPort() + " connected");
-
+        try {
             BufferedReader in = new BufferedReader(
                     new InputStreamReader(client.getInputStream())
             );
 
-            PrintWriter out = new PrintWriter(
-                    client.getOutputStream(), true
-            );
+            out = new PrintWriter(client.getOutputStream(), true);
 
             clients.add(out);
 
-            String request = in.readLine();
-            System.out.println("Received: " + request);
+            String msg;
 
-            try {
-                BigDecimal amount = new BigDecimal(request);
+            while ((msg = in.readLine()) != null) {
 
-                Bid bid = bidService.placeBid(user, auction, amount);
+                System.out.println("[" + clientId + "] " + msg);
 
-                broadcast("Client " + client.getPort() + " bid: " + amount);
+                // LOGIN
+                if (msg.startsWith("LOGIN")) {
+                    String[] parts = msg.split(" ");
+                    String username = parts[1];
+                    String password = parts[2];
 
-                out.println("SUCCESS: " + bid.getAmount());
+                    User user = authService.login(username, password);
 
-            } catch (Exception e) {
-                out.println("ERROR: " + e.getMessage());
+                    if (user != null) {
+                        authService.addSession(clientId, user);
+                        out.println("LOGIN_SUCCESS");
+                    } else {
+                        out.println("LOGIN_FAIL");
+                    }
+                    continue;
+                }
+
+                // BID
+                User user = authService.getUser(clientId);
+
+                if (user == null) {
+                    out.println("ERROR: Please login first");
+                    continue;
+                }
+
+                try {
+                    BigDecimal amount = new BigDecimal(msg);
+
+                    Bid bid = bidService.placeBid(user, auction, amount);
+
+                    broadcast("NEW BID: " + bid.getAmount());
+
+                    out.println("SUCCESS: " + bid.getAmount());
+
+                } catch (Exception e) {
+                    out.println("ERROR: " + e.getMessage());
+                }
             }
 
-            client.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+
+        } finally {
+            if (out != null) {
+                clients.remove(out);
+            }
+
+            authService.logout(clientId);
+
+            try {
+                client.close();
+            } catch (Exception e) {}
         }
     }
+
     private static void broadcast(String message) {
         for (PrintWriter client : clients) {
             client.println(message);
