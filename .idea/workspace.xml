@@ -2,24 +2,28 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="5af2bed7-78f6-4ab9-af71-e18e72eed976" name="Changes" comment="feat: add socket-based auction system with login, bidding and JavaFX UI">
-      <change afterPath="$PROJECT_DIR$/src/service/FileService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/ui/auction.fxml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BaiTapLon.iml" beforeDir="false" afterPath="$PROJECT_DIR$/BaiTapLon.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/authsystem.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/client/AuctionController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/client/AuctionController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/client/SocketClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/client/SocketClient.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/model/Auction.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/model/Auction.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/model/Bid.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/model/Bid.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/model/Item.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/model/Item.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/model/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/model/User.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/server/AuctionServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/AuctionServer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/service/AuctionService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/service/AuctionService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/service/AuthService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/service/AuthService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/service/BidService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/service/BidService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/BidServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/BidServiceTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/production/BaiTapLon/Main.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/production/BaiTapLon/client/AuctionController.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/production/BaiTapLon/client/SocketClient$MessageListener.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/production/BaiTapLon/client/SocketClient.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/production/BaiTapLon/exception/AuctionClosedException.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/production/BaiTapLon/exception/AuthenticationException.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/production/BaiTapLon/exception/InvalidBidException.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/production/BaiTapLon/model/Auction.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/production/BaiTapLon/model/AuctionStatus.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/production/BaiTapLon/model/Bid.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/production/BaiTapLon/model/Item.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/production/BaiTapLon/model/Role.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/production/BaiTapLon/model/User.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/production/BaiTapLon/server/AuctionServer.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/production/BaiTapLon/service/AdminService.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/production/BaiTapLon/service/AuctionService.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/production/BaiTapLon/service/AuthService.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/production/BaiTapLon/service/BidService.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/production/BaiTapLon/service/FileService.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/production/BaiTapLon/test/BidServiceTest.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/production/BaiTapLon/ui/auction.fxml" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -62,29 +66,30 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Application.AuctionClient.executor&quot;: &quot;Run&quot;,
-    &quot;Application.AuctionServer.executor&quot;: &quot;Run&quot;,
-    &quot;Application.Main.executor&quot;: &quot;Run&quot;,
-    &quot;Application.Unnamed.executor&quot;: &quot;Run&quot;,
-    &quot;Application.authsystem.executor&quot;: &quot;Run&quot;,
-    &quot;Downloaded.Files.Path.Enabled&quot;: &quot;false&quot;,
-    &quot;JUnit.BidServiceTest.executor&quot;: &quot;Run&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;Repository.Attach.Annotations&quot;: &quot;false&quot;,
-    &quot;Repository.Attach.JavaDocs&quot;: &quot;false&quot;,
-    &quot;Repository.Attach.Sources&quot;: &quot;false&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;dev&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/MINH PHU/Ltnc/BaiTapLon&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Application.AuctionClient.executor": "Run",
+    "Application.AuctionServer.executor": "Run",
+    "Application.Main.executor": "Run",
+    "Application.Unnamed.executor": "Run",
+    "Application.authsystem.executor": "Run",
+    "Downloaded.Files.Path.Enabled": "false",
+    "JUnit.BidServiceTest.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "Repository.Attach.Annotations": "false",
+    "Repository.Attach.JavaDocs": "false",
+    "Repository.Attach.Sources": "false",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "dev",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/Users/MINH PHU/Ltnc/BaiTapLon",
+    "project.structure.last.edited": "Project",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.2"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\MINH PHU\Ltnc\BaiTapLon\src" />
