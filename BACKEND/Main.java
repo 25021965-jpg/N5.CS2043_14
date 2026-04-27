@@ -8,7 +8,7 @@ public class Main extends Application {
     @Override
     public void start(Stage stage) throws Exception {
         FXMLLoader loader = new FXMLLoader(
-                getClass().getResource("auction.fxml")
+                getClass().getClassLoader().getResource("ui/auction.fxml")
         );
 
         Scene scene = new Scene(loader.load(), 300, 300);

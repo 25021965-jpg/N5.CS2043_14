@@ -1,16 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="5af2bed7-78f6-4ab9-af71-e18e72eed976" name="Changes" comment="pkl">
-      <change afterPath="$PROJECT_DIR$/authsystem.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/client/AuctionController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/client/SocketClient.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/service/AuthService.java" afterDir="false" />
+    <list default="true" id="5af2bed7-78f6-4ab9-af71-e18e72eed976" name="Changes" comment="feat: add socket-based auction system with login, bidding and JavaFX UI">
+      <change afterPath="$PROJECT_DIR$/src/service/FileService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/ui/auction.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BaiTapLon.iml" beforeDir="false" afterPath="$PROJECT_DIR$/BaiTapLon.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/authsystem.java" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/client/AuctionClient.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/client/AuctionController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/client/AuctionController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/client/SocketClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/client/SocketClient.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/model/Auction.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/model/Auction.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/model/Bid.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/model/Bid.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/model/Item.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/model/Item.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/model/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/model/User.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/server/AuctionServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/AuctionServer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/service/AuctionService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/service/AuctionService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/service/AuthService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/service/AuthService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/service/BidService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/service/BidService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/BidServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/BidServiceTest.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -53,38 +62,49 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Application.AuctionClient.executor": "Run",
-    "Application.AuctionServer.executor": "Run",
-    "Application.Main.executor": "Run",
-    "Application.Unnamed.executor": "Run",
-    "Application.authsystem.executor": "Run",
-    "Downloaded.Files.Path.Enabled": "false",
-    "JUnit.BidServiceTest.executor": "Run",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "Repository.Attach.Annotations": "false",
-    "Repository.Attach.JavaDocs": "false",
-    "Repository.Attach.Sources": "false",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "dev",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/MINH PHU/Ltnc/BaiTapLon/src",
-    "project.structure.last.edited": "Modules",
-    "project.structure.proportion": "0.15",
-    "project.structure.side.proportion": "0.2"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Application.AuctionClient.executor&quot;: &quot;Run&quot;,
+    &quot;Application.AuctionServer.executor&quot;: &quot;Run&quot;,
+    &quot;Application.Main.executor&quot;: &quot;Run&quot;,
+    &quot;Application.Unnamed.executor&quot;: &quot;Run&quot;,
+    &quot;Application.authsystem.executor&quot;: &quot;Run&quot;,
+    &quot;Downloaded.Files.Path.Enabled&quot;: &quot;false&quot;,
+    &quot;JUnit.BidServiceTest.executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;Repository.Attach.Annotations&quot;: &quot;false&quot;,
+    &quot;Repository.Attach.JavaDocs&quot;: &quot;false&quot;,
+    &quot;Repository.Attach.Sources&quot;: &quot;false&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;dev&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/MINH PHU/Ltnc/BaiTapLon&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\MINH PHU\Ltnc\BaiTapLon\src" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\MINH PHU\Ltnc\BaiTapLon\ui" />
       <recent name="C:\Users\MINH PHU\Ltnc\BaiTapLon" />
     </key>
   </component>
   <component name="RunManager">
+    <configuration name="Main" type="Application" factoryName="Application" singleton="false">
+      <option name="ALTERNATIVE_JRE_PATH" value="26" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
+      <option name="MAIN_CLASS_NAME" value="Main" />
+      <module name="BaiTapLon" />
+      <option name="VM_PARAMETERS" value="--module-path &quot;C:\javafx-sdk-26\lib&quot; --add-modules javafx.controls,javafx.fxml" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration default="true" type="JetRunConfigurationType">
       <method v="2">
         <option name="Make" enabled="true" />
@@ -126,7 +146,15 @@
       <option name="project" value="LOCAL" />
       <updated>1776184791334</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="login">
+      <option name="closed" value="true" />
+      <created>1776327656916</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1776327656916</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -142,18 +170,8 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="pkl" />
-    <option name="LAST_COMMIT_MESSAGE" value="pkl" />
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="java-field">
-          <url>file://$PROJECT_DIR$/src/model/User.java</url>
-          <line>6</line>
-          <properties field="id" class="model.User" />
-          <option name="timeStamp" value="1" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
+    <MESSAGE value="login" />
+    <MESSAGE value="feat: add socket-based auction system with login, bidding and JavaFX UI" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: add socket-based auction system with login, bidding and JavaFX UI" />
   </component>
 </project>

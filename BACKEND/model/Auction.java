@@ -1,9 +1,10 @@
 package model;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-public class Auction {
+public class Auction implements Serializable {
     private String id;
     private User seller;
     private Item item;

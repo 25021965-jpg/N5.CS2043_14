@@ -1,4 +1,5 @@
 package test;
+
 import model.*;
 import service.*;
 import exception.*;
@@ -12,15 +13,28 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class BidServiceTest {
 
-    @Test
-    void testValidBid() {
-        User user = new User();
-        user.setRoles(List.of(Role.BIDDER));
+    private User createBidder() {
+        return new User(
+                "1",
+                "user",
+                "user@gmail.com",
+                "123",
+                List.of(Role.BIDDER)
+        );
+    }
 
+    private Auction createActiveAuction() {
         Auction auction = new Auction();
         auction.setCurrentPrice(BigDecimal.valueOf(100));
         auction.setMinIncrement(BigDecimal.valueOf(10));
         auction.setStatus(AuctionStatus.ACTIVE);
+        return auction;
+    }
+
+    @Test
+    void testValidBid() {
+        User user = createBidder();
+        Auction auction = createActiveAuction();
 
         BidService service = new BidService();
 
@@ -31,13 +45,8 @@ public class BidServiceTest {
 
     @Test
     void testBidTooLow() {
-        User user = new User();
-        user.setRoles(List.of(Role.BIDDER));
-
-        Auction auction = new Auction();
-        auction.setCurrentPrice(BigDecimal.valueOf(100));
-        auction.setMinIncrement(BigDecimal.valueOf(10));
-        auction.setStatus(AuctionStatus.ACTIVE);
+        User user = createBidder();
+        Auction auction = createActiveAuction();
 
         BidService service = new BidService();
 
@@ -48,8 +57,7 @@ public class BidServiceTest {
 
     @Test
     void testAuctionClosed() {
-        User user = new User();
-        user.setRoles(List.of(Role.BIDDER));
+        User user = createBidder();
 
         Auction auction = new Auction();
         auction.setStatus(AuctionStatus.ENDED);

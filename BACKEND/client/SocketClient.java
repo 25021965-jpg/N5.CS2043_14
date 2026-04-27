@@ -1,6 +1,8 @@
 package client;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.Socket;
 
 public class SocketClient {
@@ -11,17 +13,22 @@ public class SocketClient {
 
     public SocketClient() throws Exception {
         socket = new Socket("localhost", 9999);
-
         out = new PrintWriter(socket.getOutputStream(), true);
         in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
     }
 
-    // gửi bid từ UI
-    public void sendBid(String bid){
-        out.println(bid);
+    public void send(String message) {
+        out.println(message);
     }
 
-    // nhận realtime từ server
+    public void sendBid(String amount) {
+        send("BID " + amount);
+    }
+
+    public void sendLogin(String email, String password) {
+        send("LOGIN " + email + " " + password);
+    }
+
     public void listen(MessageListener listener) {
         new Thread(() -> {
             try {
