@@ -2,36 +2,39 @@ package service;
 
 import model.Role;
 import model.User;
-import service.FileService;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class AuthService {
 
     private final List<User> users = new ArrayList<>();
-    private final Map<String, User> sessions = new HashMap<>();
+    private final Map<String, User> sessions = Collections.synchronizedMap(new HashMap<>());
 
     public AuthService() {
+
+        // load user từ file
         List<User> loaded = FileService.load("users.dat");
 
-        if (loaded != null) {
+        if (loaded != null && !loaded.isEmpty()) {
             users.addAll(loaded);
         } else {
+            // user mặc định
             users.add(new User("1", "admin", "admin@gmail.com", "123",
                     List.of(Role.ADMIN)));
 
             users.add(new User("2", "user", "user@gmail.com", "456",
                     List.of(Role.BIDDER)));
+
+            FileService.save("users.dat", users);
         }
     }
 
+    // Register
     public User register(String id, String username, String email, String password, List<Role> roles) {
+
         for (User u : users) {
             if (u.getEmail().equalsIgnoreCase(email)) {
-                return null;
+                return null; // email đã tồn tại
             }
         }
 
@@ -43,15 +46,21 @@ public class AuthService {
         return newUser;
     }
 
+    // Login
     public User login(String email, String password) {
+
         for (User u : users) {
-            if (u.getEmail().equalsIgnoreCase(email) && u.getPassword().equals(password)) {
+            if (u.getEmail().equalsIgnoreCase(email)
+                    && u.getPassword().equals(password)) {
+
                 return u;
             }
         }
+
         return null;
     }
 
+    // Session: nhớ người dùng
     public void addSession(String clientId, User user) {
         sessions.put(clientId, user);
     }

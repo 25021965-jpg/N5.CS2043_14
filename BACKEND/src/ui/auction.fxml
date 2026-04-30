@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox spacing="15" alignment="TOP_CENTER" prefWidth="460" prefHeight="680"
+      style="-fx-background-color: #f4f6f8;"
+      xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="client.AuctionController">
+
+    <padding>
+        <Insets top="20" right="25" bottom="20" left="25"/>
+    </padding>
+
+    <!-- ================= LOGIN ================= -->
+    <VBox fx:id="loginBox" spacing="15" maxWidth="380"
+          style="-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 12;
+                 -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08),10,0,0,4);">
+
+        <Label text="AUCTION WORLD"
+               style="-fx-font-size: 22; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"
+               alignment="CENTER" maxWidth="Infinity"/>
+
+        <TabPane tabClosingPolicy="UNAVAILABLE">
+
+            <tabs>
+
+                <!-- LOGIN -->
+                <Tab text="Sign In">
+                    <VBox spacing="12" style="-fx-padding: 20;">
+                        <TextField fx:id="logEmail" promptText="Email"
+                                   style="-fx-padding: 10; -fx-background-radius: 8;"/>
+
+                        <PasswordField fx:id="logPassword" promptText="Password"
+                                       style="-fx-padding: 10; -fx-background-radius: 8;"/>
+
+                        <Button text="Login" onAction="#handleLogin" maxWidth="Infinity"
+                                style="-fx-background-color: #3498db; -fx-text-fill: white;
+                                       -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 10;"/>
+                    </VBox>
+                </Tab>
+
+                <!-- REGISTER -->
+                <Tab text="Sign Up">
+                    <VBox spacing="12" style="-fx-padding: 20;">
+                        <TextField fx:id="regUsername" promptText="Full Name"
+                                   style="-fx-padding: 10; -fx-background-radius: 8;"/>
+
+                        <TextField fx:id="regEmail" promptText="Email Address"
+                                   style="-fx-padding: 10; -fx-background-radius: 8;"/>
+
+                        <PasswordField fx:id="regPassword" promptText="Create Password"
+                                       style="-fx-padding: 10; -fx-background-radius: 8;"/>
+
+                        <Button text="Create Account" onAction="#handleRegister" maxWidth="Infinity"
+                                style="-fx-background-color: #2ecc71; -fx-text-fill: white;
+                                       -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 10;"/>
+                    </VBox>
+                </Tab>
+
+            </tabs>
+        </TabPane>
+
+        <Label fx:id="statusLabel" text="Ready to connect..."
+               style="-fx-font-style: italic; -fx-text-fill: #7f8c8d;"
+               alignment="CENTER" maxWidth="Infinity"/>
+    </VBox>
+
+    <!-- ================= AUCTION ================= -->
+    <VBox fx:id="auctionBox" spacing="15" visible="false" managed="false" maxWidth="420"
+          style="-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 12;
+                 -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08),10,0,0,4);">
+
+        <!-- HEADER -->
+        <HBox alignment="CENTER_LEFT">
+            <Label fx:id="userLabel"
+                   style="-fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+
+            <Region HBox.hgrow="ALWAYS"/>
+
+            <Button text="Logout" onAction="#handleLogout"
+                    style="-fx-background-color: #e74c3c; -fx-text-fill: white;
+                           -fx-font-weight: bold; -fx-background-radius: 8;"/>
+        </HBox>
+
+        <Separator/>
+
+        <!-- ===== CURRENT PRICE (FIX CHÍNH NẰM Ở ĐÂY) ===== -->
+        <StackPane style="-fx-background-color: #ecf0f1; -fx-padding: 15; -fx-background-radius: 10;">
+
+            <VBox alignment="CENTER" spacing="5">
+                <Label text="Current Highest Bid"
+                       style="-fx-text-fill: #7f8c8d;"/>
+
+                <Label fx:id="currentPriceLabel"
+                       text="0"
+                       minWidth="200"
+                       maxWidth="Infinity"
+                       alignment="CENTER"
+                       style="-fx-font-size: 34;
+                              -fx-font-weight: bold;
+                              -fx-text-fill: #e74c3c;
+                              -fx-background-color: transparent;
+                              -fx-alignment: center;"/>
+            </VBox>
+
+        </StackPane>
+
+        <!-- BID INPUT -->
+        <HBox spacing="10">
+            <TextField fx:id="auctionIdInput" promptText="Item ID" prefWidth="80"
+                       style="-fx-padding: 10; -fx-background-radius: 8;"/>
+
+            <TextField fx:id="bidInput" promptText="Your bid ($)" HBox.hgrow="ALWAYS"
+                       style="-fx-padding: 10; -fx-background-radius: 8;"/>
+
+            <Button text="Bid" onAction="#handleBid"
+                    style="-fx-background-color: #27ae60; -fx-text-fill: white;
+                           -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 10 15;"/>
+        </HBox>
+
+        <!-- LOG -->
+        <Label text="Auction History"
+               style="-fx-font-size: 12; -fx-text-fill: #95a5a6;"/>
+
+        <TextArea fx:id="logArea"
+                  VBox.vgrow="ALWAYS"
+                  editable="false"
+                  style="-fx-font-family: 'Consolas'; -fx-font-size: 12; -fx-background-radius: 8;"/>
+    </VBox>
+
+</VBox>
