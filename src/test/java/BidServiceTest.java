@@ -1,6 +1,7 @@
 import model.*;
-import service.*;
-import exception.*;
+import server.exception.AuctionClosedException;
+import server.exception.InvalidBidException;
+import server.service.*;
 
 import org.junit.jupiter.api.Test;
 
