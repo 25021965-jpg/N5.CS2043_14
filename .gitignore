@@ -10,7 +10,7 @@ production/
 target/
 !FRONTEND/.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
-!**/src/test/**/target/
+!src/test/**/target/
 
 ### Eclipse ###
 .apt_generated
@@ -22,7 +22,7 @@ target/
 .sts4-cache
 bin/
 !**/src/main/**/bin/
-!**/src/test/**/bin/
+!src/test/**/bin/
 
 ### NetBeans ###
 /nbproject/private/
@@ -32,7 +32,7 @@ bin/
 /.nb-gradle/
 build/
 !**/src/main/**/build/
-!**/src/test/**/build/
+!src/test/**/build/
 
 ### VS Code ###
 .vscode/

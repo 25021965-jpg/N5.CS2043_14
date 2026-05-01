@@ -75,7 +75,7 @@
          <children>
             <ImageView fitHeight="242.0" fitWidth="474.0" nodeOrientation="RIGHT_TO_LEFT" pickOnBounds="true" preserveRatio="true" rotate="270.0" scaleX="1.26" scaleY="1.26" VBox.vgrow="ALWAYS">
                <image>
-                  <Image url="@../../../../image/anh.jpg" />
+                  <Image url="@../image/anh.jpg" />
                </image>
                <effect>
                   <Glow level="0.63">
