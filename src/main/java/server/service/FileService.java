@@ -1,4 +1,4 @@
-package service;
+package server.service;
 
 import java.io.*;
 
