@@ -1,21 +1,34 @@
 package client.controller;
 
+import client.network.ClientSocket;
+
+import javafx.application.Platform;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.TextField;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.*;
+import javafx.scene.control.*;
+import javafx.stage.Stage;
 
 public class LoginController {
 
-    @FXML
-    private TextField userField;
+    @FXML private TextField userField;
+    @FXML private PasswordField passField;
 
-    @FXML
-    private PasswordField passField;
+    private ClientSocket client;
 
     @FXML
     public void initialize() {
-        // Runs when the view is loaded
+        try {
+            client = new ClientSocket();
+
+            // lắng nghe server
+            client.listen(msg -> Platform.runLater(() -> handleResponse(msg)));
+
+            showAlert("Success","Connected to server");
+        } catch (Exception e) {
+            showAlert("Error","Cannot connect to server!");
+        }
     }
 
     @FXML
@@ -24,39 +37,69 @@ public class LoginController {
         String username = userField.getText().trim();
         String password = passField.getText().trim();
 
-        if (username.isEmpty() || password.isEmpty()) {
-            showAlert("Error", "Please enter your ID and password.");
+        if (username.isEmpty()) {
+            showAlert("Error","Enter username!");
+            userField.requestFocus();
             return;
         }
 
-        // Demo login
-        if (username.equals("admin") && password.equals("123")) {
-            showAlert("Success", "Login successful!");
-        } else {
-            showAlert("Login Failed", "Invalid ID or password.");
+        if (password.isEmpty()) {
+            showAlert("Error","Enter password!");
+            passField.requestFocus();
+            return;
+        }
+
+        // gửi lên server
+        client.sendLogin(username, password);
+        showAlert("Success","Logging in...");
+    }
+
+    private void handleResponse(String msg) {
+
+        if (msg.startsWith("LOGIN_SUCCESS")) {
+
+            showAlert("Success","Login success!");
+
+            // chuyển sang màn auction
+            goToAuction();
+
+        } else if (msg.startsWith("LOGIN_FAILED")) {
+
+            showAlert("Error","Wrong username or password!");
+            passField.clear();
+            passField.requestFocus();
+
+        } else if (msg.startsWith("ERROR")) {
+            showAlert("Error",msg);
         }
     }
-    @FXML
-    private void goToRegister(javafx.event.ActionEvent event) {
+
+    private void goToAuction() {
         try {
-            javafx.fxml.FXMLLoader loader =
-                    new javafx.fxml.FXMLLoader(getClass().getResource("/fxml/register-view.fxml"));
+            Parent root = FXMLLoader.load(getClass().getResource("/fxml/auction-view.fxml"));
 
-            javafx.scene.Parent root = loader.load();
-
-            // Lấy stage hiện tại
-            javafx.stage.Stage stage = (javafx.stage.Stage)
-                    ((javafx.scene.Node) event.getSource()).getScene().getWindow();
-
-            stage.setScene(new javafx.scene.Scene(root));
-            stage.setTitle("Register");
-            stage.show();
+            Stage stage = (Stage) userField.getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.setTitle("Auction");
 
         } catch (Exception e) {
-            e.printStackTrace();
+            showAlert("Error","Cannot open auction screen!");
         }
     }
 
+    @FXML
+    private void goToRegister(ActionEvent event) {
+        try {
+            Parent root = FXMLLoader.load(getClass().getResource("/fxml/register-view.fxml"));
+
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.setTitle("Register");
+
+        } catch (Exception e) {
+            showAlert("Error","Cannot open register screen!");
+        }
+    }
     private void showAlert(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(title);
