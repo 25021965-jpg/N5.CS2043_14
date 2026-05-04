@@ -36,6 +36,26 @@ public class LoginController {
             showAlert("Login Failed", "Invalid ID or password.");
         }
     }
+    @FXML
+    private void goToRegister(javafx.event.ActionEvent event) {
+        try {
+            javafx.fxml.FXMLLoader loader =
+                    new javafx.fxml.FXMLLoader(getClass().getResource("/fxml/register-view.fxml"));
+
+            javafx.scene.Parent root = loader.load();
+
+            // Lấy stage hiện tại
+            javafx.stage.Stage stage = (javafx.stage.Stage)
+                    ((javafx.scene.Node) event.getSource()).getScene().getWindow();
+
+            stage.setScene(new javafx.scene.Scene(root));
+            stage.setTitle("Register");
+            stage.show();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     private void showAlert(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
