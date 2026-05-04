@@ -1,96 +1,141 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.Cursor?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Hyperlink?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.TextField?>
-<?import javafx.scene.effect.Blend?>
-<?import javafx.scene.effect.Glow?>
-<?import javafx.scene.effect.InnerShadow?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.paint.Color?>
+<?import javafx.scene.paint.LinearGradient?>
 <?import javafx.scene.paint.RadialGradient?>
 <?import javafx.scene.paint.Stop?>
 <?import javafx.scene.text.Font?>
 
 <HBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="900.0" style="-fx-background-color: #121212;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controller.LoginController">
    <children>
-      <VBox alignment="CENTER" prefHeight="600.0" prefWidth="400.0" HBox.hgrow="ALWAYS">
+      <VBox alignment="CENTER" prefHeight="600.0" prefWidth="444.0" HBox.hgrow="ALWAYS">
          <children>
-            <Label prefHeight="51.0" prefWidth="139.0" text="LOG IN">
+            <Label prefHeight="46.0" prefWidth="139.0" text="LOG IN">
                <textFill>
-                  <RadialGradient centerX="0.6481481340196398" centerY="0.5" cycleMethod="REFLECT" focusDistance="-0.07692304757925184" radius="1.0">
+                  <RadialGradient centerX="0.5814814673529731" centerY="0.5" cycleMethod="REFLECT" focusDistance="-0.07692304757925184" radius="1.0">
                      <stops>
                         <Stop>
                            <color>
-                              <Color red="0.6491228342056274" green="0.613227367401123" blue="0.2183777391910553" />
+                              <Color red="1.0" green="1.0" blue="1.0" />
                            </color>
                         </Stop>
                         <Stop offset="1.0">
                            <color>
-                              <Color red="1.0" green="1.0" blue="1.0" />
+                              <Color />
                            </color>
                         </Stop>
                      </stops>
                   </RadialGradient>
                </textFill>
                <font>
-                  <Font name="Centaur" size="41.0" />
+                  <Font name="Berlin Sans FB Demi Bold" size="41.0" />
                </font>
             </Label>
-            <TextField fx:id="userField" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="33.0" prefWidth="326.0" promptText="ID" styleClass="-fx-background-color: #D4AF37, white; -fx-background-insets: 0, 2; -fx-background-radius: 8, 8; -fx-padding: 8;">
+            <TextField fx:id="userField" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="46.0" prefWidth="332.0" promptText="Username" styleClass="-fx-background-color: #D4AF37, white; -fx-background-insets: 0, 2; -fx-background-radius: 8, 8; -fx-padding: 8;">
                <VBox.margin>
                   <Insets bottom="20.0" top="20.0" />
                </VBox.margin>
             </TextField>
-            <PasswordField fx:id="passField" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="34.0" prefWidth="327.0" promptText="Password" styleClass="-fx-background-color: white; -fx-border-color: #D4AF37; -fx-border-width: 2; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 8;">
+            <PasswordField fx:id="passField" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="45.0" prefWidth="331.0" promptText="Password" styleClass="-fx-background-color: white; -fx-border-color: #D4AF37; -fx-border-width: 2; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 8;">
                <VBox.margin>
                   <Insets bottom="20.0" />
                </VBox.margin>
             </PasswordField>
-            <Button graphicTextGap="3.0" mnemonicParsing="false" onAction="#handleLogin" styleClass="-fx-background-color: #D4AF37; -fx-text-fill: black; -fx-font-weight: bold; -fx-background-radius: 8; -fx-cursor: hand; -fx-padding: 10;" text="Log in" textOverrun="CLIP">
+            <Button graphicTextGap="3.0" mnemonicParsing="false" onAction="#handleLogin" prefHeight="41.0" prefWidth="329.0" styleClass="-fx-background-color: #D4AF37; -fx-text-fill: black; -fx-font-weight: bold; -fx-background-radius: 8; -fx-cursor: hand; -fx-padding: 10;" text="Log in" textOverrun="CLIP">
                <VBox.margin>
                   <Insets bottom="20.0" />
                </VBox.margin>
                <font>
-                  <Font name="Centaur" size="17.0" />
+                  <Font name="Berlin Sans FB Demi Bold" size="24.0" />
                </font>
             </Button>
-            <Hyperlink styleClass="-fx-text-fill: #D4AF37; -fx-underline: false; -fx-border-color: transparent;" text="Forgot password?" textFill="#ffecb7" />
+            <Hyperlink styleClass="-fx-text-fill: #D4AF37; -fx-underline: false; -fx-border-color: transparent;" text="Forgot password?">
+               <font>
+                  <Font name="Berlin Sans FB Demi Bold" size="18.0" />
+               </font>
+               <textFill>
+                  <LinearGradient cycleMethod="REFLECT" endX="1.0" startX="0.4810126702996749">
+                     <stops>
+                        <Stop>
+                           <color>
+                              <Color red="1.0" green="1.0" blue="1.0" />
+                           </color>
+                        </Stop>
+                        <Stop offset="1.0">
+                           <color>
+                              <Color red="0.41228070855140686" green="0.370289146900177" blue="0.3562919497489929" />
+                           </color>
+                        </Stop>
+                     </stops>
+                  </LinearGradient>
+               </textFill></Hyperlink>
             <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0">
                <children>
-                  <Label text="Don't have account?" textFill="#d9af19" />
-                  <Hyperlink text="Register" textFill="#efe5ce" />
+                  <Label text="Don't have account?">
+                     <font>
+                        <Font name="Berlin Sans FB Demi Bold" size="18.0" />
+                     </font>
+                     <textFill>
+                        <LinearGradient cycleMethod="REFLECT" endX="1.0" startX="0.4810126702996749">
+                           <stops>
+                              <Stop>
+                                 <color>
+                                    <Color red="1.0" green="1.0" blue="1.0" />
+                                 </color>
+                              </Stop>
+                              <Stop offset="1.0">
+                                 <color>
+                                    <Color red="0.2719298303127289" green="0.2719298303127289" blue="0.2719298303127289" />
+                                 </color>
+                              </Stop>
+                           </stops>
+                        </LinearGradient>
+                     </textFill></Label>
+                  <Hyperlink onAction="#goToRegister" text="Register">
+                     <font>
+                        <Font name="Berlin Sans FB Demi Bold" size="19.0" />
+                     </font>
+                     <textFill>
+                        <LinearGradient endX="0.9794303797468354" endY="0.4050633394265477" startX="0.9778481012658228" startY="1.0">
+                           <stops>
+                              <Stop>
+                                 <color>
+                                    <Color />
+                                 </color>
+                              </Stop>
+                              <Stop offset="0.006711409395973154">
+                                 <color>
+                                    <Color />
+                                 </color>
+                              </Stop>
+                              <Stop offset="1.0">
+                                 <color>
+                                    <Color red="1.0" green="1.0" blue="1.0" />
+                                 </color>
+                              </Stop>
+                           </stops>
+                        </LinearGradient>
+                     </textFill></Hyperlink>
                </children>
             </HBox>
          </children>
       </VBox>
-      <VBox alignment="CENTER_RIGHT" prefHeight="600.0" prefWidth="444.0" HBox.hgrow="ALWAYS">
+      <VBox alignment="CENTER" prefHeight="600.0" prefWidth="408.0" style="-fx-background-color: #FFFFFF;" HBox.hgrow="ALWAYS">
          <children>
-            <ImageView fitHeight="242.0" fitWidth="474.0" nodeOrientation="RIGHT_TO_LEFT" pickOnBounds="true" preserveRatio="true" rotate="270.0" scaleX="1.26" scaleY="1.26" VBox.vgrow="ALWAYS">
+            <ImageView fitHeight="391.0" fitWidth="397.0" pickOnBounds="true" preserveRatio="true" style="-fx-image: #FFFFFF;">
                <image>
-                  <Image url="@/image/anh.jpg" />
+                  <Image url="@/image/login.jpg" />
                </image>
-               <effect>
-                  <Glow level="0.63">
-                     <input>
-                        <Blend>
-                           <topInput>
-                              <InnerShadow choke="0.45" height="202.04" radius="58.8375" width="35.31" />
-                           </topInput>
-                        </Blend>
-                     </input>
-                  </Glow>
-               </effect>
-               <cursor>
-                  <Cursor fx:constant="DEFAULT" />
-               </cursor>
             </ImageView>
          </children>
       </VBox>
