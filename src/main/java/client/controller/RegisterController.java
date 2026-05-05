@@ -1,5 +1,5 @@
 
-package main.java.client.controller;
+package client.controller;
 
 import client.network.ClientSocket;
 import common.ResponseType;
@@ -25,15 +25,12 @@ public class RegisterController {
 
     public void setClient(ClientSocket client) {
         this.client = client;
-    }
 
-    @FXML
-    public void initialize() {
-        if (client != null) {
-            client.listen(msg -> {
-                Platform.runLater(() -> handleResponse(msg));
-            });
-        }
+        client.setHandler(msg -> {
+            Platform.runLater(() -> handleResponse(msg));
+        });
+        
+        client.listen();
     }
 
     @FXML
@@ -56,7 +53,7 @@ public class RegisterController {
         }
 
         // gửi lên server
-        client.sendRegister(username, email, password, "USER");
+        client.register(username, email, password, "USER");
 
         showAlert("Info", "Creating account...");
     }
