@@ -29,7 +29,7 @@ public class LoginController {
             Platform.runLater(() -> handleResponse(msg));
         });
 
-        client.listen()
+        client.listen();
     }
 
     @FXML
