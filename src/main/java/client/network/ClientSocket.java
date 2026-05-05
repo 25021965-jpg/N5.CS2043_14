@@ -1,4 +1,4 @@
-package client.network;
+package main.java.client.network;
 
 import common.Command;
 import common.CommandBuilder;
