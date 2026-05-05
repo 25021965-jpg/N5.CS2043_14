@@ -20,16 +20,24 @@ public class FileService {
         Object lock = getLock(filename);
 
         synchronized (lock) {
+            try {
+                File file = new File(filename);
+                //Tạo folder nếu chưa có
+                File parent = file.getParentFile();
+                if (parent != null && !parent.exists()) {
+                    parent.mkdirs();
+                }
+            
             try (ObjectOutputStream out =
-                         new ObjectOutputStream(new FileOutputStream(filename))) {
-
+                         new ObjectOutputStream(new FileOutputStream(file))) {
                 out.writeObject(data);
-
-            } catch (Exception e) {
-                System.out.println("Save error: " + e.getMessage());
             }
+
+        } catch (Exception e) {
+                System.out.println("Save error: " + e.getMessage());
         }
     }
+}
 
     // LOAD (thread-safe)
     @SuppressWarnings("unchecked")
