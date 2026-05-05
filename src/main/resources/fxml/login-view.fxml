@@ -132,7 +132,7 @@
       </VBox>
       <VBox alignment="CENTER" prefHeight="600.0" prefWidth="408.0" style="-fx-background-color: #FFFFFF;" HBox.hgrow="ALWAYS">
          <children>
-            <ImageView fitHeight="391.0" fitWidth="397.0" pickOnBounds="true" preserveRatio="true" style="-fx-image: #FFFFFF;">
+            <ImageView fitHeight="391.0" fitWidth="397.0" pickOnBounds="true" preserveRatio="true">
                <image>
                   <Image url="@/image/login.jpg" />
                </image>

@@ -1,40 +1,53 @@
 package server.dao;
 
 import model.User;
-import java.io.*;
+import server.service.FileService;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class UserDAO {
-    private final String FILE_PATH = "users.dat"; // File lưu dữ liệu người dùng
 
-    // Lưu danh sách người dùng vào file
-    public void saveAll(List<User> users) {
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(FILE_PATH))) {
-            oos.writeObject(users);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+    private static final String FILE_PATH = "data/users.dat";
 
-    // Đọc danh sách người dùng từ file
-    @SuppressWarnings("unchecked")
+    // LOAD
     public List<User> findAll() {
-        File file = new File(FILE_PATH);
-        if (!file.exists()) return new ArrayList<>(); // Nếu chưa có file thì trả về list rỗng
-
-        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(FILE_PATH))) {
-            return (List<User>) ois.readObject();
-        } catch (IOException | ClassNotFoundException e) {
-            return new ArrayList<>();
-        }
+        List<User> users = FileService.load(FILE_PATH);
+        return users != null ? users : new ArrayList<>();
     }
 
-    // Tìm user theo username để phục vụ đăng nhập
+    // SAVE ALL
+    public void saveAll(List<User> users) {
+        FileService.save(FILE_PATH, users);
+    }
+
+    // SAVE 1 USER (thread-safe hơn)
+    public synchronized void save(User user) {
+        List<User> users = findAll();
+
+        // tránh trùng username
+        for (User u : users) {
+            if (u.getUsername().equals(user.getUsername())) {
+                throw new RuntimeException("User already exists");
+            }
+        }
+
+        users.add(user);
+        saveAll(users);
+    }
+
+    // FIND
     public User findByUsername(String username) {
-        return findAll().stream()
-                .filter(u -> u.getUsername().equals(username))
-                .findFirst()
-                .orElse(null);
+        for (User u : findAll()) {
+            if (u.getUsername().equals(username)) {
+                return u;
+            }
+        }
+        return null;
+    }
+
+    // EXISTS
+    public boolean exists(String username) {
+        return findByUsername(username) != null;
     }
 }

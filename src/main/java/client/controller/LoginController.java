@@ -23,7 +23,9 @@ public class LoginController {
             client = new ClientSocket();
 
             // lắng nghe server
-            client.listen(msg -> Platform.runLater(() -> handleResponse(msg)));
+            client.listen(msg -> {
+                System.out.println("Server: " + msg );
+            });
 
             showAlert("Success","Connected to server");
         } catch (Exception e) {
@@ -76,7 +78,7 @@ public class LoginController {
 
     private void goToAuction() {
         try {
-            Parent root = FXMLLoader.load(getClass().getResource("/fxml/auction-view.fxml"));
+            Parent root = FXMLLoader.load(getClass().getResource("/fxml/user-view.fxml"));
 
             Stage stage = (Stage) userField.getScene().getWindow();
             stage.setScene(new Scene(root));
