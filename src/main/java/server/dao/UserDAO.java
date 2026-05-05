@@ -1,58 +1,44 @@
 package server.dao;
 
 import model.User;
+import server.service.FileService;
 
-import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class UserDAO {
 
-    private static final String FILE_PATH = "users.dat";
+    private static final String FILE_PATH = "data/users.dat";
 
-    // load
-    @SuppressWarnings("unchecked")
+    // LOAD
     public List<User> findAll() {
-        File file = new File(FILE_PATH);
-        if (!file.exists()) return new ArrayList<>();
-
-        try (ObjectInputStream ois =
-                     new ObjectInputStream(new FileInputStream(FILE_PATH))) {
-
-            return (List<User>) ois.readObject();
-
-        } catch (IOException | ClassNotFoundException e) {
-            System.err.println("Error loading users:");
-            e.printStackTrace();
-            return new ArrayList<>();
-        }
+        List<User> users = FileService.load(FILE_PATH);
+        return users != null ? users : new ArrayList<>();
     }
 
-    // save
+    // SAVE ALL
     public void saveAll(List<User> users) {
-        try (ObjectOutputStream oos =
-                     new ObjectOutputStream(new FileOutputStream(FILE_PATH))) {
-
-            oos.writeObject(users);
-
-        } catch (IOException e) {
-            System.err.println("Error saving users:");
-            e.printStackTrace();
-        }
+        FileService.save(FILE_PATH, users);
     }
 
-    // save 1 user
-    public void save(User user) {
+    // SAVE 1 USER (thread-safe hơn)
+    public synchronized void save(User user) {
         List<User> users = findAll();
+
+        // tránh trùng username
+        for (User u : users) {
+            if (u.getUsername().equals(user.getUsername())) {
+                throw new RuntimeException("User already exists");
+            }
+        }
+
         users.add(user);
         saveAll(users);
     }
 
-    // tìm
+    // FIND
     public User findByUsername(String username) {
-        List<User> users = findAll();
-
-        for (User u : users) {
+        for (User u : findAll()) {
             if (u.getUsername().equals(username)) {
                 return u;
             }
@@ -60,7 +46,7 @@ public class UserDAO {
         return null;
     }
 
-    // check tồn tại
+    // EXISTS
     public boolean exists(String username) {
         return findByUsername(username) != null;
     }
