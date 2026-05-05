@@ -23,7 +23,7 @@ public class ClientSocket {
         listen();
     }
 
-    private void listen() {
+    public void listen() {
         new Thread(() -> {
             try {
                 String msg;
