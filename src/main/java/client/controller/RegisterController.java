@@ -1,4 +1,4 @@
-```java
+
 package client.controller;
 
 import client.network.ClientSocket;
@@ -121,4 +121,3 @@ public class RegisterController {
         alert.showAndWait();
     }
 }
-```
