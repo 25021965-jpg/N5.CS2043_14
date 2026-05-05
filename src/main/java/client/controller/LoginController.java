@@ -1,5 +1,5 @@
 
-package main.java.client.controller;
+package client.controller;
 
 import client.network.ClientSocket;
 import common.ResponseType;
@@ -24,10 +24,12 @@ public class LoginController {
         this.client = client;
 
         // listen tại đây để chắc chắn client != null
-        client.listen(msg -> {
+        client.setHandler(msg -> {
             System.out.println("Server: " + msg);
             Platform.runLater(() -> handleResponse(msg));
         });
+
+        client.listen()
     }
 
     @FXML
@@ -58,7 +60,7 @@ public class LoginController {
             return;
         }
 
-        client.sendLogin(username, password);
+        client.login(username, password);
         showAlert("Info", "Logging in...");
     }
 
