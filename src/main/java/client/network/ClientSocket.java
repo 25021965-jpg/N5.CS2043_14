@@ -1,5 +1,7 @@
 package client.network;
 
+import common.Command;
+
 import java.io.*;
 import java.net.Socket;
 import java.util.function.Consumer;
@@ -10,55 +12,53 @@ public class ClientSocket {
     private BufferedReader in;
     private PrintWriter out;
 
-    public ClientSocket() throws Exception {
+    private Consumer<String> handler;
+
+    public ClientSocket() throws IOException {
         socket = new Socket("localhost", 9999);
 
         in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         out = new PrintWriter(socket.getOutputStream(), true);
+
+        listen();
     }
 
-    public void listen(Consumer<String> callback) {
+    private void listen() {
         new Thread(() -> {
             try {
                 String msg;
                 while ((msg = in.readLine()) != null) {
-                    callback.accept(msg);
+                    if (handler != null) handler.accept(msg);
                 }
             } catch (Exception e) {
-                callback.accept("Disconnected from server");
+                if (handler != null) handler.accept("DISCONNECTED");
             }
         }).start();
     }
 
-    private void send(String msg) {
-        out.println(msg);
+    public void setHandler(Consumer<String> handler) {
+        this.handler = handler;
     }
 
-    public void sendLogin(String email, String password) {
-        send("LOGIN " + email + " " + password);
+    private void send(Command cmd, String... args) {
+        out.println(CommandBuilder.build(cmd, args));
     }
 
-    public void sendRegister(String username, String email, String password, String role) {
-        send("REGISTER " + username + " " + email + " " + password + " " + role);
+    // ===== COMMANDS =====
+
+    public void login(String email, String password) {
+        send(Command.LOGIN, email, password);
     }
 
-    public void sendLogout() {
-        send("LOGOUT");
+    public void register(String username, String email, String password, String role) {
+        send(Command.REGISTER, username, email, password, role);
     }
 
-    public void sendList() {
-        send("LIST");
+    public void list() {
+        send(Command.LIST);
     }
 
-    public void sendJoin(String id) {
-        send("JOIN " + id);
-    }
-
-    public void sendBid(String auctionId, String amount) {
-        out.println("BID " + auctionId + " " + amount);
-    }
-
-    public void sendCreate(String name, String category, String price) {
-        send("CREATE " + name + " " + category + " " + price);
+    public void bid(String id, String amount) {
+        send(Command.BID, id, amount);
     }
 }
