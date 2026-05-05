@@ -8,7 +8,7 @@ public class CommandBuilder {
         StringBuilder sb = new StringBuilder(cmd.name());
 
         for (String arg : args) {
-            sb.append(" ").append(arg);
+            sb.append("|").append(arg == null ? "" : arg);
         }
 
         return sb.toString();
