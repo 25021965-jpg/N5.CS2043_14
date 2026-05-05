@@ -19,23 +19,29 @@ public class LoginController {
 
     private ClientSocket client;
 
+    // nhận client từ màn trước
+    public void setClient(ClientSocket client) {
+        this.client = client;
+
+        // listen tại đây để chắc chắn client != null
+        client.listen(msg -> {
+            System.out.println("Server: " + msg);
+            Platform.runLater(() -> handleResponse(msg));
+        });
+    }
+
     @FXML
     public void initialize() {
-        try {
-            client = new ClientSocket();
-
-            client.listen(msg -> {
-                System.out.println("Server: " + msg);
-                Platform.runLater(() -> handleResponse(msg));
-            });
-
-        } catch (Exception e) {
-            showAlert("Error", "Cannot connect to server!");
-        }
+        // không tạo socket ở đây nữa
     }
 
     @FXML
     private void handleLogin() {
+
+        if (client == null) {
+            showAlert("Error", "Not connected to server");
+            return;
+        }
 
         String username = userField.getText().trim();
         String password = passField.getText().trim();
