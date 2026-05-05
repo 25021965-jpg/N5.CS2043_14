@@ -1,5 +1,5 @@
 
-package client.controller;
+package main.java.client.controller;
 
 import client.network.ClientSocket;
 import common.ResponseType;
