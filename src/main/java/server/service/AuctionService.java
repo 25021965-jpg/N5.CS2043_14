@@ -4,17 +4,16 @@ import model.*;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class AuctionService {
 
-    private List<Auction> auctions = Collections.synchronizedList(new ArrayList<>());
+    private final List<Auction> auctions = new ArrayList<>();
+    private static final String FILE = "data/auctions.dat";
 
     public AuctionService() {
 
-        // load từ file
-        List<Auction> loaded = FileService.load("auctions.dat");
+        List<Auction> loaded = FileService.load(FILE);
 
         if (loaded != null && !loaded.isEmpty()) {
             auctions.addAll(loaded);
@@ -31,11 +30,12 @@ public class AuctionService {
                 auctions.add(a);
             }
 
-            FileService.save("auctions.dat", auctions);
+            FileService.save(FILE, auctions);
         }
     }
 
-    public Auction createAuction(User seller, Item item, BigDecimal startPrice) {
+    //tránh race condition
+    public synchronized Auction createAuction(User seller, Item item, BigDecimal startPrice) {
 
         if (seller == null || !seller.hasRole(Role.SELLER)) {
             throw new RuntimeException("User is not seller");
@@ -53,28 +53,25 @@ public class AuctionService {
         auction.setStatus(AuctionStatus.ACTIVE);
 
         auctions.add(auction);
-        FileService.save("auctions.dat", auctions);
+        FileService.save(FILE, auctions);
 
         return auction;
     }
 
-    public List<Auction> getAllAuctions() {
-        return auctions;
+    public synchronized List<Auction> getAllAuctions() {
+        return new ArrayList<>(auctions); // tránh sửa trực tiếp
     }
 
-    // Get bằng id
-    public Auction getAuctionById(String id) {
-
+    public synchronized Auction getAuctionById(String id) {
         for (Auction a : auctions) {
             if (a.getId().equals(id)) {
                 return a;
             }
         }
-
         return null;
     }
 
-    public void closeAuction(String id) {
+    public synchronized void closeAuction(String id) {
         Auction auction = getAuctionById(id);
 
         if (auction == null) {
@@ -82,14 +79,15 @@ public class AuctionService {
         }
 
         auction.setStatus(AuctionStatus.ENDED);
-        FileService.save("auctions.dat", auctions);
+        FileService.save(FILE, auctions);
     }
 
-    public void saveAll() {
-        FileService.save("auctions.dat", auctions);
+    public synchronized void saveAll() {
+        FileService.save(FILE, auctions);
     }
 
+    // ID an toàn hơn
     private String generateId() {
-        return String.valueOf(auctions.size() + 1);
+        return String.valueOf(System.currentTimeMillis());
     }
 }
