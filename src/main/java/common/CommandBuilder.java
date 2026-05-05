@@ -1,4 +1,4 @@
-package client.network;
+package common;
 
 import common.Command;
 
