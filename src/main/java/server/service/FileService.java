@@ -1,31 +1,57 @@
 package server.service;
 
 import java.io.*;
+import java.util.HashMap;
+import java.util.Map;
 
 public class FileService {
 
-    // Save
-    public synchronized static <T> void save(String filename, T data) {
-        try (ObjectOutputStream out =
-                     new ObjectOutputStream(new FileOutputStream(filename))) {
+    // Lock riêng cho từng file
+    private static final Map<String, Object> locks = new HashMap<>();
 
-            out.writeObject(data);
-
-        } catch (Exception e) {
-            System.out.println("Save error: " + e.getMessage());
+    private static Object getLock(String filename) {
+        synchronized (locks) {
+            return locks.computeIfAbsent(filename, k -> new Object());
         }
     }
 
-    // Load
+    // SAVE 
+    public static <T> void save(String filename, T data) {
+        Object lock = getLock(filename);
+
+        synchronized (lock) {
+            try (ObjectOutputStream out =
+                         new ObjectOutputStream(new FileOutputStream(filename))) {
+
+                out.writeObject(data);
+
+            } catch (Exception e) {
+                System.out.println("Save error: " + e.getMessage());
+            }
+        }
+    }
+
+    // LOAD (thread-safe)
     @SuppressWarnings("unchecked")
     public static <T> T load(String filename) {
-        try (ObjectInputStream in =
-                     new ObjectInputStream(new FileInputStream(filename))) {
+        Object lock = getLock(filename);
 
-            return (T) in.readObject();
+        synchronized (lock) {
+            File file = new File(filename);
 
-        } catch (Exception e) {
-            return null; // tránh lỗi khi file chưa tồn tại
+            if (!file.exists()) {
+                return null;
+            }
+
+            try (ObjectInputStream in =
+                         new ObjectInputStream(new FileInputStream(file))) {
+
+                return (T) in.readObject();
+
+            } catch (Exception e) {
+                System.out.println("Load error: " + e.getMessage());
+                return null;
+            }
         }
     }
 }
