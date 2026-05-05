@@ -1,6 +1,8 @@
+```java
 package client.controller;
 
 import client.network.ClientSocket;
+import common.ResponseType;
 
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -22,14 +24,13 @@ public class LoginController {
         try {
             client = new ClientSocket();
 
-            // lắng nghe server
             client.listen(msg -> {
-                System.out.println("Server: " + msg );
+                System.out.println("Server: " + msg);
+                Platform.runLater(() -> handleResponse(msg));
             });
 
-            showAlert("Success","Connected to server");
         } catch (Exception e) {
-            showAlert("Error","Cannot connect to server!");
+            showAlert("Error", "Cannot connect to server!");
         }
     }
 
@@ -40,68 +41,92 @@ public class LoginController {
         String password = passField.getText().trim();
 
         if (username.isEmpty()) {
-            showAlert("Error","Enter username!");
+            showAlert("Error", "Enter username!");
             userField.requestFocus();
             return;
         }
 
         if (password.isEmpty()) {
-            showAlert("Error","Enter password!");
+            showAlert("Error", "Enter password!");
             passField.requestFocus();
             return;
         }
 
-        // gửi lên server
         client.sendLogin(username, password);
-        showAlert("Success","Logging in...");
+        showAlert("Info", "Logging in...");
     }
 
     private void handleResponse(String msg) {
 
-        if (msg.startsWith("LOGIN_SUCCESS")) {
+        ResponseType type = ResponseType.from(msg);
+        if (type == null) return;
 
-            showAlert("Success","Login success!");
+        switch (type) {
 
-            // chuyển sang màn auction
-            goToAuction();
+            case LOGIN_SUCCESS:
+                showAlert("Success", "Login success!");
+                goToAuction();
+                break;
 
-        } else if (msg.startsWith("LOGIN_FAILED")) {
+            case LOGIN_FAILED:
+                showAlert("Error", "Wrong username or password!");
+                passField.clear();
+                passField.requestFocus();
+                break;
 
-            showAlert("Error","Wrong username or password!");
-            passField.clear();
-            passField.requestFocus();
+            case ERROR:
+                showAlert("Error", msg);
+                break;
 
-        } else if (msg.startsWith("ERROR")) {
-            showAlert("Error",msg);
+            case DISCONNECTED:
+                showAlert("Error", "Disconnected from server!");
+                break;
         }
     }
 
     private void goToAuction() {
         try {
-            Parent root = FXMLLoader.load(getClass().getResource("/fxml/user-view.fxml"));
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/fxml/user-view.fxml")
+            );
+
+            Parent root = loader.load();
+
+            UserController controller = loader.getController();
+            controller.setClient(client);
 
             Stage stage = (Stage) userField.getScene().getWindow();
             stage.setScene(new Scene(root));
             stage.setTitle("Auction");
 
         } catch (Exception e) {
-            showAlert("Error","Cannot open auction screen!");
+            showAlert("Error", "Cannot open auction screen!");
+            e.printStackTrace();
         }
     }
 
     @FXML
     private void goToRegister(ActionEvent event) {
         try {
-            Parent root = FXMLLoader.load(getClass().getResource("/fxml/register-view.fxml"));
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/fxml/register-view.fxml")
+            );
+
+            Parent root = loader.load();
+
+            RegisterController controller = loader.getController();
+            controller.setClient(client);
 
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.setScene(new Scene(root));
             stage.setTitle("Register");
 
         } catch (Exception e) {
-            showAlert("Error","Cannot open register screen!");
+            showAlert("Error", "Cannot open register screen!");
+            e.printStackTrace();
         }
     }
+
     private void showAlert(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(title);
@@ -110,3 +135,4 @@ public class LoginController {
         alert.showAndWait();
     }
 }
+```
