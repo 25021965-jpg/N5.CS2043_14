@@ -3,6 +3,8 @@ package common;
 public enum ResponseType {
     LOGIN_SUCCESS,
     LOGIN_FAILED,
+    REGISTER_SUCCESS,
+    REGISTER_FAILED,
     ERROR,
     DISCONNECTED;
 

@@ -1,6 +1,7 @@
 package client.network;
 
 import common.Command;
+import common.CommandBuilder;
 
 import java.io.*;
 import java.net.Socket;
@@ -13,17 +14,19 @@ public class ClientSocket {
     private PrintWriter out;
 
     private Consumer<String> handler;
+    private boolean isListening = false;
 
     public ClientSocket() throws IOException {
         socket = new Socket("localhost", 9999);
 
         in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         out = new PrintWriter(socket.getOutputStream(), true);
-
-        listen();
     }
 
-    private void listen() {
+    public void listen() {
+        if (isListening) return;
+        isListening = true;
+
         new Thread(() -> {
             try {
                 String msg;
