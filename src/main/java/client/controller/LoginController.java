@@ -60,7 +60,7 @@ public class LoginController {
             return;
         }
 
-        client.login(username, password);
+        client.sendLogin(username, password);
         showAlert("Info", "Logging in...");
     }
 

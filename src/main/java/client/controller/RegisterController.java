@@ -53,7 +53,7 @@ public class RegisterController {
         }
 
         // gửi lên server
-        client.register(username, email, password, "USER");
+        client.sendRegister(username, email, password, "USER");
 
         showAlert("Info", "Creating account...");
     }
