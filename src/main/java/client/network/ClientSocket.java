@@ -1,8 +1,5 @@
 package client.network;
 
-import common.Command;
-import common.CommandBuilder;
-
 import java.io.*;
 import java.net.Socket;
 import java.util.function.Consumer;
@@ -13,55 +10,57 @@ public class ClientSocket {
     private BufferedReader in;
     private PrintWriter out;
 
-    private Consumer<String> handler;
-    private boolean isListening = false;
-
-    public ClientSocket() throws IOException {
+    public ClientSocket() throws Exception {
         socket = new Socket("localhost", 9999);
-
         in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         out = new PrintWriter(socket.getOutputStream(), true);
     }
 
-    public void listen() {
-        if (isListening) return;
-        isListening = true;
-
+    public void listen(Consumer<String> callback) {
         new Thread(() -> {
             try {
                 String msg;
                 while ((msg = in.readLine()) != null) {
-                    if (handler != null) handler.accept(msg);
+                    callback.accept(msg);
                 }
             } catch (Exception e) {
-                if (handler != null) handler.accept("DISCONNECTED");
+                callback.accept("DISCONNECTED");
             }
         }).start();
     }
 
-    public void setHandler(Consumer<String> handler) {
-        this.handler = handler;
+    private void send(String msg) {
+        out.println(msg);
     }
 
-    private void send(Command cmd, String... args) {
-        out.println(CommandBuilder.build(cmd, args));
+    // SỬA: LOGIN username password (dùng dấu cách)
+    public void sendLogin(String username, String password) {
+        send("LOGIN " + username + " " + password);
     }
 
-    // ===== COMMANDS =====
-
-    public void login(String email, String password) {
-        send(Command.LOGIN, email, password);
+    // SỬA: REGISTER fullname username email password
+    public void sendRegister(String fullname, String username, String email, String password) {
+        send("REGISTER " + fullname + "|" + username + "|" + email + "|" + password);
     }
 
-    public void register(String username, String email, String password, String role) {
-        send(Command.REGISTER, username, email, password, role);
+    // GIỮ NGUYÊN các method khác
+    public void sendLogout() {
+        send("LOGOUT");
     }
 
-    public void list() {
-        send(Command.LIST);
+    public void sendList() {
+        send("LIST");
     }
 
-    public void bid(String id, String amount) {
-        send(Command.BID, id, amount);
+    public void sendJoin(String id) {
+        send("JOIN " + id);
+    }
+
+    public void sendBid(String auctionId, String amount) {
+        send("BID " + auctionId + " " + amount);
+    }
+
+    public void sendCreate(String name, String category, String price) {
+        send("CREATE " + name + " " + category + " " + price);
     }
 }

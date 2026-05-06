@@ -10,12 +10,9 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.paint.Color?>
-<?import javafx.scene.paint.LinearGradient?>
-<?import javafx.scene.paint.Stop?>
 <?import javafx.scene.text.Font?>
 
-<HBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controller.RegisterController">
+<HBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controller.RegisterController">
    <children>
       <VBox alignment="CENTER" prefHeight="600.0" prefWidth="334.0" style="-fx-background-color: #B71C1C;" HBox.hgrow="ALWAYS">
          <children>
@@ -24,41 +21,34 @@
                   <Image url="@../image/register.jpg" />
                </image>
             </ImageView>
-         </children></VBox>
+         </children>
+      </VBox>
+
       <VBox alignment="CENTER" prefHeight="600.0" prefWidth="383.0" spacing="10.0" style="-fx-background-color: #121212;" HBox.hgrow="ALWAYS">
          <children>
-            <Label text="CREATE ACCOUNT">
+            <Label text="CREATE ACCOUNT" style="-fx-text-fill: white; -fx-font-size: 41px; -fx-font-weight: bold;">
                <font>
                   <Font name="Berlin Sans FB Demi Bold" size="41.0" />
                </font>
-               <textFill>
-                  <LinearGradient cycleMethod="REFLECT" endX="1.0" endY="0.5253164194807222" startX="1.0">
-                     <stops>
-                        <Stop>
-                           <color>
-                              <Color />
-                           </color>
-                        </Stop>
-                        <Stop offset="1.0">
-                           <color>
-                              <Color red="1.0" green="1.0" blue="1.0" />
-                           </color>
-                        </Stop>
-                     </stops>
-                  </LinearGradient>
-               </textFill>
             </Label>
-            <TextField fx:id="fullNameField" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="31.0" prefWidth="309.0" promptText="Full name ">
+
+            <TextField fx:id="fullNameField" prefHeight="31.0" prefWidth="309.0" promptText="Full name" style="-fx-background-color: white; -fx-background-radius: 5;">
                <opaqueInsets>
                   <Insets />
                </opaqueInsets>
             </TextField>
-            <DatePicker fx:id="dobField" prefHeight="35.0" prefWidth="310.0" promptText="Date of Birth" />
-            <TextField fx:id="usernameField" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="35.0" prefWidth="310.0" promptText="Username" />
-            <TextField fx:id="emailField" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="34.0" prefWidth="310.0" promptText="Email" />
-            <PasswordField fx:id="passwordField" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="39.0" prefWidth="310.0" promptText="Password" />
-            <PasswordField fx:id="verifyPasswordField" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="39.0" prefWidth="311.0" promptText="Verify Password" />
-            <Button mnemonicParsing="false" onAction="#handleCreate" prefHeight="37.0" prefWidth="312.0" style="-fx-background-color: #2C2C2C;" text="CREATE" textFill="WHITE">
+
+            <DatePicker fx:id="dobField" prefHeight="35.0" prefWidth="310.0" promptText="Date of Birth" style="-fx-background-color: white; -fx-background-radius: 5;"/>
+
+            <TextField fx:id="usernameField" prefHeight="35.0" prefWidth="310.0" promptText="Username" style="-fx-background-color: white; -fx-background-radius: 5;"/>
+
+            <TextField fx:id="emailField" prefHeight="34.0" prefWidth="310.0" promptText="Email" style="-fx-background-color: white; -fx-background-radius: 5;"/>
+
+            <PasswordField fx:id="passwordField" prefHeight="39.0" prefWidth="310.0" promptText="Password" style="-fx-background-color: white; -fx-background-radius: 5;"/>
+
+            <PasswordField fx:id="verifyPasswordField" prefHeight="39.0" prefWidth="311.0" promptText="Verify Password" style="-fx-background-color: white; -fx-background-radius: 5;"/>
+
+            <Button onAction="#handleCreate" prefHeight="37.0" prefWidth="312.0" style="-fx-background-color: #2C2C2C; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5;" text="CREATE">
                <font>
                   <Font name="Berlin Sans FB Demi Bold" size="20.0" />
                </font>
