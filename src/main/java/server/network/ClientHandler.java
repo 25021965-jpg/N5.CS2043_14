@@ -22,7 +22,6 @@ public class ClientHandler implements Runnable {
 
             while ((clientMessage = reader.readLine()) != null) {
                 System.out.println("Received from client: " + clientMessage);
-
                 String response = handleRequest(clientMessage);
                 writer.println(response);
             }
@@ -34,12 +33,69 @@ public class ClientHandler implements Runnable {
     }
 
     private String handleRequest(String message) {
+        System.out.println("=== Xử lý request: " + message + " ===");
 
+        // XỬ LÝ LOGIN
         if (message.startsWith("LOGIN")) {
-            return "AUTH_SUCCESS";
-        } else if (message.startsWith("GET_AUCTIONS")) {
+            // Format: "LOGIN username password"
+            String[] parts = message.split(" ");
+            if (parts.length == 3) {
+                String username = parts[1];
+                String password = parts[2];
+
+                System.out.println("Đăng nhập - Username: " + username + ", Password: " + password);
+
+                // GỌI DATABASE ĐỂ KIỂM TRA
+                boolean success = client.network.DatabaseService.login(username, password);
+
+                if (success) {
+                    System.out.println("✓ Đăng nhập thành công: " + username);
+                    return "LOGIN_SUCCESS";
+                } else {
+                    System.out.println("✗ Đăng nhập thất bại: " + username);
+                    return "LOGIN_FAILED";
+                }
+            } else {
+                return "ERROR: Invalid LOGIN format";
+            }
+        }
+
+        // XỬ LÝ REGISTER
+        else if (message.startsWith("REGISTER")) {
+            // Format: "REGISTER fullname|username|email|password"
+            String[] parts = message.split(" ");
+            if (parts.length == 2) {
+                String[] data = parts[1].split("\\|");
+                if (data.length == 4) {
+                    String fullname = data[0];
+                    String username = data[1];
+                    String email = data[2];
+                    String password = data[3];
+
+                    System.out.println("Đăng ký - Username: " + username + ", Email: " + email);
+
+                    boolean success = client.network.DatabaseService.register(fullname, username, email, password);
+
+                    if (success) {
+                        System.out.println("✓ Đăng ký thành công: " + username);
+                        return "REGISTER_SUCCESS";
+                    } else {
+                        System.out.println("✗ Đăng ký thất bại: " + username);
+                        return "REGISTER_FAILED";
+                    }
+                } else {
+                    return "ERROR: Invalid REGISTER data format";
+                }
+            } else {
+                return "ERROR: Invalid REGISTER format";
+            }
+        }
+
+        // XỬ LÝ GET_AUCTIONS (giữ nguyên)
+        else if (message.startsWith("GET_AUCTIONS")) {
             return "AUCTION_LIST_DATA";
         }
+
         return "ERROR: Unknown Command";
     }
 

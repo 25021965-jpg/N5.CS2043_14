@@ -12,7 +12,6 @@ public class ClientSocket {
 
     public ClientSocket() throws Exception {
         socket = new Socket("localhost", 9999);
-
         in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         out = new PrintWriter(socket.getOutputStream(), true);
     }
@@ -25,7 +24,7 @@ public class ClientSocket {
                     callback.accept(msg);
                 }
             } catch (Exception e) {
-                callback.accept("Disconnected from server");
+                callback.accept("DISCONNECTED");
             }
         }).start();
     }
@@ -34,14 +33,17 @@ public class ClientSocket {
         out.println(msg);
     }
 
-    public void sendLogin(String email, String password) {
-        send("LOGIN " + email + " " + password);
+    // SỬA: LOGIN username password (dùng dấu cách)
+    public void sendLogin(String username, String password) {
+        send("LOGIN " + username + " " + password);
     }
 
-    public void sendRegister(String username, String email, String password, String role) {
-        send("REGISTER " + username + " " + email + " " + password + " " + role);
+    // SỬA: REGISTER fullname username email password
+    public void sendRegister(String fullname, String username, String email, String password) {
+        send("REGISTER " + fullname + "|" + username + "|" + email + "|" + password);
     }
 
+    // GIỮ NGUYÊN các method khác
     public void sendLogout() {
         send("LOGOUT");
     }
@@ -55,7 +57,7 @@ public class ClientSocket {
     }
 
     public void sendBid(String auctionId, String amount) {
-        out.println("BID " + auctionId + " " + amount);
+        send("BID " + auctionId + " " + amount);
     }
 
     public void sendCreate(String name, String category, String price) {
