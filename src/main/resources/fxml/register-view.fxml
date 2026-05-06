@@ -18,7 +18,7 @@
          <children>
             <ImageView fitHeight="417.0" fitWidth="408.0" pickOnBounds="true" preserveRatio="true">
                <image>
-                  <Image url="@/image/register.jpg" />
+                  <Image url="@../image/register.jpg" />
                </image>
             </ImageView>
          </children>
