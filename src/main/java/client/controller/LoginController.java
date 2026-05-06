@@ -1,15 +1,16 @@
-
 package client.controller;
 
 import client.network.ClientSocket;
-import common.ResponseType;
-
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.*;
-import javafx.scene.control.*;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 
 public class LoginController {
@@ -19,27 +20,45 @@ public class LoginController {
 
     private ClientSocket client;
 
-    // nhận client từ màn trước
     public void setClient(ClientSocket client) {
         this.client = client;
+    }
 
-        // listen tại đây để chắc chắn client != null
-        client.setHandler(msg -> {
-            System.out.println("Server: " + msg);
-            Platform.runLater(() -> handleResponse(msg));
-        });
-
-        client.listen();
+    public void startListening() {
+        if (client != null) {
+            client.listen(msg -> {
+                System.out.println("Server: " + msg);
+                Platform.runLater(() -> handleResponse(msg));
+            });
+        }
     }
 
     @FXML
     public void initialize() {
-        // không tạo socket ở đây nữa
+        System.out.println("=== LoginController initialize() START ===");
+
+        try {
+            client = new ClientSocket();
+            System.out.println("=== ClientSocket created ===");
+
+            client.listen(msg -> {
+                System.out.println("=== Received: " + msg + " ===");
+                Platform.runLater(() -> handleResponse(msg));
+            });
+
+            showAlert("Success", "Connected to server");
+
+        } catch (Exception e) {
+            System.out.println("=== ERROR: " + e.getMessage() + " ===");
+            e.printStackTrace();
+            showAlert("Error", "Cannot connect to server: " + e.getMessage());
+        }
+
+        System.out.println("=== LoginController initialize() END ===");
     }
 
     @FXML
     private void handleLogin() {
-
         if (client == null) {
             showAlert("Error", "Not connected to server");
             return;
@@ -60,78 +79,56 @@ public class LoginController {
             return;
         }
 
-        client.login(username, password);
-        showAlert("Info", "Logging in...");
+        client.sendLogin(username, password);
     }
 
     private void handleResponse(String msg) {
-
-        ResponseType type = ResponseType.from(msg);
-        if (type == null) return;
-
-        switch (type) {
-
-            case LOGIN_SUCCESS:
-                showAlert("Success", "Login success!");
-                goToAuction();
-                break;
-
-            case LOGIN_FAILED:
-                showAlert("Error", "Wrong username or password!");
-                passField.clear();
-                passField.requestFocus();
-                break;
-
-            case ERROR:
-                showAlert("Error", msg);
-                break;
-
-            case DISCONNECTED:
-                showAlert("Error", "Disconnected from server!");
-                break;
+        if (msg.startsWith("LOGIN_SUCCESS")) {
+            showAlert("Success", "Login successful!");
+            goToAuction();
         }
-    }
-
-    private void goToAuction() {
-        try {
-            FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/fxml/user-view.fxml")
-            );
-
-            Parent root = loader.load();
-
-            UserController controller = loader.getController();
-            controller.setClient(client);
-
-            Stage stage = (Stage) userField.getScene().getWindow();
-            stage.setScene(new Scene(root));
-            stage.setTitle("Auction");
-
-        } catch (Exception e) {
-            showAlert("Error", "Cannot open auction screen!");
-            e.printStackTrace();
+        else if (msg.startsWith("LOGIN_FAILED")) {
+            showAlert("Error", "Wrong username or password!");
+            passField.clear();
+            passField.requestFocus();
+        }
+        else if (msg.startsWith("REGISTER_SUCCESS")) {
+            showAlert("Success", "Register successful! Please login.");
+        }
+        else if (msg.startsWith("REGISTER_FAILED")) {
+            showAlert("Error", "Username or email already exists!");
         }
     }
 
     @FXML
     private void goToRegister(ActionEvent event) {
         try {
-            FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/fxml/register-view.fxml")
-            );
-
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/register-view.fxml"));
             Parent root = loader.load();
 
             RegisterController controller = loader.getController();
             controller.setClient(client);
+            controller.startListening();
 
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.setScene(new Scene(root));
             stage.setTitle("Register");
 
         } catch (Exception e) {
-            showAlert("Error", "Cannot open register screen!");
             e.printStackTrace();
+            showAlert("Error", "Cannot open register screen!");
+        }
+    }
+
+    private void goToAuction() {
+        try {
+            Parent root = FXMLLoader.load(getClass().getResource("/fxml/user-view.fxml"));
+            Stage stage = (Stage) userField.getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.setTitle("Auction");
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert("Error", "Cannot open auction screen!");
         }
     }
 
@@ -143,4 +140,3 @@ public class LoginController {
         alert.showAndWait();
     }
 }
-

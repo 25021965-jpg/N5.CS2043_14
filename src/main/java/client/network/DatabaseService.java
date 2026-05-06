@@ -20,7 +20,6 @@ public class DatabaseService {
 
     // ĐĂNG NHẬP
     public static boolean login(String username, String password) {
-        System.out.println("Đang kiểm tra login: " + username + " - " + password);
         String sql = "SELECT * FROM users WHERE username = ? AND password = ?";
 
         try (Connection conn = getConnection();
