@@ -100,8 +100,8 @@ public class LoginController {
 
             Parent root = loader.load();
 
-            UserController controller = loader.getController();
-            controller.setClient(client);
+            UserViewController controller = loader.getController();
+            controller.setClient(new ClientSocket());
 
             Stage stage = (Stage) userField.getScene().getWindow();
             stage.setScene(new Scene(root));
