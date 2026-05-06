@@ -1,16 +1,15 @@
+
 package client.controller;
 
 import client.network.ClientSocket;
+import common.ResponseType;
+
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.TextField;
+import javafx.scene.*;
+import javafx.scene.control.*;
 import javafx.stage.Stage;
 
 public class LoginController {
@@ -20,110 +19,119 @@ public class LoginController {
 
     private ClientSocket client;
 
+    // nhận client từ màn trước
+    public void setClient(ClientSocket client) {
+        this.client = client;
+
+        // listen tại đây để chắc chắn client != null
+        client.setHandler(msg -> {
+            System.out.println("Server: " + msg);
+            Platform.runLater(() -> handleResponse(msg));
+        });
+
+        client.listen();
+    }
+
     @FXML
     public void initialize() {
-        System.out.println("=== 1. initialize() START ===");
-
-        try {
-            System.out.println("=== 2. Đang tạo ClientSocket... ===");
-            client = new ClientSocket();
-            System.out.println("=== 3. ClientSocket tạo thành công ===");
-
-            System.out.println("=== 4. Đang lắng nghe server... ===");
-            client.listen(msg -> {
-                System.out.println("=== 5. Nhận từ server: " + msg + " ===");
-
-                Platform.runLater(() -> {
-                    if (msg.startsWith("LOGIN_SUCCESS")) {
-                        System.out.println("=== 6. ĐĂNG NHẬP THÀNH CÔNG ===");
-                        showAlert("Success", "Login successful!");
-                        goToAuction();
-                    }
-                    else if (msg.startsWith("LOGIN_FAILED")) {
-                        System.out.println("=== 6. ĐĂNG NHẬP THẤT BẠI ===");
-                        showAlert("Error", "Wrong username or password!");
-                        passField.clear();
-                        passField.requestFocus();
-                    }
-                    else if (msg.startsWith("REGISTER_SUCCESS")) {
-                        System.out.println("=== 6. ĐĂNG KÝ THÀNH CÔNG ===");
-                        showAlert("Success", "Register successful! Please login.");
-                    }
-                    else if (msg.startsWith("REGISTER_FAILED")) {
-                        System.out.println("=== 6. ĐĂNG KÝ THẤT BẠI ===");
-                        showAlert("Error", "Username or email already exists!");
-                    }
-                });
-            });
-
-            System.out.println("=== 7. Hiện alert kết nối thành công ===");
-            showAlert("Success", "Connected to server");
-
-        } catch (Exception e) {
-            System.out.println("=== LỖI trong initialize(): " + e.getMessage() + " ===");
-            e.printStackTrace();
-            showAlert("Error", "Cannot connect to server: " + e.getMessage());
-        }
-
-        System.out.println("=== 8. initialize() END ===");
+        // không tạo socket ở đây nữa
     }
 
     @FXML
     private void handleLogin() {
-        System.out.println("=== handleLogin() START ===");
+
+        if (client == null) {
+            showAlert("Error", "Not connected to server");
+            return;
+        }
 
         String username = userField.getText().trim();
         String password = passField.getText().trim();
 
-        System.out.println("=== Username: " + username + ", Password: " + password + " ===");
-
         if (username.isEmpty()) {
-            System.out.println("=== Username rỗng ===");
             showAlert("Error", "Enter username!");
             userField.requestFocus();
             return;
         }
 
         if (password.isEmpty()) {
-            System.out.println("=== Password rỗng ===");
             showAlert("Error", "Enter password!");
             passField.requestFocus();
             return;
         }
 
-        System.out.println("=== Gửi yêu cầu LOGIN lên server ===");
-        client.sendLogin(username, password);
-        System.out.println("=== Đã gửi, chờ phản hồi... ===");
+        client.login(username, password);
+        showAlert("Info", "Logging in...");
     }
 
-    @FXML
-    private void goToRegister(ActionEvent event) {
-        System.out.println("=== goToRegister() START ===");
-        try {
-            Parent root = FXMLLoader.load(getClass().getResource("/fxml/register-view.fxml"));
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            stage.setScene(new Scene(root));
-            stage.setTitle("Register");
-            System.out.println("=== Chuyển sang màn hình đăng ký thành công ===");
-        } catch (Exception e) {
-            System.out.println("=== LỖI goToRegister(): " + e.getMessage() + " ===");
-            e.printStackTrace();
-            showAlert("Error", "Cannot open register screen!");
+    private void handleResponse(String msg) {
+
+        ResponseType type = ResponseType.from(msg);
+        if (type == null) return;
+
+        switch (type) {
+
+            case LOGIN_SUCCESS:
+                showAlert("Success", "Login success!");
+                goToAuction();
+                break;
+
+            case LOGIN_FAILED:
+                showAlert("Error", "Wrong username or password!");
+                passField.clear();
+                passField.requestFocus();
+                break;
+
+            case ERROR:
+                showAlert("Error", msg);
+                break;
+
+            case DISCONNECTED:
+                showAlert("Error", "Disconnected from server!");
+                break;
         }
     }
 
     private void goToAuction() {
-        System.out.println("=== goToAuction() START ===");
         try {
-            Parent root = FXMLLoader.load(getClass().getResource("/fxml/user-view.fxml"));
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/fxml/user-view.fxml")
+            );
+
+            Parent root = loader.load();
+
+            UserController controller = loader.getController();
+            controller.setClient(client);
+
             Stage stage = (Stage) userField.getScene().getWindow();
             stage.setScene(new Scene(root));
             stage.setTitle("Auction");
-            System.out.println("=== Chuyển sang màn hình auction thành công ===");
+
         } catch (Exception e) {
-            System.out.println("=== LỖI goToAuction(): " + e.getMessage() + " ===");
-            e.printStackTrace();
             showAlert("Error", "Cannot open auction screen!");
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
+    private void goToRegister(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/fxml/register-view.fxml")
+            );
+
+            Parent root = loader.load();
+
+            RegisterController controller = loader.getController();
+            controller.setClient(client);
+
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.setTitle("Register");
+
+        } catch (Exception e) {
+            showAlert("Error", "Cannot open register screen!");
+            e.printStackTrace();
         }
     }
 
@@ -135,3 +143,4 @@ public class LoginController {
         alert.showAndWait();
     }
 }
+
