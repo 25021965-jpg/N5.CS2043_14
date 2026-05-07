@@ -2,65 +2,50 @@ package server.service;
 
 import model.Role;
 import model.User;
+import server.dao.UserDAO;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class AuthService {
 
-    private final List<User> users = new ArrayList<>();
-    private final Map<String, User> sessions = Collections.synchronizedMap(new HashMap<>());
+    private final Map<String, User> sessions = new ConcurrentHashMap<>();
+    private final UserDAO userDAO = new UserDAO();
 
     public AuthService() {
-
-        // load user từ file
-        List<User> loaded = FileService.load("users.dat");
-
-        if (loaded != null && !loaded.isEmpty()) {
-            users.addAll(loaded);
-        } else {
-            // user mặc định
-            users.add(new User("1", "admin", "admin@gmail.com", "123",
-                    List.of(Role.ADMIN)));
-
-            users.add(new User("2", "user", "user@gmail.com", "456",
-                    List.of(Role.BIDDER)));
-
-            FileService.save("users.dat", users);
-        }
     }
 
     // Register
-    public User register(String id, String username, String email, String password, List<Role> roles) {
-
-        for (User u : users) {
-            if (u.getEmail().equalsIgnoreCase(email)) {
-                return null; // email đã tồn tại
-            }
+    public User register(String username, String email, String password, List<Role> roles) {
+        // 1. Kiểm tra email đã tồn tại chưa bằng SQL
+        if (userDAO.findByEmail(email) != null) {
+            return null;
         }
 
+        // 2. Tạo User mới (ID có thể dùng UUID hoặc để DB tự tăng)
+        String id = UUID.randomUUID().toString();
         User newUser = new User(id, username, email, password, roles);
-        users.add(newUser);
 
-        FileService.save("users.dat", users);
+        // 3. Lưu trực tiếp vào Database thông qua DAO
+        userDAO.save(newUser);
 
         return newUser;
     }
 
     // Login
     public User login(String email, String password) {
+        // Tìm user theo email trong DB
+        User user = userDAO.findByEmail(email);
 
-        for (User u : users) {
-            if (u.getEmail().equalsIgnoreCase(email)
-                    && u.getPassword().equals(password)) {
-
-                return u;
-            }
+        // Kiểm tra password
+        if (user != null && user.getPassword().equals(password)) {
+            return user;
         }
 
         return null;
     }
 
-    // Session: nhớ người dùng
+    // Quản lý Session
     public void addSession(String clientId, User user) {
         sessions.put(clientId, user);
     }
@@ -77,7 +62,8 @@ public class AuthService {
         return sessions.containsKey(clientId);
     }
 
+    // Nếu cần lấy tất cả user (ví dụ trang Admin)
     public List<User> getUsers() {
-        return users;
+        return userDAO.findAll();
     }
 }

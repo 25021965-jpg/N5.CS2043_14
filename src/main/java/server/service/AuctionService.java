@@ -1,6 +1,7 @@
 package server.service;
 
 import model.*;
+import server.dao.AuctionDAO;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -9,13 +10,13 @@ import java.util.List;
 public class AuctionService {
 
     private final List<Auction> auctions = new ArrayList<>();
-    private static final String FILE = "data/auctions.dat";
-
+    private final AuctionDAO auctionDAO = new AuctionDAO(); // Khởi tạo DAO
+    
     public AuctionService() {
 
-        List<Auction> loaded = FileService.load(FILE);
+        List<Auction> loaded = AuctionDAO.findAll();
 
-        if (loaded != null && !loaded.isEmpty()) {
+        if (!loaded.isEmpty()) {
             auctions.addAll(loaded);
         }
 
@@ -27,10 +28,10 @@ public class AuctionService {
                 a.setMinIncrement(BigDecimal.TEN);
                 a.setStatus(AuctionStatus.ACTIVE);
 
+                auctionDAO.save(a);
                 auctions.add(a);
             }
 
-            FileService.save(FILE, auctions);
         }
     }
 
@@ -42,18 +43,18 @@ public class AuctionService {
         }
 
         Auction auction = new Auction();
-
-        String newId = generateId();
-        auction.setId(newId);
-
+        auction.setId(generateId());
         auction.setSeller(seller);
         auction.setItem(item);
         auction.setCurrentPrice(startPrice);
         auction.setMinIncrement(BigDecimal.TEN);
         auction.setStatus(AuctionStatus.ACTIVE);
 
+        // Lưu vào db trước
+        auctionDAO.save(auction);
+
+        // Sau đó mới thêm vào list bộ nhớ tạm
         auctions.add(auction);
-        FileService.save(FILE, auctions);
 
         return auction;
     }
@@ -79,11 +80,7 @@ public class AuctionService {
         }
 
         auction.setStatus(AuctionStatus.ENDED);
-        FileService.save(FILE, auctions);
-    }
-
-    public synchronized void saveAll() {
-        FileService.save(FILE, auctions);
+        auctionDAO.updateStatus(id, AuctionStatus.ENDED);
     }
 
     // ID an toàn hơn

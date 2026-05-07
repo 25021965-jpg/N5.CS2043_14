@@ -5,15 +5,8 @@ import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 
 import javafx.scene.image.ImageView;
-import model.AuctionItem;
-import model.Item;
+import model.*;
 
-import java.io.File;
-
-import javafx.fxml.FXML;
-import javafx.scene.control.Label;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import java.io.File;
 
 public class ItemCardController {
@@ -23,14 +16,23 @@ public class ItemCardController {
     @FXML private Label lblStep;
     @FXML private Label lblEndTime;
 
-    public void setData(AuctionItem item) {
-        lblName.setText("NAME: " + item.getName());
-        lblCurrentPrice.setText("Current Price: " + item.getCurrentPrice());
-        lblStep.setText("Step: " + item.getStep());
-        lblEndTime.setText("End at: " + item.getEndTime());
+    public void setData(Auction auction) {
+        Item item = auction.getItem();
 
-        if (item.getImagePath() != null) {
-            File file = new File(item.getImagePath());
+        lblName.setText("NAME: " + item.getName());
+
+        lblCurrentPrice.setText("Current Price: " + auction.getCurrentPrice());
+
+        lblStep.setText("Step: " + auction.getMinIncrement());
+
+        if (auction.getEndTime() != null) {
+            // Định dạng lại thời gian cho đẹp
+            java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
+            lblEndTime.setText("End at: " + auction.getEndTime().format(formatter));
+        }
+
+        if (item.getImages() != null) {
+            File file = new File(item.getImages());
             Image image = new Image(file.toURI().toString());
             imgProduct.setImage(image);
         }

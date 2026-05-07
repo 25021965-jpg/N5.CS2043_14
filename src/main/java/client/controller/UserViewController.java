@@ -13,9 +13,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
-import model.AuctionItem;
-
-import java.io.IOException;
+import model.*;
 
     public class UserViewController {
         private ClientSocket client;
@@ -36,7 +34,7 @@ import java.io.IOException;
         /**
          * Hàm này dùng để thêm một Card mới vào danh sách hiển thị
          */
-        public void addNewAuctionCard(AuctionItem item) {
+        public void addNewAuctionCard(Auction auction) {
             try {
                 // 1. Load file FXML của cái Card
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/itemsCard-view.fxml"));
@@ -44,7 +42,7 @@ import java.io.IOException;
 
                 // 2. Lấy controller của Card để đổ dữ liệu vào
                 ItemCardController cardController = loader.getController();
-                cardController.setData(item);
+                cardController.setData(auction);
 
                 // 3. Tính toán vị trí: nếu đầy 3 cột thì xuống hàng
                 if (column == 3) {
