@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.MenuButton?>
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
@@ -13,17 +15,23 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
 
 <BorderPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="800.0" prefWidth="1024.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controller.UserViewController">
    <top>
-      <HBox alignment="CENTER_LEFT" prefHeight="100.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+      <HBox alignment="CENTER_LEFT" prefHeight="100.0" prefWidth="200.0" style="-fx-background-color: white; -fx-border-color: black; -fx-border-width: 5;" BorderPane.alignment="CENTER">
          <children>
-            <ImageView fitHeight="101.0" fitWidth="140.0" pickOnBounds="true" preserveRatio="true" />
-            <Label text="Label" />
+            <ImageView fitHeight="109.0" fitWidth="144.0" pickOnBounds="true" preserveRatio="true">
+               <image>
+                  <Image url="@../image/main2.jpg" />
+               </image></ImageView>
             <Label />
-            <TextField fx:id="txtSearch" prefHeight="27.0" prefWidth="379.0" />
-            <Button mnemonicParsing="false" onAction="#handleSearch" prefHeight="27.0" prefWidth="38.0" text="Button" />
-            <MenuButton mnemonicParsing="false" text="Categories">
+            <TextField fx:id="txtSearch" prefHeight="43.0" prefWidth="387.0">
+               <HBox.margin>
+                  <Insets left="60.0" />
+               </HBox.margin></TextField>
+            <Button mnemonicParsing="false" onAction="#handleSearch" prefHeight="42.0" prefWidth="47.0" style="-fx-background-color: d4af37;" text="🔎" />
+            <MenuButton mnemonicParsing="false" prefHeight="45.0" prefWidth="125.0" style="-fx-background-color: d4af37;" text="Categories">
               <items>
                 <MenuItem mnemonicParsing="false" text="Electronics" />
                 <MenuItem mnemonicParsing="false" text="Fashion" />
@@ -31,22 +39,37 @@
                   <MenuItem mnemonicParsing="false" text="Book" />
                   <MenuItem mnemonicParsing="false" text="Other" />
               </items>
+               <HBox.margin>
+                  <Insets left="50.0" />
+               </HBox.margin>
+               <font>
+                  <Font name="Berlin Sans FB Demi Bold" size="15.0" />
+               </font>
             </MenuButton>
-            <MenuButton mnemonicParsing="false" text="Your Account">
+            <MenuButton mnemonicParsing="false" prefHeight="44.0" prefWidth="133.0" style="-fx-background-color: d4af37;" text="Your Account">
               <items>
                 <MenuItem mnemonicParsing="false" text="Personal Information" />
                 <MenuItem mnemonicParsing="false" text="Favourite Items" />
                   <MenuItem mnemonicParsing="false" text="Auction History" />
                   <MenuItem mnemonicParsing="false" text="Your Auction" />
               </items>
+               <HBox.margin>
+                  <Insets left="50.0" />
+               </HBox.margin>
+               <font>
+                  <Font name="Berlin Sans FB Demi Bold" size="15.0" />
+               </font>
             </MenuButton>
          </children>
       </HBox>
    </top>
    <left>
-      <VBox alignment="CENTER" prefHeight="500.0" prefWidth="138.0" BorderPane.alignment="CENTER">
+      <VBox alignment="CENTER" prefHeight="691.0" prefWidth="176.0" style="-fx-background-color: black;" BorderPane.alignment="CENTER">
          <children>
-            <Button fx:id="btnCreate" mnemonicParsing="false" onAction="#handleCreateAuction" text="Create an Auction" />
+            <Button fx:id="btnCreate" mnemonicParsing="false" onAction="#handleCreateAuction" prefHeight="45.0" prefWidth="161.0" style="-fx-background-color: d4af37;" text="Create an Auction">
+               <font>
+                  <Font name="Berlin Sans FB Demi Bold" size="16.0" />
+               </font></Button>
          </children></VBox>
    </left>
    <center>
@@ -54,7 +77,7 @@
          <children>
             <ScrollPane fitToHeight="true" fitToWidth="true" prefHeight="667.0" prefWidth="889.0">
                <content>
-                  <GridPane fx:id="itemGrid" hgap="15.0" prefHeight="664.0" prefWidth="813.0" vgap="15.0">
+                  <GridPane fx:id="itemGrid" hgap="15.0" prefHeight="685.0" prefWidth="857.0" style="-fx-background-color: white; -fx-border-color: d4af37; -fx-border-width: 5; -fx-border-radius: 10;" vgap="15.0">
                     <columnConstraints>
                       <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
                       <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />

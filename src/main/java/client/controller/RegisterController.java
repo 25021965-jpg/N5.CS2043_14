@@ -161,6 +161,32 @@ public class RegisterController {
             showAlert("Error", "Cannot open login screen!");
         }
     }
+    @FXML
+    private void handleBack(ActionEvent event) {
+        try {
+            // 1. Tải file FXML của trang Login (Đảm bảo đường dẫn chính xác)
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/login-view.fxml"));
+            Parent root = loader.load();
+
+            // 2. Lấy controller của trang Login và truyền lại ClientSocket (nếu cần)
+            LoginController controller = loader.getController();
+            controller.setClient(this.client);
+            controller.startListening();
+            // Lưu ý: Nếu LoginController tự khởi tạo client trong initialize,
+            // bạn có thể cần xem xét lại logic để tránh tạo quá nhiều socket.
+
+            // 3. Chuyển Scene
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.setTitle("Login");
+            stage.show();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            // Hiển thị thông báo lỗi nếu không chuyển được trang
+            showAlert("Error", "Không thể quay lại trang đăng nhập!");
+        }
+    }
 
     private void showAlert(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
