@@ -1,5 +1,7 @@
 package server.network;
 
+import server.dao.DatabaseService;
+
 import java.io.*;
 import java.net.Socket;
 
@@ -46,7 +48,7 @@ public class ClientHandler implements Runnable {
                 System.out.println("Đăng nhập - Username: " + username + ", Password: " + password);
 
                 // GỌI DATABASE ĐỂ KIỂM TRA
-                boolean success = client.network.DatabaseService.login(username, password);
+                boolean success = DatabaseService.login(username, password);
 
                 if (success) {
                     System.out.println("✓ Đăng nhập thành công: " + username);
@@ -74,7 +76,7 @@ public class ClientHandler implements Runnable {
 
                     System.out.println("Đăng ký - Username: " + username + ", Email: " + email);
 
-                    boolean success = client.network.DatabaseService.register(fullname, username, email, password);
+                    boolean success = DatabaseService.register(fullname, username, email, password);
 
                     if (success) {
                         System.out.println("✓ Đăng ký thành công: " + username);
