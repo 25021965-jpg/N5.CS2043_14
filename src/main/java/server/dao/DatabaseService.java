@@ -1,4 +1,4 @@
-package client.network;
+package server.dao;
 
 import java.sql.*;
 
@@ -20,7 +20,11 @@ public class DatabaseService {
 
     // ĐĂNG NHẬP
     public static boolean login(String username, String password) {
-        String sql = "SELECT * FROM users WHERE username = ? AND password = ?";
+
+        username = username.trim();
+        password = password.trim();
+
+        String sql = "SELECT 1 FROM users WHERE username = ? AND password = ?";
 
         try (Connection conn = getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -32,13 +36,19 @@ public class DatabaseService {
             return rs.next(); // trả về true nếu tìm thấy user
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("Login error: " + e.getMessage());
             return false;
         }
     }
 
     // ĐĂNG KÝ
     public static boolean register(String fullname, String username, String email, String password) {
+
+        fullname = fullname.trim();
+        username = username.trim();
+        email = email.trim();
+        password = password.trim();
+
         // Kiểm tra username đã tồn tại chưa
         if (isExist("username", username)) {
             return false;
@@ -58,17 +68,24 @@ public class DatabaseService {
             pstmt.setString(2, username);
             pstmt.setString(3, email);
             pstmt.setString(4, password);
-            pstmt.executeUpdate();
-            return true;
+            int rows = pstmt.executeUpdate();
+            return rows > 0;
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("Register error: " + e.getMessage());
             return false;
         }
     }
 
     // Kiểm tra tồn tại
     private static boolean isExist(String column, String value) {
+
+        if (!column.equals("username") &&
+                !column.equals("email")) {
+
+            return false;
+        }
+
         String sql = "SELECT 1 FROM users WHERE " + column + " = ?";
 
         try (Connection conn = getConnection();
