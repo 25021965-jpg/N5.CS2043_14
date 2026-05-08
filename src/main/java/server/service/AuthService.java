@@ -16,29 +16,44 @@ public class AuthService {
     }
 
     // Register
-    public User register(String username, String email, String password, List<Role> roles) {
-        // 1. Kiểm tra email đã tồn tại chưa bằng SQL
+    public User register(
+            String fullname,
+            String username,
+            String email,
+            String password
+    ) {
+
+        // kiểm tra email tồn tại
         if (userDAO.findByEmail(email) != null) {
             return null;
         }
 
-        // 2. Tạo User mới (ID có thể dùng UUID hoặc để DB tự tăng)
-        String id = UUID.randomUUID().toString();
-        User newUser = new User(id, username, email, password, roles);
+        // tạo user mới
+        User user = new User();
 
-        // 3. Lưu trực tiếp vào Database thông qua DAO
-        userDAO.save(newUser);
+        user.setId(UUID.randomUUID().toString());
+        user.setFullname(fullname);
+        user.setUsername(username);
+        user.setEmail(email);
+        user.setPassword(password);
 
-        return newUser;
+        // lưu DB
+        userDAO.save(user);
+
+        return user;
     }
 
     // Login
-    public User login(String email, String password) {
-        // Tìm user theo email trong DB
-        User user = userDAO.findByEmail(email);
+    public User login(String input, String password) {
 
-        // Kiểm tra password
-        if (user != null && user.getPassword().equals(password)) {
+        User user =
+                userDAO.findByUsernameOrEmail(input);
+
+        if (
+                user != null &&
+                        user.getPassword().equals(password)
+        ) {
+
             return user;
         }
 

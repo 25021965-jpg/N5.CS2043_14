@@ -24,6 +24,7 @@ public class LoginController {
         this.client = client;
     }
 
+    /*
     public void startListening() {
         if (client != null) {
             client.listen(msg -> {
@@ -32,6 +33,7 @@ public class LoginController {
             });
         }
     }
+     */
 
     @FXML
     public void initialize() {
@@ -140,22 +142,45 @@ public class LoginController {
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.setScene(new Scene(root));
             stage.setTitle("Register");
-
+            //stage.show();
         } catch (Exception e) {
             e.printStackTrace();
             showAlert("Error", "Cannot open register screen!");
         }
+
     }
 
     private void goToAuction() {
+
         try {
-            Parent root = FXMLLoader.load(getClass().getResource("src/main/resources/fxml/user-view.fxml"));
-            Stage stage = (Stage) userField.getScene().getWindow();
+
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/fxml/user-view.fxml")
+            );
+
+            Parent root = loader.load();
+
+            Stage stage = new Stage();
+
             stage.setScene(new Scene(root));
             stage.setTitle("Auction");
+
+            stage.show();
+
+            // đóng login window
+            Stage currentStage =
+                    (Stage) userField.getScene().getWindow();
+
+            currentStage.close();
+
         } catch (Exception e) {
+
             e.printStackTrace();
-            showAlert("Error", "Cannot open auction screen!");
+
+            showAlert(
+                    "Error",
+                    "Cannot open auction screen!"
+            );
         }
     }
 

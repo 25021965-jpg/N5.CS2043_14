@@ -12,7 +12,7 @@ public class DatabaseService {
 
     private static final String USER = "root";
 
-    private static final String PASSWORD = "123456";
+    private static final String PASSWORD = "Pass102938@";
 
     // KẾT NỐI DATABASE
     public static Connection getConnection() throws SQLException {

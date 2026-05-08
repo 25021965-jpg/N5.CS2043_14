@@ -3,6 +3,7 @@ package server.dao;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import model.*;
 
@@ -36,12 +37,17 @@ public class UserDAO {
     }
 
     // ĐĂNG KÝ
+    /*
     public static boolean register(
             String fullname,
             String username,
             String email,
             String password
     ) {
+
+
+        String id =
+                UUID.randomUUID().toString();
 
         fullname = fullname.trim();
         username = username.trim();
@@ -59,29 +65,31 @@ public class UserDAO {
         }
 
         String sql =
-                "INSERT INTO users(fullname, username, email, password) " +
-                        "VALUES (?, ?, ?, ?)";
+                "INSERT INTO users(id, fullname, username, email, password) " +
+                        "VALUES (?, ?, ?, ?, ?)";
 
         try (
                 Connection conn = DatabaseService.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql)
         ) {
 
-            pstmt.setString(1, fullname);
-            pstmt.setString(2, username);
-            pstmt.setString(3, email);
-            pstmt.setString(4, password);
+            pstmt.setString(1, id);
+            pstmt.setString(2, fullname);
+            pstmt.setString(3, username);
+            pstmt.setString(4, email);
+            pstmt.setString(5, password);
 
             int rows = pstmt.executeUpdate();
 
             return rows > 0;
 
         } catch (SQLException e) {
-
-            System.err.println("Register error: " + e.getMessage());
+            System.err.println("=== REGISTER SQL ERROR ===");
+            e.printStackTrace();
             return false;
         }
     }
+     */
 
     // KIỂM TRA TỒN TẠI
     private static boolean isExist(String column, String value) {
@@ -130,6 +138,7 @@ public class UserDAO {
             if (rs.next()) {
                 User user = new User();
                 user.setId(rs.getString("id"));
+                user.setFullname(rs.getString("fullname"));
                 user.setUsername(rs.getString("username"));
                 user.setEmail(rs.getString("email"));
                 user.setPassword(rs.getString("password"));
@@ -141,15 +150,91 @@ public class UserDAO {
         return null;
     }
 
+    public User findByUsername(String username) {
+
+        String sql =
+                "SELECT * FROM users WHERE username = ?";
+
+        try (
+                Connection conn =
+                        DatabaseService.getConnection();
+
+                PreparedStatement pstmt =
+                        conn.prepareStatement(sql)
+        ) {
+
+            pstmt.setString(1, username);
+
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+
+                User user = new User();
+
+                user.setId(rs.getString("id"));
+                user.setFullname(rs.getString("fullname"));
+                user.setUsername(rs.getString("username"));
+                user.setEmail(rs.getString("email"));
+                user.setPassword(rs.getString("password"));
+
+                return user;
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    public User findByUsernameOrEmail(String input) {
+
+        String sql =
+                "SELECT * FROM users " +
+                        "WHERE username = ? OR email = ?";
+
+        try (
+                Connection conn = DatabaseService.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)
+        ) {
+
+            pstmt.setString(1, input);
+            pstmt.setString(2, input);
+
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+
+                User user = new User();
+
+                user.setId(rs.getString("id"));
+                user.setFullname(rs.getString("fullname"));
+                user.setUsername(rs.getString("username"));
+                user.setEmail(rs.getString("email"));
+                user.setPassword(rs.getString("password"));
+
+                return user;
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
     public void save(User user) {
-        String sql = "INSERT INTO users (id, username, email, password) VALUES (?, ?, ?, ?)";
+        String sql =
+                "INSERT INTO users(id, fullname, username, email, password) " +
+                        "VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseService.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, user.getId());
-            pstmt.setString(2, user.getUsername());
-            pstmt.setString(3, user.getEmail());
-            pstmt.setString(4, user.getPassword());
+            pstmt.setString(2, user.getFullname());
+            pstmt.setString(3, user.getUsername());
+            pstmt.setString(4, user.getEmail());
+            pstmt.setString(5, user.getPassword());
             pstmt.executeUpdate();
 
         } catch (SQLException e) {
@@ -168,6 +253,7 @@ public class UserDAO {
             while (rs.next()) {
                 User user = new User();
                 user.setId(rs.getString("id"));
+                user.setFullname(rs.getString("fullname"));
                 user.setUsername(rs.getString("username"));
                 user.setEmail(rs.getString("email"));
                 user.setPassword(rs.getString("password"));
