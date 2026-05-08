@@ -67,14 +67,14 @@ import model.*;
                 stage.setScene(new Scene(root));
                 stage.show();
             } catch (IOException e) {
-                System.out.println("Không tìm thấy file createAuction-view.fxml");
+                System.out.println("Coudnot find createAuction-view.fxml");
             }
         }
 
         @FXML
         void handleSearch(ActionEvent event) {
             String keyword = txtSearch.getText();
-            System.out.println("Đang tìm kiếm: " + keyword);
+            System.out.println("Searching: " + keyword);
             // Viết logic lọc card ở đây
         }
         public void setClient(ClientSocket client) {

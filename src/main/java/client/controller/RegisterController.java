@@ -131,7 +131,7 @@ public class RegisterController {
             Stage stage = (Stage) fullNameField.getScene().getWindow();
             stage.setScene(new Scene(root));
             stage.setTitle("Login");
-            System.out.println("=== Chuyển về màn hình Login thành công ===");
+            System.out.println("=== go to LOGIN successfully ===");
 
         } catch (Exception e) {
             System.out.println("=== Error goToLogin(): " + e.getMessage() + "===");
@@ -156,7 +156,7 @@ public class RegisterController {
             stage.setTitle("Login");
 
         } catch (Exception e) {
-            System.out.println("=== LỖI goToLogin(ActionEvent): " + e.getMessage() + " ===");
+            System.out.println("=== Error goToLogin(ActionEvent): " + e.getMessage() + " ===");
             e.printStackTrace();
             showAlert("Error", "Cannot open login screen!");
         }
@@ -184,7 +184,7 @@ public class RegisterController {
         } catch (Exception e) {
             e.printStackTrace();
             // Hiển thị thông báo lỗi nếu không chuyển được trang
-            showAlert("Error", "Không thể quay lại trang đăng nhập!");
+            showAlert("Error", "cannot  open login screen!");
         }
     }
 
