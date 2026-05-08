@@ -35,26 +35,53 @@ public class LoginController {
 
     @FXML
     public void initialize() {
-        System.out.println("=== LoginController initialize() START ===");
+
+        System.out.println(
+                "=== LoginController initialize() START ==="
+        );
 
         try {
 
-            System.out.println("=== ClientSocket created ===");
+            client = new ClientSocket();
+
+            System.out.println(
+                    "=== ClientSocket created ==="
+            );
 
             client.listen(msg -> {
-                System.out.println("=== Received: " + msg + " ===");
-                Platform.runLater(() -> handleResponse(msg));
+
+                System.out.println(
+                        "=== Received: " + msg + " ==="
+                );
+
+                Platform.runLater(() ->
+                        handleResponse(msg)
+                );
             });
 
-            showAlert("Success", "Connected to server");
+            showAlert(
+                    "Success",
+                    "Connected to server"
+            );
 
         } catch (Exception e) {
-            System.out.println("=== ERROR: " + e.getMessage() + " ===");
+
+            System.out.println(
+                    "=== ERROR: " + e.getMessage() + " ==="
+            );
+
             e.printStackTrace();
-            showAlert("Error", "Cannot connect to server: " + e.getMessage());
+
+            showAlert(
+                    "Error",
+                    "Cannot connect to server: "
+                            + e.getMessage()
+            );
         }
 
-        System.out.println("=== LoginController initialize() END ===");
+        System.out.println(
+                "=== LoginController initialize() END ==="
+        );
     }
 
     @FXML
@@ -108,7 +135,7 @@ public class LoginController {
 
             RegisterController controller = loader.getController();
             controller.setClient(client);
-            controller.startListening();
+            //controller.startListening();
 
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.setScene(new Scene(root));
@@ -122,7 +149,7 @@ public class LoginController {
 
     private void goToAuction() {
         try {
-            Parent root = FXMLLoader.load(getClass().getResource("/fxml/user-view.fxml"));
+            Parent root = FXMLLoader.load(getClass().getResource("src/main/resources/fxml/user-view.fxml"));
             Stage stage = (Stage) userField.getScene().getWindow();
             stage.setScene(new Scene(root));
             stage.setTitle("Auction");

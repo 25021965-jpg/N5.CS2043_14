@@ -8,7 +8,7 @@ public class MessageParser {
     private String[] args;
 
     public MessageParser(String message) {
-        String[] parts = message.split(" ");
+        String[] parts = message.split("\\|");
 
         command = Command.from(parts[0]);
 

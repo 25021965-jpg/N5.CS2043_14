@@ -1,21 +1,32 @@
 package client.network;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.function.Consumer;
 
-public class ClientSocket {
+import common.Command;
 
+public class ClientSocket {
     private Socket socket;
     private BufferedReader in;
     private PrintWriter out;
-
     public ClientSocket() throws Exception {
+
         socket = new Socket("localhost", 9999);
-        in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        out = new PrintWriter(socket.getOutputStream(), true);
+        in = new BufferedReader(
+                new InputStreamReader(
+                        socket.getInputStream()
+                )
+        );
+        out = new PrintWriter(
+                socket.getOutputStream(),
+                true
+        );
     }
 
+    // lắng nghe message từ server
     public void listen(Consumer<String> callback) {
         new Thread(() -> {
             try {
@@ -23,56 +34,120 @@ public class ClientSocket {
                 while ((msg = in.readLine()) != null) {
                     callback.accept(msg);
                 }
+
             } catch (Exception e) {
                 callback.accept("DISCONNECTED");
             }
         }).start();
     }
 
-    private void send(String msg) {
+    // generic send
+    private void send(Command command, String... data) {
+        StringBuilder sb =
+                new StringBuilder(command.name());
+        for (String s : data) {
+            sb.append("|").append(s);
+        }
+        String msg = sb.toString();
         out.println(msg);
+        System.out.println("SEND: " + msg);
     }
 
-    // SỬA: LOGIN username password (dùng dấu cách)
-    public void sendLogin(String username, String password) {
-        send("LOGIN " + username + " " + password);
-    }
-
-    // SỬA: REGISTER fullname username email password
-    public void sendRegister(String fullname, String username,
-                             String email, String password) {
-
-        send("REGISTER|" + fullname + "|" +
-                username + "|" +
-                email + "|" +
-                password);
-
-        System.out.println(
-                "SEND: REGISTER|" + fullname + "|" +
-                        username + "|" +
-                        email + "|" +
-                        password
+    // LOGIN
+    public void sendLogin(
+            String username,
+            String password
+    ) {
+        send(
+                Command.LOGIN,
+                username,
+                password
         );
     }
 
-    // GIỮ NGUYÊN các method khác
+    // REGISTER
+    public void sendRegister(
+            String fullname,
+            String username,
+            String email,
+            String password
+    ) {
+
+        send(
+                Command.REGISTER,
+                fullname,
+                username,
+                email,
+                password
+        );
+    }
+
+    // LOGOUT
     public void sendLogout() {
-        send("LOGOUT");
+
+        send(Command.LOGOUT);
     }
 
+    // LIST
     public void sendList() {
-        send("LIST");
+
+        send(Command.LIST);
     }
 
-    public void sendJoin(String id) {
-        send("JOIN " + id);
+    // JOIN
+    public void sendJoin(String auctionId) {
+
+        send(
+                Command.JOIN,
+                auctionId
+        );
     }
 
-    public void sendBid(String auctionId, String amount) {
-        send("BID " + auctionId + " " + amount);
+    // BID
+    public void sendBid(
+            String auctionId,
+            String amount
+    ) {
+
+        send(
+                Command.BID,
+                auctionId,
+                amount
+        );
     }
 
-    public void sendCreate(String name, String category, String price) {
-        send("CREATE " + name + " " + category + " " + price);
+    // CREATE
+    public void sendCreate(
+            String name,
+            String category,
+            String price
+    ) {
+
+        send(
+                Command.CREATE,
+                name,
+                category,
+                price
+        );
+    }
+
+    // đóng kết nối
+    public void close() {
+
+        try {
+            if (in != null) {
+                in.close();
+            }
+            if (out != null) {
+                out.close();
+            }
+            if (socket != null &&
+                    !socket.isClosed()) {
+                socket.close();
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
