@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
@@ -11,153 +10,103 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<AnchorPane prefHeight="720.0" prefWidth="1080.0" style="-fx-background-color: #F1F5F9;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.CreatedAuctionController">
+<AnchorPane prefHeight="720.0" prefWidth="1080.0" style="-fx-background-color: #F8FAFC;                    -fx-border-color: #D4AF37;                    -fx-border-width: 6;" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.CreatedAuctionController">
 
-    <!-- ================= LEFT PANEL ================= -->
-    <VBox layoutX="0.0" layoutY="0.0" prefHeight="720.0" prefWidth="250.0" spacing="15" style="-fx-background-color: black;">
-
-        <padding>
-            <Insets bottom="20" left="20" right="20" top="30" />
-        </padding>
+    <!-- LEFT MENU -->
+    <VBox prefWidth="250.0" spacing="18" style="-fx-background-color: #000000;              -fx-border-color: #D4AF37;              -fx-border-width: 0 3 0 0;              -fx-padding: 30 20 20 20;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0">
 
         <!-- TITLE -->
-        <Label style="-fx-text-fill: white;                       -fx-font-size: 24px;                       -fx-font-weight: bold;" text="USER PANEL" />
+        <VBox alignment="CENTER" spacing="6">
 
-        <Separator />
-      <Button fx:id="favoriteBtn11" layoutX="30.0" layoutY="673.0" prefHeight="45" prefWidth="210" style="-fx-background-color: #334155;                        -fx-text-fill: white;                        -fx-font-size: 14px;" text="Information " />
+            <Label style="-fx-text-fill: white;                       -fx-font-size: 26px;                       -fx-font-weight: bold;" text="Auction System" />
 
-        <!-- MENU -->
-        <Button fx:id="historyBtn" prefHeight="45" prefWidth="210" style="-fx-background-color: #334155;                        -fx-text-fill: white;                        -fx-font-size: 14px;" text="Auction History" />
+            <!-- KHÔNG ĐỔI USER PANEL -->
+            <Label style="-fx-text-fill: #94A3B8;                       -fx-font-size: 13px;" text="USER PANEL" />
 
-        <Button fx:id="createdAuctionBtn" prefHeight="45" prefWidth="210" style="-fx-background-color: #475569;                        -fx-text-fill: white;                        -fx-font-size: 14px;                        -fx-font-weight: bold;" text="Your Auctions" />
+        </VBox>
 
-        <Button fx:id="favoriteBtn" prefHeight="45" prefWidth="210" style="-fx-background-color: #334155;                        -fx-text-fill: white;                        -fx-font-size: 14px;" text="Favourite " />
-      <Button fx:id="favoriteBtn1" layoutX="30.0" layoutY="227.0" prefHeight="45" prefWidth="210" style="-fx-background-color: #334155;                        -fx-text-fill: white;                        -fx-font-size: 14px;" text="Account Balance" />
+        <Separator style="-fx-background-color: #334155;" />
 
-        <Button fx:id="logoutBtn" prefHeight="45" prefWidth="210" style="-fx-background-color: d4af37; -fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;" text="Log Out" />
+        <!-- PROFILE -->
+        <Button fx:id="infoBtn" prefHeight="45" prefWidth="210" style="-fx-background-color: #475569;                    -fx-text-fill: white;                    -fx-font-size: 15px;                    -fx-font-weight: bold;                    -fx-background-radius: 8;" text="Profile" />
 
-        <Button fx:id="deleteAccountBtn" prefHeight="45" prefWidth="210" style="-fx-background-color: #DC2626;                        -fx-text-fill: white;                        -fx-font-size: 14px;                        -fx-font-weight: bold;" text="DELETE ACCOUNT" />
+        <!-- HISTORY -->
+        <Button fx:id="historyBtn" prefHeight="45" prefWidth="210" style="-fx-background-color: #334155;                    -fx-text-fill: white;                    -fx-font-size: 15px;                    -fx-font-weight: bold;                    -fx-background-radius: 8;" text="Auction History" />
 
-        <VBox prefHeight="250" />
+        <!-- YOUR AUCTIONS -->
+        <Button fx:id="createdAuctionBtn" prefHeight="45" prefWidth="210" style="-fx-background-color: #334155;                    -fx-text-fill: white;                    -fx-font-size: 15px;                    -fx-font-weight: bold;                    -fx-background-radius: 8;" text="Your Auctions" />
+
+        <!-- FAVOURITE -->
+        <Button fx:id="favoriteBtn" prefHeight="45" prefWidth="210" style="-fx-background-color: #334155;                    -fx-text-fill: white;                    -fx-font-size: 15px;                    -fx-font-weight: bold;                    -fx-background-radius: 8;" text="Favourite" />
+
+        <!-- BALANCE -->
+        <Button fx:id="balanceBtn" prefHeight="45" prefWidth="210" style="-fx-background-color: #334155;                    -fx-text-fill: white;                    -fx-font-size: 15px;                    -fx-font-weight: bold;                    -fx-background-radius: 8;" text="Account Balance" />
+
+        <!-- LOG OUT -->
+        <Button fx:id="logoutBtn" prefHeight="48" prefWidth="210" style="-fx-background-color: #D4AF37;                    -fx-text-fill: white;                    -fx-font-size: 15px;                    -fx-font-weight: bold;                    -fx-background-radius: 8;" text="Log Out" />
+
+        <!-- DELETE -->
+        <Button fx:id="deleteAccountBtn" prefHeight="48" prefWidth="210" style="-fx-background-color: #EF4444;                    -fx-text-fill: white;                    -fx-font-size: 15px;                    -fx-font-weight: bold;                    -fx-background-radius: 8;" text="DELETE ACCOUNT" />
+
+        <Region VBox.vgrow="ALWAYS" />
 
         <!-- BACK -->
-        <Button fx:id="backHomeBtn" prefHeight="45" prefWidth="210" style="-fx-background-color: #2563EB;                        -fx-text-fill: white;                        -fx-font-size: 14px;                        -fx-font-weight: bold;" text="← Back To Home" />
+        <Button fx:id="backHomeBtn" prefHeight="48" prefWidth="210" style="-fx-background-color: #2563EB;                    -fx-text-fill: white;                    -fx-font-size: 15px;                    -fx-font-weight: bold;                    -fx-background-radius: 8;" text="← Back To Home" />
+
     </VBox>
 
-    <!-- ================= PAGE TITLE ================= -->
+    <!-- PAGE TITLE -->
+    <Label layoutX="290.0" layoutY="35.0" style="-fx-font-size: 32px;                   -fx-font-weight: bold;                   -fx-text-fill: #0F172A;" text="Your Auctions" />
 
-    <Label layoutX="290.0" layoutY="35.0" style="-fx-font-size: 30px;                   -fx-font-weight: bold;                   -fx-text-fill: #0F172A;" text="Your Auctions" />
-
-    <!-- ================= FILTER ================= -->
-
+    <!-- FILTER -->
     <HBox alignment="CENTER_LEFT" layoutX="290.0" layoutY="100.0" spacing="15">
 
-        <Label style="-fx-font-size: 16px;                       -fx-font-weight: bold;" text="Status" />
+        <Label style="-fx-font-size: 16px;                       -fx-font-weight: bold;                       -fx-text-fill: #334155;" text="Status" />
 
-        <ComboBox fx:id="statusFilterComboBox" prefHeight="40" prefWidth="220" />
-
+        <ComboBox fx:id="statusFilterComboBox" prefHeight="40" prefWidth="220" promptText="Select status" />
     </HBox>
 
-    <!-- ================= AUCTION LIST ================= -->
+    <!-- AUCTION LIST -->
+    <ScrollPane fitToWidth="true" layoutX="290.0" layoutY="160.0" prefHeight="520.0" prefWidth="760.0"
+                style="-fx-background-color: transparent;">
 
-    <ScrollPane fitToWidth="true" layoutX="290.0" layoutY="160.0" prefHeight="520.0" prefWidth="760.0" style="-fx-background-color: transparent;">
+        <VBox prefWidth="730" spacing="20" style="-fx-padding: 10;">
 
-        <content>
+            <HBox prefHeight="150" prefWidth="730" spacing="20"
+                  style="-fx-background-color: white;                              -fx-background-radius: 15;                              -fx-border-radius: 15;                              -fx-border-color: #D4AF37;                              -fx-border-width: 2;                              -fx-padding: 15;">
 
-            <VBox prefWidth="730" spacing="20" style="-fx-padding: 10;">
+                <Region prefHeight="120" prefWidth="130"
+                        style="-fx-background-color: #E2E8F0;                                    -fx-background-radius: 10;"/>
 
-                <!-- ================= UPCOMING ITEM ================= -->
+                <VBox spacing="10">
 
-                <HBox prefHeight="150" prefWidth="730" spacing="20" style="-fx-background-color: white;                              -fx-background-radius: 15;                              -fx-border-radius: 15;                              -fx-border-color: #CBD5E1;                              -fx-padding: 15;">
+                    <Label style="-fx-font-size: 20px;                                       -fx-font-weight: bold;                                       -fx-text-fill: #94A3B8;"
+                           text="Auction Name"/>
 
-                    <!-- IMAGE -->
-                    <Region prefHeight="120" prefWidth="130" style="-fx-background-color: #CBD5E1;                                    -fx-background-radius: 10;" />
+                    <Label style="-fx-font-size: 15px;                                       -fx-text-fill: #94A3B8;"
+                           text="Current Price"/>
 
-                    <!-- INFO -->
-                    <VBox spacing="10">
+                    <Label style="-fx-font-size: 15px;                                       -fx-text-fill: #94A3B8;"
+                           text="End Date"/>
 
-                        <Label style="-fx-font-size: 20px;                                       -fx-font-weight: bold;" text="RTX 5090 Gaming GPU" />
+                    <Label style="-fx-font-size: 15px;                                       -fx-font-weight: bold;                                       -fx-text-fill: #94A3B8;"
+                           text="Status"/>
 
-                        <Label style="-fx-font-size: 15px;" text="Giá khởi điểm: 40.000.000 VNĐ" />
+                    <HBox spacing="10">
 
-                        <Label style="-fx-font-size: 15px;" text="Bắt đầu: 20/05/2026" />
+                        <Button prefHeight="35" prefWidth="100"
+                                style="-fx-background-color: #2563EB;                                            -fx-text-fill: white;                                            -fx-font-weight: bold;                                            -fx-background-radius: 8;"
+                                text="View"/>
 
-                        <Label style="-fx-font-size: 15px;                                       -fx-text-fill: #F59E0B;                                       -fx-font-weight: bold;" text="Trạng thái: Upcoming" />
+                        <Button prefHeight="35" prefWidth="100"
+                                style="-fx-background-color: #EF4444;                                            -fx-text-fill: white;                                            -fx-font-weight: bold;                                            -fx-background-radius: 8;"
+                                text="Delete"/>
+                    </HBox>
 
-                        <HBox spacing="10">
+                </VBox>
+            </HBox>
 
-                            <Button prefHeight="35" prefWidth="100" style="-fx-background-color: #2563EB;                                            -fx-text-fill: white;                                            -fx-font-weight: bold;" text="Edit" />
-
-                            <Button prefHeight="35" prefWidth="100" style="-fx-background-color: #DC2626;                                            -fx-text-fill: white;                                            -fx-font-weight: bold;" text="Delete" />
-
-                        </HBox>
-
-                    </VBox>
-
-                </HBox>
-
-                <!-- ================= ACTIVE ITEM ================= -->
-
-                <HBox prefHeight="150" prefWidth="730" spacing="20" style="-fx-background-color: white;                              -fx-background-radius: 15;                              -fx-border-radius: 15;                              -fx-border-color: #CBD5E1;                              -fx-padding: 15;">
-
-                    <!-- IMAGE -->
-                    <Region prefHeight="120" prefWidth="130" style="-fx-background-color: #CBD5E1;                                    -fx-background-radius: 10;" />
-
-                    <!-- INFO -->
-                    <VBox spacing="10">
-
-                        <Label style="-fx-font-size: 20px;                                       -fx-font-weight: bold;" text="Iphone 16 Pro Max" />
-
-                        <Label style="-fx-font-size: 15px;" text="Giá hiện tại: 32.500.000 VNĐ" />
-
-                        <Label style="-fx-font-size: 15px;" text="Kết thúc: 15/05/2026" />
-
-                        <Label style="-fx-font-size: 15px;                                       -fx-text-fill: #16A34A;                                       -fx-font-weight: bold;" text="Trạng thái: Active" />
-
-                        <HBox spacing="10">
-
-                            <Button prefHeight="35" prefWidth="100" style="-fx-background-color: #2563EB;                                            -fx-text-fill: white;                                            -fx-font-weight: bold;" text="View" />
-
-                            <Button prefHeight="35" prefWidth="100" style="-fx-background-color: #F59E0B;                                            -fx-text-fill: white;                                            -fx-font-weight: bold;" text="Stop" />
-
-                        </HBox>
-
-                    </VBox>
-
-                </HBox>
-
-                <!-- ================= ENDED ITEM ================= -->
-
-                <HBox prefHeight="150" prefWidth="730" spacing="20" style="-fx-background-color: white;                              -fx-background-radius: 15;                              -fx-border-radius: 15;                              -fx-border-color: #CBD5E1;                              -fx-padding: 15;">
-
-                    <!-- IMAGE -->
-                    <Region prefHeight="120" prefWidth="130" style="-fx-background-color: #CBD5E1;                                    -fx-background-radius: 10;" />
-
-                    <!-- INFO -->
-                    <VBox spacing="10">
-
-                        <Label style="-fx-font-size: 20px;                                       -fx-font-weight: bold;" text="Playstation 6" />
-
-                        <Label style="-fx-font-size: 15px;" text="Giá cuối cùng: 18.000.000 VNĐ" />
-
-                        <Label style="-fx-font-size: 15px;" text="Đã kết thúc: 01/05/2026" />
-
-                        <Label style="-fx-font-size: 15px;                                       -fx-text-fill: #DC2626;                                       -fx-font-weight: bold;" text="Trạng thái: Ended" />
-
-                        <HBox spacing="10">
-
-                            <Button prefHeight="35" prefWidth="120" style="-fx-background-color: #2563EB;                                            -fx-text-fill: white;                                            -fx-font-weight: bold;" text="View Result" />
-
-                        </HBox>
-
-                    </VBox>
-
-                </HBox>
-
-            </VBox>
-
-        </content>
-
+        </VBox>
     </ScrollPane>
 
 </AnchorPane>
