@@ -41,7 +41,7 @@ public class CreateAuctionController {
     @FXML
     private void handleUploadImage() {
         javafx.stage.FileChooser fileChooser = new javafx.stage.FileChooser();
-        fileChooser.setTitle("Chọn ảnh sản phẩm");
+        fileChooser.setTitle("Choose item image");
 
         // Chỉ lọc các định dạng ảnh
         fileChooser.getExtensionFilters().addAll(
@@ -67,7 +67,7 @@ public class CreateAuctionController {
         try {
             // --- BƯỚC 1: VALIDATION ---
             if (txtName.getText().isEmpty() || dpStartDate.getValue() == null || dpEndDate.getValue() == null) {
-                showAlert("Lỗi", "Vui lòng điền đầy đủ các thông tin bắt buộc (*)");
+                showAlert("Error", "Please fill in all information");
                 return;
             }
 
@@ -81,7 +81,7 @@ public class CreateAuctionController {
             LocalDateTime endDateTime = dpEndDate.getValue().atTime(endH, endM);
 
             if (endDateTime.isBefore(startDateTime)) {
-                showAlert("Lỗi", "Thời gian kết thúc phải sau thời gian bắt đầu!");
+                showAlert("Error", "End time must be after start time!");
                 return;
             }
 
@@ -117,10 +117,10 @@ public class CreateAuctionController {
             stage.show();
 
         } catch (NumberFormatException e) {
-            showAlert("Lỗi định dạng", "Giá tiền, giờ và phút phải là số!");
+            showAlert("Format Error", "Price, hour, and minutes must be numeric value");
         } catch (IOException e) {
             e.printStackTrace();
-            showAlert("Lỗi hệ thống", "Không thể tải giao diện hiển thị!");
+            showAlert("System Error", "Could not load the display interface");
         }
     }
     @FXML
@@ -141,7 +141,7 @@ public class CreateAuctionController {
             appStage.show();
 
         } catch (IOException e) {
-            System.out.println("Không thể tìm thấy file user-view.fxml");
+            System.out.println("Could not find user-view.fxml");
             e.printStackTrace();
         }
     }

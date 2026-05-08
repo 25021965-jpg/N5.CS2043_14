@@ -74,15 +74,15 @@ public class ClientHandler implements Runnable {
                     String email = data[2];
                     String password = data[3];
 
-                    System.out.println("Đăng ký - Username: " + username + ", Email: " + email);
+                    System.out.println("Register - Username: " + username + ", Email: " + email);
 
                     boolean success = UserDAO.register(fullname, username, email, password);
 
                     if (success) {
-                        System.out.println("✓ Đăng ký thành công: " + username);
+                        System.out.println("✓ Successfully register: " + username);
                         return "REGISTER_SUCCESS";
                     } else {
-                        System.out.println("✗ Đăng ký thất bại: " + username);
+                        System.out.println("✗ failed Register: " + username);
                         return "REGISTER_FAILED";
                     }
                 } else {
