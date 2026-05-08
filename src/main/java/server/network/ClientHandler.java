@@ -64,30 +64,34 @@ public class ClientHandler implements Runnable {
 
         // XỬ LÝ REGISTER
         else if (message.startsWith("REGISTER")) {
-            // Format: "REGISTER fullname|username|email|password"
-            String[] parts = message.split(" ");
-            if (parts.length == 2) {
-                String[] data = parts[1].split("\\|");
-                if (data.length == 4) {
-                    String fullname = data[0];
-                    String username = data[1];
-                    String email = data[2];
-                    String password = data[3];
 
-                    System.out.println("Đăng ký - Username: " + username + ", Email: " + email);
+            String[] data = message.split("\\|");
 
-                    boolean success = UserDAO.register(fullname, username, email, password);
+            if (data.length == 5) {
 
-                    if (success) {
-                        System.out.println("✓ Đăng ký thành công: " + username);
-                        return "REGISTER_SUCCESS";
-                    } else {
-                        System.out.println("✗ Đăng ký thất bại: " + username);
-                        return "REGISTER_FAILED";
-                    }
+                String command = data[0];
+                String fullname = data[1];
+                String username = data[2];
+                String email = data[3];
+                String password = data[4];
+
+                System.out.println("Đăng ký - Username: " + username);
+
+                boolean success = UserDAO.register(
+                        fullname,
+                        username,
+                        email,
+                        password
+                );
+
+                if (success) {
+                    System.out.println("✓ Đăng ký thành công");
+                    return "REGISTER_SUCCESS";
                 } else {
-                    return "ERROR: Invalid REGISTER data format";
+                    System.out.println("✗ Đăng ký thất bại");
+                    return "REGISTER_FAILED";
                 }
+
             } else {
                 return "ERROR: Invalid REGISTER format";
             }

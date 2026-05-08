@@ -92,7 +92,7 @@ public class RegisterController {
         }
 
         client.sendRegister(fullname, username, email, password);
-        showAlert("Info", "Registering...");
+        //showAlert("Info", "Registering...");
     }
 
     private void handleResponse(String msg) {
@@ -126,7 +126,7 @@ public class RegisterController {
 
             LoginController controller = loader.getController();
             controller.setClient(client);
-            controller.startListening();
+            //controller.startListening();
 
             Stage stage = (Stage) fullNameField.getScene().getWindow();
             stage.setScene(new Scene(root));
@@ -134,7 +134,7 @@ public class RegisterController {
             System.out.println("=== Chuyển về màn hình Login thành công ===");
 
         } catch (Exception e) {
-            System.out.println("=== Error goToLogin(): " + e.getMessage() == "===");
+            System.out.println("=== Error goToLogin(): " + e.getMessage() + "===");
             e.printStackTrace();
             showAlert("Error", "Cannot open login screen: " + e.getMessage());
         }
@@ -149,7 +149,7 @@ public class RegisterController {
 
             LoginController controller = loader.getController();
             controller.setClient(client);
-            controller.startListening();
+            //controller.startListening();
 
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.setScene(new Scene(root));
@@ -171,7 +171,7 @@ public class RegisterController {
             // 2. Lấy controller của trang Login và truyền lại ClientSocket (nếu cần)
             LoginController controller = loader.getController();
             controller.setClient(this.client);
-            controller.startListening();
+            //controller.startListening();
             // Lưu ý: Nếu LoginController tự khởi tạo client trong initialize,
             // bạn có thể cần xem xét lại logic để tránh tạo quá nhiều socket.
 
