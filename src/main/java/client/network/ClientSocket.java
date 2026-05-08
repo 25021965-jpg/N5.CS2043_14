@@ -39,8 +39,20 @@ public class ClientSocket {
     }
 
     // SỬA: REGISTER fullname username email password
-    public void sendRegister(String fullname, String username, String email, String password) {
-        send("REGISTER " + fullname + "|" + username + "|" + email + "|" + password);
+    public void sendRegister(String fullname, String username,
+                             String email, String password) {
+
+        send("REGISTER|" + fullname + "|" +
+                username + "|" +
+                email + "|" +
+                password);
+
+        System.out.println(
+                "SEND: REGISTER|" + fullname + "|" +
+                        username + "|" +
+                        email + "|" +
+                        password
+        );
     }
 
     // GIỮ NGUYÊN các method khác
