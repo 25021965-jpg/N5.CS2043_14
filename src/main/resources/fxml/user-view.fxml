@@ -31,6 +31,33 @@
                   <Insets left="60.0" />
                </HBox.margin></TextField>
             <Button mnemonicParsing="false" onAction="#handleSearch" prefHeight="42.0" prefWidth="47.0" style="-fx-background-color: d4af37;" text="🔎" />
+            <Button fx:id="btnCreate" mnemonicParsing="false" onAction="#handleCreateAuction" prefHeight="45.0" prefWidth="161.0" style="-fx-background-color: d4af37;" text="Create an Auction">
+               <font>
+                  <Font name="Berlin Sans FB Demi Bold" size="16.0" />
+               </font>
+               <HBox.margin>
+                  <Insets left="30.0" />
+               </HBox.margin></Button>
+            <MenuButton mnemonicParsing="false" prefHeight="44.0" prefWidth="133.0" style="-fx-background-color: d4af37;" text="Your Account">
+              <items>
+                <MenuItem mnemonicParsing="false" text="Personal Information" />
+                <MenuItem mnemonicParsing="false" text="Favourite Items" />
+                  <MenuItem mnemonicParsing="false" text="Auction History" />
+                  <MenuItem mnemonicParsing="false" text="Your Auction" />
+              </items>
+               <font>
+                  <Font name="Berlin Sans FB Demi Bold" size="15.0" />
+               </font>
+               <HBox.margin>
+                  <Insets left="30.0" />
+               </HBox.margin>
+            </MenuButton>
+         </children>
+      </HBox>
+   </top>
+   <left>
+      <VBox alignment="CENTER" prefHeight="691.0" prefWidth="176.0" style="-fx-background-color: black;" BorderPane.alignment="CENTER">
+         <children>
             <MenuButton mnemonicParsing="false" prefHeight="45.0" prefWidth="125.0" style="-fx-background-color: d4af37;" text="Categories">
               <items>
                 <MenuItem mnemonicParsing="false" text="Electronics" />
@@ -39,37 +66,10 @@
                   <MenuItem mnemonicParsing="false" text="Book" />
                   <MenuItem mnemonicParsing="false" text="Other" />
               </items>
-               <HBox.margin>
-                  <Insets left="50.0" />
-               </HBox.margin>
                <font>
                   <Font name="Berlin Sans FB Demi Bold" size="15.0" />
                </font>
             </MenuButton>
-            <MenuButton mnemonicParsing="false" prefHeight="44.0" prefWidth="133.0" style="-fx-background-color: d4af37;" text="Your Account">
-              <items>
-                <MenuItem mnemonicParsing="false" text="Personal Information" />
-                <MenuItem mnemonicParsing="false" text="Favourite Items" />
-                  <MenuItem mnemonicParsing="false" text="Auction History" />
-                  <MenuItem mnemonicParsing="false" text="Your Auction" />
-              </items>
-               <HBox.margin>
-                  <Insets left="50.0" />
-               </HBox.margin>
-               <font>
-                  <Font name="Berlin Sans FB Demi Bold" size="15.0" />
-               </font>
-            </MenuButton>
-         </children>
-      </HBox>
-   </top>
-   <left>
-      <VBox alignment="CENTER" prefHeight="691.0" prefWidth="176.0" style="-fx-background-color: black;" BorderPane.alignment="CENTER">
-         <children>
-            <Button fx:id="btnCreate" mnemonicParsing="false" onAction="#handleCreateAuction" prefHeight="45.0" prefWidth="161.0" style="-fx-background-color: d4af37;" text="Create an Auction">
-               <font>
-                  <Font name="Berlin Sans FB Demi Bold" size="16.0" />
-               </font></Button>
          </children></VBox>
    </left>
    <center>

@@ -38,7 +38,7 @@ public class LoginController {
         System.out.println("=== LoginController initialize() START ===");
 
         try {
-            client = new ClientSocket();
+
             System.out.println("=== ClientSocket created ===");
 
             client.listen(msg -> {

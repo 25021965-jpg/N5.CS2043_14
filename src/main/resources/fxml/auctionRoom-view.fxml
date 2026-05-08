@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="850.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1">
+   <top>
+      <HBox alignment="CENTER" prefHeight="71.0" prefWidth="900.0" spacing="30.0" BorderPane.alignment="CENTER">
+         <children>
+            <Label fx:id="lblTimer" text="Timer" />
+            <Label fx:id="lblStatus" text="status" />
+         </children>
+      </HBox>
+   </top>
+   <left>
+      <VBox prefHeight="200.0" prefWidth="350.0" BorderPane.alignment="CENTER">
+         <children>
+            <ImageView fx:id="imgItem" fitHeight="335.0" fitWidth="362.0" pickOnBounds="true" preserveRatio="true" />
+            <Label text="name" />
+            <TextArea editable="false" prefHeight="150.0" prefWidth="200.0" promptText="Descirption" wrapText="true" />
+            <HBox prefHeight="43.0" prefWidth="350.0">
+               <children>
+                  <Label text="Current Price" />
+                  <Label layoutX="10.0" layoutY="10.0" text="Label" />
+               </children>
+            </HBox>
+            <HBox prefHeight="47.0" prefWidth="350.0">
+               <children>
+                  <Label text="Step Price" />
+                  <Label layoutX="10.0" layoutY="10.0" text="Label" />
+               </children>
+            </HBox>
+         </children>
+      </VBox>
+   </left>
+   <center>
+      <VBox prefHeight="200.0" prefWidth="100.0" spacing="25.0" BorderPane.alignment="CENTER">
+         <children>
+            <Label text="CURRENT PRICE" />
+            <Label fx:id="lblCurrentPrice" text="1222222" />
+            <TextField fx:id="txtBid" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" promptText="Enter your bid" />
+            <Button fx:id="btnBid" mnemonicParsing="false" text="Place bid" />
+         </children>
+      </VBox>
+   </center>
+</BorderPane>
