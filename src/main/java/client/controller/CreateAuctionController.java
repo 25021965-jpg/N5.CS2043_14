@@ -7,7 +7,6 @@ import javafx.scene.control.DatePicker;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -15,7 +14,7 @@ import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import javafx.scene.Node;
 import javafx.event.ActionEvent;
-import model.AuctionItem;
+import model.*;
 
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
@@ -66,15 +65,9 @@ public class CreateAuctionController {
     @FXML
     private void handleCreate(ActionEvent event) {
         try {
-            // --- BƯỚC 1: VALIDATION (KIỂM TRA DỮ LIỆU) ---
+            // --- BƯỚC 1: VALIDATION ---
             if (txtName.getText().isEmpty() || dpStartDate.getValue() == null || dpEndDate.getValue() == null) {
                 showAlert("Lỗi", "Vui lòng điền đầy đủ các thông tin bắt buộc (*)");
-                return;
-            }
-
-            if (txtStartHour.getText().isEmpty() || txtStartMin.getText().isEmpty() ||
-                    txtEndHour.getText().isEmpty() || txtEndMin.getText().isEmpty()) {
-                showAlert("Lỗi", "Vui lòng nhập đầy đủ giờ và phút!");
                 return;
             }
 
@@ -92,37 +85,36 @@ public class CreateAuctionController {
                 return;
             }
 
-            // --- BƯỚC 3: TẠO ĐỐI TƯỢNG DỮ LIỆU (MODEL) ---
-            String imagePath = (selectedImageFile != null) ? selectedImageFile.toURI().toString() : null;
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
+            // --- BƯỚC 3: TẠO ĐỐI TƯỢNG DỮ LIỆU ---
 
-            // Tạo object chứa thông tin vừa nhập
-            AuctionItem newItem = new AuctionItem(
-                    txtName.getText(),
-                    Double.parseDouble(txtStartingBid.getText()),
-                    Double.parseDouble(txtMinIncrement.getText()),
-                    endDateTime.format(formatter),
-                    imagePath
-            );
+            // 1. Tạo Item chứa thông tin cơ bản
+            Item item = new Item();
+            item.setName(txtName.getText());
+            item.setDescription(txtDescription.getText());
+            if (selectedImageFile != null) {
+                item.setImages(String.valueOf(java.util.Collections.singletonList(selectedImageFile.toURI().toString())));
+            }
 
-            // --- BƯỚC 4: CHUYỂN TRANG VÀ HIỂN THỊ CARD ---
-            // Load trang UserView (nơi chứa danh sách card)
+            // 2. Tạo Auction chứa thông tin đấu giá (Thay thế cho AuctionItem cũ)
+            Auction newAuction = new Auction();
+            newAuction.setItem(item);
+            newAuction.setCurrentPrice(new java.math.BigDecimal(txtStartingBid.getText()));
+            newAuction.setMinIncrement(new java.math.BigDecimal(txtMinIncrement.getText()));
+            newAuction.setEndTime(endDateTime);
+            newAuction.setStatus(AuctionStatus.ACTIVE);
+
+            // --- BƯỚC 4: CHUYỂN TRANG VÀ HIỂN THỊ ---
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/user-view.fxml"));
             Parent userViewParent = loader.load();
 
-            // Lấy Controller của trang UserView (Giả sử tên là UserViewController)
-            // Lưu ý: Trong UserViewController bạn cần một cái FlowPane hoặc TilePane để chứa Card
             UserViewController userController = loader.getController();
 
-            // Gọi hàm hiển thị card bên trang UserView
-            userController.addNewAuctionCard(newItem);
+            // Truyền newAuction
+            userController.addNewAuctionCard(newAuction);
 
-            // Hiển thị màn hình mới
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.setScene(new Scene(userViewParent));
             stage.show();
-
-            System.out.println("Tạo đấu giá thành công: " + newItem.getName());
 
         } catch (NumberFormatException e) {
             showAlert("Lỗi định dạng", "Giá tiền, giờ và phút phải là số!");

@@ -99,7 +99,7 @@ public class RegisterController {
         System.out.println("=== handleResponse: " + msg + " ===");
 
         if (msg.startsWith("REGISTER_SUCCESS")) {
-            System.out.println("=== ĐĂNG KÝ THÀNH CÔNG, CHUYỂN VỀ LOGIN ===");
+            System.out.println("=== REGISTER SUCCESSFULLY, GO TO LOGIN ===");
             // Chuyển về màn hình login
             Platform.runLater(() -> {
                 goToLogin();
@@ -134,7 +134,7 @@ public class RegisterController {
             System.out.println("=== Chuyển về màn hình Login thành công ===");
 
         } catch (Exception e) {
-            System.out.println("=== LỖI goToLogin(): " + e.getMessage() == "===");
+            System.out.println("=== Error goToLogin(): " + e.getMessage() == "===");
             e.printStackTrace();
             showAlert("Error", "Cannot open login screen: " + e.getMessage());
         }

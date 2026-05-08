@@ -8,7 +8,7 @@ public class Item implements Serializable {
     private String id;
     private String name;
     private String description;
-    private List<String> images;
+    private String images;
     private Category category;
 
     public Item() {}
@@ -28,8 +28,8 @@ public class Item implements Serializable {
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
 
-    public List<String> getImages() { return images; }
-    public void setImages(List<String> images) { this.images = images; }
+    public String getImages() { return images; }
+    public void setImages(String images) { this.images = images; }
 
     public Category getCategory() { return category; }
     public void setCategory(Category category) { this.category = category; }
