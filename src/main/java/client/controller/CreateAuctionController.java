@@ -1,5 +1,8 @@
 package client.controller;
-
+import javafx.stage.FileChooser;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
@@ -19,10 +22,12 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
 import java.io.IOException;
-import java.time.format.DateTimeFormatter;
 
 public class CreateAuctionController {
-    private java.io.File selectedImageFile;
+
+    private List<File> imageFiles = new ArrayList<>();
+    private int currentImageIndex = 0;
+
 
     @FXML private TextField txtName;
     @FXML private TextArea txtDescription;
@@ -41,48 +46,30 @@ public class CreateAuctionController {
     @FXML private TextField txtEndMin;
     @FXML private DatePicker dpEndDate;
 
-    @FXML
-    private void handleUploadImage() {
-
-        javafx.stage.FileChooser fileChooser =
-                new javafx.stage.FileChooser();
-
-        fileChooser.setTitle(
-                "Choose item image"
-        );
-
-        fileChooser.getExtensionFilters().addAll(
-                new javafx.stage.FileChooser.ExtensionFilter(
-                        "Image Files",
-                        "*.png",
-                        "*.jpg",
-                        "*.jpeg"
-                )
-        );
-
-        selectedImageFile =
-                fileChooser.showOpenDialog(
-                        imgItem.getScene().getWindow()
-                );
-        if (selectedImageFile != null) {
-            Image image =
-                    new Image(
-                            selectedImageFile
-                                    .toURI()
-                                    .toString()
-                    );
-
-            imagePreview.setImage(image);
-            imgItem.setVisible(false);
-        }
-    }
 
     @FXML
     private void handleCreate(ActionEvent event) {
         try {
             // --- BƯỚC 1: VALIDATION ---
-            if (txtName.getText().isEmpty() || dpStartDate.getValue() == null || dpEndDate.getValue() == null) {
+
+            if (txtName.getText().isEmpty()
+                    || txtDescription.getText().isEmpty()
+                    || txtStartingBid.getText().isEmpty()
+                    || txtMinIncrement.getText().isEmpty()
+                    || txtStartHour.getText().isEmpty()
+                    || txtStartMin.getText().isEmpty()
+                    || txtEndHour.getText().isEmpty()
+                    || txtEndMin.getText().isEmpty()
+                    || dpStartDate.getValue() == null
+                    || dpEndDate.getValue() == null) {
+
                 showAlert("Error", "Please fill in all information");
+                return;
+            }
+
+            if (imageFiles.isEmpty()) {
+
+                showAlert("Error", "Please upload at least one image");
                 return;
             }
 
@@ -93,8 +80,17 @@ public class CreateAuctionController {
 
             int endH = Integer.parseInt(txtEndHour.getText());
             int endM = Integer.parseInt(txtEndMin.getText());
-            LocalDateTime endDateTime = dpEndDate.getValue().atTime(endH, endM);
 
+            if (startH < 0 || startH > 23
+                    || startM < 0 || startM > 59
+                    || endH < 0 || endH > 23
+                    || endM < 0 || endM > 59) {
+
+                showAlert("Error", "Invalid time format");
+                return;
+            }
+
+            LocalDateTime endDateTime = dpEndDate.getValue().atTime(endH, endM);
             if (endDateTime.isBefore(startDateTime)) {
                 showAlert("Error", "End time must be after start time!");
                 return;
@@ -106,9 +102,9 @@ public class CreateAuctionController {
             Item item = new Item();
             item.setName(txtName.getText());
             item.setDescription(txtDescription.getText());
-            if (selectedImageFile != null) {
+            if (!imageFiles.isEmpty()) {
                 item.setImages(
-                        selectedImageFile
+                        imageFiles.get(0)
                                 .toURI()
                                 .toString()
                 );            }
@@ -162,6 +158,79 @@ public class CreateAuctionController {
             System.out.println("Could not find user-view.fxml");
             e.printStackTrace();
         }
+    }
+    @FXML
+    private void handleUploadImages() {
+
+        FileChooser fileChooser = new FileChooser();
+
+        fileChooser.setTitle("Choose Images");
+
+        fileChooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter(
+                        "Image Files",
+                        "*.png",
+                        "*.jpg",
+                        "*.jpeg"
+                )
+        );
+
+        List<File> files = fileChooser.showOpenMultipleDialog(imgItem.getScene().getWindow());
+
+        if (files != null && !files.isEmpty()) {
+
+            imageFiles.clear();
+
+            imageFiles.addAll(files);
+
+            currentImageIndex = 0;
+
+            showImage(currentImageIndex);
+
+            imgItem.setVisible(false);
+        }
+    }
+    private void showImage(int index) {
+
+        if (imageFiles.isEmpty()) {
+            return;
+        }
+
+        Image image = new Image(
+                imageFiles.get(index).toURI().toString()
+        );
+
+        imagePreview.setImage(image);
+    }
+    @FXML
+    private void showPreviousImage() {
+
+        if (imageFiles.isEmpty()) {
+            return;
+        }
+
+        currentImageIndex--;
+
+        if (currentImageIndex < 0) {
+            currentImageIndex = imageFiles.size() - 1;
+        }
+
+        showImage(currentImageIndex);
+    }
+    @FXML
+    private void showNextImage() {
+
+        if (imageFiles.isEmpty()) {
+            return;
+        }
+
+        currentImageIndex++;
+
+        if (currentImageIndex >= imageFiles.size()) {
+            currentImageIndex = 0;
+        }
+
+        showImage(currentImageIndex);
     }
 
     // Hàm tiện ích để hiện thông báo
