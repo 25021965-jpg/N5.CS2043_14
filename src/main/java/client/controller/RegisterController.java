@@ -14,12 +14,23 @@ import javafx.stage.Stage;
 
 public class RegisterController {
 
-    @FXML private TextField fullNameField;
-    @FXML private TextField usernameField;
-    @FXML private TextField emailField;
-    @FXML private PasswordField passwordField;
-    @FXML private PasswordField verifyPasswordField;
-    @FXML private DatePicker dobField;
+    @FXML
+    private TextField fullNameField;
+
+    @FXML
+    private TextField usernameField;
+
+    @FXML
+    private TextField emailField;
+
+    @FXML
+    private PasswordField passwordField;
+
+    @FXML
+    private PasswordField verifyPasswordField;
+
+    @FXML
+    private DatePicker dobField;
 
     private ClientSocket client;
 
@@ -28,171 +39,314 @@ public class RegisterController {
     }
 
     public void startListening() {
+
         if (client != null) {
+
             client.listen(msg -> {
+
                 System.out.println("Server: " + msg);
-                Platform.runLater(() -> handleResponse(msg));
+
+                Platform.runLater(() ->
+                        handleResponse(msg)
+                );
             });
         }
     }
 
     @FXML
     public void initialize() {
-        // Không làm gì ở đây
+
     }
 
     @FXML
     private void handleCreate() {
+
         if (client == null) {
-            showAlert("Error", "Not connected to server");
+
+            showAlert(
+                    "Error",
+                    "Not connected to server"
+            );
+
             return;
         }
 
-        String fullname = fullNameField.getText().trim();
-        String username = usernameField.getText().trim();
-        String email = emailField.getText().trim();
-        String password = passwordField.getText();
-        String verify = verifyPasswordField.getText();
+        String fullname =
+                fullNameField.getText().trim();
+
+        String username =
+                usernameField.getText().trim();
+
+        String email =
+                emailField.getText().trim();
+
+        String password =
+                passwordField.getText();
+
+        String verify =
+                verifyPasswordField.getText();
 
         if (fullname.isEmpty()) {
-            showAlert("Error", "Enter full name!");
+
+            showAlert(
+                    "Error",
+                    "Enter full name!"
+            );
+
             fullNameField.requestFocus();
             return;
         }
 
         if (username.isEmpty()) {
-            showAlert("Error", "Enter username!");
+
+            showAlert(
+                    "Error",
+                    "Enter username!"
+            );
+
             usernameField.requestFocus();
             return;
         }
 
         if (email.isEmpty()) {
-            showAlert("Error", "Enter email!");
+
+            showAlert(
+                    "Error",
+                    "Enter email!"
+            );
+
             emailField.requestFocus();
             return;
         }
 
+        if (dobField.getValue() == null) {
+
+            showAlert(
+                    "Error",
+                    "Choose date of birth!"
+            );
+
+            return;
+        }
+
         if (password.isEmpty()) {
-            showAlert("Error", "Enter password!");
+
+            showAlert(
+                    "Error",
+                    "Enter password!"
+            );
+
             passwordField.requestFocus();
             return;
         }
 
         if (password.length() < 6) {
-            showAlert("Error", "Password must be at least 6 characters!");
+
+            showAlert(
+                    "Error",
+                    "Password must be at least 6 characters!"
+            );
+
             passwordField.requestFocus();
             return;
         }
 
         if (!password.equals(verify)) {
-            showAlert("Error", "Passwords do not match!");
+
+            showAlert(
+                    "Error",
+                    "Passwords do not match!"
+            );
+
             verifyPasswordField.clear();
             verifyPasswordField.requestFocus();
             return;
         }
 
-        client.sendRegister(fullname, username, email, password);
-        //showAlert("Info", "Registering...");
+        String dob =
+                dobField.getValue().toString();
+
+        client.sendRegister(
+                fullname,
+                username,
+                email,
+                password,
+                dob
+        );
     }
 
     private void handleResponse(String msg) {
-        System.out.println("=== handleResponse: " + msg + " ===");
+
+        System.out.println(
+                "=== handleResponse: "
+                        + msg +
+                        " ==="
+        );
 
         if (msg.startsWith("REGISTER_SUCCESS")) {
-            System.out.println("=== REGISTER SUCCESSFULLY, GO TO LOGIN ===");
-            // Chuyển về màn hình login
-            Platform.runLater(() -> {
-                goToLogin();
-            });
-        }
-        else if (msg.startsWith("REGISTER_FAILED")) {
-            showAlert("Error", "Username or email already exists!");
-        }
-        else if (msg.startsWith("ERROR")) {
-            showAlert("Error", msg);
-        }
-        else if (msg.startsWith("DISCONNECTED")) {
-            showAlert("Error", "Disconnected from server!");
+
+            System.out.println(
+                    "=== REGISTER SUCCESSFULLY ==="
+            );
+
+            Platform.runLater(this::goToLogin);
+
+        } else if (
+                msg.startsWith("REGISTER_FAILED")
+        ) {
+
+            showAlert(
+                    "Error",
+                    "Username or email already exists!"
+            );
+
+        } else if (
+                msg.startsWith("ERROR")
+        ) {
+
+            showAlert(
+                    "Error",
+                    msg
+            );
+
+        } else if (
+                msg.startsWith("DISCONNECTED")
+        ) {
+
+            showAlert(
+                    "Error",
+                    "Disconnected from server!"
+            );
         }
     }
 
     private void goToLogin() {
-        System.out.println("=== goToLogin() START ===");
+
+        System.out.println(
+                "=== goToLogin() START ==="
+        );
+
         try {
-            System.out.println("=== Loading login-view.fxml... ===");
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/login-view.fxml"));
-            Parent root = loader.load();
-            System.out.println("=== Load FXML success ===");
 
-            LoginController controller = loader.getController();
+            FXMLLoader loader =
+                    new FXMLLoader(
+                            getClass().getResource(
+                                    "/fxml/login-view.fxml"
+                            )
+                    );
+
+            Parent root =
+                    loader.load();
+
+            System.out.println(
+                    "=== Load login-view.fxml success ==="
+            );
+
+            LoginController controller =
+                    loader.getController();
+
             controller.setClient(client);
-            //controller.startListening();
 
-            Stage stage = (Stage) fullNameField.getScene().getWindow();
-            stage.setScene(new Scene(root));
+            Stage stage =
+                    (Stage)
+                            fullNameField
+                                    .getScene()
+                                    .getWindow();
+
+            stage.setScene(
+                    new Scene(root)
+            );
+
             stage.setTitle("Login");
-            System.out.println("=== go to LOGIN successfully ===");
+
+            System.out.println(
+                    "=== Go to LOGIN successfully ==="
+            );
 
         } catch (Exception e) {
-            System.out.println("=== Error goToLogin(): " + e.getMessage() + "===");
+
+            System.out.println(
+                    "=== Error goToLogin(): "
+                            + e.getMessage()
+                            + " ==="
+            );
+
             e.printStackTrace();
-            showAlert("Error", "Cannot open login screen: " + e.getMessage());
+
+            showAlert(
+                    "Error",
+                    "Cannot open login screen!"
+            );
         }
     }
 
     @FXML
-    private void goToLogin(ActionEvent event) {
-        System.out.println("=== goToLogin(ActionEvent) START ===");
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/login-view.fxml"));
-            Parent root = loader.load();
+    private void goToLogin(
+            ActionEvent event
+    ) {
 
-            LoginController controller = loader.getController();
+        try {
+
+            FXMLLoader loader =
+                    new FXMLLoader(
+                            getClass().getResource(
+                                    "/fxml/login-view.fxml"
+                            )
+                    );
+
+            Parent root =
+                    loader.load();
+
+            LoginController controller =
+                    loader.getController();
+
             controller.setClient(client);
-            //controller.startListening();
 
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            stage.setScene(new Scene(root));
+            Stage stage =
+                    (Stage)
+                            ((Node) event.getSource())
+                                    .getScene()
+                                    .getWindow();
+
+            stage.setScene(
+                    new Scene(root)
+            );
+
             stage.setTitle("Login");
 
         } catch (Exception e) {
-            System.out.println("=== Error goToLogin(ActionEvent): " + e.getMessage() + " ===");
+
             e.printStackTrace();
-            showAlert("Error", "Cannot open login screen!");
+
+            showAlert(
+                    "Error",
+                    "Cannot open login screen!"
+            );
         }
     }
+
     @FXML
-    private void handleBack(ActionEvent event) {
-        try {
-            // 1. Tải file FXML của trang Login (Đảm bảo đường dẫn chính xác)
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/login-view.fxml"));
-            Parent root = loader.load();
+    private void handleBack(
+            ActionEvent event
+    ) {
 
-            // 2. Lấy controller của trang Login và truyền lại ClientSocket (nếu cần)
-            LoginController controller = loader.getController();
-            controller.setClient(this.client);
-            //controller.startListening();
-            // Lưu ý: Nếu LoginController tự khởi tạo client trong initialize,
-            // bạn có thể cần xem xét lại logic để tránh tạo quá nhiều socket.
-
-            // 3. Chuyển Scene
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            stage.setScene(new Scene(root));
-            stage.setTitle("Login");
-            stage.show();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            // Hiển thị thông báo lỗi nếu không chuyển được trang
-            showAlert("Error", "cannot  open login screen!");
-        }
+        goToLogin(event);
     }
 
-    private void showAlert(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+    private void showAlert(
+            String title,
+            String message
+    ) {
+
+        Alert alert =
+                new Alert(
+                        Alert.AlertType.INFORMATION
+                );
+
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(message);
+
         alert.showAndWait();
     }
 }

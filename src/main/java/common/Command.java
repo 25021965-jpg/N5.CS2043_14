@@ -7,7 +7,8 @@ public enum Command {
     LIST,
     JOIN,
     BID,
-    CREATE;
+    CREATE,
+    GET_PROFILE;
 
     // parse an toàn (tránh crash)
     public static Command from(String value) {

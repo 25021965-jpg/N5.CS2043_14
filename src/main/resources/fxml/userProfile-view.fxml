@@ -13,57 +13,88 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<AnchorPane prefHeight="720.0" prefWidth="1080.0" style="-fx-background-color: #F8FAFC; -fx-border-color: #D4AF37; -fx-border-width: 6;" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.ProfileController">
+<AnchorPane prefHeight="720.0" prefWidth="1080.0" style="             -fx-background-color: #F8FAFC;             -fx-border-color: #D4AF37;             -fx-border-width: 6;         " xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controller.ProfileController">
 
+    <!-- ================================================= -->
     <!-- LEFT MENU -->
-    <VBox prefWidth="250.0" spacing="18" style="-fx-background-color: #000000;              -fx-border-color: #D4AF37;              -fx-border-width: 0 3 0 0;              -fx-padding: 30 20 20 20;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0">
+    <!-- ================================================= -->
+
+    <VBox prefWidth="250.0" spacing="18" style="                 -fx-background-color: #000000;                 -fx-border-color: #D4AF37;                 -fx-border-width: 0 3 0 0;                 -fx-padding: 30 20 20 20;             " AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0">
 
         <!-- TITLE -->
+
         <VBox alignment="CENTER" spacing="6">
 
-            <Label style="-fx-text-fill: white;                       -fx-font-size: 26px;                       -fx-font-weight: bold;" text="Auction System" />
+            <Label style="                         -fx-text-fill: white;                         -fx-font-size: 26px;                         -fx-font-weight: bold;                     " text="Auction System" />
 
-            <!-- KHÔNG ĐỔI USER PANEL -->
-            <Label style="-fx-text-fill: #94A3B8;                       -fx-font-size: 13px;" text="USER PANEL" />
+            <Label style="                         -fx-text-fill: #94A3B8;                         -fx-font-size: 13px;                     " text="USER PANEL" />
 
         </VBox>
 
         <Separator style="-fx-background-color: #334155;" />
 
         <!-- PROFILE -->
-        <Button fx:id="infoBtn" prefHeight="45" prefWidth="210" style="-fx-background-color: #475569;                    -fx-text-fill: white;                    -fx-font-size: 15px;                    -fx-font-weight: bold;                    -fx-background-radius: 8;" text="Profile" />
+
+        <Button fx:id="infoBtn" prefHeight="45" prefWidth="210" style="                     -fx-background-color: #475569;                     -fx-text-fill: white;                     -fx-font-size: 15px;                     -fx-font-weight: bold;                     -fx-background-radius: 8;                 " text="Profile" />
 
         <!-- HISTORY -->
-        <Button fx:id="historyBtn" prefHeight="45" prefWidth="210" style="-fx-background-color: #334155;                    -fx-text-fill: white;                    -fx-font-size: 15px;                    -fx-font-weight: bold;                    -fx-background-radius: 8;" text="Auction History" />
+
+        <Button fx:id="historyBtn" prefHeight="45" prefWidth="210" style="                     -fx-background-color: #334155;                     -fx-text-fill: white;                     -fx-font-size: 15px;                     -fx-font-weight: bold;                     -fx-background-radius: 8;                 " text="Auction History" />
 
         <!-- YOUR AUCTIONS -->
-        <Button fx:id="createdAuctionBtn" prefHeight="45" prefWidth="210" style="-fx-background-color: #334155;                    -fx-text-fill: white;                    -fx-font-size: 15px;                    -fx-font-weight: bold;                    -fx-background-radius: 8;" text="Your Auctions" />
+
+        <Button fx:id="createdAuctionBtn" prefHeight="45" prefWidth="210" style="                     -fx-background-color: #334155;                     -fx-text-fill: white;                     -fx-font-size: 15px;                     -fx-font-weight: bold;                     -fx-background-radius: 8;                 " text="Your Auctions" />
 
         <!-- FAVOURITE -->
-        <Button fx:id="favoriteBtn" prefHeight="45" prefWidth="210" style="-fx-background-color: #334155;                    -fx-text-fill: white;                    -fx-font-size: 15px;                    -fx-font-weight: bold;                    -fx-background-radius: 8;" text="Favourite" />
+
+        <Button fx:id="favoriteBtn" prefHeight="45" prefWidth="210" style="                     -fx-background-color: #334155;                     -fx-text-fill: white;                     -fx-font-size: 15px;                     -fx-font-weight: bold;                     -fx-background-radius: 8;                 " text="Favourite" />
 
         <!-- BALANCE -->
-        <Button fx:id="balanceBtn" prefHeight="45" prefWidth="210" style="-fx-background-color: #334155;                    -fx-text-fill: white;                    -fx-font-size: 15px;                    -fx-font-weight: bold;                    -fx-background-radius: 8;" text="Account Balance" />
+
+        <Button fx:id="balanceBtn" prefHeight="45" prefWidth="210" style="                     -fx-background-color: #334155;                     -fx-text-fill: white;                     -fx-font-size: 15px;                     -fx-font-weight: bold;                     -fx-background-radius: 8;                 " text="Account Balance" />
 
         <!-- LOG OUT -->
-        <Button fx:id="logoutBtn" prefHeight="48" prefWidth="210" style="-fx-background-color: #D4AF37;                    -fx-text-fill: white;                    -fx-font-size: 15px;                    -fx-font-weight: bold;                    -fx-background-radius: 8;" text="Log Out" />
+
+        <Button fx:id="logoutBtn" prefHeight="48" prefWidth="210" style="                     -fx-background-color: #D4AF37;                     -fx-text-fill: white;                     -fx-font-size: 15px;                     -fx-font-weight: bold;                     -fx-background-radius: 8;                 " text="Log Out" />
 
         <!-- DELETE -->
-        <Button fx:id="deleteAccountBtn" prefHeight="48" prefWidth="210" style="-fx-background-color: #EF4444;                    -fx-text-fill: white;                    -fx-font-size: 15px;                    -fx-font-weight: bold;                    -fx-background-radius: 8;" text="DELETE ACCOUNT" />
+
+        <Button fx:id="deleteAccountBtn" prefHeight="48" prefWidth="210" style="                     -fx-background-color: #EF4444;                     -fx-text-fill: white;                     -fx-font-size: 15px;                     -fx-font-weight: bold;                     -fx-background-radius: 8;                 " text="DELETE ACCOUNT" />
 
         <Region VBox.vgrow="ALWAYS" />
 
         <!-- BACK -->
-        <Button fx:id="backHomeBtn" prefHeight="48" prefWidth="210" style="-fx-background-color: #2563EB;                    -fx-text-fill: white;                    -fx-font-size: 15px;                    -fx-font-weight: bold;                    -fx-background-radius: 8;" text="← Back To Home" />
 
+        <Button
+                fx:id="backHomeBtn"
+                onAction="#handleBackHome"
+                prefHeight="48"
+                prefWidth="210"
+                style="
+        -fx-background-color: #2563EB;
+        -fx-text-fill: white;
+        -fx-font-size: 15px;
+        -fx-font-weight: bold;
+        -fx-background-radius: 8;
+    "
+                text="← Back To Home"
+        />
     </VBox>
 
+    <!-- ================================================= -->
     <!-- RIGHT CONTENT -->
+    <!-- ================================================= -->
+
     <VBox layoutX="320" layoutY="90" spacing="25">
 
-        <Label style="-fx-font-size: 32px;                       -fx-font-weight: bold;                       -fx-text-fill: #0F172A;" text="Information" />
+        <!-- TITLE -->
 
+        <Label style="                     -fx-font-size: 32px;                     -fx-font-weight: bold;                     -fx-text-fill: #0F172A;                 " text="Information" />
+
+        <!-- ================================================= -->
         <!-- INFO GRID -->
+        <!-- ================================================= -->
+
         <GridPane hgap="20" vgap="18">
 
             <columnConstraints>
@@ -78,78 +109,91 @@
             </rowConstraints>
 
             <!-- FULL NAME -->
-            <Label style="-fx-font-size: 15px;                           -fx-font-weight: bold;                           -fx-text-fill: #334155;" text="Full Name" GridPane.columnIndex="0" GridPane.rowIndex="0" />
 
-            <HBox prefHeight="50" prefWidth="520" style="-fx-background-color: white;                          -fx-border-color: #D4AF37;                          -fx-border-width: 2;                          -fx-border-radius: 8;                          -fx-background-radius: 8;                          -fx-alignment: CENTER-LEFT;                          -fx-padding: 0 15 0 15;" GridPane.columnIndex="1" GridPane.rowIndex="0">
+            <Label style="                         -fx-font-size: 15px;                         -fx-font-weight: bold;                         -fx-text-fill: #334155;                     " text="Full Name" GridPane.columnIndex="0" GridPane.rowIndex="0" />
 
-                <Label fx:id="fullNameLabel" style="-fx-font-size: 15px;                               -fx-text-fill: #94A3B8;" text="Nguyen Van A" />
+            <HBox prefHeight="50" prefWidth="520" style="                         -fx-background-color: white;                         -fx-border-color: #D4AF37;                         -fx-border-width: 2;                         -fx-border-radius: 8;                         -fx-background-radius: 8;                         -fx-alignment: CENTER-LEFT;                         -fx-padding: 0 15 0 15;                     " GridPane.columnIndex="1" GridPane.rowIndex="0">
+
+                <Label fx:id="fullNameLabel" style="                             -fx-font-size: 15px;                             -fx-text-fill: #94A3B8;                         " text="Nguyen Van A" />
 
             </HBox>
 
             <!-- USERNAME -->
-            <Label style="-fx-font-size: 15px;                           -fx-font-weight: bold;                           -fx-text-fill: #334155;" text="Username" GridPane.columnIndex="0" GridPane.rowIndex="1" />
 
-            <HBox prefHeight="50" prefWidth="520" style="-fx-background-color: white;                          -fx-border-color: #D4AF37;                          -fx-border-width: 2;                          -fx-border-radius: 8;                          -fx-background-radius: 8;                          -fx-alignment: CENTER-LEFT;                          -fx-padding: 0 15 0 15;" GridPane.columnIndex="1" GridPane.rowIndex="1">
+            <Label style="                         -fx-font-size: 15px;                         -fx-font-weight: bold;                         -fx-text-fill: #334155;                     " text="Username" GridPane.columnIndex="0" GridPane.rowIndex="1" />
 
-                <Label fx:id="usernameLabel" style="-fx-font-size: 15px;                               -fx-text-fill: #94A3B8;" text="user123" />
+            <HBox prefHeight="50" prefWidth="520" style="                         -fx-background-color: white;                         -fx-border-color: #D4AF37;                         -fx-border-width: 2;                         -fx-border-radius: 8;                         -fx-background-radius: 8;                         -fx-alignment: CENTER-LEFT;                         -fx-padding: 0 15 0 15;                     " GridPane.columnIndex="1" GridPane.rowIndex="1">
 
-                <Label style="-fx-text-fill: #CBD5E1;                               -fx-font-size: 15px;" text="   |   " />
+                <Label fx:id="usernameLabel" style="                             -fx-font-size: 15px;                             -fx-text-fill: #94A3B8;                         " text="user123" />
 
-                <Label fx:id="dobLabel" style="-fx-font-size: 15px;                               -fx-text-fill: #94A3B8;" text="01/01/2000" />
+                <Label style="                             -fx-text-fill: #CBD5E1;                             -fx-font-size: 15px;                         " text="   |   " />
+
+                <Label fx:id="dobLabel" style="                             -fx-font-size: 15px;                             -fx-text-fill: #94A3B8;                         " text="01/01/2000" />
 
             </HBox>
 
             <!-- EMAIL -->
-            <Label style="-fx-font-size: 15px;                           -fx-font-weight: bold;                           -fx-text-fill: #334155;" text="Email" GridPane.columnIndex="0" GridPane.rowIndex="2" />
 
-            <HBox prefHeight="50" prefWidth="520" style="-fx-background-color: white;                          -fx-border-color: #D4AF37;                          -fx-border-width: 2;                          -fx-border-radius: 8;                          -fx-background-radius: 8;                          -fx-alignment: CENTER-LEFT;                          -fx-padding: 0 15 0 15;" GridPane.columnIndex="1" GridPane.rowIndex="2">
+            <Label style="                         -fx-font-size: 15px;                         -fx-font-weight: bold;                         -fx-text-fill: #334155;                     " text="Email" GridPane.columnIndex="0" GridPane.rowIndex="2" />
 
-                <Label fx:id="emailLabel" style="-fx-font-size: 15px;                               -fx-text-fill: #94A3B8;" text="example@gmail.com" />
+            <HBox prefHeight="50" prefWidth="520" style="                         -fx-background-color: white;                         -fx-border-color: #D4AF37;                         -fx-border-width: 2;                         -fx-border-radius: 8;                         -fx-background-radius: 8;                         -fx-alignment: CENTER-LEFT;                         -fx-padding: 0 15 0 15;                     " GridPane.columnIndex="1" GridPane.rowIndex="2">
+
+                <Label fx:id="emailLabel" style="                             -fx-font-size: 15px;                             -fx-text-fill: #94A3B8;                         " text="example@gmail.com" />
 
             </HBox>
 
         </GridPane>
 
+        <!-- ================================================= -->
         <!-- RESET PASSWORD -->
-        <VBox spacing="8">
+        <!-- ================================================= -->
 
-            <Label style="-fx-font-size: 15px;                   -fx-font-weight: bold;                   -fx-text-fill: #334155;" text="Reset Password" />
+        <VBox spacing="12">
+
+            <Label style="                 -fx-font-size: 18px;                 -fx-font-weight: bold;                 -fx-text-fill: #334155;             " text="Reset Password" />
 
             <!-- OLD PASSWORD -->
-            <HBox alignment="CENTER_LEFT" prefHeight="45.0" prefWidth="331.0" spacing="5" style="-fx-background-color: white;                  -fx-border-color: #D4AF37;                  -fx-border-width: 2;                  -fx-border-radius: 8;                  -fx-background-radius: 8;                  -fx-padding: 0 8 0 8;">
 
-                <PasswordField fx:id="oldPasswordField" prefWidth="260.0" promptText="Old Password" style="-fx-background-color: transparent;                               -fx-border-color: transparent;" />
+            <HBox alignment="CENTER_LEFT" prefHeight="45" prefWidth="420" spacing="5" style="                 -fx-background-color: white;                 -fx-border-color: #D4AF37;                 -fx-border-width: 2;                 -fx-border-radius: 8;                 -fx-background-radius: 8;                 -fx-padding: 0 8 0 8;             ">
 
-                <TextField fx:id="oldPasswordTextField" managed="false" prefWidth="260.0" promptText="Old Password" style="-fx-background-color: transparent;                           -fx-border-color: transparent;" visible="false" />
+                <PasswordField fx:id="oldPasswordField" prefWidth="340" promptText="Old Password" style="                     -fx-background-color: transparent;                     -fx-border-color: transparent;                 " />
 
-                <Button fx:id="toggleOldBtn" prefWidth="40.0" style="-fx-background-color: transparent;                        -fx-font-size: 16px;                        -fx-cursor: hand;" text="👁" translateY="8" />
+                <TextField fx:id="oldPasswordTextField" managed="false" prefWidth="340" promptText="Old Password" style="                     -fx-background-color: transparent;                     -fx-border-color: transparent;                 " visible="false" />
+
+                <Button fx:id="toggleOldBtn" prefWidth="40" style="                     -fx-background-color: transparent;                     -fx-font-size: 16px;                     -fx-cursor: hand;                 " text="👁" />
 
             </HBox>
 
             <!-- NEW PASSWORD -->
-            <HBox alignment="CENTER_LEFT" prefHeight="45.0" prefWidth="331.0" spacing="5" style="-fx-background-color: white;                  -fx-border-color: #D4AF37;                  -fx-border-width: 2;                  -fx-border-radius: 8;                  -fx-background-radius: 8;                  -fx-padding: 0 8 0 8;">
 
-                <PasswordField fx:id="newPasswordField" prefWidth="260.0" promptText="New Password" style="-fx-background-color: transparent;                               -fx-border-color: transparent;" />
+            <HBox alignment="CENTER_LEFT" prefHeight="45" prefWidth="420" spacing="5" style="                 -fx-background-color: white;                 -fx-border-color: #D4AF37;                 -fx-border-width: 2;                 -fx-border-radius: 8;                 -fx-background-radius: 8;                 -fx-padding: 0 8 0 8;             ">
 
-                <TextField fx:id="newPasswordTextField" managed="false" prefWidth="260.0" promptText="New Password" style="-fx-background-color: transparent;                           -fx-border-color: transparent;" visible="false" />
+                <PasswordField fx:id="newPasswordField" prefWidth="340" promptText="New Password" style="                     -fx-background-color: transparent;                     -fx-border-color: transparent;                 " />
 
-                <Button fx:id="toggleNewBtn" prefWidth="40.0" style="-fx-background-color: transparent;                        -fx-font-size: 16px;                        -fx-cursor: hand;" text="👁" translateY="8" />
+                <TextField fx:id="newPasswordTextField" managed="false" prefWidth="340" promptText="New Password" style="                     -fx-background-color: transparent;                     -fx-border-color: transparent;                 " visible="false" />
+
+                <Button fx:id="toggleNewBtn" prefWidth="40" style="                     -fx-background-color: transparent;                     -fx-font-size: 16px;                     -fx-cursor: hand;                 " text="👁" />
 
             </HBox>
 
             <!-- VERIFY PASSWORD -->
-            <HBox alignment="CENTER_LEFT" prefHeight="45.0" prefWidth="331.0" spacing="5" style="-fx-background-color: white; -fx-border-color: #D4AF37; -fx-border-width: 2; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 0 8 0 8;">
 
-                <PasswordField fx:id="verifyNewPasswordField" prefWidth="260.0" promptText="Confirm Password" style="-fx-background-color: transparent;                               -fx-border-color: transparent;" />
+            <HBox alignment="CENTER_LEFT" prefHeight="45" prefWidth="420" spacing="5" style="                 -fx-background-color: white;                 -fx-border-color: #D4AF37;                 -fx-border-width: 2;                 -fx-border-radius: 8;                 -fx-background-radius: 8;                 -fx-padding: 0 8 0 8;             ">
 
-                <TextField fx:id="verifyNewPasswordTextField" managed="false" prefWidth="260.0" promptText="Confirm Password" style="-fx-background-color: transparent;                           -fx-border-color: transparent;" visible="false" />
+                <PasswordField fx:id="verifyNewPasswordField" prefWidth="340" promptText="Confirm Password" style="                     -fx-background-color: transparent;                     -fx-border-color: transparent;                 " />
 
-                <Button fx:id="toggleVerifyBtn" prefWidth="40.0" style="-fx-background-color: transparent;                        -fx-font-size: 16px;                        -fx-cursor: hand;" text="👁" translateY="8" />
+                <TextField fx:id="verifyNewPasswordTextField" managed="false" prefWidth="340" promptText="Confirm Password" style="                     -fx-background-color: transparent;                     -fx-border-color: transparent;                 " visible="false" />
+
+                <Button fx:id="toggleVerifyBtn" prefWidth="40" style="                     -fx-background-color: transparent;                     -fx-font-size: 16px;                     -fx-cursor: hand;                 " text="👁" />
 
             </HBox>
 
         </VBox>
 
     </VBox>
+
+      <!-- RESET BUTTON -->
+
+      <Button layoutX="789.0" layoutY="582.0" onAction="#resetPassword" prefHeight="31.0" prefWidth="143.0" style="                 -fx-background-color: #D4AF37;                 -fx-text-fill: white;                 -fx-font-size: 15px;                 -fx-font-weight: bold;                 -fx-background-radius: 8;             " text="Reset Password" />
 
 </AnchorPane>

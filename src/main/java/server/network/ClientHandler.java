@@ -1,19 +1,29 @@
 package server.network;
 
-import server.dao.UserDAO;
 import model.User;
+import server.dao.UserDAO;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+
 import java.net.Socket;
+
 import java.util.UUID;
 
 public class ClientHandler implements Runnable {
 
     private Socket socket;
+
     private BufferedReader reader;
+
     private PrintWriter writer;
 
-    public ClientHandler(Socket socket) {
+    public ClientHandler(
+            Socket socket
+    ) {
+
         this.socket = socket;
     }
 
@@ -22,25 +32,40 @@ public class ClientHandler implements Runnable {
 
         try {
 
-            reader = new BufferedReader(
-                    new InputStreamReader(socket.getInputStream())
-            );
+            reader =
+                    new BufferedReader(
+                            new InputStreamReader(
+                                    socket.getInputStream()
+                            )
+                    );
 
-            writer = new PrintWriter(
-                    socket.getOutputStream(),
-                    true
-            );
+            writer =
+                    new PrintWriter(
+                            socket.getOutputStream(),
+                            true
+                    );
 
             String clientMessage;
 
-            while ((clientMessage = reader.readLine()) != null) {
+            while (
+                    (clientMessage =
+                            reader.readLine()) != null
+            ) {
 
                 System.out.println(
-                        "Received from client: " + clientMessage
+                        "Received from client: "
+                                + clientMessage
                 );
 
                 String response =
-                        handleRequest(clientMessage);
+                        handleRequest(
+                                clientMessage
+                        );
+
+                System.out.println(
+                        "Response: "
+                                + response
+                );
 
                 writer.println(response);
             }
@@ -58,37 +83,73 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    private String handleRequest(String message) {
+    private String handleRequest(
+            String message
+    ) {
 
         System.out.println(
-                "=== Xử lý request: " + message + " ==="
+                "Handle request: "
+                        + message
         );
 
         // LOGIN
-        if (message.startsWith("LOGIN")) {
+        if (
+                message.startsWith(
+                        "LOGIN"
+                )
+        ) {
 
-            String[] parts = message.split("\\|");
+            String[] parts =
+                    message.split("\\|");
 
             if (parts.length == 3) {
 
-                String username = parts[1];
-                String password = parts[2];
+                String input =
+                        parts[1].trim();
+
+                String password =
+                        parts[2].trim();
 
                 System.out.println(
-                        "Login - Username: "
-                                + username
+                        "Login: "
+                                + input
                 );
 
                 boolean success =
-                        UserDAO.login(username, password);
+                        UserDAO.login(
+                                input,
+                                password
+                        );
 
                 if (success) {
+
+                    UserDAO userDAO =
+                            new UserDAO();
+
+                    User user =
+                            userDAO.findByUsernameOrEmail(
+                                    input
+                            );
+
+                    if (user == null) {
+
+                        return "LOGIN_FAILED";
+                    }
 
                     System.out.println(
                             "Login success"
                     );
 
-                    return "LOGIN_SUCCESS";
+                    return "LOGIN_SUCCESS|"
+                            + user.getId() + "|"
+                            + user.getFullname() + "|"
+                            + user.getUsername() + "|"
+                            + user.getEmail() + "|"
+                            + (
+                            user.getDob() == null
+                                    ? ""
+                                    : user.getDob()
+                    );
 
                 } else {
 
@@ -101,32 +162,50 @@ public class ClientHandler implements Runnable {
 
             } else {
 
-                return "ERROR: Invalid LOGIN format";
+                return "ERROR|Invalid LOGIN format";
             }
         }
 
         // REGISTER
-        else if (message.startsWith("REGISTER")) {
+        else if (
+                message.startsWith(
+                        "REGISTER"
+                )
+        ) {
 
-            String[] data = message.split("\\|");
+            String[] data =
+                    message.split("\\|");
 
-            if (data.length == 5) {
+            if (data.length == 6) {
 
-                String fullname = data[1];
-                String username = data[2];
-                String email = data[3];
-                String password = data[4];
+                String fullname =
+                        data[1].trim();
+
+                String username =
+                        data[2].trim();
+
+                String email =
+                        data[3].trim();
+
+                String password =
+                        data[4].trim();
+
+                String dob =
+                        data[5].trim();
 
                 System.out.println(
-                        fullname + " | " +
-                                username + " | " +
-                                email
+                        fullname + " | "
+                                + username + " | "
+                                + email
                 );
 
-                UserDAO userDAO = new UserDAO();
+                UserDAO userDAO =
+                        new UserDAO();
 
-                // check email tồn tại
-                if (userDAO.findByEmail(email) != null) {
+                if (
+                        userDAO.findByEmail(email)
+                                != null
+                ) {
 
                     System.out.println(
                             "Email already exists"
@@ -135,16 +214,50 @@ public class ClientHandler implements Runnable {
                     return "REGISTER_FAILED";
                 }
 
-                User user = new User();
+                if (
+                        userDAO.findByUsername(username)
+                                != null
+                ) {
 
-                user.setId(
-                        UUID.randomUUID().toString()
+                    System.out.println(
+                            "Username already exists"
+                    );
+
+                    return "REGISTER_FAILED";
+                }
+
+                User user =
+                        new User();
+
+                String shortId =
+                        "USR"
+                                + UUID.randomUUID()
+                                .toString()
+                                .replace("-", "")
+                                .substring(0, 7)
+                                .toUpperCase();
+
+                user.setId(shortId);
+
+                user.setFullname(
+                        fullname
                 );
 
-                user.setFullname(fullname);
-                user.setUsername(username);
-                user.setEmail(email);
-                user.setPassword(password);
+                user.setUsername(
+                        username
+                );
+
+                user.setEmail(
+                        email
+                );
+
+                user.setPassword(
+                        password
+                );
+
+                user.setDob(
+                        dob
+                );
 
                 try {
 
@@ -165,24 +278,42 @@ public class ClientHandler implements Runnable {
 
             } else {
 
-                return "ERROR: Invalid REGISTER format";
+                return "ERROR|Invalid REGISTER format";
             }
         }
 
         // GET AUCTIONS
-        else if (message.startsWith("GET_AUCTIONS")) {
+        else if (
+                message.startsWith(
+                        "GET_AUCTIONS"
+                )
+        ) {
 
             return "AUCTION_LIST_DATA";
         }
 
-        return "ERROR: Unknown Command";
+        return "ERROR|Unknown Command";
     }
 
     private void closeConnection() {
 
         try {
 
-            if (socket != null) {
+            if (reader != null) {
+
+                reader.close();
+            }
+
+            if (writer != null) {
+
+                writer.close();
+            }
+
+            if (
+                    socket != null
+                            && !socket.isClosed()
+            ) {
+
                 socket.close();
             }
 

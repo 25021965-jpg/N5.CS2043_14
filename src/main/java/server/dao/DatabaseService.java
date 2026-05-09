@@ -8,7 +8,7 @@ import java.sql.Statement;
 public class DatabaseService {
 
     private static final String URL =
-            "jdbc:mysql://localhost:3306/myapp_db";
+            "jdbc:mysql://localhost:3306/auction_system";
 
     private static final String USER = "root";
 

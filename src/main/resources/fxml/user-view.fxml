@@ -86,19 +86,45 @@
 
                 <items>
 
-                    <MenuItem mnemonicParsing="false" text="Information"/>
+                    <!-- PROFILE -->
+                    <MenuItem fx:id="profileMenuItem"
+                              mnemonicParsing="false"
+                              onAction="#openProfile"
+                              text="Profile"/>
 
-                    <MenuItem mnemonicParsing="false" text="Auction History"/>
+                    <!-- HISTORY -->
+                    <MenuItem fx:id="historyMenuItem"
+                              mnemonicParsing="false"
+                              onAction="#openHistory"
+                              text="Auction History"/>
 
-                    <MenuItem mnemonicParsing="false" text="Your Auctions"/>
+                    <!-- YOUR AUCTIONS -->
+                    <MenuItem fx:id="yourAuctionMenuItem"
+                              mnemonicParsing="false"
+                              onAction="#openYourAuctions"
+                              text="Your Auctions"/>
 
-                    <MenuItem mnemonicParsing="false" text="Favourite"/>
+                    <!-- FAVOURITE -->
+                    <MenuItem fx:id="favouriteMenuItem"
+                              mnemonicParsing="false"
+                              onAction="#openFavourite"
+                              text="Favourite"/>
 
-                    <MenuItem mnemonicParsing="false" text="Account Balance"/>
+                    <!-- BALANCE -->
+                    <MenuItem fx:id="balanceMenuItem"
+                              mnemonicParsing="false"
+                              onAction="#openBalance"
+                              text="Account Balance"/>
 
-                    <MenuItem mnemonicParsing="false" text="Log Out"/>
+                    <!-- LOGOUT -->
+                    <MenuItem fx:id="logoutMenuItem"
+                              mnemonicParsing="false"
+                              text="Log Out"/>
 
-                    <MenuItem mnemonicParsing="false" text="DELETE ACCOUNT"/>
+                    <!-- DELETE -->
+                    <MenuItem fx:id="deleteAccountMenuItem"
+                              mnemonicParsing="false"
+                              text="DELETE ACCOUNT"/>
 
                 </items>
 
@@ -111,7 +137,6 @@
                 </HBox.margin>
 
             </MenuButton>
-
         </HBox>
     </top>
 

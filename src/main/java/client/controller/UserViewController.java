@@ -1,86 +1,252 @@
 package client.controller;
 
-import java.io.IOException;
-
 import client.network.ClientSocket;
+
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
+
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
+
 import javafx.scene.layout.GridPane;
+
 import javafx.stage.Stage;
-import model.*;
 
-    public class UserViewController {
-        private ClientSocket client;
+import model.Auction;
+import model.User;
 
-        @FXML
-        private GridPane itemGrid; // Kết nối với GridPane trong FXML
+import java.io.IOException;
 
-        @FXML
-        private TextField txtSearch;
+public class UserViewController {
 
-        @FXML
-        private Button btnCreate;
+    private ClientSocket client;
 
-        // Biến để quản lý vị trí thêm card (3 cột)
-        private int column = 0;
-        private int row = 0;
+    private User currentUser;
 
-        /**
-         * Hàm này dùng để thêm một Card mới vào danh sách hiển thị
-         */
-        public void addNewAuctionCard(Auction auction) {
-            try {
-                // 1. Load file FXML của cái Card
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/itemsCard-view.fxml"));
-                Node card = loader.load();
+    @FXML
+    private GridPane itemGrid;
 
-                // 2. Lấy controller của Card để đổ dữ liệu vào
-                ItemCardController cardController = loader.getController();
-                cardController.setData(auction);
+    @FXML
+    private TextField txtSearch;
 
-                // 3. Tính toán vị trí: nếu đầy 3 cột thì xuống hàng
-                if (column == 3) {
-                    column = 0;
-                    row++;
-                }
+    private int column = 0;
 
-                // 4. Thêm vào GridPane
-                itemGrid.add(card, column++, row);
+    private int row = 0;
 
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+    @FXML
+    public void initialize() {
 
-        @FXML
-        void handleCreateAuction(ActionEvent event) {
-            try {
-                // Chuyển từ UserView sang trang CreateAuction
-                Parent root = FXMLLoader.load(getClass().getResource("/fxml/createAuction-view.fxml"));
-                Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-                stage.setScene(new Scene(root));
-                stage.show();
-            } catch (IOException e) {
-                System.out.println("Coudnot find createAuction-view.fxml");
-            }
-        }
+        System.out.println(
+                "UserView Loaded"
+        );
+    }
 
-        @FXML
-        void handleSearch(ActionEvent event) {
-            String keyword = txtSearch.getText();
-            System.out.println("Searching: " + keyword);
-            // Viết logic lọc card ở đây
-        }
-        public void setClient(ClientSocket client) {
-            this.client = client;
+    public void setClient(
+            ClientSocket client
+    ) {
 
+        this.client = client;
+    }
 
+    public void setUser(
+            User user
+    ) {
+
+        this.currentUser = user;
+
+        if (user != null) {
+
+            System.out.println(
+                    "Current user: "
+                            + user.getUsername()
+            );
         }
     }
 
+    @FXML
+    private void handleSearch(
+            ActionEvent event
+    ) {
+
+        System.out.println(
+                "Search: "
+                        + txtSearch.getText()
+        );
+    }
+
+    @FXML
+    private void handleCreateAuction(
+            ActionEvent event
+    ) {
+
+        System.out.println(
+                "Create Auction clicked"
+        );
+    }
+
+    @FXML
+    private void openProfile(
+            ActionEvent event
+    ) {
+
+        openProfilePage(event);
+    }
+
+    @FXML
+    private void openHistory(
+            ActionEvent event
+    ) {
+
+        System.out.println(
+                "Open History"
+        );
+    }
+
+    @FXML
+    private void openYourAuctions(
+            ActionEvent event
+    ) {
+
+        System.out.println(
+                "Open Your Auctions"
+        );
+    }
+
+    @FXML
+    private void openFavourite(
+            ActionEvent event
+    ) {
+
+        System.out.println(
+                "Open Favourite"
+        );
+    }
+
+    @FXML
+    private void openBalance(
+            ActionEvent event
+    ) {
+
+        System.out.println(
+                "Open Balance"
+        );
+    }
+
+    public void addNewAuctionCard(
+            Auction auction
+    ) {
+
+        try {
+
+            FXMLLoader loader =
+                    new FXMLLoader(
+                            getClass().getResource(
+                                    "/fxml/itemsCard-view.fxml"
+                            )
+                    );
+
+            Node card =
+                    loader.load();
+
+            ItemCardController controller =
+                    loader.getController();
+
+            controller.setData(auction);
+
+            if (column == 3) {
+
+                column = 0;
+
+                row++;
+            }
+
+            itemGrid.add(
+                    card,
+                    column++,
+                    row
+            );
+
+        } catch (IOException e) {
+
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
+    private void openProfileDirect(
+            ActionEvent event
+    ) {
+
+        openProfilePage(event);
+    }
+
+    private void openProfilePage(
+            ActionEvent event
+    ) {
+
+        try {
+
+            FXMLLoader loader =
+                    new FXMLLoader(
+                            getClass().getResource(
+                                    "/fxml/userProfile-view.fxml"
+                            )
+                    );
+
+            Parent root =
+                    loader.load();
+
+            ProfileController controller =
+                    loader.getController();
+
+            controller.setClient(client);
+
+            controller.setUser(currentUser);
+
+            Stage stage;
+
+            if (
+                    event.getSource()
+                            instanceof MenuItem
+            ) {
+
+                MenuItem item =
+                        (MenuItem)
+                                event.getSource();
+
+                stage =
+                        (Stage)
+                                item.getParentPopup()
+                                        .getOwnerWindow();
+
+            } else {
+
+                stage =
+                        (Stage)
+                                ((Node)
+                                        event.getSource())
+                                        .getScene()
+                                        .getWindow();
+            }
+
+            stage.setScene(
+                    new Scene(root)
+            );
+
+            stage.setTitle(
+                    "Profile"
+            );
+
+            stage.show();
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+        }
+    }
+}
