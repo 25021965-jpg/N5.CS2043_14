@@ -9,14 +9,14 @@ import java.math.BigDecimal;
 
 public class BidDAO {
 
-    public static boolean placeBid(int auctionId, int userId, BigDecimal amount) {
+    public static boolean placeBid(String auctionId, String userId, BigDecimal amount) {
         String sql = "INSERT INTO bids (auction_id, user_id, bid_amount, bid_time) VALUES (?, ?, ?, NOW())";
 
         try (Connection conn = DatabaseService.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setInt(1, auctionId);
-            pstmt.setInt(2, userId);
+            pstmt.setString(1, auctionId);
+            pstmt.setString(2, userId);
             pstmt.setBigDecimal(3, amount);
 
             return pstmt.executeUpdate() > 0;
