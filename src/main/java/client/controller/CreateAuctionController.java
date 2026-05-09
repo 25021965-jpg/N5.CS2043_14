@@ -1,14 +1,12 @@
 package client.controller;
+import javafx.scene.control.*;
 import javafx.stage.FileChooser;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.DatePicker;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
+
 import java.time.LocalDateTime;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -27,8 +25,20 @@ public class CreateAuctionController {
 
     private List<File> imageFiles = new ArrayList<>();
     private int currentImageIndex = 0;
+    @FXML
+    private ComboBox<String> cbCategory;
+    @FXML
+    public void initialize() {
 
+        cbCategory.getItems().addAll(
+                "ELECTRONICS",
+                "FASHION",
+                "HOME",
+                "BOOK",
+                "OTHER"
+        );
 
+    }
     @FXML private TextField txtName;
     @FXML private TextArea txtDescription;
     @FXML private TextField txtStartingBid;
@@ -65,7 +75,13 @@ public class CreateAuctionController {
 
                 showAlert("Error", "Please fill in all information");
                 return;
+
             }
+            if (cbCategory.getValue() == null) {
+                showAlert("Error", "Please choose category");
+                return;
+            }
+
 
             if (imageFiles.isEmpty()) {
 
@@ -102,12 +118,17 @@ public class CreateAuctionController {
             Item item = new Item();
             item.setName(txtName.getText());
             item.setDescription(txtDescription.getText());
-            if (!imageFiles.isEmpty()) {
-                item.setImages(
-                        imageFiles.get(0)
-                                .toURI()
-                                .toString()
-                );            }
+            item.setCategory(
+                    Category.valueOf(
+                            cbCategory.getValue()
+                    )
+            );
+
+            item.setImages(
+                    imageFiles.get(0)
+                            .toURI()
+                            .toString()
+            );
 
             // 2. Tạo Auction chứa thông tin đấu giá (Thay thế cho AuctionItem cũ)
             Auction newAuction = new Auction();

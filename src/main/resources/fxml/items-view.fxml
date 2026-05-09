@@ -7,50 +7,187 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
 
+<BorderPane prefHeight="600.0" prefWidth="900.0" style="-fx-background-color: #121212;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1">
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1">
+   <!-- TOP -->
    <top>
-      <VBox prefHeight="89.0" prefWidth="900.0" BorderPane.alignment="CENTER">
+
+      <VBox spacing="10.0" style="-fx-background-color: #1a1a1a;                      -fx-border-color: #d4af37;                      -fx-border-width: 0 0 2 0;">
+
+         <padding>
+            <Insets bottom="20.0" left="30.0" top="20.0" />
+         </padding>
+
          <children>
-            <Label fx:id="lblName" text="Name" />
+
+            <Label fx:id="lblName" text="Item Information" textFill="#d4af37">
+
+               <font>
+                  <Font name="Berlin Sans FB Demi Bold" size="34.0" />
+               </font>
+
+            </Label>
+
          </children>
+
       </VBox>
+
    </top>
+
+   <!-- LEFT IMAGE -->
    <left>
-      <VBox prefHeight="427.0" prefWidth="356.0" BorderPane.alignment="CENTER">
+
+      <VBox alignment="TOP_CENTER" prefWidth="420.0" spacing="20.0">
+
+         <padding>
+            <Insets left="25.0" right="10.0" top="30.0" />
+         </padding>
+
          <children>
-            <ImageView fx:id="imgItem" fitHeight="255.0" fitWidth="368.0" pickOnBounds="true" preserveRatio="true" />
-         </children>
-      </VBox>
-   </left>
-   <center>
-      <VBox prefHeight="446.0" prefWidth="665.0" spacing="20.0" BorderPane.alignment="CENTER">
-         <children>
-            <Label text="description" />
-            <TextArea fx:id="txtDescription" editable="false" prefHeight="200.0" prefWidth="200.0" wrapText="true" />
-            <VBox prefHeight="200.0" prefWidth="100.0">
+
+            <StackPane prefHeight="340.0" prefWidth="380.0" style="                            -fx-background-color: #1f1f1f;                            -fx-background-radius: 18;                            -fx-border-radius: 18;                            -fx-border-color: #d4af37;                            -fx-border-width: 2;                            ">
+
                <children>
-                  <Label fx:id="lblCurrentPrice" text="cur P" />
-                  <Label fx:id="lblStep" layoutX="10.0" layoutY="10.0" text="Min Incre" />
-                  <Label fx:id="lblStart" layoutX="10.0" layoutY="29.0" text="Start T" />
-                  <Label fx:id="lblEnd" layoutX="10.0" layoutY="49.0" text="End T" />
+
+                  <ImageView fx:id="imgItem" fitHeight="340.0" fitWidth="380.0" preserveRatio="false" />
+
                </children>
-            </VBox>
+
+            </StackPane>
+
          </children>
+
       </VBox>
-   </center>
-   <bottom>
-      <HBox alignment="CENTER" prefHeight="83.0" prefWidth="900.0" BorderPane.alignment="CENTER">
+
+   </left>
+
+   <!-- CENTER CONTENT -->
+   <center>
+
+      <VBox spacing="22.0">
+
+         <padding>
+            <Insets left="15.0" right="30.0" top="30.0" />
+         </padding>
+
          <children>
-            <Button alignment="CENTER" mnemonicParsing="false" text="back">
-               <HBox.margin>
-                  <Insets right="500.0" />
-               </HBox.margin>
-            </Button>
-            <Button alignment="CENTER" mnemonicParsing="false" text="Join" />
+
+            <!-- DESCRIPTION -->
+            <VBox spacing="10.0">
+
+               <children>
+
+                  <Label text="DESCRIPTION" textFill="#d4af37">
+
+                     <font>
+                        <Font name="Arial Bold" size="18.0" />
+                     </font>
+
+                  </Label>
+
+                  <TextArea fx:id="txtDescription" editable="false" prefHeight="180.0" style="                                   -fx-control-inner-background: #1f1f1f;                                   -fx-text-fill: white;                                   -fx-font-size: 14px;                                   -fx-background-radius: 12;                                   -fx-border-radius: 12;                                   -fx-border-color: #333333;                                   -fx-background-insets: 0;                                   " wrapText="true" />
+
+               </children>
+
+            </VBox>
+
+            <!-- INFO CARD -->
+            <VBox prefWidth="400.0" spacing="18.0" style="                       -fx-background-color: #1a1a1a;                       -fx-background-radius: 16;                       -fx-border-radius: 16;                       -fx-border-color: #2c2c2c;                       ">
+
+               <padding>
+                  <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+               </padding>
+
+               <children>
+
+                  <Label text="AUCTION INFORMATION" textFill="#d4af37">
+
+                     <font>
+                        <Font name="Arial Bold" size="18.0" />
+                     </font>
+
+                  </Label>
+
+                  <Label fx:id="lblCurrentPrice" text="Current Price: " textFill="WHITE">
+
+                     <font>
+                        <Font size="16.0" />
+                     </font>
+
+                  </Label>
+
+                  <Label fx:id="lblStep" text="Min Increment: " textFill="WHITE">
+
+                     <font>
+                        <Font size="16.0" />
+                     </font>
+
+                  </Label>
+
+                  <Label fx:id="lblStart" text="Start Time: " textFill="WHITE">
+
+                     <font>
+                        <Font size="16.0" />
+                     </font>
+
+                  </Label>
+
+                  <Label fx:id="lblEnd" text="End Time: " textFill="WHITE">
+
+                     <font>
+                        <Font size="16.0" />
+                     </font>
+
+                  </Label>
+
+               </children>
+
+            </VBox>
+
          </children>
+
+      </VBox>
+
+   </center>
+
+   <!-- BOTTOM -->
+   <bottom>
+
+      <HBox alignment="CENTER" prefHeight="90.0" spacing="20.0" style="               -fx-background-color: #1a1a1a;               -fx-border-color: #2c2c2c;               -fx-border-width: 2 0 0 0;               ">
+
+         <padding>
+            <Insets left="30.0" right="30.0" />
+         </padding>
+
+         <children>
+
+            <Button mnemonicParsing="false" prefHeight="45.0" prefWidth="140.0" style="                         -fx-background-color: transparent;                         -fx-text-fill: #d4af37;                         -fx-border-color: #d4af37;                         -fx-border-width: 2;                         -fx-border-radius: 12;                         -fx-background-radius: 12;                         -fx-font-weight: bold;                         -fx-cursor: hand;                         " text="BACK">
+
+               <font>
+                  <Font name="Arial Bold" size="15.0" />
+               </font>
+
+            </Button>
+
+            <Region HBox.hgrow="ALWAYS" />
+
+            <Button mnemonicParsing="false" prefHeight="45.0" prefWidth="180.0" style="                         -fx-background-color: #d4af37;                         -fx-text-fill: black;                         -fx-font-weight: bold;                         -fx-background-radius: 12;                         -fx-font-size: 15px;                         -fx-cursor: hand;                         " text="JOIN AUCTION">
+
+               <font>
+                  <Font name="Arial Bold" size="15.0" />
+               </font>
+
+            </Button>
+
+         </children>
+
       </HBox>
+
    </bottom>
+
 </BorderPane>

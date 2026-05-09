@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.collections.FXCollections?>
+<?import java.lang.String?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.Cursor?>
 <?import javafx.scene.control.Button?>
@@ -10,190 +13,437 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="793.0" prefWidth="1024.0" style="-fx-background-color: black;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controller.CreateAuctionController">
-   <Label layoutX="325.0" layoutY="38.0" prefHeight="69.0" prefWidth="397.0" text="Create Auction" textFill="#d4af37">
+<AnchorPane prefHeight="800.0"
+            prefWidth="1100.0"
+            style="-fx-background-color: linear-gradient(to bottom right, #0f0f0f, #1b1b1b);"
+            xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="client.controller.CreateAuctionController">
+
+   <!-- TITLE -->
+   <Label layoutX="345.0"
+          layoutY="30.0"
+          text="CREATE AUCTION"
+          textFill="#d4af37">
+
       <font>
-         <Font name="Berlin Sans FB Demi Bold" size="55.0" />
+         <Font name="Berlin Sans FB Demi Bold"
+               size="48.0"/>
       </font>
+
    </Label>
-   <HBox layoutX="41.0" layoutY="134.0" prefHeight="523.0" prefWidth="965.0" spacing="20.0">
-      <VBox prefHeight="200.0" prefWidth="100.0" HBox.hgrow="ALWAYS">
-         <StackPane prefHeight="309.0" prefWidth="480.0" style="-fx-border-color: #cccccc; -fx-cursor: hand;" VBox.vgrow="ALWAYS">
 
-            <ImageView fx:id="imagePreview" fitHeight="300.0" fitWidth="420.0" />
-            <Button mnemonicParsing="false" onAction="#showPreviousImage" style="-fx-background-color: rgba(0,0,0,0.5); -fx-background-radius: 20;" text="&lt;" textFill="#fffefe" StackPane.alignment="CENTER_LEFT">
+   <!-- MAIN CONTAINER -->
+   <HBox layoutX="45.0"
+         layoutY="120.0"
+         prefHeight="580.0"
+         prefWidth="1010.0"
+         spacing="35.0">
+
+      <!-- LEFT SIDE -->
+      <VBox spacing="20.0"
+            prefWidth="500.0">
+
+         <!-- IMAGE CARD -->
+         <StackPane prefHeight="360.0"
+                    prefWidth="500.0"
+                    style="
+                       -fx-background-color: #1f1f1f;
+                       -fx-background-radius: 25;
+                       -fx-border-radius: 25;
+                       -fx-border-color: #d4af37;
+                       -fx-border-width: 2;
+                       -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 18,0,0,6);
+                       ">
+
+            <!-- IMAGE -->
+            <ImageView fx:id="imagePreview"
+                       fitHeight="360.0"
+                       fitWidth="500.0"
+                       preserveRatio="false"/>
+
+            <!-- LEFT BUTTON -->
+            <Button mnemonicParsing="false"
+                    onAction="#showPreviousImage"
+                    text="❮"
+                    textFill="WHITE"
+                    StackPane.alignment="CENTER_LEFT"
+                    style="
+                        -fx-background-color: rgba(0,0,0,0.55);
+                        -fx-background-radius: 50;
+                        -fx-font-size: 22px;
+                        -fx-font-weight: bold;
+                        -fx-cursor: hand;
+                        "
+                    prefHeight="45.0"
+                    prefWidth="45.0">
+
                <StackPane.margin>
-                  <Insets left="10.0" />
+                  <Insets left="15.0"/>
                </StackPane.margin>
+
             </Button>
-            <Button mnemonicParsing="false" onAction="#showNextImage" style="-fx-background-color: rgba(0,0,0,0.5); -fx-background-radius: 20;" text="&gt;" textFill="#f6f1f1" StackPane.alignment="CENTER_RIGHT">
+
+            <!-- RIGHT BUTTON -->
+            <Button mnemonicParsing="false"
+                    onAction="#showNextImage"
+                    text="❯"
+                    textFill="WHITE"
+                    StackPane.alignment="CENTER_RIGHT"
+                    style="
+                        -fx-background-color: rgba(0,0,0,0.55);
+                        -fx-background-radius: 50;
+                        -fx-font-size: 22px;
+                        -fx-font-weight: bold;
+                        -fx-cursor: hand;
+                        "
+                    prefHeight="45.0"
+                    prefWidth="45.0">
+
                <StackPane.margin>
-                  <Insets right="10.0" />
+                  <Insets right="15.0"/>
                </StackPane.margin>
+
             </Button>
 
-            <HBox fx:id="imgItem" alignment="CENTER" onMouseClicked="#handleUploadImages" prefHeight="308.0" prefWidth="496.0" spacing="5.0">
+            <!-- UPLOAD -->
+            <VBox fx:id="imgItems"
+                  alignment="CENTER"
+                  spacing="10.0"
+                  onMouseClicked="#handleUploadImages"
+                  style="-fx-cursor: hand;">
 
-               <Label text="Upload Picture of Item" textFill="#d4af37" />
+               <children>
 
-               <Label text="*" textFill="#f41d1d" />
+                  <Label text="⬆"
+                         textFill="#d4af37">
+
+                     <font>
+                        <Font size="55.0"/>
+                     </font>
+
+                  </Label>
+
+                  <Label text="Upload Product Images"
+                         textFill="#d4af37">
+
+                     <font>
+                        <Font name="Arial Bold"
+                              size="18.0"/>
+                     </font>
+
+                  </Label>
+
+               </children>
+
                <cursor>
-                  <Cursor fx:constant="HAND" />
+                  <Cursor fx:constant="HAND"/>
                </cursor>
 
-            </HBox>
+            </VBox>
 
          </StackPane>
-         <HBox spacing="5.0">
-            <Label text="Description" textFill="#d4af37">
-               <font>
-                  <Font name="Arial" size="14.0" />
-               </font>
-            </Label>
-            <Label text="*" textFill="#ef0f0f" />
-         </HBox>
-         <TextArea fx:id="txtDescription" prefHeight="179.0" prefWidth="540.0" />
+
+         <!-- DESCRIPTION -->
+         <VBox spacing="10.0">
+
+            <children>
+
+               <Label text="DESCRIPTION"
+                      textFill="#d4af37">
+
+                  <font>
+                     <Font name="Arial Bold"
+                           size="17.0"/>
+                  </font>
+
+               </Label>
+
+               <TextArea fx:id="txtDescription"
+                         prefHeight="180.0"
+                         wrapText="true"
+                         style="
+                              -fx-control-inner-background: #1f1f1f;
+                              -fx-text-fill: white;
+                              -fx-background-radius: 18;
+                              -fx-border-radius: 18;
+                              -fx-border-color: #2c2c2c;
+                              -fx-font-size: 14px;
+                              -fx-padding: 12;
+                              "/>
+
+            </children>
+
+         </VBox>
+
       </VBox>
-      <VBox alignment="CENTER_LEFT" prefHeight="523.0" prefWidth="288.0" spacing="25.0" HBox.hgrow="ALWAYS">
-         <HBox prefHeight="81.0" prefWidth="341.0">
-            <padding>
-               <Insets top="15.0" />
-            </padding>
-            <Label prefHeight="16.0" prefWidth="73.0" text="Item Name" textFill="#d4af37">
-               <font>
-                  <Font name="Arial Bold" size="14.0" />
-               </font>
-               <padding>
-                  <Insets top="10.0" />
-               </padding>
-            </Label>
-            <Label layoutX="10.0" layoutY="10.0" prefHeight="22.0" prefWidth="3.0" text="*" textFill="RED">
-               <font>
-                  <Font name="Arial" size="19.0" />
-               </font>
-               <HBox.margin>
-                  <Insets top="10.0" />
-               </HBox.margin>
-            </Label>
-            <TextField fx:id="txtName" prefHeight="40.0" prefWidth="286.0" style="-fx-background-color: #D4AF37, white; -fx-background-insets: 0, 2; -fx-background-radius: 8, 8;: d4af37;" styleClass="-fx-background-color: #D4AF37, white; -fx-background-insets: 0, 2; -fx-background-radius: 8, 8;">
-               <HBox.margin>
-                  <Insets left="26.0" />
-               </HBox.margin>
-            </TextField>
-         </HBox>
-         <HBox prefHeight="100.0" prefWidth="200.0">
-            <Label prefHeight="16.0" prefWidth="84.0" text="Starting Bid" textFill="#d4af37">
-               <font>
-                  <Font name="Arial Bold" size="14.0" />
-               </font>
-               <padding>
-                  <Insets top="10.0" />
-               </padding>
-            </Label>
-            <Label prefHeight="22.0" prefWidth="3.0" text="*" textFill="RED">
-               <font>
-                  <Font name="Arial" size="19.0" />
-               </font>
-               <padding>
-                  <Insets top="10.0" />
-               </padding>
-            </Label>
-            <TextField fx:id="txtStartingBid" prefHeight="40.0" prefWidth="283.0">
-               <HBox.margin>
-                  <Insets left="16.5" />
-               </HBox.margin>
-            </TextField>
-         </HBox>
-         <HBox prefHeight="100.0" prefWidth="337.0" VBox.vgrow="ALWAYS">
-            <Label prefHeight="16.0" prefWidth="101.0" text="Min Increment" textFill="#d4af37">
-               <font>
-                  <Font name="Arial Bold" size="14.0" />
-               </font>
-               <HBox.margin>
-                  <Insets />
-               </HBox.margin>
-               <padding>
-                  <Insets top="10.0" />
-               </padding>
-            </Label>
-            <Label prefHeight="22.0" prefWidth="3.0" text="*" textFill="RED">
-               <font>
-                  <Font name="Arial" size="19.0" />
-               </font>
-               <padding>
-                  <Insets top="10.0" />
-               </padding>
-            </Label>
-            <TextField fx:id="txtMinIncrement" prefHeight="40.0" prefWidth="282.0" />
-         </HBox>
-         <HBox prefHeight="100.0" prefWidth="200.0">
-            <Label prefHeight="16.0" prefWidth="73.0" text="Start Time" textFill="#d4af37">
-               <font>
-                  <Font name="Arial Bold" size="14.0" />
-               </font>
-               <padding>
-                  <Insets top="10.0" />
-               </padding>
-            </Label>
-            <Label prefHeight="22.0" prefWidth="3.0" text="*" textFill="RED">
-               <font>
-                  <Font name="Arial" size="19.0" />
-               </font>
-               <padding>
-                  <Insets top="10.0" />
-               </padding>
-            </Label>
-            <HBox prefHeight="87.0" prefWidth="320.0">
-               <TextField fx:id="txtStartHour" prefHeight="40.0" prefWidth="51.0">
-                  <HBox.margin>
-                     <Insets left="27.0" />
-                  </HBox.margin>
-               </TextField>
-               <TextField fx:id="txtStartMin" prefHeight="40.0" prefWidth="49.0" />
-               <DatePicker fx:id="dpStartDate" prefHeight="40.0" prefWidth="186.0" />
-            </HBox>
-         </HBox>
-         <HBox layoutX="10.0" layoutY="317.0" prefHeight="100.0" prefWidth="200.0">
-            <Label prefHeight="16.0" prefWidth="66.0" text="End Time" textFill="#d4af37">
-               <font>
-                  <Font name="Arial Bold" size="14.0" />
-               </font>
-               <padding>
-                  <Insets top="10.0" />
-               </padding>
-            </Label>
-            <Label prefHeight="22.0" prefWidth="3.0" text="*" textFill="RED">
-               <font>
-                  <Font name="Arial" size="19.0" />
-               </font>
-               <padding>
-                  <Insets top="10.0" />
-               </padding>
-            </Label>
-            <HBox prefHeight="87.0" prefWidth="320.0">
-               <TextField fx:id="txtEndHour" prefHeight="40.0" prefWidth="79.0">
-                  <HBox.margin>
-                     <Insets left="33.0" />
-                  </HBox.margin>
-               </TextField>
-               <TextField fx:id="txtEndMin" prefHeight="40.0" prefWidth="76.0" />
-               <DatePicker fx:id="dpEndDate" prefHeight="40.0" prefWidth="207.0" />
-            </HBox>
-         </HBox>
+
+      <!-- RIGHT SIDE -->
+      <VBox spacing="22.0"
+            prefWidth="470.0"
+            style="
+              -fx-background-color: #181818;
+              -fx-background-radius: 25;
+              -fx-border-radius: 25;
+              -fx-border-color: #2b2b2b;
+              -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.45), 15,0,0,5);
+              ">
+
+         <padding>
+            <Insets top="30.0"
+                    left="28.0"
+                    right="28.0"
+                    bottom="30.0"/>
+         </padding>
+
+         <!-- ITEM NAME -->
+         <VBox spacing="8.0">
+
+            <children>
+
+               <Label text="ITEM NAME"
+                      textFill="#d4af37"/>
+
+               <TextField fx:id="txtName"
+                          prefHeight="45.0"
+                          style="
+                               -fx-background-color: #262626;
+                               -fx-text-fill: white;
+                               -fx-background-radius: 14;
+                               -fx-border-radius: 14;
+                               -fx-border-color: #3a3a3a;
+                               -fx-font-size: 14px;
+                               "/>
+
+            </children>
+
+         </VBox>
+
+         <!-- STARTING BID -->
+         <VBox spacing="8.0">
+
+            <children>
+
+               <Label text="STARTING BID"
+                      textFill="#d4af37"/>
+
+               <TextField fx:id="txtStartingBid"
+                          prefHeight="45.0"
+                          style="
+                               -fx-background-color: #262626;
+                               -fx-text-fill: white;
+                               -fx-background-radius: 14;
+                               -fx-border-radius: 14;
+                               -fx-border-color: #3a3a3a;
+                               "/>
+
+            </children>
+
+         </VBox>
+
+         <!-- MIN INCREMENT -->
+         <VBox spacing="8.0">
+
+            <children>
+
+               <Label text="MIN INCREMENT"
+                      textFill="#d4af37"/>
+
+               <TextField fx:id="txtMinIncrement"
+                          prefHeight="45.0"
+                          style="
+                               -fx-background-color: #262626;
+                               -fx-text-fill: white;
+                               -fx-background-radius: 14;
+                               -fx-border-radius: 14;
+                               -fx-border-color: #3a3a3a;
+                               "/>
+
+            </children>
+
+         </VBox>
+
+         <!-- CATEGORY -->
+         <VBox spacing="8.0">
+
+            <children>
+
+               <Label text="CATEGORY"
+                      textFill="#d4af37"/>
+
+               <ComboBox fx:id="cbCategory"
+                         prefHeight="45.0"
+                         prefWidth="410.0"
+                         style="
+                  -fx-background-color: #262626;
+                  -fx-text-fill: white;
+                  -fx-background-radius: 14;
+                  -fx-border-radius: 14;
+                  -fx-border-color: #3a3a3a;
+                  ">
+
+                  <items>
+                     <FXCollections fx:factory="observableArrayList">
+
+                        <String fx:value="Electronics"/>
+                        <String fx:value="Fashion"/>
+                        <String fx:value="Collectibles"/>
+                        <String fx:value="Vehicles"/>
+                        <String fx:value="Luxury Items"/>
+
+                     </FXCollections>
+                  </items>
+
+               </ComboBox>
+
+            </children>
+
+         </VBox>
+
+         <!-- START TIME -->
+         <VBox spacing="8.0">
+
+            <children>
+
+               <Label text="START TIME"
+                      textFill="#d4af37"/>
+
+               <HBox spacing="10.0">
+
+                  <children>
+
+                     <TextField fx:id="txtStartHour"
+                                promptText="HH"
+                                prefWidth="70.0"
+                                prefHeight="45.0"
+                                style="
+                                       -fx-background-color: #262626;
+                                       -fx-text-fill: white;
+                                       -fx-background-radius: 14;
+                                       "/>
+
+                     <TextField fx:id="txtStartMin"
+                                promptText="MM"
+                                prefWidth="70.0"
+                                prefHeight="45.0"
+                                style="
+                                       -fx-background-color: #262626;
+                                       -fx-text-fill: white;
+                                       -fx-background-radius: 14;
+                                       "/>
+
+                     <DatePicker fx:id="dpStartDate"
+                                 prefHeight="45.0"
+                                 prefWidth="250.0"
+                                 style="
+                                        -fx-background-color: #262626;
+                                        -fx-background-radius: 14;
+                                        "/>
+
+                  </children>
+
+               </HBox>
+
+            </children>
+
+         </VBox>
+
+         <!-- END TIME -->
+         <VBox spacing="8.0">
+
+            <children>
+
+               <Label text="END TIME"
+                      textFill="#d4af37"/>
+
+               <HBox spacing="10.0">
+
+                  <children>
+
+                     <TextField fx:id="txtEndHour"
+                                promptText="HH"
+                                prefWidth="70.0"
+                                prefHeight="45.0"
+                                style="
+                                       -fx-background-color: #262626;
+                                       -fx-text-fill: white;
+                                       -fx-background-radius: 14;
+                                       "/>
+
+                     <TextField fx:id="txtEndMin"
+                                promptText="MM"
+                                prefWidth="70.0"
+                                prefHeight="45.0"
+                                style="
+                                       -fx-background-color: #262626;
+                                       -fx-text-fill: white;
+                                       -fx-background-radius: 14;
+                                       "/>
+
+                     <DatePicker fx:id="dpEndDate"
+                                 prefHeight="45.0"
+                                 prefWidth="250.0"
+                                 style="
+                                        -fx-background-color: #262626;
+                                        -fx-background-radius: 14;
+                                        "/>
+
+                  </children>
+
+               </HBox>
+
+            </children>
+
+         </VBox>
+
       </VBox>
+
    </HBox>
-   <Button fx:id="btnCreate" layoutX="766.0" layoutY="683.0" mnemonicParsing="false" onAction="#handleCreate" prefHeight="35.0" prefWidth="73.0" style="-fx-background-color: #d4af37;" text="Create ">
-      <font>
-         <Font name="Arial Bold" size="14.0" />
-      </font>
-   </Button>
-   <Button fx:id="btnCancel" layoutX="876.0" layoutY="683.0" mnemonicParsing="false" onAction="#handleCancel" prefHeight="35.0" prefWidth="73.0" style="-fx-background-color: d4af37;" text="Cancel">
-      <font>
-         <Font name="Arial Bold" size="14.0" />
-      </font>
-   </Button>
+
+   <!-- BOTTOM BUTTONS -->
+   <HBox layoutX="720.0"
+         layoutY="730.0"
+         spacing="18.0">
+
+      <children>
+
+         <Button fx:id="btnCreate"
+                 mnemonicParsing="false"
+                 onAction="#handleCreate"
+                 prefHeight="48.0"
+                 prefWidth="140.0"
+                 text="CREATE"
+                 textFill="BLACK"
+                 style="
+                    -fx-background-color: #d4af37;
+                    -fx-background-radius: 16;
+                    -fx-font-weight: bold;
+                    -fx-font-size: 15px;
+                    -fx-cursor: hand;
+                    "/>
+
+         <Button fx:id="btnCancel"
+                 mnemonicParsing="false"
+                 onAction="#handleCancel"
+                 prefHeight="48.0"
+                 prefWidth="140.0"
+                 text="CANCEL"
+                 textFill="WHITE"
+                 style="
+                    -fx-background-color: #2b2b2b;
+                    -fx-background-radius: 16;
+                    -fx-font-weight: bold;
+                    -fx-font-size: 15px;
+                    -fx-cursor: hand;
+                    "/>
+
+      </children>
+
+   </HBox>
+
 </AnchorPane>
