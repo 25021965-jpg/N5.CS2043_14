@@ -9,6 +9,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.Parent;
 
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
@@ -84,9 +85,38 @@ public class UserViewController {
             ActionEvent event
     ) {
 
-        System.out.println(
-                "Create Auction clicked"
-        );
+        try {
+
+            FXMLLoader loader =
+                    new FXMLLoader(
+                            getClass().getResource(
+                                    "/fxml/createAuction-view.fxml"
+                            )
+                    );
+
+            Parent root =
+                    loader.load();
+
+            Stage stage =
+                    (Stage)
+                            ((Node)
+                                    event.getSource())
+                                    .getScene()
+                                    .getWindow();
+
+            stage.setScene(
+                    new Scene(root)
+            );
+
+            stage.setTitle(
+                    "Create Auction"
+            );
+
+            stage.show();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML

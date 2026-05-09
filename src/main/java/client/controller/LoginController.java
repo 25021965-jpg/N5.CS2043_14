@@ -93,22 +93,18 @@ public class LoginController {
     private void handleResponse(String msg) {
 
         if (msg.startsWith("LOGIN_SUCCESS")) {
-
             showInfo("Login successful!");
             goToAuction();
 
         } else if (msg.startsWith("LOGIN_FAILED")) {
-
             showError("Wrong username or password!");
             passField.clear();
             passField.requestFocus();
 
         } else if (msg.startsWith("REGISTER_SUCCESS")) {
-
             showInfo("Register successful! Please login.");
 
         } else if (msg.startsWith("REGISTER_FAILED")) {
-
             showError("Username or email already exists!");
         }
     }
@@ -148,7 +144,6 @@ public class LoginController {
                     "Cannot open register screen",
                     e
             );
-
             showError("Cannot open register screen!");
         }
     }

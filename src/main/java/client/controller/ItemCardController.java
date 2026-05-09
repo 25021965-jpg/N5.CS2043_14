@@ -6,7 +6,6 @@ import javafx.scene.image.Image;
 
 import javafx.scene.image.ImageView;
 import model.*;
-
 import java.io.File;
 
 public class ItemCardController {
@@ -26,14 +25,19 @@ public class ItemCardController {
         lblStep.setText("Step: " + auction.getMinIncrement());
 
         if (auction.getEndTime() != null) {
-            // Định dạng lại thời gian cho đẹp
+            // Định dạng lại thời gian
             java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
             lblEndTime.setText("End at: " + auction.getEndTime().format(formatter));
         }
 
-        if (item.getImages() != null) {
-            File file = new File(item.getImages());
-            Image image = new Image(file.toURI().toString());
+        if (item.getImages() != null &&
+                !item.getImages().isEmpty()) {
+
+            Image image =
+                    new Image(
+                            item.getImages()
+                    );
+
             imgProduct.setImage(image);
         }
     }

@@ -15,6 +15,8 @@ import javafx.stage.Stage;
 import javafx.scene.Node;
 import javafx.event.ActionEvent;
 import model.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
@@ -27,6 +29,7 @@ public class CreateAuctionController {
     @FXML private TextField txtStartingBid;
     @FXML private TextField txtMinIncrement;
     @FXML private HBox imgItem;
+    @FXML private ImageView imagePreview;
 
     // Thành phần thời gian bắt đầu
     @FXML private TextField txtStartHour;
@@ -40,25 +43,37 @@ public class CreateAuctionController {
 
     @FXML
     private void handleUploadImage() {
-        javafx.stage.FileChooser fileChooser = new javafx.stage.FileChooser();
-        fileChooser.setTitle("Choose item image");
 
-        // Chỉ lọc các định dạng ảnh
-        fileChooser.getExtensionFilters().addAll(
-                new javafx.stage.FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg")
+        javafx.stage.FileChooser fileChooser =
+                new javafx.stage.FileChooser();
+
+        fileChooser.setTitle(
+                "Choose item image"
         );
 
-        // Mở cửa sổ chọn file
-        selectedImageFile = fileChooser.showOpenDialog(imgItem.getScene().getWindow());
+        fileChooser.getExtensionFilters().addAll(
+                new javafx.stage.FileChooser.ExtensionFilter(
+                        "Image Files",
+                        "*.png",
+                        "*.jpg",
+                        "*.jpeg"
+                )
+        );
 
+        selectedImageFile =
+                fileChooser.showOpenDialog(
+                        imgItem.getScene().getWindow()
+                );
         if (selectedImageFile != null) {
-            // Cập nhật giao diện để người dùng biết đã chọn ảnh thành công
-            // Ví dụ: Đổi màu viền hoặc đổi chữ trong HBox
-            imgItem.setStyle("-fx-border-color: #2ecc71; -fx-border-width: 2;");
+            Image image =
+                    new Image(
+                            selectedImageFile
+                                    .toURI()
+                                    .toString()
+                    );
 
-            // Tìm cái Label đầu tiên trong HBox để đổi text thành tên file
-            javafx.scene.control.Label lbl = (javafx.scene.control.Label) imgItem.getChildren().get(0);
-            lbl.setText("Selected: " + selectedImageFile.getName());
+            imagePreview.setImage(image);
+            imgItem.setVisible(false);
         }
     }
 
@@ -92,8 +107,11 @@ public class CreateAuctionController {
             item.setName(txtName.getText());
             item.setDescription(txtDescription.getText());
             if (selectedImageFile != null) {
-                item.setImages(String.valueOf(java.util.Collections.singletonList(selectedImageFile.toURI().toString())));
-            }
+                item.setImages(
+                        selectedImageFile
+                                .toURI()
+                                .toString()
+                );            }
 
             // 2. Tạo Auction chứa thông tin đấu giá (Thay thế cho AuctionItem cũ)
             Auction newAuction = new Auction();
