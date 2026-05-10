@@ -9,7 +9,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.Parent;
 
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
@@ -20,6 +19,7 @@ import javafx.stage.Stage;
 
 import model.Auction;
 import model.User;
+import model.Category;
 
 import java.io.IOException;
 
@@ -38,6 +38,8 @@ public class UserViewController {
     private int column = 0;
 
     private int row = 0;
+    private final java.util.List<Auction> auctionList =
+            new java.util.ArrayList<>();
 
     @FXML
     public void initialize() {
@@ -78,6 +80,60 @@ public class UserViewController {
                 "Search: "
                         + txtSearch.getText()
         );
+    }
+    @FXML
+    private void showAccessories() {
+        filterByCategory(Category.ACCESSORIES);
+    }
+
+    @FXML
+    private void showCollectibles() {
+        filterByCategory(Category.COLLECTIBLES);
+    }
+
+    @FXML
+    private void showElectronics() {
+        filterByCategory(Category.ELECTRONICS);
+    }
+
+    @FXML
+    private void showFashion() {
+        filterByCategory(Category.FASHION);
+    }
+
+    @FXML
+    private void showHomeAppliances() {
+        filterByCategory(Category.HOME_APPLIANCES);
+    }
+
+    @FXML
+    private void showVehicles() {
+        filterByCategory(Category.VEHICLES);
+    }
+
+    @FXML
+    private void showOther() {
+        filterByCategory(Category.OTHER);
+    }
+
+    private void filterByCategory(Category category) {
+
+        itemGrid.getChildren().clear();
+
+        column = 0;
+        row = 0;
+
+        for (Auction auction : auctionList) {
+
+            if (
+                    auction.getItem()
+                            .getCategory()
+                            == category
+            ) {
+
+                addCardToGridOnly(auction);
+            }
+        }
     }
 
     @FXML
@@ -167,9 +223,14 @@ public class UserViewController {
         );
     }
 
-    public void addNewAuctionCard(
-            Auction auction
-    ) {
+    public void addNewAuctionCard(Auction auction) {
+
+        auctionList.add(auction);
+
+        addCardToGridOnly(auction);
+    }
+
+    private void addCardToGridOnly(Auction auction) {
 
         try {
 
@@ -191,7 +252,6 @@ public class UserViewController {
             if (column == 3) {
 
                 column = 0;
-
                 row++;
             }
 
@@ -208,16 +268,25 @@ public class UserViewController {
     }
 
     @FXML
-    private void openProfileDirect(
-            ActionEvent event
-    ) {
+    private void showAll() {
 
+        itemGrid.getChildren().clear();
+
+        column = 0;
+        row = 0;
+
+        for (Auction auction : auctionList) {
+
+            addCardToGridOnly(auction);
+        }
+    }
+
+    @FXML
+    private void openProfileDirect(ActionEvent event) {
         openProfilePage(event);
     }
 
-    private void openProfilePage(
-            ActionEvent event
-    ) {
+    private void openProfilePage(ActionEvent event) {
 
         try {
 

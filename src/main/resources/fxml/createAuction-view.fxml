@@ -282,6 +282,7 @@
                          style="
                   -fx-background-color: #262626;
                   -fx-text-fill: white;
+                  -fx-prompt-text-fill: white;
                   -fx-background-radius: 14;
                   -fx-border-radius: 14;
                   -fx-border-color: #3a3a3a;
@@ -289,12 +290,13 @@
 
                   <items>
                      <FXCollections fx:factory="observableArrayList">
-
-                        <String fx:value="Electronics"/>
-                        <String fx:value="Fashion"/>
-                        <String fx:value="Collectibles"/>
-                        <String fx:value="Vehicles"/>
-                        <String fx:value="Luxury Items"/>
+                        <String fx:value="ACCESSORIES"/>
+                        <String fx:value="COLLECTIBLES"/>
+                        <String fx:value="ELECTRONICS"/>
+                        <String fx:value="FASHION"/>
+                        <String fx:value="HOME_APPLIANCES"/>
+                        <String fx:value="VEHICLES"/>
+                        <String fx:value="OTHER"/>
 
                      </FXCollections>
                   </items>

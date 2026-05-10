@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.time.LocalDateTime;
 
+
 public class Auction implements Serializable {
 
     private String id;
@@ -17,6 +18,7 @@ public class Auction implements Serializable {
 
     private AuctionStatus status;
 
+    private LocalDateTime startTime;
     private LocalDateTime endTime;
 
     private List<Bid> bids = new ArrayList<>();
@@ -42,7 +44,6 @@ public class Auction implements Serializable {
     public String getId() {
         return id;
     }
-
     public void setId(String id) {
         this.id = id;
     }
@@ -50,7 +51,6 @@ public class Auction implements Serializable {
     public Item getItem() {
         return item;
     }
-
     public void setItem(Item item) {
         this.item = item;
     }
@@ -58,7 +58,6 @@ public class Auction implements Serializable {
     public User getSeller() {
         return seller;
     }
-
     public void setSeller(User seller) {
         this.seller = seller;
     }
@@ -66,7 +65,6 @@ public class Auction implements Serializable {
     public BigDecimal getCurrentPrice() {
         return currentPrice;
     }
-
     public void setCurrentPrice(BigDecimal currentPrice) {
         this.currentPrice = currentPrice;
     }
@@ -74,7 +72,6 @@ public class Auction implements Serializable {
     public BigDecimal getMinIncrement() {
         return minIncrement;
     }
-
     public void setMinIncrement(BigDecimal minIncrement) {
         this.minIncrement = minIncrement;
     }
@@ -82,7 +79,6 @@ public class Auction implements Serializable {
     public AuctionStatus getStatus() {
         return status;
     }
-
     public void setStatus(AuctionStatus status) {
         this.status = status;
     }
@@ -95,10 +91,12 @@ public class Auction implements Serializable {
         this.bids = bids;
     }
 
+    public LocalDateTime getStartTime() { return startTime; }
+    public void setStartTime(LocalDateTime startTime) { this.startTime = startTime; }
+
     public LocalDateTime getEndTime() {
         return endTime;
     }
-
     public void setEndTime(LocalDateTime endTime) {
         this.endTime = endTime;
     }

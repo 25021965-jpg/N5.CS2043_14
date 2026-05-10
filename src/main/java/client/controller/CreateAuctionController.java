@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.scene.Node;
 import javafx.event.ActionEvent;
@@ -29,22 +29,13 @@ public class CreateAuctionController {
     private ComboBox<String> cbCategory;
     @FXML
     public void initialize() {
-
-        cbCategory.getItems().addAll(
-                "ELECTRONICS",
-                "FASHION",
-                "HOME",
-                "BOOK",
-                "OTHER"
-        );
-
     }
+
     @FXML private TextField txtName;
     @FXML private TextArea txtDescription;
     @FXML private TextField txtStartingBid;
     @FXML private TextField txtMinIncrement;
-    @FXML private HBox imgItem;
-    @FXML private ImageView imagePreview;
+    @FXML private VBox imgItems;    @FXML private ImageView imagePreview;
 
     // Thành phần thời gian bắt đầu
     @FXML private TextField txtStartHour;
@@ -77,19 +68,33 @@ public class CreateAuctionController {
                 return;
 
             }
+
+            java.math.BigDecimal startingBid =
+                    new java.math.BigDecimal(txtStartingBid.getText());
+            java.math.BigDecimal minIncrement =
+                    new java.math.BigDecimal(txtMinIncrement.getText());
+
+            if (startingBid.compareTo(java.math.BigDecimal.ZERO) <= 0) {
+                showAlert("Error", "Starting bid must be greater than 0");
+                return;
+            }
+
+            if (minIncrement.compareTo(java.math.BigDecimal.ZERO) <= 0) {
+                showAlert("Error", "Minimum increment must be greater than 0");
+                return;
+            }
+
             if (cbCategory.getValue() == null) {
                 showAlert("Error", "Please choose category");
                 return;
             }
 
-
             if (imageFiles.isEmpty()) {
-
                 showAlert("Error", "Please upload at least one image");
                 return;
             }
 
-            // --- BƯỚC 2: XỬ LÝ THỜI GIAN ---
+            // xử lý tgian
             int startH = Integer.parseInt(txtStartHour.getText());
             int startM = Integer.parseInt(txtStartMin.getText());
             LocalDateTime startDateTime = dpStartDate.getValue().atTime(startH, startM);
@@ -112,7 +117,7 @@ public class CreateAuctionController {
                 return;
             }
 
-            // --- BƯỚC 3: TẠO ĐỐI TƯỢNG DỮ LIỆU ---
+            // tạo đối tượng dữ liệu
 
             // 1. Tạo Item chứa thông tin cơ bản
             Item item = new Item();
@@ -124,18 +129,27 @@ public class CreateAuctionController {
                     )
             );
 
-            item.setImages(
-                    imageFiles.get(0)
-                            .toURI()
-                            .toString()
-            );
+            java.util.List<String> imagePaths =
+                    new java.util.ArrayList<>();
+
+            for (File file : imageFiles) {
+
+                imagePaths.add(
+                        file.toURI().toString()
+                );
+            }
+
+            item.setImages(imagePaths);
 
             // 2. Tạo Auction chứa thông tin đấu giá (Thay thế cho AuctionItem cũ)
             Auction newAuction = new Auction();
             newAuction.setItem(item);
             newAuction.setCurrentPrice(new java.math.BigDecimal(txtStartingBid.getText()));
             newAuction.setMinIncrement(new java.math.BigDecimal(txtMinIncrement.getText()));
+
+            newAuction.setStartTime(startDateTime);
             newAuction.setEndTime(endDateTime);
+
             newAuction.setStatus(AuctionStatus.ACTIVE);
 
             // --- BƯỚC 4: CHUYỂN TRANG VÀ HIỂN THỊ ---
@@ -196,7 +210,7 @@ public class CreateAuctionController {
                 )
         );
 
-        List<File> files = fileChooser.showOpenMultipleDialog(imgItem.getScene().getWindow());
+        List<File> files = fileChooser.showOpenMultipleDialog(imgItems.getScene().getWindow());
 
         if (files != null && !files.isEmpty()) {
 
@@ -208,7 +222,7 @@ public class CreateAuctionController {
 
             showImage(currentImageIndex);
 
-            imgItem.setVisible(false);
+            imgItems.setVisible(false);
         }
     }
     private void showImage(int index) {

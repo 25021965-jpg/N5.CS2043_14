@@ -29,6 +29,8 @@
          <Font name="Berlin Sans FB" size="25.0"/>
       </font>
    </Label>
+   <Label fx:id="lblCategory"
+          textFill="#d4af37"/>
    <Label fx:id="lblCurrentPrice" text="Current Price :">
       <font>
          <Font name="Berlin Sans FB" size="18.0"/>

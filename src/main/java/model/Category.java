@@ -3,9 +3,11 @@ package model;
 import java.io.Serializable;
 
 public enum Category implements Serializable {
+    ACCESSORIES,
+    COLLECTIBLES,
     ELECTRONICS,
     FASHION,
-    HOME,
-    BOOK,
+    HOME_APPLIANCES,
+    VEHICLES,
     OTHER
 }

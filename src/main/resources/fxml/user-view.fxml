@@ -165,8 +165,47 @@
             <Separator prefWidth="140.0"/>
 
             <!-- CATEGORY BUTTONS -->
+            <Button mnemonicParsing="false"
+                    onAction="#showAll"
+                    prefHeight="45.0"
+                    prefWidth="140.0"
+                    style="-fx-background-color: #d4af37;"
+                    text="All">
+
+                <font>
+                    <Font name="Berlin Sans FB Demi Bold" size="14.0"/>
+                </font>
+
+            </Button>
 
             <Button mnemonicParsing="false"
+                    onAction="#showAccessories"
+                    prefHeight="45.0"
+                    prefWidth="140.0"
+                    style="-fx-background-color: #d4af37;"
+                    text="Accessories">
+
+                <font>
+                    <Font name="Berlin Sans FB Demi Bold" size="14.0"/>
+                </font>
+
+            </Button>
+
+            <Button mnemonicParsing="false"
+                    onAction="#showCollectibles"
+                    prefHeight="45.0"
+                    prefWidth="140.0"
+                    style="-fx-background-color: #d4af37;"
+                    text="Collectibles">
+
+                <font>
+                    <Font name="Berlin Sans FB Demi Bold" size="14.0"/>
+                </font>
+
+            </Button>
+
+            <Button mnemonicParsing="false"
+                    onAction="#showElectronics"
                     prefHeight="45.0"
                     prefWidth="140.0"
                     style="-fx-background-color: #d4af37;"
@@ -179,6 +218,7 @@
             </Button>
 
             <Button mnemonicParsing="false"
+                    onAction="#showHomeAppliances"
                     prefHeight="45.0"
                     prefWidth="140.0"
                     style="-fx-background-color: #d4af37;"
@@ -191,10 +231,11 @@
             </Button>
 
             <Button mnemonicParsing="false"
+                    onAction="#showHomeAppliances"
                     prefHeight="45.0"
                     prefWidth="140.0"
                     style="-fx-background-color: #d4af37;"
-                    text="Home">
+                    text="Home Appliances">
 
                 <font>
                     <Font name="Berlin Sans FB Demi Bold" size="14.0"/>
@@ -203,10 +244,11 @@
             </Button>
 
             <Button mnemonicParsing="false"
+                    onAction="#showVehicles"
                     prefHeight="45.0"
                     prefWidth="140.0"
                     style="-fx-background-color: #d4af37;"
-                    text="Book">
+                    text="Vehicles">
 
                 <font>
                     <Font name="Berlin Sans FB Demi Bold" size="14.0"/>
@@ -215,6 +257,7 @@
             </Button>
 
             <Button mnemonicParsing="false"
+                    onAction="#showOther"
                     prefHeight="45.0"
                     prefWidth="140.0"
                     style="-fx-background-color: #d4af37;"

@@ -6,11 +6,11 @@ import javafx.scene.image.Image;
 
 import javafx.scene.image.ImageView;
 import model.*;
-import java.io.File;
 
 public class ItemCardController {
     @FXML private ImageView imgProduct;
     @FXML private Label lblName;
+    @FXML private Label lblCategory;
     @FXML private Label lblCurrentPrice;
     @FXML private Label lblStep;
     @FXML private Label lblEndTime;
@@ -19,6 +19,30 @@ public class ItemCardController {
         Item item = auction.getItem();
 
         lblName.setText("NAME: " + item.getName());
+
+        String category =
+                item.getCategory()
+                        .name()
+                        .replace("_", " ")
+                        .toLowerCase();
+
+        String[] words = category.split(" ");
+
+        StringBuilder formattedCategory = new StringBuilder();
+
+        for (String word : words) {
+
+            formattedCategory.append(
+                    word.substring(0, 1).toUpperCase()
+                            + word.substring(1)
+                            + " "
+            );
+        }
+
+        lblCategory.setText(
+                "Category: "
+                        + formattedCategory.toString().trim()
+        );
 
         lblCurrentPrice.setText("Current Price: " + auction.getCurrentPrice());
 
@@ -35,10 +59,10 @@ public class ItemCardController {
 
             Image image =
                     new Image(
-                            item.getImages()
+                            item.getImages().getFirst()
                     );
 
             imgProduct.setImage(image);
         }
-    }
+        }
 }

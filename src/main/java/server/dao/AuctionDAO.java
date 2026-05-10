@@ -40,8 +40,15 @@ public class AuctionDAO {
 
                 // Lấy ảnh
                 String path = rs.getString("image_path");
+
                 if (path != null) {
-                    item.setImages(path);
+
+                    List<String> images =
+                            new ArrayList<>();
+
+                    images.add(path);
+
+                    item.setImages(images);
                 }
 
                 auction.setItem(item);
