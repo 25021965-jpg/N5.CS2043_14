@@ -56,12 +56,12 @@ public class DatabaseService {
 
             // TẠO DATABASE
             stmt.executeUpdate(
-                    "CREATE DATABASE IF NOT EXISTS myapp_db"
+                    "CREATE DATABASE IF NOT EXISTS auction_system"
             );
 
             // CHUYỂN DATABASE
             stmt.executeUpdate(
-                    "USE myapp_db"
+                    "USE auction_system"
             );
 
             // TẠO TABLE USERS

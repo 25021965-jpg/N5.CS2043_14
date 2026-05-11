@@ -113,11 +113,22 @@ public class ItemViewController {
     }
     @FXML
     private void handleAddToFavourite(ActionEvent event) {
+        // 1. Thêm vào danh sách tĩnh
+        /*if (!FavouriteManager.favouriteAuctions.contains(this.auction)) {  //model lưu trữ
+            FavouriteManager.favouriteAuctions.add(this.auction);
 
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setContentText("This item is already in your favourites!");
-        alert.showAndWait();
-
+            // 2. Hiện thông báo thành công
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Success");
+            alert.setHeaderText(null);
+            alert.setContentText("Add success!");
+            alert.showAndWait();
+        } else {
+            // Thông báo nếu đã có rồi (tùy chọn) */
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setContentText("This item is already in your favourites!");
+            alert.showAndWait();
+     //   }
     }
 
     @FXML

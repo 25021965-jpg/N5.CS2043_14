@@ -121,10 +121,11 @@ public class ProfileController implements UserDataReceiver {
         );
 
         historyBtn.setOnAction(
-                e -> {
-                    // TODO:
-                    // open history page
-                }
+                e ->
+                    openPage("/fxml/auctionHistory-view.fxml",
+                            "Profile",
+                            null
+                    )
         );
 
         favoriteBtn.setOnAction(

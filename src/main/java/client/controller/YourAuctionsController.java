@@ -150,10 +150,10 @@ public class YourAuctionsController implements UserDataReceiver{
         );
 
         historyBtn.setOnAction(
-                e -> {
-                    // TODO:
-                    // open history page
-                }
+                e ->
+                        openPage("/fxml/auctionHistory-view.fxml",
+                                "Profile"
+                        )
         );
 
         favoriteBtn.setOnAction(

@@ -2,14 +2,17 @@ package client.controller;
 
 import client.network.ClientSocket;
 
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 
 import javafx.scene.control.*;
 
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import model.User;
@@ -17,7 +20,7 @@ import model.User;
 import java.io.IOException;
 import java.util.Optional;
 
-public class FavouriteController implements UserDataReceiver {
+public class AuctionHistoryController implements UserDataReceiver {
 
     private ClientSocket client;
 
@@ -48,22 +51,10 @@ public class FavouriteController implements UserDataReceiver {
     private Button backHomeBtn;
 
     @FXML
-    private ComboBox<String> statusFilterComboBox;
+    private ComboBox<String> filterComboBox;
 
     @FXML
-    private ComboBox<String> categoryFilterComboBox;
-
-    @FXML
-    public void initialize() {
-
-        System.out.println(
-                "Favourite Page Loaded"
-        );
-
-        setupStatusFilter();
-        setupCategoryFilter();
-        setupMenuEvents();
-    }
+    private VBox historyContainer;
 
     public void setClient(
             ClientSocket client
@@ -79,43 +70,32 @@ public class FavouriteController implements UserDataReceiver {
         this.currentUser = user;
     }
 
-    private void setupStatusFilter() {
+    @FXML
+    public void initialize() {
 
-        statusFilterComboBox.getItems().addAll(
-                "ALL",
-                "ACTIVE",
-                "FINISHED",
-                "CANCELLED"
+        System.out.println(
+                "AuctionHistory Loaded"
         );
 
-        statusFilterComboBox.setValue(
-                "ALL"
-        );
-
-        statusFilterComboBox.setOnAction(
-                e -> filterFavourite()
-        );
+        setupFilter();
+        setupMenuEvents();
     }
 
-    private void setupCategoryFilter() {
+    private void setupFilter() {
 
-        categoryFilterComboBox.getItems().addAll(
-                "ALL",
-                "ACCESSORIES",
-                "COLLECTIBLES",
-                "ELECTRONICS",
-                "FASHION",
-                "HOME APPLIANCES",
-                "VEHICLES",
-                "OTHER"
+        filterComboBox.getItems().addAll(
+                "All",
+                "Winning",
+                "Losing",
+                "Ended"
         );
 
-        categoryFilterComboBox.setValue(
-                "ALL"
+        filterComboBox.setValue(
+                "All"
         );
 
-        categoryFilterComboBox.setOnAction(
-                e -> filterFavourite()
+        filterComboBox.setOnAction(
+                e -> handleFilter()
         );
     }
 
@@ -132,13 +112,6 @@ public class FavouriteController implements UserDataReceiver {
                 e -> openPage(
                         "/fxml/yourAuctions-view.fxml",
                         "Your Auctions"
-                )
-        );
-
-        favoriteBtn.setOnAction(
-                e -> openPage(
-                        "/fxml/favourite-view.fxml",
-                        "Favourite"
                 )
         );
 
@@ -164,6 +137,14 @@ public class FavouriteController implements UserDataReceiver {
                 )
         );
 
+        favoriteBtn.setOnAction(
+                e -> openPage(
+                        "/fxml/Favourite-view.fxml",
+                        "Favourite"
+
+                )
+        );
+
         balanceBtn.setOnAction(
                 e -> {
                     // TODO:
@@ -172,33 +153,23 @@ public class FavouriteController implements UserDataReceiver {
         );
     }
 
-    private void filterFavourite() {
+    private void handleFilter() {
 
-        String selectedStatus =
-                statusFilterComboBox.getValue();
-
-        String selectedCategory =
-                categoryFilterComboBox.getValue();
+        String selected =
+                filterComboBox.getValue();
 
         System.out.println(
-                "Filter Status: "
-                        + selectedStatus
-        );
-
-        System.out.println(
-                "Filter Category: "
-                        + selectedCategory
+                "Filter: "
+                        + selected
         );
 
         /*
             TODO:
-            - filter favourite auction
-            - update UI
+            - filter history by status
          */
     }
 
-    @FXML
-    private void handleRemoveFavourite() {
+    private void handleLogout() {
 
         Alert alert =
                 new Alert(
@@ -206,72 +177,11 @@ public class FavouriteController implements UserDataReceiver {
                 );
 
         alert.setTitle(
-                "Remove Favourite"
-        );
-
-        alert.setHeaderText(null);
-
-        alert.setContentText(
-                "Remove this auction from favourite? This auction will no longer appear in your favourite list."
-        );
-
-        ButtonType removeButton =
-                new ButtonType(
-                        "Remove"
-                );
-
-        ButtonType cancelButton =
-                new ButtonType(
-                        "Cancel",
-                        ButtonBar.ButtonData.CANCEL_CLOSE
-                );
-
-        alert.getButtonTypes().setAll(
-                removeButton,
-                cancelButton
-        );
-
-        DialogPane dialogPane =
-                alert.getDialogPane();
-
-        dialogPane.setStyle(
-                "-fx-font-family: 'Berlin Sans FB Demi Bold';"
-        );
-
-        Optional<ButtonType> result =
-                alert.showAndWait();
-
-        if (
-                result.isPresent()
-                        &&
-                        result.get() == removeButton
-        ) {
-
-            System.out.println(
-                    "Favourite removed!"
-            );
-
-            /*
-                TODO:
-                - remove favourite from database
-                - refresh UI
-             */
-        }
-    }
-
-    private void handleLogout() {
-
-        Alert alert =
-                new Alert(
-                        Alert.AlertType.WARNING
-                );
-
-        alert.setTitle(
                 "Logout"
         );
 
         alert.setHeaderText(
-                "⚠ Are you sure you want to logout?"
+                "Are you sure you want to logout?"
         );
 
         alert.setContentText(
@@ -292,13 +202,6 @@ public class FavouriteController implements UserDataReceiver {
         alert.getButtonTypes().setAll(
                 logoutButton,
                 cancelButton
-        );
-
-        DialogPane dialogPane =
-                alert.getDialogPane();
-
-        dialogPane.setStyle(
-                "-fx-font-family: 'Berlin Sans FB Demi Bold';"
         );
 
         Optional<ButtonType> result =
@@ -325,7 +228,7 @@ public class FavouriteController implements UserDataReceiver {
 
         Alert alert =
                 new Alert(
-                        Alert.AlertType.WARNING
+                        Alert.AlertType.CONFIRMATION
                 );
 
         alert.setTitle(
@@ -333,7 +236,7 @@ public class FavouriteController implements UserDataReceiver {
         );
 
         alert.setHeaderText(
-                "⚠ Are you sure you want to delete your account?"
+                "Are you sure you want to delete your account?"
         );
 
         alert.setContentText(
@@ -356,13 +259,6 @@ public class FavouriteController implements UserDataReceiver {
                 cancelButton
         );
 
-        DialogPane dialogPane =
-                alert.getDialogPane();
-
-        dialogPane.setStyle(
-                "-fx-font-family: 'Berlin Sans FB Demi Bold';"
-        );
-
         Optional<ButtonType> result =
                 alert.showAndWait();
 
@@ -375,12 +271,6 @@ public class FavouriteController implements UserDataReceiver {
             System.out.println(
                     "Account deleted"
             );
-
-            /*
-                TODO:
-                - delete account from server
-                - clear session
-             */
 
             openPage(
                     "/fxml/login-view.fxml",
