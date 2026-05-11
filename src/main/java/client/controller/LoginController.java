@@ -155,7 +155,7 @@ public class LoginController {
             FXMLLoader loader = new FXMLLoader(
                     Objects.requireNonNull(
                             getClass().getResource(
-                                    "/fxml/user-view.fxml"
+                                    "/fxml/HomePage.fxml"
                             )
                     )
             );

@@ -26,7 +26,7 @@
             prefWidth="1024.0"
             xmlns="http://javafx.com/javafx/25"
             xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="client.controller.UserViewController">
+            fx:controller="client.controller.HomePageController">
 
     <!-- TOP BAR -->
     <top>
@@ -119,11 +119,13 @@
                     <!-- LOGOUT -->
                     <MenuItem fx:id="logoutMenuItem"
                               mnemonicParsing="false"
+                              onAction="#handleLogout"
                               text="Log Out"/>
 
                     <!-- DELETE -->
                     <MenuItem fx:id="deleteAccountMenuItem"
                               mnemonicParsing="false"
+                              onAction="#handleDeleteAccount"
                               text="DELETE ACCOUNT"/>
 
                 </items>
@@ -218,7 +220,7 @@
             </Button>
 
             <Button mnemonicParsing="false"
-                    onAction="#showHomeAppliances"
+                    onAction="#showFashion"
                     prefHeight="45.0"
                     prefWidth="140.0"
                     style="-fx-background-color: #d4af37;"

@@ -153,10 +153,10 @@ public class CreateAuctionController {
             newAuction.setStatus(AuctionStatus.ACTIVE);
 
             // --- BƯỚC 4: CHUYỂN TRANG VÀ HIỂN THỊ ---
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/user-view.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/HomePage.fxml"));
             Parent userViewParent = loader.load();
 
-            UserViewController userController = loader.getController();
+            HomePageController userController = loader.getController();
 
             // Truyền newAuction
             userController.addNewAuctionCard(newAuction);
@@ -177,7 +177,7 @@ public class CreateAuctionController {
         try {
             // 1. Tải file FXML của trang chủ
             // Lưu ý: Thay "HomeView.fxml" bằng tên file thực tế của bạn
-            Parent homePage = FXMLLoader.load(getClass().getResource("/fxml/user-view.fxml"));
+            Parent homePage = FXMLLoader.load(getClass().getResource("/fxml/HomePage.fxml"));
 
             // 2. Tạo một Scene mới với trang chủ
             Scene homeScene = new Scene(homePage);
@@ -190,7 +190,7 @@ public class CreateAuctionController {
             appStage.show();
 
         } catch (IOException e) {
-            System.out.println("Could not find user-view.fxml");
+            System.out.println("Could not find HomePage.fxml");
             e.printStackTrace();
         }
     }
