@@ -497,6 +497,7 @@
 
                         <Button
                                 fx:id="removeFavouriteBtn"
+                                onAction="#handleRemoveFavourite"
                                 prefHeight="35"
                                 prefWidth="160"
                                 text="Remove Favourite"

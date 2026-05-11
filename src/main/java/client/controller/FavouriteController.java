@@ -202,7 +202,7 @@ public class FavouriteController implements UserDataReceiver {
 
         Alert alert =
                 new Alert(
-                        Alert.AlertType.CONFIRMATION
+                        Alert.AlertType.WARNING
                 );
 
         alert.setTitle(
@@ -234,9 +234,6 @@ public class FavouriteController implements UserDataReceiver {
         DialogPane dialogPane =
                 alert.getDialogPane();
 
-        dialogPane.setStyle(
-                "-fx-font-family: 'Berlin Sans FB Demi Bold';"
-        );
 
         Optional<ButtonType> result =
                 alert.showAndWait();
@@ -270,12 +267,10 @@ public class FavouriteController implements UserDataReceiver {
                 "Logout"
         );
 
-        alert.setHeaderText(
-                "⚠ Are you sure you want to logout?"
-        );
+        alert.setHeaderText(null);
 
         alert.setContentText(
-                "You will need to login again."
+                "Are you sure you want to logout? You will need to login again."
         );
 
         ButtonType logoutButton =
@@ -296,10 +291,6 @@ public class FavouriteController implements UserDataReceiver {
 
         DialogPane dialogPane =
                 alert.getDialogPane();
-
-        dialogPane.setStyle(
-                "-fx-font-family: 'Berlin Sans FB Demi Bold';"
-        );
 
         Optional<ButtonType> result =
                 alert.showAndWait();
@@ -332,12 +323,9 @@ public class FavouriteController implements UserDataReceiver {
                 "Delete Account"
         );
 
-        alert.setHeaderText(
-                "⚠ Are you sure you want to delete your account?"
-        );
-
+        alert.setHeaderText(null);
         alert.setContentText(
-                "This action cannot be undone."
+                "Are you sure you want to delete your account? This action cannot be undone."
         );
 
         ButtonType deleteButton =
@@ -358,10 +346,6 @@ public class FavouriteController implements UserDataReceiver {
 
         DialogPane dialogPane =
                 alert.getDialogPane();
-
-        dialogPane.setStyle(
-                "-fx-font-family: 'Berlin Sans FB Demi Bold';"
-        );
 
         Optional<ButtonType> result =
                 alert.showAndWait();

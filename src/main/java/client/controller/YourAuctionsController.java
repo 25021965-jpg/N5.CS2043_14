@@ -157,10 +157,10 @@ public class YourAuctionsController implements UserDataReceiver{
         );
 
         favoriteBtn.setOnAction(
-                e -> {
-                    // TODO:
-                    // open favourite page
-                }
+                e -> openPage(
+                        "/fxml/favourite-view.fxml",
+                        "Favourite"
+                )
         );
 
         balanceBtn.setOnAction(
@@ -176,7 +176,7 @@ public class YourAuctionsController implements UserDataReceiver{
 
         Alert alert =
                 new Alert(
-                        Alert.AlertType.CONFIRMATION
+                        Alert.AlertType.WARNING
                 );
 
         alert.setTitle(
@@ -254,19 +254,17 @@ public class YourAuctionsController implements UserDataReceiver{
 
         Alert alert =
                 new Alert(
-                        Alert.AlertType.CONFIRMATION
+                        Alert.AlertType.WARNING
                 );
 
         alert.setTitle(
                 "Logout"
         );
 
-        alert.setHeaderText(
-                "Are you sure you want to logout?"
-        );
+        alert.setHeaderText(null);
 
         alert.setContentText(
-                "You will need to login again."
+                "Are you sure you want to logout? You will need to login again."
         );
 
         ButtonType logoutButton =
@@ -309,7 +307,7 @@ public class YourAuctionsController implements UserDataReceiver{
 
         Alert alert =
                 new Alert(
-                        Alert.AlertType.CONFIRMATION
+                        Alert.AlertType.WARNING
                 );
 
         alert.setTitle(
@@ -317,7 +315,6 @@ public class YourAuctionsController implements UserDataReceiver{
         );
 
         alert.setHeaderText(null);
-
         alert.setContentText(
                 "Are you sure you want to delete your account? This action cannot be undone."
         );

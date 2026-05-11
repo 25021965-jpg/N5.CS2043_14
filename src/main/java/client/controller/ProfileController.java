@@ -332,19 +332,17 @@ public class ProfileController implements UserDataReceiver {
 
         Alert alert =
                 new Alert(
-                        Alert.AlertType.CONFIRMATION
+                        Alert.AlertType.WARNING
                 );
 
         alert.setTitle(
                 "Logout"
         );
 
-        alert.setHeaderText(
-                "Are you sure you want to logout?"
-        );
+        alert.setHeaderText(null);
 
         alert.setContentText(
-                "You will need to login again."
+                "Are you sure you want to logout? You will need to login again."
         );
 
         ButtonType logoutButton =
@@ -388,7 +386,7 @@ public class ProfileController implements UserDataReceiver {
 
         Alert alert =
                 new Alert(
-                        Alert.AlertType.CONFIRMATION
+                        Alert.AlertType.WARNING
                 );
 
         alert.setTitle(
