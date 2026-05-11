@@ -359,17 +359,11 @@ public class HomePageController implements UserDataReceiver {
     private void openFavourite(
             ActionEvent event
     ) {
-
-        // TODO:
-        // open favourite page
-
-        /*
         openPage(
-                "/fxml/favourite-view.fxml",
+                "/fxml/Favourite-view.fxml",
                 "Favourite",
                 event
         );
-        */
     }
 
     @FXML
@@ -571,7 +565,7 @@ public class HomePageController implements UserDataReceiver {
             c.setUser(currentUser);
         }
 
-        /*
+
         if (
                 controller instanceof FavouriteController c
         ) {
@@ -580,6 +574,7 @@ public class HomePageController implements UserDataReceiver {
             c.setUser(currentUser);
         }
 
+        /*
         if (
                 controller instanceof BalanceController c
         ) {

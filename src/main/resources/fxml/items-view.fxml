@@ -12,7 +12,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane prefHeight="600.0" prefWidth="900.0" style="-fx-background-color: #121212;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controller.ItemViewController">
+<BorderPane prefHeight="600.0" prefWidth="900.0" style="-fx-background-color: #121212;" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controller.ItemViewController">
 
    <!-- TOP -->
    <top>
@@ -54,15 +54,11 @@
                <children>
                   <ImageView fx:id="imgItem" fitHeight="340.0" fitWidth="380.0" preserveRatio="false" />
 
-                  <Button mnemonicParsing="false" onAction="#showPreviousImage" prefHeight="40.0" prefWidth="40.0"
-                          style="-fx-background-color: rgba(0,0,0,0.5); -fx-text-fill: white; -fx-background-radius: 50; -fx-cursor: hand;"
-                          text="❮" StackPane.alignment="CENTER_LEFT">
+                  <Button mnemonicParsing="false" onAction="#showPreviousImage" prefHeight="40.0" prefWidth="40.0" style="-fx-background-color: rgba(0,0,0,0.5); -fx-text-fill: white; -fx-background-radius: 50; -fx-cursor: hand;" text="❮" StackPane.alignment="CENTER_LEFT">
                      <StackPane.margin><Insets left="10.0" /></StackPane.margin>
                   </Button>
 
-                  <Button mnemonicParsing="false" onAction="#showNextImage" prefHeight="40.0" prefWidth="40.0"
-                          style="-fx-background-color: rgba(0,0,0,0.5); -fx-text-fill: white; -fx-background-radius: 50; -fx-cursor: hand;"
-                          text="❯" StackPane.alignment="CENTER_RIGHT">
+                  <Button mnemonicParsing="false" onAction="#showNextImage" prefHeight="40.0" prefWidth="40.0" style="-fx-background-color: rgba(0,0,0,0.5); -fx-text-fill: white; -fx-background-radius: 50; -fx-cursor: hand;" text="❯" StackPane.alignment="CENTER_RIGHT">
                      <StackPane.margin><Insets right="10.0" /></StackPane.margin>
                   </Button>
                </children>
@@ -177,7 +173,7 @@
             <Button mnemonicParsing="false" onAction="#handleBack" prefHeight="45.0" prefWidth="140.0" style="                         -fx-background-color: transparent;                         -fx-text-fill: #d4af37;                         -fx-border-color: #d4af37;                         -fx-border-width: 2;                         -fx-border-radius: 12;                         -fx-background-radius: 12;                         -fx-font-weight: bold;                         -fx-cursor: hand;                         " text="BACK">
 
                <font>
-                  <Font name="Arial Bold" size="15.0" />
+                  <Font name="Berlin Sans FB Demi Bold" size="15.0" />
                </font>
 
             </Button>
@@ -185,12 +181,12 @@
             <Region HBox.hgrow="ALWAYS" />
             <Button layoutX="700.0" layoutY="33.0" mnemonicParsing="false" onAction="#handleAddToFavourite" prefHeight="45.0" prefWidth="178.0" style="                         -fx-background-color: #d4af37;                         -fx-text-fill: black;                         -fx-font-weight: bold;                         -fx-background-radius: 12;                         -fx-font-size: 15px;                         -fx-cursor: hand;                         " text="ADD TO FAVOURITE">
                <font>
-                  <Font name="Arial Bold" size="15.0" />
+                  <Font name="Berlin Sans FB Demi Bold" size="15.0" />
                </font>
             </Button>
             <Button layoutX="700.0" layoutY="33.0" mnemonicParsing="false" onAction="#handleJoinAuction" prefHeight="45.0" prefWidth="180.0" style="                         -fx-background-color: #d4af37;                         -fx-text-fill: black;                         -fx-font-weight: bold;                         -fx-background-radius: 12;                         -fx-font-size: 15px;                         -fx-cursor: hand;                         " text="JOIN AUCTION">
                <font>
-                  <Font name="Arial Bold" size="15.0" />
+                  <Font name="Berlin Sans FB Demi Bold" size="15.0" />
                </font>
             </Button>
 

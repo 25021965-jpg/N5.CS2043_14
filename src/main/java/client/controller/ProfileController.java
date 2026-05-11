@@ -128,10 +128,11 @@ public class ProfileController implements UserDataReceiver {
         );
 
         favoriteBtn.setOnAction(
-                e -> {
-                    // TODO:
-                    // open favourite page
-                }
+                e -> openPage(
+                        "/fxml/Favourite-view.fxml",
+                        "Favourite",
+                        null
+                )
         );
 
         balanceBtn.setOnAction(
@@ -394,12 +395,9 @@ public class ProfileController implements UserDataReceiver {
                 "Delete Account"
         );
 
-        alert.setHeaderText(
-                "Are you sure you want to delete your account?"
-        );
-
+        alert.setHeaderText(null);
         alert.setContentText(
-                "This action cannot be undone."
+                "Are you sure you want to delete your account? This action cannot be undone."
         );
 
         ButtonType deleteButton =
@@ -428,7 +426,7 @@ public class ProfileController implements UserDataReceiver {
         ) {
 
             System.out.println(
-                    "Account deleted"
+                    "Account deleted!"
             );
 
         /*

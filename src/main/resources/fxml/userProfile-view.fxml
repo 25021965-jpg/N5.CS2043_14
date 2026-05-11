@@ -26,7 +26,10 @@
 
         <VBox alignment="CENTER" spacing="6">
 
-            <Label style="                         -fx-text-fill: white;                         -fx-font-size: 26px;                         -fx-font-weight: bold;                     " text="Auction System" />
+            <Label style="                         -fx-text-fill: white;                         -fx-font-size: 26px;                         -fx-font-weight: bold;                     " text="Auction System">
+            <font>
+               <Font name="Berlin Sans FB Demi Bold" size="14.0" />
+            </font></Label>
 
             <Label style="                         -fx-text-fill: #94A3B8;                         -fx-font-size: 13px;                     " text="USER PANEL" />
 
@@ -36,50 +39,61 @@
 
         <!-- PROFILE -->
 
-        <Button fx:id="infoBtn" prefHeight="45" prefWidth="210" style="                     -fx-background-color: #475569;                     -fx-text-fill: white;                     -fx-font-size: 15px;                     -fx-font-weight: bold;                     -fx-background-radius: 8;                 " text="Profile" />
+        <Button fx:id="infoBtn" prefHeight="45" prefWidth="210" style="                     -fx-background-color: #475569;                     -fx-text-fill: white;                     -fx-font-size: 15px;                     -fx-font-weight: bold;                     -fx-background-radius: 8;                 " text="Profile">
+         <font>
+            <Font name="Berlin Sans FB Demi Bold" size="14.0" />
+         </font></Button>
 
         <!-- HISTORY -->
 
-        <Button fx:id="historyBtn" prefHeight="45" prefWidth="210" style="                     -fx-background-color: #334155;                     -fx-text-fill: white;                     -fx-font-size: 15px;                     -fx-font-weight: bold;                     -fx-background-radius: 8;                 " text="Auction History" />
+        <Button fx:id="historyBtn" prefHeight="45" prefWidth="210" style="                     -fx-background-color: #334155;                     -fx-text-fill: white;                     -fx-font-size: 15px;                     -fx-font-weight: bold;                     -fx-background-radius: 8;                 " text="Auction History">
+         <font>
+            <Font name="Berlin Sans FB Demi Bold" size="14.0" />
+         </font></Button>
 
         <!-- YOUR AUCTIONS -->
 
-        <Button fx:id="createdAuctionBtn" prefHeight="45" prefWidth="210" style="                     -fx-background-color: #334155;                     -fx-text-fill: white;                     -fx-font-size: 15px;                     -fx-font-weight: bold;                     -fx-background-radius: 8;                 " text="Your Auctions" />
+        <Button fx:id="createdAuctionBtn" prefHeight="45" prefWidth="210" style="                     -fx-background-color: #334155;                     -fx-text-fill: white;                     -fx-font-size: 15px;                     -fx-font-weight: bold;                     -fx-background-radius: 8;                 " text="Your Auctions">
+         <font>
+            <Font name="Berlin Sans FB Demi Bold" size="14.0" />
+         </font></Button>
 
         <!-- FAVOURITE -->
 
-        <Button fx:id="favoriteBtn" prefHeight="45" prefWidth="210" style="                     -fx-background-color: #334155;                     -fx-text-fill: white;                     -fx-font-size: 15px;                     -fx-font-weight: bold;                     -fx-background-radius: 8;                 " text="Favourite" />
+        <Button fx:id="favoriteBtn" prefHeight="45" prefWidth="210" style="                     -fx-background-color: #334155;                     -fx-text-fill: white;                     -fx-font-size: 15px;                     -fx-font-weight: bold;                     -fx-background-radius: 8;                 " text="Favourite">
+         <font>
+            <Font name="Berlin Sans FB Demi Bold" size="14.0" />
+         </font></Button>
 
         <!-- BALANCE -->
 
-        <Button fx:id="balanceBtn" prefHeight="45" prefWidth="210" style="                     -fx-background-color: #334155;                     -fx-text-fill: white;                     -fx-font-size: 15px;                     -fx-font-weight: bold;                     -fx-background-radius: 8;                 " text="Account Balance" />
+        <Button fx:id="balanceBtn" prefHeight="45" prefWidth="210" style="                     -fx-background-color: #334155;                     -fx-text-fill: white;                     -fx-font-size: 15px;                     -fx-font-weight: bold;                     -fx-background-radius: 8;                 " text="Account Balance">
+         <font>
+            <Font name="Berlin Sans FB Demi Bold" size="14.0" />
+         </font></Button>
 
         <!-- LOG OUT -->
 
-        <Button fx:id="logoutBtn" prefHeight="48" prefWidth="210" style="                     -fx-background-color: #D4AF37;                     -fx-text-fill: white;                     -fx-font-size: 15px;                     -fx-font-weight: bold;                     -fx-background-radius: 8;                 " text="Log Out" />
+        <Button fx:id="logoutBtn" prefHeight="48" prefWidth="210" style="                     -fx-background-color: #D4AF37;                     -fx-text-fill: white;                     -fx-font-size: 15px;                     -fx-font-weight: bold;                     -fx-background-radius: 8;                 " text="Log Out">
+         <font>
+            <Font name="Berlin Sans FB Demi Bold" size="14.0" />
+         </font></Button>
 
         <!-- DELETE -->
 
-        <Button fx:id="deleteAccountBtn" prefHeight="48" prefWidth="210" style="                     -fx-background-color: #EF4444;                     -fx-text-fill: white;                     -fx-font-size: 15px;                     -fx-font-weight: bold;                     -fx-background-radius: 8;                 " text="DELETE ACCOUNT" />
+        <Button fx:id="deleteAccountBtn" prefHeight="48" prefWidth="210" style="                     -fx-background-color: #EF4444;                     -fx-text-fill: white;                     -fx-font-size: 15px;                     -fx-font-weight: bold;                     -fx-background-radius: 8;                 " text="DELETE ACCOUNT">
+         <font>
+            <Font name="Berlin Sans FB Demi Bold" size="14.0" />
+         </font></Button>
 
         <Region VBox.vgrow="ALWAYS" />
 
         <!-- BACK -->
 
-        <Button
-                fx:id="backHomeBtn"
-                onAction="#handleBackHome"
-                prefHeight="48"
-                prefWidth="210"
-                style="
-        -fx-background-color: #2563EB;
-        -fx-text-fill: white;
-        -fx-font-size: 15px;
-        -fx-font-weight: bold;
-        -fx-background-radius: 8;
-    "
-                text="← Back To Home"
-        />
+        <Button fx:id="backHomeBtn" onAction="#handleBackHome" prefHeight="48" prefWidth="210" style="         -fx-background-color: #2563EB;         -fx-text-fill: white;         -fx-font-size: 15px;         -fx-font-weight: bold;         -fx-background-radius: 8;     " text="← Back To Home">
+         <font>
+            <Font name="Berlin Sans FB Demi Bold" size="14.0" />
+         </font></Button>
     </VBox>
 
     <!-- ================================================= -->
@@ -90,7 +104,10 @@
 
         <!-- TITLE -->
 
-        <Label style="                     -fx-font-size: 32px;                     -fx-font-weight: bold;                     -fx-text-fill: #0F172A;                 " text="Information" />
+        <Label style="                     -fx-font-size: 32px;                     -fx-font-weight: bold;                     -fx-text-fill: #0F172A;                 " text="Information">
+         <font>
+            <Font name="Berlin Sans FB Demi Bold" size="14.0" />
+         </font></Label>
 
         <!-- ================================================= -->
         <!-- INFO GRID -->
@@ -111,7 +128,10 @@
 
             <!-- FULL NAME -->
 
-            <Label style="                         -fx-font-size: 15px;                         -fx-font-weight: bold;                         -fx-text-fill: #334155;                     " text="Full Name" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+            <Label style="                         -fx-font-size: 15px;                         -fx-font-weight: bold;                         -fx-text-fill: #334155;                     " text="Full Name" GridPane.columnIndex="0" GridPane.rowIndex="0">
+            <font>
+               <Font name="Berlin Sans FB Demi Bold" size="14.0" />
+            </font></Label>
 
             <HBox prefHeight="50" prefWidth="520" style="                         -fx-background-color: white;                         -fx-border-color: #D4AF37;                         -fx-border-width: 2;                         -fx-border-radius: 8;                         -fx-background-radius: 8;                         -fx-alignment: CENTER-LEFT;                         -fx-padding: 0 15 0 15;                     " GridPane.columnIndex="1" GridPane.rowIndex="0">
 
@@ -121,7 +141,10 @@
 
             <!-- USERNAME -->
 
-            <Label style="                         -fx-font-size: 15px;                         -fx-font-weight: bold;                         -fx-text-fill: #334155;                     " text="Username" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+            <Label style="                         -fx-font-size: 15px;                         -fx-font-weight: bold;                         -fx-text-fill: #334155;                     " text="Username" GridPane.columnIndex="0" GridPane.rowIndex="1">
+            <font>
+               <Font name="Berlin Sans FB Demi Bold" size="14.0" />
+            </font></Label>
 
             <HBox prefHeight="50" prefWidth="520" style="                         -fx-background-color: white;                         -fx-border-color: #D4AF37;                         -fx-border-width: 2;                         -fx-border-radius: 8;                         -fx-background-radius: 8;                         -fx-alignment: CENTER-LEFT;                         -fx-padding: 0 15 0 15;                     " GridPane.columnIndex="1" GridPane.rowIndex="1">
 
@@ -135,7 +158,10 @@
 
             <!-- EMAIL -->
 
-            <Label style="                         -fx-font-size: 15px;                         -fx-font-weight: bold;                         -fx-text-fill: #334155;                     " text="Email" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+            <Label style="                         -fx-font-size: 15px;                         -fx-font-weight: bold;                         -fx-text-fill: #334155;                     " text="Email" GridPane.columnIndex="0" GridPane.rowIndex="2">
+            <font>
+               <Font name="Berlin Sans FB Demi Bold" size="14.0" />
+            </font></Label>
 
             <HBox prefHeight="50" prefWidth="520" style="                         -fx-background-color: white;                         -fx-border-color: #D4AF37;                         -fx-border-width: 2;                         -fx-border-radius: 8;                         -fx-background-radius: 8;                         -fx-alignment: CENTER-LEFT;                         -fx-padding: 0 15 0 15;                     " GridPane.columnIndex="1" GridPane.rowIndex="2">
 
@@ -151,7 +177,10 @@
 
         <VBox spacing="12">
 
-            <Label style="                 -fx-font-size: 18px;                 -fx-font-weight: bold;                 -fx-text-fill: #334155;             " text="Reset Password" />
+            <Label style="                 -fx-font-size: 18px;                 -fx-font-weight: bold;                 -fx-text-fill: #334155;             " text="Reset Password">
+            <font>
+               <Font name="Berlin Sans FB Demi Bold" size="14.0" />
+            </font></Label>
 
             <!-- OLD PASSWORD -->
 
@@ -195,6 +224,9 @@
 
       <!-- RESET BUTTON -->
 
-      <Button layoutX="789.0" layoutY="582.0" onAction="#resetPassword" prefHeight="31.0" prefWidth="143.0" style="                 -fx-background-color: #D4AF37;                 -fx-text-fill: white;                 -fx-font-size: 15px;                 -fx-font-weight: bold;                 -fx-background-radius: 8;             " text="Reset Password" />
+      <Button layoutX="789.0" layoutY="582.0" onAction="#resetPassword" prefHeight="31.0" prefWidth="143.0" style="                 -fx-background-color: #D4AF37;                 -fx-text-fill: white;                 -fx-font-size: 15px;                 -fx-font-weight: bold;                 -fx-background-radius: 8;             " text="Reset Password">
+      <font>
+         <Font name="Berlin Sans FB Demi Bold" size="14.0" />
+      </font></Button>
 
 </AnchorPane>

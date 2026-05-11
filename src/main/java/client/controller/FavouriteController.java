@@ -17,10 +17,8 @@ import model.User;
 import java.io.IOException;
 import java.util.Optional;
 
-public class YourAuctionsController implements UserDataReceiver{
+public class FavouriteController implements UserDataReceiver {
 
-    @FXML
-    private ComboBox<String> categoryFilterComboBox;
     private ClientSocket client;
 
     private User currentUser;
@@ -52,6 +50,21 @@ public class YourAuctionsController implements UserDataReceiver{
     @FXML
     private ComboBox<String> statusFilterComboBox;
 
+    @FXML
+    private ComboBox<String> categoryFilterComboBox;
+
+    @FXML
+    public void initialize() {
+
+        System.out.println(
+                "Favourite Page Loaded"
+        );
+
+        setupStatusFilter();
+        setupCategoryFilter();
+        setupMenuEvents();
+    }
+
     public void setClient(
             ClientSocket client
     ) {
@@ -64,18 +77,6 @@ public class YourAuctionsController implements UserDataReceiver{
     ) {
 
         this.currentUser = user;
-    }
-
-    @FXML
-    public void initialize() {
-
-        System.out.println(
-                "YourAuctions Loaded"
-        );
-
-        setupStatusFilter();
-        setupCategoryFilter();
-        setupMenuEvents();
     }
 
     private void setupStatusFilter() {
@@ -92,7 +93,7 @@ public class YourAuctionsController implements UserDataReceiver{
         );
 
         statusFilterComboBox.setOnAction(
-                e -> filterAuctions()
+                e -> filterFavourite()
         );
     }
 
@@ -114,10 +115,10 @@ public class YourAuctionsController implements UserDataReceiver{
         );
 
         categoryFilterComboBox.setOnAction(
-                e -> filterAuctions()
+                e -> filterFavourite()
         );
     }
-    
+
     private void setupMenuEvents() {
 
         infoBtn.setOnAction(
@@ -131,6 +132,13 @@ public class YourAuctionsController implements UserDataReceiver{
                 e -> openPage(
                         "/fxml/yourAuctions-view.fxml",
                         "Your Auctions"
+                )
+        );
+
+        favoriteBtn.setOnAction(
+                e -> openPage(
+                        "/fxml/favourite-view.fxml",
+                        "Favourite"
                 )
         );
 
@@ -156,13 +164,6 @@ public class YourAuctionsController implements UserDataReceiver{
                 }
         );
 
-        favoriteBtn.setOnAction(
-                e -> {
-                    // TODO:
-                    // open favourite page
-                }
-        );
-
         balanceBtn.setOnAction(
                 e -> {
                     // TODO:
@@ -171,8 +172,33 @@ public class YourAuctionsController implements UserDataReceiver{
         );
     }
 
+    private void filterFavourite() {
+
+        String selectedStatus =
+                statusFilterComboBox.getValue();
+
+        String selectedCategory =
+                categoryFilterComboBox.getValue();
+
+        System.out.println(
+                "Filter Status: "
+                        + selectedStatus
+        );
+
+        System.out.println(
+                "Filter Category: "
+                        + selectedCategory
+        );
+
+        /*
+            TODO:
+            - filter favourite auction
+            - update UI
+         */
+    }
+
     @FXML
-    private void handleCancelAuction() {
+    private void handleRemoveFavourite() {
 
         Alert alert =
                 new Alert(
@@ -180,28 +206,36 @@ public class YourAuctionsController implements UserDataReceiver{
                 );
 
         alert.setTitle(
-                "Cancel Auction"
+                "Remove Favourite"
         );
 
         alert.setHeaderText(null);
+
         alert.setContentText(
-                "Are you sure you want to cancel this auction? Users will no longer be able to bid on this item."
+                "Remove this auction from favourite? This auction will no longer appear in your favourite list."
         );
 
-        ButtonType cancelAuctionButton =
+        ButtonType removeButton =
                 new ButtonType(
-                        "Cancel Auction"
+                        "Remove"
                 );
 
-        ButtonType closeButton =
+        ButtonType cancelButton =
                 new ButtonType(
-                        "Close",
+                        "Cancel",
                         ButtonBar.ButtonData.CANCEL_CLOSE
                 );
 
         alert.getButtonTypes().setAll(
-                cancelAuctionButton,
-                closeButton
+                removeButton,
+                cancelButton
+        );
+
+        DialogPane dialogPane =
+                alert.getDialogPane();
+
+        dialogPane.setStyle(
+                "-fx-font-family: 'Berlin Sans FB Demi Bold';"
         );
 
         Optional<ButtonType> result =
@@ -210,51 +244,26 @@ public class YourAuctionsController implements UserDataReceiver{
         if (
                 result.isPresent()
                         &&
-                        result.get()
-                                == cancelAuctionButton
+                        result.get() == removeButton
         ) {
 
             System.out.println(
-                    "Auction cancelled!"
+                    "Favourite removed!"
             );
 
-        /*
-            TODO:
-            - update auction status
-            - send request to server
-            - refresh UI
-         */
+            /*
+                TODO:
+                - remove favourite from database
+                - refresh UI
+             */
         }
-    }
-
-    private void filterAuctions() {
-
-        String selectedStatus =
-                statusFilterComboBox.getValue();
-        String selectedCategory =
-                categoryFilterComboBox.getValue();
-
-        System.out.println(
-                "Filter: "
-                        + selectedStatus
-        );
-        System.out.println(
-                "Category: "
-                        + selectedCategory
-        );
-
-        /*
-            TODO:
-            - filter auction by status
-            - update UI
-         */
     }
 
     private void handleLogout() {
 
         Alert alert =
                 new Alert(
-                        Alert.AlertType.CONFIRMATION
+                        Alert.AlertType.WARNING
                 );
 
         alert.setTitle(
@@ -262,7 +271,7 @@ public class YourAuctionsController implements UserDataReceiver{
         );
 
         alert.setHeaderText(
-                "Are you sure you want to logout?"
+                "⚠ Are you sure you want to logout?"
         );
 
         alert.setContentText(
@@ -283,6 +292,13 @@ public class YourAuctionsController implements UserDataReceiver{
         alert.getButtonTypes().setAll(
                 logoutButton,
                 cancelButton
+        );
+
+        DialogPane dialogPane =
+                alert.getDialogPane();
+
+        dialogPane.setStyle(
+                "-fx-font-family: 'Berlin Sans FB Demi Bold';"
         );
 
         Optional<ButtonType> result =
@@ -309,17 +325,19 @@ public class YourAuctionsController implements UserDataReceiver{
 
         Alert alert =
                 new Alert(
-                        Alert.AlertType.CONFIRMATION
+                        Alert.AlertType.WARNING
                 );
 
         alert.setTitle(
                 "Delete Account"
         );
 
-        alert.setHeaderText(null);
+        alert.setHeaderText(
+                "⚠ Are you sure you want to delete your account?"
+        );
 
         alert.setContentText(
-                "Are you sure you want to delete your account? This action cannot be undone."
+                "This action cannot be undone."
         );
 
         ButtonType deleteButton =
@@ -338,6 +356,13 @@ public class YourAuctionsController implements UserDataReceiver{
                 cancelButton
         );
 
+        DialogPane dialogPane =
+                alert.getDialogPane();
+
+        dialogPane.setStyle(
+                "-fx-font-family: 'Berlin Sans FB Demi Bold';"
+        );
+
         Optional<ButtonType> result =
                 alert.showAndWait();
 
@@ -351,11 +376,11 @@ public class YourAuctionsController implements UserDataReceiver{
                     "Account deleted"
             );
 
-        /*
-            TODO:
-            - delete account from server
-            - clear session
-         */
+            /*
+                TODO:
+                - delete account from server
+                - clear session
+             */
 
             openPage(
                     "/fxml/login-view.fxml",
