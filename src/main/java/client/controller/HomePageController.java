@@ -330,17 +330,12 @@ public class HomePageController implements UserDataReceiver {
     private void openHistory(
             ActionEvent event
     ) {
-
-        // TODO:
-        // open history page
-
-        /*
         openPage(
                 "/fxml/auctionHistory-view.fxml",
                 "History",
                 event
         );
-        */
+
     }
 
     @FXML

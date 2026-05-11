@@ -2,14 +2,17 @@ package client.controller;
 
 import client.network.ClientSocket;
 
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 
 import javafx.scene.control.*;
 
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import model.User;
@@ -17,10 +20,8 @@ import model.User;
 import java.io.IOException;
 import java.util.Optional;
 
-public class YourAuctionsController implements UserDataReceiver{
+public class AuctionHistoryController implements UserDataReceiver {
 
-    @FXML
-    private ComboBox<String> categoryFilterComboBox;
     private ClientSocket client;
 
     private User currentUser;
@@ -50,7 +51,10 @@ public class YourAuctionsController implements UserDataReceiver{
     private Button backHomeBtn;
 
     @FXML
-    private ComboBox<String> statusFilterComboBox;
+    private ComboBox<String> filterComboBox;
+
+    @FXML
+    private VBox historyContainer;
 
     public void setClient(
             ClientSocket client
@@ -70,54 +74,31 @@ public class YourAuctionsController implements UserDataReceiver{
     public void initialize() {
 
         System.out.println(
-                "YourAuctions Loaded"
+                "AuctionHistory Loaded"
         );
 
-        setupStatusFilter();
-        setupCategoryFilter();
+        setupFilter();
         setupMenuEvents();
     }
 
-    private void setupStatusFilter() {
+    private void setupFilter() {
 
-        statusFilterComboBox.getItems().addAll(
-                "ALL",
-                "ACTIVE",
-                "FINISHED",
-                "CANCELLED"
+        filterComboBox.getItems().addAll(
+                "All",
+                "Winning",
+                "Losing",
+                "Ended"
         );
 
-        statusFilterComboBox.setValue(
-                "ALL"
+        filterComboBox.setValue(
+                "All"
         );
 
-        statusFilterComboBox.setOnAction(
-                e -> filterAuctions()
-        );
-    }
-
-    private void setupCategoryFilter() {
-
-        categoryFilterComboBox.getItems().addAll(
-                "ALL",
-                "ACCESSORIES",
-                "COLLECTIBLES",
-                "ELECTRONICS",
-                "FASHION",
-                "HOME APPLIANCES",
-                "VEHICLES",
-                "OTHER"
-        );
-
-        categoryFilterComboBox.setValue(
-                "ALL"
-        );
-
-        categoryFilterComboBox.setOnAction(
-                e -> filterAuctions()
+        filterComboBox.setOnAction(
+                e -> handleFilter()
         );
     }
-    
+
     private void setupMenuEvents() {
 
         infoBtn.setOnAction(
@@ -150,16 +131,17 @@ public class YourAuctionsController implements UserDataReceiver{
         );
 
         historyBtn.setOnAction(
-                e ->
-                        openPage("/fxml/auctionHistory-view.fxml",
-                                "Profile"
-                        )
+                e -> openPage(
+                        "/fxml/auctionHistory-view.fxml",
+                        "Auction History"
+                )
         );
 
         favoriteBtn.setOnAction(
                 e -> openPage(
-                        "/fxml/favourite-view.fxml",
+                        "/fxml/Favourite-view.fxml",
                         "Favourite"
+
                 )
         );
 
@@ -171,82 +153,19 @@ public class YourAuctionsController implements UserDataReceiver{
         );
     }
 
-    @FXML
-    private void handleCancelAuction() {
+    private void handleFilter() {
 
-        Alert alert =
-                new Alert(
-                        Alert.AlertType.WARNING
-                );
-
-        alert.setTitle(
-                "Cancel Auction"
-        );
-
-        alert.setHeaderText(null);
-        alert.setContentText(
-                "Are you sure you want to cancel this auction? Users will no longer be able to bid on this item."
-        );
-
-        ButtonType cancelAuctionButton =
-                new ButtonType(
-                        "Cancel Auction"
-                );
-
-        ButtonType closeButton =
-                new ButtonType(
-                        "Close",
-                        ButtonBar.ButtonData.CANCEL_CLOSE
-                );
-
-        alert.getButtonTypes().setAll(
-                cancelAuctionButton,
-                closeButton
-        );
-
-        Optional<ButtonType> result =
-                alert.showAndWait();
-
-        if (
-                result.isPresent()
-                        &&
-                        result.get()
-                                == cancelAuctionButton
-        ) {
-
-            System.out.println(
-                    "Auction cancelled!"
-            );
-
-        /*
-            TODO:
-            - update auction status
-            - send request to server
-            - refresh UI
-         */
-        }
-    }
-
-    private void filterAuctions() {
-
-        String selectedStatus =
-                statusFilterComboBox.getValue();
-        String selectedCategory =
-                categoryFilterComboBox.getValue();
+        String selected =
+                filterComboBox.getValue();
 
         System.out.println(
                 "Filter: "
-                        + selectedStatus
-        );
-        System.out.println(
-                "Category: "
-                        + selectedCategory
+                        + selected
         );
 
         /*
             TODO:
-            - filter auction by status
-            - update UI
+            - filter history by status
          */
     }
 
@@ -254,17 +173,19 @@ public class YourAuctionsController implements UserDataReceiver{
 
         Alert alert =
                 new Alert(
-                        Alert.AlertType.WARNING
+                        Alert.AlertType.CONFIRMATION
                 );
 
         alert.setTitle(
                 "Logout"
         );
 
-        alert.setHeaderText(null);
+        alert.setHeaderText(
+                "Are you sure you want to logout?"
+        );
 
         alert.setContentText(
-                "Are you sure you want to logout? You will need to login again."
+                "You will need to login again."
         );
 
         ButtonType logoutButton =
@@ -307,16 +228,19 @@ public class YourAuctionsController implements UserDataReceiver{
 
         Alert alert =
                 new Alert(
-                        Alert.AlertType.WARNING
+                        Alert.AlertType.CONFIRMATION
                 );
 
         alert.setTitle(
                 "Delete Account"
         );
 
-        alert.setHeaderText(null);
+        alert.setHeaderText(
+                "Are you sure you want to delete your account?"
+        );
+
         alert.setContentText(
-                "Are you sure you want to delete your account? This action cannot be undone."
+                "This action cannot be undone."
         );
 
         ButtonType deleteButton =
@@ -347,12 +271,6 @@ public class YourAuctionsController implements UserDataReceiver{
             System.out.println(
                     "Account deleted"
             );
-
-        /*
-            TODO:
-            - delete account from server
-            - clear session
-         */
 
             openPage(
                     "/fxml/login-view.fxml",

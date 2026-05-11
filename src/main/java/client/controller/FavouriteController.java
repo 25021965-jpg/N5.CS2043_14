@@ -158,10 +158,10 @@ public class FavouriteController implements UserDataReceiver {
         );
 
         historyBtn.setOnAction(
-                e -> {
-                    // TODO:
-                    // open history page
-                }
+                e -> openPage(
+                        "/fxml/auctionHistory-view.fxml",
+                        "Auction History"
+                )
         );
 
         balanceBtn.setOnAction(
