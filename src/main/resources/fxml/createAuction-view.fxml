@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.collections.FXCollections?>
 <?import java.lang.String?>
-<?import javafx.scene.control.ComboBox?>
+<?import javafx.collections.FXCollections?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.Cursor?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TextArea?>
@@ -13,128 +13,68 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="800.0"
-            prefWidth="1100.0"
-            style="-fx-background-color: linear-gradient(to bottom right, #0f0f0f, #1b1b1b);"
-            xmlns="http://javafx.com/javafx/17"
-            xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="client.controller.CreateAuctionController">
+<AnchorPane prefHeight="800.0" prefWidth="1100.0" style="-fx-background-color: linear-gradient(to bottom right, #0f0f0f, #1b1b1b);" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controller.CreateAuctionController">
 
    <!-- TITLE -->
-   <Label layoutX="345.0"
-          layoutY="30.0"
-          text="CREATE AUCTION"
-          textFill="#d4af37">
+   <Label layoutX="345.0" layoutY="30.0" text="CREATE AUCTION" textFill="#d4af37">
 
       <font>
-         <Font name="Berlin Sans FB Demi Bold"
-               size="48.0"/>
+         <Font name="Berlin Sans FB Demi Bold" size="48.0" />
       </font>
 
    </Label>
 
    <!-- MAIN CONTAINER -->
-   <HBox layoutX="45.0"
-         layoutY="120.0"
-         prefHeight="580.0"
-         prefWidth="1010.0"
-         spacing="35.0">
+   <HBox layoutX="45.0" layoutY="120.0" prefHeight="580.0" prefWidth="1010.0" spacing="35.0">
 
       <!-- LEFT SIDE -->
-      <VBox spacing="20.0"
-            prefWidth="500.0">
+      <VBox prefWidth="500.0" spacing="20.0">
 
          <!-- IMAGE CARD -->
-         <StackPane prefHeight="360.0"
-                    prefWidth="500.0"
-                    style="
-                       -fx-background-color: #1f1f1f;
-                       -fx-background-radius: 25;
-                       -fx-border-radius: 25;
-                       -fx-border-color: #d4af37;
-                       -fx-border-width: 2;
-                       -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 18,0,0,6);
-                       ">
+         <StackPane prefHeight="360.0" prefWidth="500.0" style="                        -fx-background-color: #1f1f1f;                        -fx-background-radius: 25;                        -fx-border-radius: 25;                        -fx-border-color: #d4af37;                        -fx-border-width: 2;                        -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 18,0,0,6);                        ">
 
             <!-- IMAGE -->
-            <ImageView fx:id="imagePreview"
-                       fitHeight="360.0"
-                       fitWidth="500.0"
-                       preserveRatio="false"/>
+            <ImageView fx:id="imagePreview" fitHeight="360.0" fitWidth="500.0" preserveRatio="false" />
 
             <!-- LEFT BUTTON -->
-            <Button mnemonicParsing="false"
-                    onAction="#showPreviousImage"
-                    text="❮"
-                    textFill="WHITE"
-                    StackPane.alignment="CENTER_LEFT"
-                    style="
-                        -fx-background-color: rgba(0,0,0,0.55);
-                        -fx-background-radius: 50;
-                        -fx-font-size: 22px;
-                        -fx-font-weight: bold;
-                        -fx-cursor: hand;
-                        "
-                    prefHeight="45.0"
-                    prefWidth="45.0">
+            <Button mnemonicParsing="false" onAction="#showPreviousImage" prefHeight="45.0" prefWidth="45.0" style="                         -fx-background-color: rgba(0,0,0,0.55);                         -fx-background-radius: 50;                         -fx-font-size: 22px;                         -fx-font-weight: bold;                         -fx-cursor: hand;                         " text="❮" textFill="WHITE" StackPane.alignment="CENTER_LEFT">
 
                <StackPane.margin>
-                  <Insets left="15.0"/>
+                  <Insets left="15.0" />
                </StackPane.margin>
 
             </Button>
 
             <!-- RIGHT BUTTON -->
-            <Button mnemonicParsing="false"
-                    onAction="#showNextImage"
-                    text="❯"
-                    textFill="WHITE"
-                    StackPane.alignment="CENTER_RIGHT"
-                    style="
-                        -fx-background-color: rgba(0,0,0,0.55);
-                        -fx-background-radius: 50;
-                        -fx-font-size: 22px;
-                        -fx-font-weight: bold;
-                        -fx-cursor: hand;
-                        "
-                    prefHeight="45.0"
-                    prefWidth="45.0">
+            <Button mnemonicParsing="false" onAction="#showNextImage" prefHeight="45.0" prefWidth="45.0" style="                         -fx-background-color: rgba(0,0,0,0.55);                         -fx-background-radius: 50;                         -fx-font-size: 22px;                         -fx-font-weight: bold;                         -fx-cursor: hand;                         " text="❯" textFill="WHITE" StackPane.alignment="CENTER_RIGHT">
 
                <StackPane.margin>
-                  <Insets right="15.0"/>
+                  <Insets right="15.0" />
                </StackPane.margin>
 
             </Button>
 
             <!-- UPLOAD -->
-            <VBox fx:id="imgItems"
-                  alignment="CENTER"
-                  spacing="10.0"
-                  onMouseClicked="#handleUploadImages"
-                  style="-fx-cursor: hand;">
+            <VBox fx:id="imgItems" alignment="CENTER" onMouseClicked="#handleUploadImages" spacing="10.0" style="-fx-cursor: hand;">
 
                <children>
 
-                  <Label text="⬆"
-                         textFill="#d4af37">
+                  <Label text="⬆" textFill="#d4af37">
 
                      <font>
-                        <Font size="55.0"/>
+                        <Font size="55.0" />
                      </font>
 
                   </Label>
 
-                  <Label text="Upload Product Images"
-                         textFill="#d4af37">
+                  <Label text="Upload Product Images" textFill="#d4af37">
 
                      <font>
-                        <Font name="Arial Bold"
-                              size="18.0"/>
+                        <Font name="Arial Bold" size="18.0" />
                      </font>
 
                   </Label>
@@ -142,7 +82,7 @@
                </children>
 
                <cursor>
-                  <Cursor fx:constant="HAND"/>
+                  <Cursor fx:constant="HAND" />
                </cursor>
 
             </VBox>
@@ -154,28 +94,15 @@
 
             <children>
 
-               <Label text="DESCRIPTION"
-                      textFill="#d4af37">
+               <Label text="DESCRIPTION" textFill="#d4af37">
 
                   <font>
-                     <Font name="Arial Bold"
-                           size="17.0"/>
+                     <Font name="Arial Bold" size="17.0" />
                   </font>
 
                </Label>
 
-               <TextArea fx:id="txtDescription"
-                         prefHeight="180.0"
-                         wrapText="true"
-                         style="
-                              -fx-control-inner-background: #1f1f1f;
-                              -fx-text-fill: white;
-                              -fx-background-radius: 18;
-                              -fx-border-radius: 18;
-                              -fx-border-color: #2c2c2c;
-                              -fx-font-size: 14px;
-                              -fx-padding: 12;
-                              "/>
+               <TextArea fx:id="txtDescription" prefHeight="180.0" style="                               -fx-control-inner-background: #1f1f1f;                               -fx-text-fill: white;                               -fx-background-radius: 18;                               -fx-border-radius: 18;                               -fx-border-color: #2c2c2c;                               -fx-font-size: 14px;                               -fx-padding: 12;                               " wrapText="true" />
 
             </children>
 
@@ -184,21 +111,10 @@
       </VBox>
 
       <!-- RIGHT SIDE -->
-      <VBox spacing="22.0"
-            prefWidth="470.0"
-            style="
-              -fx-background-color: #181818;
-              -fx-background-radius: 25;
-              -fx-border-radius: 25;
-              -fx-border-color: #2b2b2b;
-              -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.45), 15,0,0,5);
-              ">
+      <VBox prefWidth="470.0" spacing="22.0" style="               -fx-background-color: #181818;               -fx-background-radius: 25;               -fx-border-radius: 25;               -fx-border-color: #2b2b2b;               -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.45), 15,0,0,5);               ">
 
          <padding>
-            <Insets top="30.0"
-                    left="28.0"
-                    right="28.0"
-                    bottom="30.0"/>
+            <Insets bottom="30.0" left="28.0" right="28.0" top="30.0" />
          </padding>
 
          <!-- ITEM NAME -->
@@ -206,19 +122,9 @@
 
             <children>
 
-               <Label text="ITEM NAME"
-                      textFill="#d4af37"/>
+               <Label text="ITEM NAME" textFill="#d4af37" />
 
-               <TextField fx:id="txtName"
-                          prefHeight="45.0"
-                          style="
-                               -fx-background-color: #262626;
-                               -fx-text-fill: white;
-                               -fx-background-radius: 14;
-                               -fx-border-radius: 14;
-                               -fx-border-color: #3a3a3a;
-                               -fx-font-size: 14px;
-                               "/>
+               <TextField fx:id="txtName" prefHeight="45.0" style="                                -fx-background-color: #262626;                                -fx-text-fill: white;                                -fx-background-radius: 14;                                -fx-border-radius: 14;                                -fx-border-color: #3a3a3a;                                -fx-font-size: 14px;                                " />
 
             </children>
 
@@ -229,18 +135,9 @@
 
             <children>
 
-               <Label text="STARTING BID"
-                      textFill="#d4af37"/>
+               <Label text="STARTING BID" textFill="#d4af37" />
 
-               <TextField fx:id="txtStartingBid"
-                          prefHeight="45.0"
-                          style="
-                               -fx-background-color: #262626;
-                               -fx-text-fill: white;
-                               -fx-background-radius: 14;
-                               -fx-border-radius: 14;
-                               -fx-border-color: #3a3a3a;
-                               "/>
+               <TextField fx:id="txtStartingBid" prefHeight="45.0" style="                                -fx-background-color: #262626;                                -fx-text-fill: white;                                -fx-background-radius: 14;                                -fx-border-radius: 14;                                -fx-border-color: #3a3a3a;                                " />
 
             </children>
 
@@ -251,18 +148,9 @@
 
             <children>
 
-               <Label text="MIN INCREMENT"
-                      textFill="#d4af37"/>
+               <Label text="MIN INCREMENT" textFill="#d4af37" />
 
-               <TextField fx:id="txtMinIncrement"
-                          prefHeight="45.0"
-                          style="
-                               -fx-background-color: #262626;
-                               -fx-text-fill: white;
-                               -fx-background-radius: 14;
-                               -fx-border-radius: 14;
-                               -fx-border-color: #3a3a3a;
-                               "/>
+               <TextField fx:id="txtMinIncrement" prefHeight="45.0" style="                                -fx-background-color: #262626;                                -fx-text-fill: white;                                -fx-background-radius: 14;                                -fx-border-radius: 14;                                -fx-border-color: #3a3a3a;                                " />
 
             </children>
 
@@ -273,30 +161,19 @@
 
             <children>
 
-               <Label text="CATEGORY"
-                      textFill="#d4af37"/>
+               <Label text="CATEGORY" textFill="#d4af37" />
 
-               <ComboBox fx:id="cbCategory"
-                         prefHeight="45.0"
-                         prefWidth="410.0"
-                         style="
-                  -fx-background-color: #262626;
-                  -fx-text-fill: white;
-                  -fx-prompt-text-fill: white;
-                  -fx-background-radius: 14;
-                  -fx-border-radius: 14;
-                  -fx-border-color: #3a3a3a;
-                  ">
+               <ComboBox fx:id="cbCategory" prefHeight="45.0" prefWidth="410.0" style="                   -fx-background-color: #262626;                   -fx-text-fill: white;                   -fx-prompt-text-fill: white;                   -fx-background-radius: 14;                   -fx-border-radius: 14;                   -fx-border-color: #3a3a3a;                   " stylesheets="@../CA.css">
 
                   <items>
                      <FXCollections fx:factory="observableArrayList">
-                        <String fx:value="ACCESSORIES"/>
-                        <String fx:value="COLLECTIBLES"/>
-                        <String fx:value="ELECTRONICS"/>
-                        <String fx:value="FASHION"/>
-                        <String fx:value="HOME_APPLIANCES"/>
-                        <String fx:value="VEHICLES"/>
-                        <String fx:value="OTHER"/>
+                        <String fx:value="ACCESSORIES" />
+                        <String fx:value="COLLECTIBLES" />
+                        <String fx:value="ELECTRONICS" />
+                        <String fx:value="FASHION" />
+                        <String fx:value="HOME_APPLIANCES" />
+                        <String fx:value="VEHICLES" />
+                        <String fx:value="OTHER" />
 
                      </FXCollections>
                   </items>
@@ -312,40 +189,17 @@
 
             <children>
 
-               <Label text="START TIME"
-                      textFill="#d4af37"/>
+               <Label text="START TIME" textFill="#d4af37" />
 
                <HBox spacing="10.0">
 
                   <children>
 
-                     <TextField fx:id="txtStartHour"
-                                promptText="HH"
-                                prefWidth="70.0"
-                                prefHeight="45.0"
-                                style="
-                                       -fx-background-color: #262626;
-                                       -fx-text-fill: white;
-                                       -fx-background-radius: 14;
-                                       "/>
+                     <TextField fx:id="txtStartHour" prefHeight="45.0" prefWidth="70.0" promptText="HH" style="                                        -fx-background-color: #262626;                                        -fx-text-fill: white;                                        -fx-background-radius: 14;                                        " />
 
-                     <TextField fx:id="txtStartMin"
-                                promptText="MM"
-                                prefWidth="70.0"
-                                prefHeight="45.0"
-                                style="
-                                       -fx-background-color: #262626;
-                                       -fx-text-fill: white;
-                                       -fx-background-radius: 14;
-                                       "/>
+                     <TextField fx:id="txtStartMin" prefHeight="45.0" prefWidth="70.0" promptText="MM" style="                                        -fx-background-color: #262626;                                        -fx-text-fill: white;                                        -fx-background-radius: 14;                                        " />
 
-                     <DatePicker fx:id="dpStartDate"
-                                 prefHeight="45.0"
-                                 prefWidth="250.0"
-                                 style="
-                                        -fx-background-color: #262626;
-                                        -fx-background-radius: 14;
-                                        "/>
+                     <DatePicker fx:id="dpStartDate" prefHeight="45.0" prefWidth="250.0" style="                                         -fx-background-color: #262626;                                         -fx-background-radius: 14;                                         " />
 
                   </children>
 
@@ -360,40 +214,17 @@
 
             <children>
 
-               <Label text="END TIME"
-                      textFill="#d4af37"/>
+               <Label text="END TIME" textFill="#d4af37" />
 
                <HBox spacing="10.0">
 
                   <children>
 
-                     <TextField fx:id="txtEndHour"
-                                promptText="HH"
-                                prefWidth="70.0"
-                                prefHeight="45.0"
-                                style="
-                                       -fx-background-color: #262626;
-                                       -fx-text-fill: white;
-                                       -fx-background-radius: 14;
-                                       "/>
+                     <TextField fx:id="txtEndHour" prefHeight="45.0" prefWidth="70.0" promptText="HH" style="                                        -fx-background-color: #262626;                                        -fx-text-fill: white;                                        -fx-background-radius: 14;                                        " />
 
-                     <TextField fx:id="txtEndMin"
-                                promptText="MM"
-                                prefWidth="70.0"
-                                prefHeight="45.0"
-                                style="
-                                       -fx-background-color: #262626;
-                                       -fx-text-fill: white;
-                                       -fx-background-radius: 14;
-                                       "/>
+                     <TextField fx:id="txtEndMin" prefHeight="45.0" prefWidth="70.0" promptText="MM" style="                                        -fx-background-color: #262626;                                        -fx-text-fill: white;                                        -fx-background-radius: 14;                                        " />
 
-                     <DatePicker fx:id="dpEndDate"
-                                 prefHeight="45.0"
-                                 prefWidth="250.0"
-                                 style="
-                                        -fx-background-color: #262626;
-                                        -fx-background-radius: 14;
-                                        "/>
+                     <DatePicker fx:id="dpEndDate" prefHeight="45.0" prefWidth="250.0" style="                                         -fx-background-color: #262626;                                         -fx-background-radius: 14;                                         " />
 
                   </children>
 
@@ -408,41 +239,13 @@
    </HBox>
 
    <!-- BOTTOM BUTTONS -->
-   <HBox layoutX="720.0"
-         layoutY="730.0"
-         spacing="18.0">
+   <HBox layoutX="720.0" layoutY="730.0" spacing="18.0">
 
       <children>
 
-         <Button fx:id="btnCreate"
-                 mnemonicParsing="false"
-                 onAction="#handleCreate"
-                 prefHeight="48.0"
-                 prefWidth="140.0"
-                 text="CREATE"
-                 textFill="BLACK"
-                 style="
-                    -fx-background-color: #d4af37;
-                    -fx-background-radius: 16;
-                    -fx-font-weight: bold;
-                    -fx-font-size: 15px;
-                    -fx-cursor: hand;
-                    "/>
+         <Button fx:id="btnCreate" mnemonicParsing="false" onAction="#handleCreate" prefHeight="48.0" prefWidth="140.0" style="                     -fx-background-color: #d4af37;                     -fx-background-radius: 16;                     -fx-font-weight: bold;                     -fx-font-size: 15px;                     -fx-cursor: hand;                     " text="CREATE" textFill="BLACK" />
 
-         <Button fx:id="btnCancel"
-                 mnemonicParsing="false"
-                 onAction="#handleCancel"
-                 prefHeight="48.0"
-                 prefWidth="140.0"
-                 text="CANCEL"
-                 textFill="WHITE"
-                 style="
-                    -fx-background-color: #2b2b2b;
-                    -fx-background-radius: 16;
-                    -fx-font-weight: bold;
-                    -fx-font-size: 15px;
-                    -fx-cursor: hand;
-                    "/>
+         <Button fx:id="btnCancel" mnemonicParsing="false" onAction="#handleCancel" prefHeight="48.0" prefWidth="140.0" style="                     -fx-background-color: #2b2b2b;                     -fx-background-radius: 16;                     -fx-font-weight: bold;                     -fx-font-size: 15px;                     -fx-cursor: hand;                     " text="CANCEL" textFill="WHITE" />
 
       </children>
 

@@ -1,5 +1,6 @@
 package client.controller;
 import javafx.scene.control.*;
+import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import java.io.File;
 import java.util.ArrayList;
@@ -11,7 +12,7 @@ import java.time.LocalDateTime;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import javafx.scene.Node;
 import javafx.event.ActionEvent;
@@ -27,15 +28,12 @@ public class CreateAuctionController {
     private int currentImageIndex = 0;
     @FXML
     private ComboBox<String> cbCategory;
-    @FXML
-    public void initialize() {
-    }
-
     @FXML private TextField txtName;
     @FXML private TextArea txtDescription;
     @FXML private TextField txtStartingBid;
     @FXML private TextField txtMinIncrement;
-    @FXML private VBox imgItems;    @FXML private ImageView imagePreview;
+    @FXML private VBox imgItems;
+    @FXML private ImageView imagePreview;
 
     // Thành phần thời gian bắt đầu
     @FXML private TextField txtStartHour;
@@ -68,33 +66,20 @@ public class CreateAuctionController {
                 return;
 
             }
-
-            java.math.BigDecimal startingBid =
-                    new java.math.BigDecimal(txtStartingBid.getText());
-            java.math.BigDecimal minIncrement =
-                    new java.math.BigDecimal(txtMinIncrement.getText());
-
-            if (startingBid.compareTo(java.math.BigDecimal.ZERO) <= 0) {
-                showAlert("Error", "Starting bid must be greater than 0");
-                return;
-            }
-
-            if (minIncrement.compareTo(java.math.BigDecimal.ZERO) <= 0) {
-                showAlert("Error", "Minimum increment must be greater than 0");
-                return;
-            }
-
             if (cbCategory.getValue() == null) {
                 showAlert("Error", "Please choose category");
                 return;
             }
 
+
             if (imageFiles.isEmpty()) {
+
                 showAlert("Error", "Please upload at least one image");
                 return;
             }
 
-            // xử lý tgian
+
+            // --- BƯỚC 2: XỬ LÝ THỜI GIAN ---
             int startH = Integer.parseInt(txtStartHour.getText());
             int startM = Integer.parseInt(txtStartMin.getText());
             LocalDateTime startDateTime = dpStartDate.getValue().atTime(startH, startM);
@@ -117,7 +102,7 @@ public class CreateAuctionController {
                 return;
             }
 
-            // tạo đối tượng dữ liệu
+            // --- BƯỚC 3: TẠO ĐỐI TƯỢNG DỮ LIỆU ---
 
             // 1. Tạo Item chứa thông tin cơ bản
             Item item = new Item();
@@ -129,27 +114,22 @@ public class CreateAuctionController {
                     )
             );
 
-            java.util.List<String> imagePaths =
-                    new java.util.ArrayList<>();
-
+            //xli anh
+            java.util.List<String> imagePaths = new java.util.ArrayList<>();
             for (File file : imageFiles) {
-
-                imagePaths.add(
-                        file.toURI().toString()
-                );
+                // Chuyển từng file ảnh sang dạng String URI
+                imagePaths.add(file.toURI().toString());
             }
-
             item.setImages(imagePaths);
+
+
 
             // 2. Tạo Auction chứa thông tin đấu giá (Thay thế cho AuctionItem cũ)
             Auction newAuction = new Auction();
             newAuction.setItem(item);
             newAuction.setCurrentPrice(new java.math.BigDecimal(txtStartingBid.getText()));
             newAuction.setMinIncrement(new java.math.BigDecimal(txtMinIncrement.getText()));
-
-            newAuction.setStartTime(startDateTime);
             newAuction.setEndTime(endDateTime);
-
             newAuction.setStatus(AuctionStatus.ACTIVE);
 
             // --- BƯỚC 4: CHUYỂN TRANG VÀ HIỂN THỊ ---
@@ -223,6 +203,9 @@ public class CreateAuctionController {
             showImage(currentImageIndex);
 
             imgItems.setVisible(false);
+
+            imagePreview.setOnMouseClicked(e -> handleUploadImages());
+
         }
     }
     private void showImage(int index) {

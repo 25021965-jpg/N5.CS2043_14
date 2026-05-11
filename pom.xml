@@ -96,7 +96,7 @@
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.8</version>
                 <configuration>
-                    <mainClass>client.ClientApp</mainClass>
+                    <mainClass>client.network.ClientApp</mainClass>
                 </configuration>
             </plugin>
         </plugins>

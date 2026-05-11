@@ -1,49 +1,79 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.effect.ColorAdjust?>
+<?import javafx.scene.effect.DropShadow?>
 <?import javafx.scene.image.ImageView?>
-<?import javafx.scene.layout.VBox?>
-<?import javafx.scene.text.Font?>
 <?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.paint.Color?>
+<?import javafx.scene.text.Font?>
 
-<VBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
-      prefHeight="328.0" prefWidth="290.0"
-      style="-fx-background-color: white; -fx-background-radius: 20; -fx-border-radius: 20; -fx-border-color: #cccccc; -fx-border-width: 1;"
-      xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="client.controller.ItemCardController">
+<VBox alignment="TOP_CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onMouseClicked="#handleCardClick" prefHeight="360.0" prefWidth="260.0" spacing="10.0" style="-fx-background-color: #1a1a1a; -fx-background-radius: 20; -fx-border-radius: 20; -fx-border-color: #d4af37; -fx-border-width: 1.5; -fx-cursor: hand;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controller.ItemCardController">
+
+   <children>
+      <StackPane prefHeight="170.0" prefWidth="240.0" style="-fx-background-color: #262626; -fx-background-radius: 15;">
+         <children>
+            <ImageView fx:id="imgProduct" fitHeight="160.0" fitWidth="230.0" pickOnBounds="true" preserveRatio="true" />
+         </children>
+         <VBox.margin>
+            <Insets left="10.0" right="10.0" top="10.0" />
+         </VBox.margin>
+      </StackPane>
+
+      <VBox alignment="CENTER_LEFT" spacing="5.0">
+         <padding>
+            <Insets left="15.0" right="15.0" />
+         </padding>
+         <children>
+            <Label fx:id="lblName" text="NAME: product" textFill="WHITE">
+               <font>
+                  <Font name="Berlin Sans FB Demi Bold" size="20.0" />
+               </font>
+            </Label>
+
+            <VBox spacing="2.0" style="-fx-padding: 5 0 0 0;">
+               <children>
+                  <Label fx:id="lblCurrentPrice" text="0.00 $" textFill="WHITE">
+                     <font>
+                        <Font name="System Bold" size="22.0" />
+                     </font>
+                  </Label>
+               </children>
+            </VBox>
+
+            <Label fx:id="lblCategory" text="Category: Item" textFill="#d4af37">
+               <font>
+                  <Font name="Berlin Sans FB" size="14.0" />
+               </font>
+            </Label>
+
+            <Label fx:id="lblStep" text="Step: 1" textFill="#cbd5e1">
+               <font>
+                  <Font size="13.0" />
+               </font>
+               <padding>
+                  <Insets top="5.0" />
+               </padding>
+            </Label>
+
+            <Label fx:id="lblEndTime" text="End at: 00:00 01/01/2026" textFill="#ff6b6b">
+               <font>
+                  <Font name="System Italic" size="12.0" />
+               </font>
+               <VBox.margin>
+                  <Insets top="5.0" />
+               </VBox.margin>
+            </Label>
+         </children>
+      </VBox>
+   </children>
+
    <effect>
-      <ColorAdjust/>
+      <DropShadow blurType="GAUSSIAN" height="20.0" radius="9.5" width="20.0">
+         <color>
+            <Color opacity="0.5" />
+         </color>
+      </DropShadow>
    </effect>
-   <StackPane prefHeight="195.0" prefWidth="259.0">
-      <ImageView fx:id="imgProduct"
-                 fitHeight="195.0"
-                 fitWidth="259.0"
-                 preserveRatio="false"
-                 smooth="true"
-                 pickOnBounds="true"/>
-
-   </StackPane>
-   <Label fx:id="lblName" layoutX="10.0" layoutY="179.0" text="NAME :">
-      <font>
-         <Font name="Berlin Sans FB" size="25.0"/>
-      </font>
-   </Label>
-   <Label fx:id="lblCategory"
-          textFill="#d4af37"/>
-   <Label fx:id="lblCurrentPrice" text="Current Price :">
-      <font>
-         <Font name="Berlin Sans FB" size="18.0"/>
-      </font>
-   </Label>
-   <Label fx:id="lblStep" layoutX="10.0" layoutY="179.0" text="Step :">
-      <font>
-         <Font name="Berlin Sans FB" size="18.0"/>
-      </font>
-   </Label>
-   <Label fx:id="lblEndTime" layoutX="10.0" layoutY="199.0" text="End at :">
-      <font>
-         <Font name="Berlin Sans FB" size="18.0"/>
-      </font>
-   </Label>
 </VBox>
