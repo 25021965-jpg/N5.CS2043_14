@@ -17,17 +17,15 @@
     <VBox prefWidth="250.0" spacing="18" style="                 -fx-background-color: #000000;                 -fx-border-color: #D4AF37;                 -fx-border-width: 0 3 0 0;                 -fx-padding: 30 20 20 20;             " AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0">
 
         <!-- TITLE -->
+
         <VBox alignment="CENTER" spacing="6">
 
-            <Label style="                         -fx-text-fill: white;                         -fx-font-size: 26px;                         -fx-font-family: 'Berlin Sans FB Demi Bold';                         -fx-font-weight: bold;                     " text="Auction System">
-
+            <Label style="                         -fx-text-fill: white;                         -fx-font-size: 26px;                         -fx-font-weight: bold;                     " text="Auction System">
                 <font>
-                    <Font name="Berlin Sans FB Demi Bold" size="26.0" />
-                </font>
+                    <Font name="Berlin Sans FB Demi Bold" size="14.0" />
+                </font></Label>
 
-            </Label>
-
-            <Label style="                         -fx-text-fill: #94A3B8;                         -fx-font-size: 13px;                         -fx-font-family: 'Berlin Sans FB Demi Bold';                     " text="USER PANEL" />
+            <Label style="                         -fx-text-fill: #94A3B8;                         -fx-font-size: 13px;                     " text="USER PANEL" />
 
         </VBox>
 
@@ -124,87 +122,96 @@
         <Label style="                     -fx-font-size: 16px;                     -fx-font-family: 'Berlin Sans FB Demi Bold';                     -fx-font-weight: bold;                     -fx-text-fill: #334155;                 " text="Status">
 
             <font>
-                <Font name="Berlin Sans FB Demi Bold" size="16.0" />
+                <Font name="Berlin Sans FB Demi Bold" size="12.0" />
             </font>
 
         </Label>
 
-        <ComboBox fx:id="statusFilterComboBox" prefHeight="40" prefWidth="220" promptText="Select Status" style="                     -fx-background-radius: 8;                     -fx-border-radius: 8;                     -fx-border-color: #D4AF37;                     -fx-font-family: 'Berlin Sans FB Demi Bold';                 " />
+        <ComboBox fx:id="statusFilterComboBox" prefHeight="40" prefWidth="220" promptText="Select Status" style="-fx-background-radius: 8; -fx-border-radius: 8; -fx-border-color: #D4AF37; -fx-font-family: System;" />
 
         <Label style="                         -fx-font-size: 16px;                         -fx-font-family: 'Berlin Sans FB Demi Bold';                         -fx-font-weight: bold;                         -fx-text-fill: #334155;                     " text="Category">
 
             <font>
-                <Font name="Berlin Sans FB Demi Bold" size="16.0" />
+                <Font name="Berlin Sans FB Demi Bold" size="12.0" />
             </font>
 
         </Label>
 
-        <ComboBox fx:id="categoryFilterComboBox" prefHeight="40" prefWidth="220" promptText="Select Category" style="                         -fx-background-radius: 8;                         -fx-border-radius: 8;                         -fx-border-color: #D4AF37;                         -fx-font-family: 'Berlin Sans FB Demi Bold';                 " />
+        <ComboBox fx:id="categoryFilterComboBox" prefHeight="40" prefWidth="220" promptText="Select Category" style="-fx-background-radius: 8; -fx-border-radius: 8; -fx-border-color: #D4AF37; -fx-font-family: System;" />
 
     </HBox>
 
 
     <!-- AUCTION LIST -->
-    <ScrollPane fitToWidth="true" layoutX="290.0" layoutY="160.0" prefHeight="520.0" prefWidth="760.0" style="                 -fx-background-color: transparent;                 -fx-background: transparent;             ">
+    <ScrollPane fitToWidth="true"
+                layoutX="290.0"
+                layoutY="160.0"
+                prefHeight="520.0"
+                prefWidth="760.0"
+                style="-fx-background-color: transparent; -fx-background: transparent;">
 
-        <VBox prefWidth="730" spacing="20" style="-fx-padding: 10;">
+        <VBox prefWidth="730"
+              spacing="20"
+              style="-fx-padding: 10;">
 
             <!-- AUCTION CARD -->
-            <HBox prefHeight="150" prefWidth="730" spacing="20" style="                         -fx-background-color: white;                         -fx-background-radius: 15;                         -fx-border-radius: 15;                         -fx-border-color: #D4AF37;                         -fx-border-width: 2;                         -fx-padding: 15;                     ">
+            <HBox prefHeight="150"
+                  prefWidth="730"
+                  spacing="20"
+                  style="-fx-background-color: white;
+                     -fx-background-radius: 15;
+                     -fx-border-radius: 15;
+                     -fx-border-color: #D4AF37;
+                     -fx-border-width: 2;
+                     -fx-padding: 15;">
 
                 <!-- IMAGE -->
-                <Region prefHeight="120" prefWidth="130" style="                             -fx-background-color: #E2E8F0;                             -fx-background-radius: 10;                         " />
+                <Region prefHeight="120"
+                        prefWidth="130"
+                        style="-fx-background-color: #E2E8F0;
+                           -fx-background-radius: 10;" />
 
                 <!-- INFO -->
                 <VBox spacing="10">
 
-                    <Label style="                                 -fx-font-size: 20px;                                 -fx-font-family: 'Berlin Sans FB Demi Bold';                                 -fx-font-weight: bold;                                 -fx-text-fill: #0F172A;                             " text="Item Name">
+                    <Label style="-fx-font-size: 20px;                                   -fx-font-weight: bold;                                   -fx-text-fill: #0F172A;" text="Auction Item" />
 
-                        <font>
-                            <Font name="Berlin Sans FB Demi Bold" size="20.0" />
-                        </font>
+                    <Label style="-fx-font-size: 15px;
+               -fx-text-fill: #334155;"
+                           text="Current Price: -- VNĐ" />
 
-                    </Label>
+                    <Label style="-fx-font-size: 15px;
+               -fx-text-fill: #7C3AED;
+               -fx-font-weight: bold;"
+                           text="Category: Electronics" />
 
-                    <Label style="                                 -fx-font-size: 15px;                                 -fx-font-family: 'Berlin Sans FB Demi Bold';                                 -fx-text-fill: #334155;                             " text="Current Price">
-                  <font>
-                     <Font name="Berlin Sans FB Demi Bold" size="13.0" />
-                  </font>
+                    <Label style="-fx-font-size: 15px;
+               -fx-text-fill: #64748B;"
+                           text="End Date: --/--/----" />
 
-                    </Label>
+                    <Label style="-fx-font-size: 15px;                                   -fx-font-weight: bold;                                   -fx-text-fill: #16A34A;" text="Status: Active" />
 
-                    <Label style="                                 -fx-font-size: 15px;                                 -fx-font-family: 'Berlin Sans FB Demi Bold';                                 -fx-text-fill: #64748B;                             " text="End Date">
-                  <font>
-                     <Font name="Berlin Sans FB Demi Bold" size="13.0" />
-                  </font>
-
-                    </Label>
-
-                    <Label style="                                 -fx-font-size: 15px;                                 -fx-font-family: 'Berlin Sans FB Demi Bold';                                 -fx-font-weight: bold;                                 -fx-text-fill: #16A34A;                             " text="Status">
-                  <font>
-                     <Font name="Berlin Sans FB Demi Bold" size="13.0" />
-                  </font>
-
-                    </Label>
 
                     <!-- ACTION BUTTONS -->
                     <HBox spacing="10">
 
-                        <Button prefHeight="35" prefWidth="100" style="                                     -fx-background-color: #2563EB;                                     -fx-text-fill: white;                                     -fx-font-family: 'Berlin Sans FB Demi Bold';                                     -fx-font-weight: bold;                                     -fx-background-radius: 8;                                 " text="View">
+                        <Button text="View"
+                                prefHeight="35"
+                                prefWidth="100"
+                                style="-fx-background-color: #2563EB;
+                                   -fx-text-fill: white;
+                                   -fx-font-weight: bold;
+                                   -fx-background-radius: 8;" />
 
-                            <font>
-                                <Font name="Berlin Sans FB Demi Bold" size="14.0" />
-                            </font>
-
-                        </Button>
-
-                        <Button fx:id="cancelAuctionBtn" onAction="#handleCancelAuction" prefHeight="35" prefWidth="140" style="                                  -fx-background-color: #EF4444;                                  -fx-text-fill: white;                                  -fx-font-family: 'Berlin Sans FB Demi Bold';                                  -fx-font-weight: bold;                                  -fx-background-radius: 8;                                " text="Cancel Auction">
-
-                            <font>
-                                <Font name="Berlin Sans FB Demi Bold" size="14.0" />
-                            </font>
-
-                        </Button>
+                        <Button fx:id="cancelAuctionBtn"
+                                onAction="#handleCancelAuction"
+                                text="Cancel Auction"
+                                prefHeight="35"
+                                prefWidth="140"
+                                style="-fx-background-color: #EF4444;
+                                   -fx-text-fill: white;
+                                   -fx-font-weight: bold;
+                                   -fx-background-radius: 8;" />
 
                     </HBox>
 

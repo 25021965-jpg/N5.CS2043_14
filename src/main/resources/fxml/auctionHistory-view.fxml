@@ -9,18 +9,23 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="720.0" prefWidth="1080.0" style="-fx-background-color: #F8FAFC;                    -fx-border-color: #D4AF37;                    -fx-border-width: 6;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controller.AuctionHistoryController">
+<AnchorPane prefHeight="720.0" prefWidth="1080.0" style="-fx-background-color: #F8FAFC;                    -fx-border-color: #D4AF37;                    -fx-border-width: 6;" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controller.AuctionHistoryController">
 
     <!-- LEFT MENU -->
     <VBox prefWidth="250.0" spacing="18" style="-fx-background-color: #000000;                  -fx-border-color: #D4AF37;                  -fx-border-width: 0 3 0 0;                  -fx-padding: 30 20 20 20;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0">
 
         <!-- TITLE -->
+
         <VBox alignment="CENTER" spacing="6">
 
-            <Label style="-fx-text-fill: white;                           -fx-font-size: 26px;                           -fx-font-weight: bold;" text="Auction System" />
+            <Label style="                         -fx-text-fill: white;                         -fx-font-size: 26px;                         -fx-font-weight: bold;                     " text="Auction System">
+                <font>
+                    <Font name="Berlin Sans FB Demi Bold" size="14.0" />
+                </font></Label>
 
-            <Label style="-fx-text-fill: #94A3B8;                           -fx-font-size: 13px;" text="USER PANEL" />
+            <Label style="                         -fx-text-fill: #94A3B8;                         -fx-font-size: 13px;                     " text="USER PANEL" />
 
         </VBox>
 
@@ -60,9 +65,25 @@
     <!-- FILTER -->
     <HBox alignment="CENTER_LEFT" layoutX="290.0" layoutY="100.0" spacing="15">
 
-        <Label style="-fx-font-size: 16px;                       -fx-font-weight: bold;                       -fx-text-fill: #334155;" text="Filter" />
+        <Label style="                     -fx-font-size: 16px;                     -fx-font-family: 'Berlin Sans FB Demi Bold';                     -fx-font-weight: bold;                     -fx-text-fill: #334155;                 " text="Status">
 
-        <ComboBox fx:id="filterComboBox" prefHeight="40" prefWidth="220" promptText="Select status" />
+            <font>
+                <Font name="Berlin Sans FB Demi Bold" size="12.0" />
+            </font>
+
+        </Label>
+
+        <ComboBox fx:id="statusFilterComboBox" prefHeight="40" prefWidth="220" promptText="Select Status" style="-fx-background-radius: 8; -fx-border-radius: 8; -fx-border-color: #D4AF37; -fx-font-family: System;" />
+
+        <Label style="                         -fx-font-size: 16px;                         -fx-font-family: 'Berlin Sans FB Demi Bold';                         -fx-font-weight: bold;                         -fx-text-fill: #334155;                     " text="Category">
+
+            <font>
+                <Font name="Berlin Sans FB Demi Bold" size="12.0" />
+            </font>
+
+        </Label>
+
+        <ComboBox fx:id="categoryFilterComboBox" prefHeight="40" prefWidth="220" promptText="Select Category" style="-fx-background-radius: 8; -fx-border-radius: 8; -fx-border-color: #D4AF37; -fx-font-family: System;" />
 
     </HBox>
 
@@ -82,9 +103,18 @@
 
                     <Label style="-fx-font-size: 20px;                                   -fx-font-weight: bold;                                   -fx-text-fill: #0F172A;" text="Auction Item" />
 
-                    <Label style="-fx-font-size: 15px;                                   -fx-text-fill: #334155;" text="Current Price: -- VNĐ" />
+                    <Label style="-fx-font-size: 15px;
+               -fx-text-fill: #334155;"
+                           text="Current Price: -- VNĐ" />
 
-                    <Label style="-fx-font-size: 15px;                                   -fx-text-fill: #64748B;" text="End Date: --/--/----" />
+                    <Label style="-fx-font-size: 15px;
+               -fx-text-fill: #7C3AED;
+               -fx-font-weight: bold;"
+                           text="Category: Electronics" />
+
+                    <Label style="-fx-font-size: 15px;
+               -fx-text-fill: #64748B;"
+                           text="End Date: --/--/----" />
 
                     <Label style="-fx-font-size: 15px;                                   -fx-font-weight: bold;                                   -fx-text-fill: #16A34A;" text="Status: Active" />
 

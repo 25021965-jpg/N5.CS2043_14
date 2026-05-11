@@ -2,11 +2,9 @@ package client.controller;
 
 import client.network.ClientSocket;
 
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 
@@ -51,7 +49,9 @@ public class AuctionHistoryController implements UserDataReceiver {
     private Button backHomeBtn;
 
     @FXML
-    private ComboBox<String> filterComboBox;
+    private ComboBox<String> statusFilterComboBox;
+    @FXML
+    private ComboBox<String> categoryFilterComboBox;
 
     @FXML
     private VBox historyContainer;
@@ -77,24 +77,48 @@ public class AuctionHistoryController implements UserDataReceiver {
                 "AuctionHistory Loaded"
         );
 
-        setupFilter();
+        setupStatusFilter();
+        setupCategoryFilter();
         setupMenuEvents();
     }
 
-    private void setupFilter() {
+    private void setupStatusFilter() {
 
-        filterComboBox.getItems().addAll(
+        statusFilterComboBox.getItems().addAll(
                 "All",
                 "Winning",
                 "Losing",
-                "Ended"
+                "Ended",
+                "Cancelled"
         );
 
-        filterComboBox.setValue(
+        statusFilterComboBox.setValue(
                 "All"
         );
 
-        filterComboBox.setOnAction(
+        statusFilterComboBox.setOnAction(
+                e -> handleFilter()
+        );
+    }
+
+    private void setupCategoryFilter() {
+
+        categoryFilterComboBox.getItems().addAll(
+                "All",
+                "Accessories",
+                "Collectibles",
+                "Electronics",
+                "Fashion",
+                "Home Appliances",
+                "Vehicles",
+                "Other"
+        );
+
+        categoryFilterComboBox.setValue(
+                "All"
+        );
+
+        categoryFilterComboBox.setOnAction(
                 e -> handleFilter()
         );
     }
@@ -156,11 +180,17 @@ public class AuctionHistoryController implements UserDataReceiver {
     private void handleFilter() {
 
         String selected =
-                filterComboBox.getValue();
+                statusFilterComboBox.getValue();
+        String selectedCategory =
+                categoryFilterComboBox.getValue();
 
         System.out.println(
-                "Filter: "
+                "Status: "
                         + selected
+        );
+        System.out.println(
+                "Category: "
+                        + selectedCategory
         );
 
         /*
@@ -173,19 +203,17 @@ public class AuctionHistoryController implements UserDataReceiver {
 
         Alert alert =
                 new Alert(
-                        Alert.AlertType.CONFIRMATION
+                        Alert.AlertType.WARNING
                 );
 
         alert.setTitle(
                 "Logout"
         );
 
-        alert.setHeaderText(
-                "Are you sure you want to logout?"
-        );
+        alert.setHeaderText(null);
 
         alert.setContentText(
-                "You will need to login again."
+                "Are you sure you want to logout? You will need to login again."
         );
 
         ButtonType logoutButton =
@@ -228,19 +256,17 @@ public class AuctionHistoryController implements UserDataReceiver {
 
         Alert alert =
                 new Alert(
-                        Alert.AlertType.CONFIRMATION
+                        Alert.AlertType.WARNING
                 );
 
         alert.setTitle(
                 "Delete Account"
         );
 
-        alert.setHeaderText(
-                "Are you sure you want to delete your account?"
-        );
+        alert.setHeaderText(null);
 
         alert.setContentText(
-                "This action cannot be undone."
+                "Are you sure you want to delete your account? This action cannot be undone."
         );
 
         ButtonType deleteButton =

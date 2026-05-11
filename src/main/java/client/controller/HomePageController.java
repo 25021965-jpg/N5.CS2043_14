@@ -42,6 +42,12 @@ public class HomePageController implements UserDataReceiver {
 
     private int row = 0;
 
+    // ================= FILTER =================
+
+    private Category selectedCategory = null;
+
+    private String selectedStatus = null;
+
     @FXML
     private GridPane itemGrid;
 
@@ -78,56 +84,19 @@ public class HomePageController implements UserDataReceiver {
         }
     }
 
+    // ================= SEARCH =================
+
     @FXML
-    private void handleSearch(
-            ActionEvent event
-    ) {
+    private void handleSearch(ActionEvent event) {
 
-        String keyword =
-                txtSearch.getText()
-                        .trim()
-                        .toLowerCase();
-
-        log(
-                "Search: "
-                        + keyword
-        );
-
-        if (keyword.isEmpty()) {
-
-            refreshGrid(
-                    auctionList
-            );
-
+        if (txtSearch == null) {
             return;
         }
 
-        List<Auction> filtered =
-                new ArrayList<>();
-
-        for (Auction auction : auctionList) {
-
-            String itemName =
-                    auction.getItem()
-                            .getName()
-                            .toLowerCase();
-
-            if (
-                    itemName.contains(
-                            keyword
-                    )
-            ) {
-
-                filtered.add(
-                        auction
-                );
-            }
-        }
-
-        refreshGrid(
-                filtered
-        );
+        applyFilters();
     }
+
+    // ================= CATEGORY =================
 
     @FXML
     private void showAccessories() {
@@ -188,6 +157,10 @@ public class HomePageController implements UserDataReceiver {
     @FXML
     private void showAll() {
 
+        selectedCategory = null;
+
+        selectedStatus = null;
+
         refreshGrid(
                 auctionList
         );
@@ -197,15 +170,87 @@ public class HomePageController implements UserDataReceiver {
             Category category
     ) {
 
+        selectedCategory = category;
+
+        applyFilters();
+    }
+
+    // ================= STATUS =================
+
+    @FXML
+    private void showAllStatus() {
+
+        selectedStatus = null;
+
+        applyFilters();
+    }
+
+    @FXML
+    private void showActive() {
+
+        selectedStatus = "ACTIVE";
+
+        applyFilters();
+    }
+
+    @FXML
+    private void showEnded() {
+
+        selectedStatus = "ENDED";
+
+        applyFilters();
+    }
+
+    @FXML
+    private void showUpcoming() {
+
+        selectedStatus = "UPCOMING";
+
+        applyFilters();
+    }
+
+    // ================= FILTER ENGINE =================
+
+    private void applyFilters() {
+
+        String keyword =
+                txtSearch.getText()
+                        .trim()
+                        .toLowerCase();
+
         List<Auction> filtered =
                 new ArrayList<>();
 
         for (Auction auction : auctionList) {
 
+            boolean matchText =
+                    keyword.isEmpty()
+                            ||
+                            auction.getItem()
+                                    .getName()
+                                    .toLowerCase()
+                                    .contains(keyword);
+
+            boolean matchCategory =
+                    selectedCategory == null
+                            ||
+                            auction.getItem()
+                                    .getCategory()
+                                    == selectedCategory;
+
+            boolean matchStatus =
+                    selectedStatus == null
+                            ||
+                            auction.getStatus()
+                                    .name()
+                                    .equalsIgnoreCase(selectedStatus);
+
             if (
-                    auction.getItem()
-                            .getCategory()
-                            == category
+                    matchText
+                            &&
+                            matchCategory
+                            &&
+                            matchStatus
             ) {
 
                 filtered.add(
@@ -218,6 +263,25 @@ public class HomePageController implements UserDataReceiver {
                 filtered
         );
     }
+
+    // ================= LOAD DATA =================
+
+    public void loadAuctions(
+            List<Auction> auctions
+    ) {
+
+        auctionList.clear();
+
+        auctionList.addAll(
+                auctions
+        );
+
+        refreshGrid(
+                auctionList
+        );
+    }
+
+    // ================= GRID =================
 
     public void addNewAuctionCard(
             Auction auction
@@ -292,6 +356,8 @@ public class HomePageController implements UserDataReceiver {
         }
     }
 
+    // ================= NAVIGATION =================
+
     @FXML
     private void handleCreateAuction(
             ActionEvent event
@@ -330,12 +396,12 @@ public class HomePageController implements UserDataReceiver {
     private void openHistory(
             ActionEvent event
     ) {
+
         openPage(
                 "/fxml/auctionHistory-view.fxml",
                 "History",
                 event
         );
-
     }
 
     @FXML
@@ -354,6 +420,7 @@ public class HomePageController implements UserDataReceiver {
     private void openFavourite(
             ActionEvent event
     ) {
+
         openPage(
                 "/fxml/Favourite-view.fxml",
                 "Favourite",
@@ -368,15 +435,9 @@ public class HomePageController implements UserDataReceiver {
 
         // TODO:
         // open balance page
-
-        /*
-        openPage(
-                "/fxml/balance-view.fxml",
-                "Balance",
-                event
-        );
-        */
     }
+
+    // ================= ALERT =================
 
     @FXML
     private void handleLogout(
@@ -496,6 +557,8 @@ public class HomePageController implements UserDataReceiver {
         }
     }
 
+    // ================= PAGE =================
+
     private void openPage(
             String fxmlPath,
             String title,
@@ -557,35 +620,18 @@ public class HomePageController implements UserDataReceiver {
         if (controller instanceof UserDataReceiver c) {
 
             c.setClient(client);
+
             c.setUser(currentUser);
         }
-
 
         if (
                 controller instanceof FavouriteController c
         ) {
 
             c.setClient(client);
+
             c.setUser(currentUser);
         }
-
-        /*
-        if (
-                controller instanceof BalanceController c
-        ) {
-
-            c.setClient(client);
-            c.setUser(currentUser);
-        }
-
-        if (
-                controller instanceof AuctionHistoryController c
-        ) {
-
-            c.setClient(client);
-            c.setUser(currentUser);
-        }
-        */
     }
 
     private Stage getStage(
@@ -614,6 +660,8 @@ public class HomePageController implements UserDataReceiver {
                                 .getScene()
                                 .getWindow();
     }
+
+    // ================= LOG =================
 
     private void log(
             String message

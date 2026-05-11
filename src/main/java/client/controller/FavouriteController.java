@@ -82,10 +82,10 @@ public class FavouriteController implements UserDataReceiver {
     private void setupStatusFilter() {
 
         statusFilterComboBox.getItems().addAll(
-                "ALL",
-                "ACTIVE",
-                "FINISHED",
-                "CANCELLED"
+                "All",
+                "Active",
+                "Finished",
+                "Cancelled"
         );
 
         statusFilterComboBox.setValue(
@@ -100,18 +100,18 @@ public class FavouriteController implements UserDataReceiver {
     private void setupCategoryFilter() {
 
         categoryFilterComboBox.getItems().addAll(
-                "ALL",
-                "ACCESSORIES",
-                "COLLECTIBLES",
-                "ELECTRONICS",
-                "FASHION",
-                "HOME APPLIANCES",
-                "VEHICLES",
-                "OTHER"
+                "All",
+                "Accessories",
+                "Collectibles",
+                "Electronics",
+                "Fashion",
+                "Home Appliances",
+                "Vehicles",
+                "Other"
         );
 
         categoryFilterComboBox.setValue(
-                "ALL"
+                "All"
         );
 
         categoryFilterComboBox.setOnAction(

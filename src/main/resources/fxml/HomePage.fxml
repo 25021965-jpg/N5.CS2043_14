@@ -14,29 +14,57 @@
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="800.0" prefWidth="1024.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controller.HomePageController">
+<BorderPane maxHeight="1.7976931348623157E308"
+            maxWidth="1.7976931348623157E308"
+            minHeight="-Infinity"
+            minWidth="-Infinity"
+            prefHeight="800.0"
+            prefWidth="1024.0"
+            xmlns="http://javafx.com/javafx/25"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="client.controller.HomePageController">
 
     <!-- TOP BAR -->
     <top>
-        <HBox alignment="CENTER_LEFT" prefHeight="100.0" spacing="10.0" style="-fx-background-color: white; -fx-border-color: black; -fx-border-width: 5;" BorderPane.alignment="CENTER">
+        <HBox alignment="CENTER_LEFT"
+              prefHeight="100.0"
+              spacing="10.0"
+              style="-fx-background-color: white; -fx-border-color: black; -fx-border-width: 5;"
+              BorderPane.alignment="CENTER">
 
-            <ImageView fitHeight="109.0" fitWidth="144.0" pickOnBounds="true" preserveRatio="true">
+            <ImageView fitHeight="109.0"
+                       fitWidth="144.0"
+                       pickOnBounds="true"
+                       preserveRatio="true">
                 <Image url="@../image/main2.jpg" />
             </ImageView>
 
-            <TextField fx:id="txtSearch" prefHeight="43.0" prefWidth="387.0" promptText="Search item...">
+            <TextField fx:id="txtSearch"
+                       prefHeight="43.0"
+                       prefWidth="387.0"
+                       promptText="Search item...">
                 <HBox.margin>
                     <Insets left="40.0" />
                 </HBox.margin>
             </TextField>
 
-            <Button mnemonicParsing="false" onAction="#handleSearch" prefHeight="42.0" prefWidth="47.0" style="-fx-background-color: #d4af37;" text="🔎" />
+            <Button mnemonicParsing="false"
+                    onAction="#handleSearch"
+                    prefHeight="42.0"
+                    prefWidth="47.0"
+                    style="-fx-background-color: #d4af37;"
+                    text="🔎" />
 
-            <Button fx:id="btnCreate" mnemonicParsing="false" onAction="#handleCreateAuction" prefHeight="45.0" prefWidth="170.0" style="-fx-background-color: #d4af37;" text="Create Auction">
+            <Button fx:id="btnCreate"
+                    mnemonicParsing="false"
+                    onAction="#handleCreateAuction"
+                    prefHeight="45.0"
+                    prefWidth="170.0"
+                    style="-fx-background-color: #d4af37;"
+                    text="Create Auction">
 
                 <font>
                     <Font name="Berlin Sans FB Demi Bold" size="16.0" />
@@ -80,34 +108,31 @@
                     <Font name="Berlin Sans FB Demi Bold" size="15.0" />
                 </font>
 
-                <HBox.margin>
-                    <Insets left="20.0" />
-                </HBox.margin>
-
             </MenuButton>
+
         </HBox>
     </top>
 
     <!-- LEFT CATEGORY PANEL -->
     <left>
-
-        <VBox alignment="TOP_CENTER" prefWidth="190.0" spacing="15.0" style="-fx-background-color: black;">
+        <VBox alignment="TOP_CENTER"
+              prefWidth="190.0"
+              spacing="15.0"
+              style="-fx-background-color: black;">
 
             <!-- TITLE -->
             <Label text="CATEGORY" textFill="WHITE">
-
                 <font>
                     <Font name="Berlin Sans FB Demi Bold" size="22.0" />
                 </font>
-
                 <VBox.margin>
                     <Insets top="30.0" />
                 </VBox.margin>
-
             </Label>
 
             <Separator prefWidth="140.0" />
 
+            <!-- CATEGORY BUTTONS -->
             <!-- CATEGORY BUTTONS -->
             <Button mnemonicParsing="false" onAction="#showAll" prefHeight="45.0" prefWidth="140.0" style="-fx-background-color: #d4af37;" text="All">
 
@@ -173,33 +198,63 @@
 
             </Button>
 
-        </VBox>
+            <Separator prefWidth="140.0" style="-fx-background-color: #334155;" />
 
+            <Label text="STATUS" textFill="WHITE">
+                <font>
+                    <Font name="Berlin Sans FB Demi Bold" size="18.0" />
+                </font>
+            </Label>
+
+            <!-- STATUS DROPDOWN (FIXED) -->
+            <MenuButton text="Select Status"
+                        prefHeight="45.0"
+                        prefWidth="140.0"
+                        style="-fx-background-color: #d4af37; -fx-text-fill: white;">
+
+                <items>
+                    <MenuItem text="All Status" onAction="#showAllStatus"/>
+                    <MenuItem text="Active" onAction="#showActive"/>
+                    <MenuItem text="Ended" onAction="#showEnded"/>
+                    <MenuItem text="Upcoming" onAction="#showUpcoming"/>
+                </items>
+
+                <font>
+                    <Font name="Berlin Sans FB Demi Bold" size="15.0" />
+                </font>
+
+            </MenuButton>
+
+        </VBox>
     </left>
 
     <!-- CENTER -->
     <center>
-        <ScrollPane fitToHeight="false" fitToWidth="true" style="-fx-background-color: black; -fx-background: white;">
-            <content>
-                <VBox alignment="TOP_CENTER">
-                    <children>
+        <ScrollPane fitToHeight="false"
+                    fitToWidth="true"
+                    style="-fx-background-color: black; -fx-background: white;">
 
-                        <GridPane fx:id="itemGrid" alignment="TOP_CENTER" hgap="30.0" style="-fx-background-color: white;" vgap="30.0">
-                            <columnConstraints>
-                                <ColumnConstraints hgrow="NEVER" minWidth="290.0" prefWidth="290.0" />
-                                <ColumnConstraints hgrow="NEVER" minWidth="290.0" prefWidth="290.0" />
-                                <ColumnConstraints hgrow="NEVER" minWidth="290.0" prefWidth="290.0" />
-                            </columnConstraints>
-                            <rowConstraints>
-                                <RowConstraints minHeight="10.0" vgrow="NEVER" />
-                            </rowConstraints>
-                            <padding>
-                                <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
-                            </padding>
-                        </GridPane>
-                    </children>
-                </VBox>
-            </content>
+            <VBox alignment="TOP_CENTER">
+
+                <GridPane fx:id="itemGrid"
+                          alignment="TOP_CENTER"
+                          hgap="30.0"
+                          vgap="30.0"
+                          style="-fx-background-color: white;">
+
+                    <columnConstraints>
+                        <ColumnConstraints prefWidth="290.0"/>
+                        <ColumnConstraints prefWidth="290.0"/>
+                        <ColumnConstraints prefWidth="290.0"/>
+                    </columnConstraints>
+
+                    <padding>
+                        <Insets top="20.0" right="20.0" bottom="20.0" left="20.0"/>
+                    </padding>
+
+                </GridPane>
+
+            </VBox>
         </ScrollPane>
     </center>
 
