@@ -5,12 +5,16 @@ public enum ResponseType {
     LOGIN_FAILED,
     REGISTER_SUCCESS,
     REGISTER_FAILED,
+    CREATE_SUCCESS,
+    CREATE_FAILED,
+    LIST_SUCCESS,
+    LIST_EMPTY,
     ERROR,
     DISCONNECTED;
 
     public static ResponseType from(String msg) {
         try {
-            String key = msg.split(" ")[0].toUpperCase();
+            String key = msg.split("\\|")[0].toUpperCase();
             return ResponseType.valueOf(key);
         } catch (Exception e) {
             return null;

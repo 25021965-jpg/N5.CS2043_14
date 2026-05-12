@@ -11,27 +11,13 @@ public class AuctionService {
 
     private final List<Auction> auctions = new ArrayList<>();
     private final AuctionDAO auctionDAO = new AuctionDAO(); // Khởi tạo DAO
-    
+
     public AuctionService() {
 
         List<Auction> loaded = AuctionDAO.findAll();
 
         if (!loaded.isEmpty()) {
             auctions.addAll(loaded);
-        }
-
-        if (auctions.isEmpty()) {
-            for (int i = 1; i <= 3; i++) {
-                Auction a = new Auction();
-                a.setId(String.valueOf(i));
-                a.setCurrentPrice(BigDecimal.valueOf(100 * i));
-                a.setMinIncrement(BigDecimal.TEN);
-                a.setStatus(AuctionStatus.ACTIVE);
-
-                auctionDAO.save(a);
-                auctions.add(a);
-            }
-
         }
     }
 
@@ -51,7 +37,7 @@ public class AuctionService {
         auction.setStatus(AuctionStatus.ACTIVE);
 
         // Lưu vào db trước
-        auctionDAO.save(auction);
+        AuctionDAO.save(auction);
 
         // Sau đó mới thêm vào list bộ nhớ tạm
         auctions.add(auction);
@@ -80,7 +66,7 @@ public class AuctionService {
         }
 
         auction.setStatus(AuctionStatus.ENDED);
-        auctionDAO.updateStatus(id, AuctionStatus.ENDED);
+        AuctionDAO.updateStatus(id, AuctionStatus.ENDED);
     }
 
     // ID an toàn hơn

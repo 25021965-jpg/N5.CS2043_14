@@ -8,7 +8,8 @@ public class Item implements Serializable {
     private String id;
     private String name;
     private String description;
-    private java.util.List<String> images;    private Category category;
+    private List<String> images;
+    private Category category;
     public Item() {}
 
     public Item(String id, String name, Category category) {

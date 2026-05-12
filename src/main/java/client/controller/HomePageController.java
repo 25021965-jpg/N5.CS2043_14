@@ -1,675 +1,201 @@
 package client.controller;
 
 import client.network.ClientSocket;
-
+import client.network.ResponseHandler;
+import client.util.NavigationUtils;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
-
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-
 import javafx.scene.Node;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-
 import javafx.scene.control.*;
-
 import javafx.scene.layout.GridPane;
-
 import javafx.stage.Stage;
-
 import model.Auction;
 import model.Category;
 import model.User;
-
 import java.io.IOException;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
-public class HomePageController implements UserDataReceiver {
+public class HomePageController {
 
+    private static HomePageController instance;
     private static final int MAX_COLUMNS = 3;
 
-    private ClientSocket client;
-
     private User currentUser;
+    private final List<Auction> auctionList = new ArrayList<>();
 
-    private final List<Auction> auctionList =
-            new ArrayList<>();
-
-    private int column = 0;
-
-    private int row = 0;
-
-    // ================= FILTER =================
-
+    // Filter states
     private Category selectedCategory = null;
-
     private String selectedStatus = null;
 
-    @FXML
-    private GridPane itemGrid;
+    @FXML private GridPane itemGrid;
+    @FXML private TextField txtSearch;
 
-    @FXML
-    private TextField txtSearch;
+    public HomePageController() {
+        instance = this;
+    }
+
+    public static HomePageController getInstance() {
+        return instance;
+    }
 
     @FXML
     public void initialize() {
+        log("Auction Dashboard Initialized");
 
-        log(
-                "UserView Loaded"
-        );
-    }
+        Platform.runLater(() -> {
+            if (itemGrid != null && itemGrid.getScene() != null) {
+                Stage stage = (Stage) itemGrid.getScene().getWindow();
+                ResponseHandler.setMainStage(stage);
+            }
+        });
 
-    public void setClient(
-            ClientSocket client
-    ) {
-
-        this.client = client;
-    }
-
-    public void setUser(
-            User user
-    ) {
-
-        this.currentUser = user;
-
-        if (user != null) {
-
-            log(
-                    "Current user: "
-                            + user.getUsername()
-            );
+        ClientSocket socket = ClientSocket.getInstance();
+        if (socket != null) {
+            socket.sendList();
         }
     }
 
-    // ================= SEARCH =================
+    public void setUser(User user) {
+        this.currentUser = user;
+        if (user != null) log("Logged in as: " + user.getUsername());
+    }
+
+    // ================= DYNAMIC UPDATES (Called by ResponseHandler) =================
+
+    public void updateAuctionList(List<Auction> auctions) {
+        if (!Platform.isFxApplicationThread()) {
+            Platform.runLater(() -> updateAuctionList(auctions));
+            return;
+        }
+        this.auctionList.clear();
+        this.auctionList.addAll(auctions);
+        applyFilters();
+    }
+
+    // ================= FILTER & SEARCH LOGIC =================
 
     @FXML
     private void handleSearch(ActionEvent event) {
-
-        if (txtSearch == null) {
-            return;
-        }
-
         applyFilters();
     }
 
-    // ================= CATEGORY =================
+    @FXML private void showAll() { selectedCategory = null; selectedStatus = null; applyFilters(); }
+    @FXML private void showAccessories() { filterByCategory(Category.ACCESSORIES); }
+    @FXML private void showCollectibles() { filterByCategory(Category.COLLECTIBLES); }
+    @FXML private void showElectronics() { filterByCategory(Category.ELECTRONICS); }
+    @FXML private void showFashion() { filterByCategory(Category.FASHION); }
+    @FXML private void showHomeAppliances() { filterByCategory(Category.HOME_APPLIANCES); }
+    @FXML private void showVehicles() { filterByCategory(Category.VEHICLES); }
+    @FXML private void showOther() { filterByCategory(Category.OTHER); }
 
-    @FXML
-    private void showAccessories() {
+    @FXML private void showAllStatus() { selectedStatus = null; applyFilters(); }
+    @FXML private void showActive() { selectedStatus = "ACTIVE"; applyFilters(); }
+    @FXML private void showEnded() { selectedStatus = "ENDED"; applyFilters(); }
+    @FXML private void showUpcoming() { selectedStatus = "UPCOMING"; applyFilters(); }
 
-        filterByCategory(
-                Category.ACCESSORIES
-        );
-    }
-
-    @FXML
-    private void showCollectibles() {
-
-        filterByCategory(
-                Category.COLLECTIBLES
-        );
-    }
-
-    @FXML
-    private void showElectronics() {
-
-        filterByCategory(
-                Category.ELECTRONICS
-        );
-    }
-
-    @FXML
-    private void showFashion() {
-
-        filterByCategory(
-                Category.FASHION
-        );
-    }
-
-    @FXML
-    private void showHomeAppliances() {
-
-        filterByCategory(
-                Category.HOME_APPLIANCES
-        );
-    }
-
-    @FXML
-    private void showVehicles() {
-
-        filterByCategory(
-                Category.VEHICLES
-        );
-    }
-
-    @FXML
-    private void showOther() {
-
-        filterByCategory(
-                Category.OTHER
-        );
-    }
-
-    @FXML
-    private void showAll() {
-
-        selectedCategory = null;
-
-        selectedStatus = null;
-
-        refreshGrid(
-                auctionList
-        );
-    }
-
-    private void filterByCategory(
-            Category category
-    ) {
-
-        selectedCategory = category;
-
+    private void filterByCategory(Category category) {
+        this.selectedCategory = category;
         applyFilters();
     }
-
-    // ================= STATUS =================
-
-    @FXML
-    private void showAllStatus() {
-
-        selectedStatus = null;
-
-        applyFilters();
-    }
-
-    @FXML
-    private void showActive() {
-
-        selectedStatus = "ACTIVE";
-
-        applyFilters();
-    }
-
-    @FXML
-    private void showEnded() {
-
-        selectedStatus = "ENDED";
-
-        applyFilters();
-    }
-
-    @FXML
-    private void showUpcoming() {
-
-        selectedStatus = "UPCOMING";
-
-        applyFilters();
-    }
-
-    // ================= FILTER ENGINE =================
 
     private void applyFilters() {
+        if (txtSearch == null) return;
+        
+        String keyword = txtSearch.getText().trim().toLowerCase();
+        List<Auction> filtered = auctionList.stream().filter(a -> {
+            if (a == null || a.getItem() == null) return false;
+            if (a.getItem().getName() == null)    return false;
 
-        String keyword =
-                txtSearch.getText()
-                        .trim()
-                        .toLowerCase();
+            boolean matchText = keyword.isEmpty() || a.getItem().getName().toLowerCase().contains(keyword);
+            boolean matchCat = selectedCategory == null || a.getItem().getCategory() == selectedCategory;
+            boolean matchStat = selectedStatus == null || (a.getStatus() != null && a.getStatus().name().equalsIgnoreCase(selectedStatus));
+            return matchText && matchCat && matchStat;
+        }).toList();
 
-        List<Auction> filtered =
-                new ArrayList<>();
-
-        for (Auction auction : auctionList) {
-
-            boolean matchText =
-                    keyword.isEmpty()
-                            ||
-                            auction.getItem()
-                                    .getName()
-                                    .toLowerCase()
-                                    .contains(keyword);
-
-            boolean matchCategory =
-                    selectedCategory == null
-                            ||
-                            auction.getItem()
-                                    .getCategory()
-                                    == selectedCategory;
-
-            boolean matchStatus =
-                    selectedStatus == null
-                            ||
-                            auction.getStatus()
-                                    .name()
-                                    .equalsIgnoreCase(selectedStatus);
-
-            if (
-                    matchText
-                            &&
-                            matchCategory
-                            &&
-                            matchStatus
-            ) {
-
-                filtered.add(
-                        auction
-                );
-            }
-        }
-
-        refreshGrid(
-                filtered
-        );
+        refreshGrid(filtered);
     }
 
-    // ================= LOAD DATA =================
+    // ================= GRID RENDERING =================
 
-    public void loadAuctions(
-            List<Auction> auctions
-    ) {
-
-        auctionList.clear();
-
-        auctionList.addAll(
-                auctions
-        );
-
-        refreshGrid(
-                auctionList
-        );
-    }
-
-    // ================= GRID =================
-
-    public void addNewAuctionCard(
-            Auction auction
-    ) {
-
-        auctionList.add(
-                auction
-        );
-
-        addAuctionCard(
-                auction
-        );
-    }
-
-    private void refreshGrid(
-            List<Auction> list
-    ) {
-
+    private void refreshGrid(List<Auction> list) {
         itemGrid.getChildren().clear();
-
-        column = 0;
-        row = 0;
+        int col = 0;
+        int row = 0;
 
         for (Auction auction : list) {
+            try {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/itemsCard-view.fxml"));
+                Node card = loader.load();
+                ItemCardController controller = loader.getController();
+                controller.setData(auction);
 
-            addAuctionCard(
-                    auction
-            );
-        }
-    }
-
-    private void addAuctionCard(
-            Auction auction
-    ) {
-
-        try {
-
-            FXMLLoader loader =
-                    new FXMLLoader(
-                            getClass().getResource(
-                                    "/fxml/itemsCard-view.fxml"
-                            )
-                    );
-
-            Node card =
-                    loader.load();
-
-            ItemCardController controller =
-                    loader.getController();
-
-            controller.setData(
-                    auction
-            );
-
-            if (
-                    column == MAX_COLUMNS
-            ) {
-
-                column = 0;
-                row++;
+                if (col == MAX_COLUMNS) { col = 0; row++; }
+                itemGrid.add(card, col++, row);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-
-            itemGrid.add(
-                    card,
-                    column++,
-                    row
-            );
-
-        } catch (IOException e) {
-
-            e.printStackTrace();
         }
     }
 
     // ================= NAVIGATION =================
 
     @FXML
-    private void handleCreateAuction(
-            ActionEvent event
-    ) {
-
-        openPage(
-                "/fxml/createAuction-view.fxml",
-                "Create Auction",
-                event
-        );
+    private void handleCreateAuction(ActionEvent event) {
+        NavigationUtils.switchScene(getStage(event), "/fxml/createAuction-view.fxml", "Create Auction");
     }
 
     @FXML
-    private void openProfile(
-            ActionEvent event
-    ) {
-
-        openPage(
-                "/fxml/userProfile-view.fxml",
-                "Profile",
-                event
-        );
+    private void openProfile(ActionEvent event) {
+        NavigationUtils.switchScene(getStage(event), "/fxml/userProfile-view.fxml", "My Profile");
     }
 
     @FXML
-    private void openProfileDirect(
-            ActionEvent event
-    ) {
-
-        openProfile(
-                event
-        );
+    private void openHistory(ActionEvent event) {
+        NavigationUtils.switchScene(getStage(event), "/fxml/auctionHistory-view.fxml", "Auction History");
     }
 
     @FXML
-    private void openHistory(
-            ActionEvent event
-    ) {
-
-        openPage(
-                "/fxml/auctionHistory-view.fxml",
-                "History",
-                event
-        );
+    private void openYourAuctions(ActionEvent event) {
+        NavigationUtils.switchScene(getStage(event), "/fxml/yourAuctions-view.fxml", "My Auctions");
     }
 
     @FXML
-    private void openYourAuctions(
-            ActionEvent event
-    ) {
-
-        openPage(
-                "/fxml/yourAuctions-view.fxml",
-                "Your Auctions",
-                event
-        );
+    private void openFavourite(ActionEvent event) {
+        NavigationUtils.switchScene(getStage(event), "/fxml/Favourite-view.fxml", "Favorites");
     }
 
     @FXML
-    private void openFavourite(
-            ActionEvent event
-    ) {
-
-        openPage(
-                "/fxml/Favourite-view.fxml",
-                "Favourite",
-                event
-        );
+    private void openBalance(ActionEvent event) {
+        NavigationUtils.showInfo("Balance feature coming soon!");
     }
 
     @FXML
-    private void openBalance(
-            ActionEvent event
-    ) {
-
-        // TODO:
-        // open balance page
-    }
-
-    // ================= ALERT =================
-
-    @FXML
-    private void handleLogout(
-            ActionEvent event
-    ) {
-
-        Alert alert =
-                new Alert(
-                        Alert.AlertType.CONFIRMATION
-                );
-
-        alert.setTitle(
-                "Logout"
-        );
-
-        alert.setHeaderText(
-                "Are you sure you want to logout?"
-        );
-
-        alert.setContentText(
-                "You will need to login again."
-        );
-
-        ButtonType logoutButton =
-                new ButtonType(
-                        "Logout"
-                );
-
-        ButtonType cancelButton =
-                new ButtonType(
-                        "Cancel",
-                        ButtonBar.ButtonData.CANCEL_CLOSE
-                );
-
-        alert.getButtonTypes().setAll(
-                logoutButton,
-                cancelButton
-        );
-
-        Optional<ButtonType> result =
-                alert.showAndWait();
-
-        if (
-                result.isPresent()
-                        &&
-                        result.get() == logoutButton
-        ) {
-
-            log(
-                    "Logout clicked"
-            );
-
-            openPage(
-                    "/fxml/login-view.fxml",
-                    "Login",
-                    event
-            );
+    private void handleLogout(ActionEvent event) {
+        if (NavigationUtils.showConfirm("Logout", "Are you sure you want to logout?")) {
+            NavigationUtils.switchScene(getStage(event), "/fxml/login-view.fxml", "Login");
         }
     }
 
     @FXML
-    private void handleDeleteAccount(
-            ActionEvent event
-    ) {
-
-        Alert alert =
-                new Alert(
-                        Alert.AlertType.CONFIRMATION
-                );
-
-        alert.setTitle(
-                "Delete Account"
-        );
-
-        alert.setHeaderText(
-                "Are you sure you want to delete your account?"
-        );
-
-        alert.setContentText(
-                "This action cannot be undone."
-        );
-
-        ButtonType deleteButton =
-                new ButtonType(
-                        "Delete"
-                );
-
-        ButtonType cancelButton =
-                new ButtonType(
-                        "Cancel",
-                        ButtonBar.ButtonData.CANCEL_CLOSE
-                );
-
-        alert.getButtonTypes().setAll(
-                deleteButton,
-                cancelButton
-        );
-
-        Optional<ButtonType> result =
-                alert.showAndWait();
-
-        if (
-                result.isPresent()
-                        &&
-                        result.get() == deleteButton
-        ) {
-
-            log(
-                    "Account deleted"
-            );
-
-            openPage(
-                    "/fxml/login-view.fxml",
-                    "Login",
-                    event
-            );
+    private void handleDeleteAccount(ActionEvent event) {
+        if (NavigationUtils.showConfirm("Danger", "Permanently delete account? This cannot be undone.")) {
+            NavigationUtils.switchScene(getStage(event), "/fxml/login-view.fxml", "Login");
         }
     }
 
-    // ================= PAGE =================
+    // ================= UTILS =================
 
-    private void openPage(
-            String fxmlPath,
-            String title,
-            ActionEvent event
-    ) {
-
-        try {
-
-            log(
-                    "Opening: "
-                            + fxmlPath
-            );
-
-            FXMLLoader loader =
-                    new FXMLLoader(
-                            getClass().getResource(
-                                    fxmlPath
-                            )
-                    );
-
-            Parent root =
-                    loader.load();
-
-            Object controller =
-                    loader.getController();
-
-            passData(
-                    controller
-            );
-
-            Stage stage =
-                    getStage(
-                            event
-                    );
-
-            stage.setScene(
-                    new Scene(root)
-            );
-
-            stage.setTitle(
-                    title
-            );
-
-            stage.show();
-
-        } catch (Exception e) {
-
-            e.printStackTrace();
-
-            log(
-                    "Cannot open: "
-                            + fxmlPath
-            );
+    private Stage getStage(ActionEvent event) {
+        if (event.getSource() instanceof MenuItem item) {
+            return (Stage) item.getParentPopup().getOwnerWindow();
         }
+        return (Stage) ((Node) event.getSource()).getScene().getWindow();
     }
 
-    private void passData(Object controller) {
-
-        if (controller instanceof UserDataReceiver c) {
-
-            c.setClient(client);
-
-            c.setUser(currentUser);
-        }
-
-        if (
-                controller instanceof FavouriteController c
-        ) {
-
-            c.setClient(client);
-
-            c.setUser(currentUser);
-        }
-    }
-
-    private Stage getStage(
-            ActionEvent event
-    ) {
-
-        if (
-                event.getSource()
-                        instanceof MenuItem
-        ) {
-
-            MenuItem item =
-                    (MenuItem)
-                            event.getSource();
-
-            return
-                    (Stage)
-                            item.getParentPopup()
-                                    .getOwnerWindow();
-        }
-
-        return
-                (Stage)
-                        ((Node)
-                                event.getSource())
-                                .getScene()
-                                .getWindow();
-    }
-
-    // ================= LOG =================
-
-    private void log(
-            String message
-    ) {
-
-        System.out.println(
-                "[UserView] "
-                        + message
-        );
+    private void log(String msg) {
+        System.out.println("[HomePage] " + msg);
     }
 }

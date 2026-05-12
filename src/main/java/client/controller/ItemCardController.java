@@ -30,29 +30,19 @@ public class ItemCardController {
 
         lblName.setText("NAME: " + item.getName());
 
-        String category =
-                item.getCategory()
-                        .name()
-                        .replace("_", " ")
-                        .toLowerCase();
-
-        String[] words = category.split(" ");
-
-        StringBuilder formattedCategory = new StringBuilder();
-
-        for (String word : words) {
-
-            formattedCategory.append(
-                    word.substring(0, 1).toUpperCase()
-                            + word.substring(1)
-                            + " "
-            );
+        if (item.getCategory() != null) {
+            String raw = item.getCategory().name().replace("_", " ").toLowerCase();
+            String[] words = raw.split(" ");
+            StringBuilder sb = new StringBuilder();
+            for (String word : words) {
+                sb.append(Character.toUpperCase(word.charAt(0)))
+                        .append(word.substring(1))
+                        .append(" ");
+            }
+            lblCategory.setText("Category: " + sb.toString().trim());
+        } else {
+            lblCategory.setText("Category: —");
         }
-
-        lblCategory.setText(
-                "Category: "
-                        + formattedCategory.toString().trim()
-        );
 
         lblCurrentPrice.setText("Current Price: " + auction.getCurrentPrice());
 
@@ -87,7 +77,6 @@ public class ItemCardController {
     @FXML
     private void handleCardClick(MouseEvent event) {
         try {
-            // Đảm bảo tên file này khớp 100% với file trong thư mục resources/fxml
             String fxmlPath = "/fxml/items-view.fxml";
 
             java.net.URL fxmlLocation = getClass().getResource(fxmlPath);

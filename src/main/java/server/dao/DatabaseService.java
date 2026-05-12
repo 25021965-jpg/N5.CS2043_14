@@ -6,86 +6,73 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 public class DatabaseService {
-
-    private static final String URL =
-            "jdbc:mysql://localhost:3306/auction_system";
-
+    private static final String DB_NAME = "auction_system";
+    private static final String URL = "jdbc:mysql://localhost:3306/" + DB_NAME;
     private static final String USER = "root";
-
     private static final String PASSWORD = "Pass102938@";
 
-    // KẾT NỐI DATABASE
     public static Connection getConnection() throws SQLException {
-
         try {
-
             Class.forName("com.mysql.cj.jdbc.Driver");
-
-            return DriverManager.getConnection(
-                    URL,
-                    USER,
-                    PASSWORD
-            );
-
+            return DriverManager.getConnection(URL, USER, PASSWORD);
         } catch (ClassNotFoundException e) {
-
-            throw new SQLException(
-                    "MySQL Driver not found!",
-                    e
-            );
+            throw new SQLException("Driver not found!", e);
         }
     }
 
-    // KHỞI TẠO DATABASE
     public static void initDatabase() {
+        String serverURL = "jdbc:mysql://localhost:3306/";
+        try (Connection conn = DriverManager.getConnection(serverURL, USER, PASSWORD);
+             Statement stmt = conn.createStatement()) {
 
-        String dbURL =
-                "jdbc:mysql://localhost:3306/";
+            // 1. Tạo database đồng nhất
+            stmt.executeUpdate("CREATE DATABASE IF NOT EXISTS " + DB_NAME);
+            stmt.executeUpdate("USE " + DB_NAME);
 
-        try (
-                Connection conn =
-                        DriverManager.getConnection(
-                                dbURL,
-                                USER,
-                                PASSWORD
-                        );
+            // 2. Tạo bảng Users
+            stmt.executeUpdate("CREATE TABLE IF NOT EXISTS users (" +
+                    "id VARCHAR(50) PRIMARY KEY, " +
+                    "fullname VARCHAR(100), " +
+                    "username VARCHAR(50) UNIQUE, " +
+                    "email VARCHAR(100) UNIQUE, " +
+                    "password VARCHAR(255), " +
+                    "dob VARCHAR(20), " +
+                    "balance DECIMAL(15,2) DEFAULT 0, " +
+                    "verified BOOLEAN DEFAULT TRUE)");
 
-                Statement stmt =
-                        conn.createStatement()
-        ) {
+            // 3. Tạo bảng Items
+            stmt.executeUpdate("CREATE TABLE IF NOT EXISTS items (" +
+                    "id VARCHAR(50) PRIMARY KEY, " +
+                    "name VARCHAR(255), " +
+                    "description TEXT, " +
+                    "image_path VARCHAR(255), " +
+                    "category VARCHAR(50))");
 
-            // TẠO DATABASE
-            stmt.executeUpdate(
-                    "CREATE DATABASE IF NOT EXISTS auction_system"
-            );
+            // 4. Tạo bảng Auctions
+            stmt.executeUpdate("CREATE TABLE IF NOT EXISTS auctions (" +
+                    "id VARCHAR(50) PRIMARY KEY, " +
+                    "item_id VARCHAR(50), " +
+                    "seller_id VARCHAR(50), " +
+                    "current_price DECIMAL(15,2), " +
+                    "min_increment DECIMAL(15,2), " +
+                    "start_time DATETIME, " +
+                    "end_time DATETIME, " +
+                    "status VARCHAR(20), " +
+                    "FOREIGN KEY (item_id) REFERENCES items(id), " +
+                    "FOREIGN KEY (seller_id) REFERENCES users(id))");
 
-            // CHUYỂN DATABASE
-            stmt.executeUpdate(
-                    "USE auction_system"
-            );
+            // 5. Tạo bảng Bids
+            stmt.executeUpdate("CREATE TABLE IF NOT EXISTS bids (" +
+                    "id INT AUTO_INCREMENT PRIMARY KEY, " +
+                    "auction_id VARCHAR(50), " +
+                    "user_id VARCHAR(50), " +
+                    "bid_amount DECIMAL(15,2), " +
+                    "bid_time DATETIME, " +
+                    "FOREIGN KEY (auction_id) REFERENCES auctions(id))");
 
-            // TẠO TABLE USERS
-            String createUsersTable =
-                    "CREATE TABLE IF NOT EXISTS users (" +
-                            "id INT PRIMARY KEY AUTO_INCREMENT," +
-                            "fullname VARCHAR(100) NOT NULL," +
-                            "username VARCHAR(50) UNIQUE NOT NULL," +
-                            "email VARCHAR(100) UNIQUE NOT NULL," +
-                            "password VARCHAR(255) NOT NULL" +
-                            ")";
-
-            stmt.executeUpdate(createUsersTable);
-
-            System.out.println(
-                    "✓ Database initialized successfully!"
-            );
-
+            System.out.println("✓ Database & All Tables initialized successfully!");
         } catch (SQLException e) {
-
-            System.err.println(
-                    "Init database error: " +
-                            e.getMessage()
-            );
+            e.printStackTrace();
         }
     }
 }

@@ -10,7 +10,7 @@ public class AuctionDAO {
 
     public static List<Auction> findAll() {
         List<Auction> auctions = new ArrayList<>();
-        String sql = "SELECT a.*, i.name AS item_name, i.description AS item_desc, i.image_path " +
+        String sql = "SELECT a.*, i.name AS item_name, i.description AS item_desc, i.image_path, i.category " +
                 "FROM auctions a " +
                 "LEFT JOIN items i ON a.item_id = i.id";
 
@@ -29,14 +29,21 @@ public class AuctionDAO {
                 if (statusStr != null) auction.setStatus(AuctionStatus.valueOf(statusStr));
 
                 // Map LocalDateTime
-                Timestamp ts = rs.getTimestamp("end_time");
-                if (ts != null) auction.setEndTime(ts.toLocalDateTime());
+                Timestamp startTs = rs.getTimestamp("start_time");
+                if (startTs != null) auction.setStartTime(startTs.toLocalDateTime());
+
+                Timestamp endTs = rs.getTimestamp("end_time");
+                if (endTs != null) auction.setEndTime(endTs.toLocalDateTime());
 
                 // --- TẠO ITEM ---
                 Item item = new Item();
                 item.setId(rs.getString("item_id"));
                 item.setName(rs.getString("item_name"));
                 item.setDescription(rs.getString("item_desc"));
+
+                // --- ĐỌC CATEGORY TỪ DB (QUAN TRỌNG) ---
+                String catStr = rs.getString("category");
+                item.setCategory(catStr != null ? Category.valueOf(catStr) : Category.OTHER);
 
                 // Lấy ảnh
                 String path = rs.getString("image_path");
@@ -61,8 +68,11 @@ public class AuctionDAO {
     }
 
     public static void save(Auction auction) {
-        String sql = "INSERT INTO auctions (id, item_id, seller_id, current_price, min_increment, end_time, status) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?)";
+
+        saveItem(auction.getItem());
+
+        String sql = "INSERT INTO auctions (id, item_id, seller_id, current_price, min_increment, start_time, end_time, status) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = DatabaseService.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -72,16 +82,41 @@ public class AuctionDAO {
             pstmt.setString(3, auction.getSeller().getId());
             pstmt.setBigDecimal(4, auction.getCurrentPrice());
             pstmt.setBigDecimal(5, auction.getMinIncrement());
-            pstmt.setTimestamp(6, Timestamp.valueOf(auction.getEndTime()));
-            pstmt.setString(7, auction.getStatus().name());
+            pstmt.setTimestamp(6, Timestamp.valueOf(auction.getStartTime()) );
+            pstmt.setTimestamp(7, Timestamp.valueOf(auction.getEndTime()));
+            pstmt.setString(8, auction.getStatus().name());
 
-            pstmt.executeUpdate();
+
+            int rows = pstmt.executeUpdate();
+            if (rows > 0) System.out.println("✓ Auction saved successfully: " + auction.getId());
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    public void updateStatus(String id, AuctionStatus status) {
+    private static void saveItem(Item item) {
+        if (item == null || item.getId() == null) return;
+
+        String sql = "INSERT IGNORE INTO items (id, name, description, image_path, category) VALUES (?, ?, ?, ?, ?)";
+        try (Connection conn = DatabaseService.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, item.getId());
+            pstmt.setString(2, item.getName());
+            pstmt.setString(3, item.getDescription());
+            // Lưu ảnh đầu tiên vào image_path
+            String firstImg = (item.getImages() != null && !item.getImages().isEmpty())
+                    ? item.getImages().get(0) : null;
+            pstmt.setString(4, firstImg);
+            pstmt.setString(5, item.getCategory() != null ? item.getCategory().name() : "OTHER");
+
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("saveItem error: " + e.getMessage());
+        }
+    }
+
+    public static void updateStatus(String id, AuctionStatus status) {
         String sql = "UPDATE auctions SET status = ? WHERE id = ?";
 
         try (Connection conn = DatabaseService.getConnection();

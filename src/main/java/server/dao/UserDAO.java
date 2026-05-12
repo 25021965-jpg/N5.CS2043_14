@@ -22,8 +22,9 @@ public class UserDAO {
             ps.setString(1, input);
             ps.setString(2, input);
             ps.setString(3, password.trim());
-            ResultSet rs = ps.executeQuery();
-            return rs.next();
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -115,10 +116,8 @@ public class UserDAO {
             ps.setString(1, input);
             ps.setString(2, input);
 
-            ResultSet rs = ps.executeQuery();
-
-            if (rs.next()) {
-                return map(rs);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return map(rs);
             }
 
         } catch (Exception e) {
@@ -138,10 +137,8 @@ public class UserDAO {
 
             ps.setString(1, username);
 
-            ResultSet rs = ps.executeQuery();
-
-            if (rs.next()) {
-                return map(rs);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return map(rs);
             }
 
         } catch (Exception e) {
@@ -161,10 +158,8 @@ public class UserDAO {
 
             ps.setString(1, email);
 
-            ResultSet rs = ps.executeQuery();
-
-            if (rs.next()) {
-                return map(rs);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return map(rs);
             }
 
         } catch (Exception e) {

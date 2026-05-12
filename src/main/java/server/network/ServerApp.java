@@ -1,5 +1,6 @@
 package server.network;
 
+import server.dao.DatabaseService;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -15,11 +16,22 @@ public class ServerApp {
     public static void main(String[] args) {
         System.out.println("--- Auction System Server Starting ---");
 
+        // Khởi tạo database trước khi lắng nghe
+        try {
+            DatabaseService.initDatabase();
+            System.out.println("✓ Database initialization check completed.");
+        } catch (Exception e) {
+            System.err.println("CRITICAL ERROR: Could not initialize database!");
+            e.printStackTrace();
+            return; // Dừng server nếu không thể kết nối database
+        }
+
+        // Bắt đầu lắng nghe kết nối từ client
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
             System.out.println("Server is listening on port: " + PORT);
             System.out.println("Waiting for clients to connect...");
 
-            while (true) {
+            while (!Thread.currentThread().isInterrupted()) {
 
                 Socket clientSocket = serverSocket.accept();
                 System.out.println("New client connected: " + clientSocket.getInetAddress());

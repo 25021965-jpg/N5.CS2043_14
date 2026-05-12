@@ -26,7 +26,7 @@ public class BidDAO {
         }
     }
 
-    public static List<Bid> getBidsByAuctionId(int auctionId) {
+    public static List<Bid> getBidsByAuctionId(String auctionId) {
         List<Bid> bids = new ArrayList<>();
         // Join with users table to populate the User object inside Bid
         String sql = "SELECT b.bid_amount, b.bid_time, u.id, u.username, u.fullname " +
@@ -38,23 +38,24 @@ public class BidDAO {
         try (Connection conn = DatabaseService.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setInt(1, auctionId);
-            ResultSet rs = pstmt.executeQuery();
+            pstmt.setString(1, auctionId);
 
-            while (rs.next()) {
-                // 1. tạo Bidder
-                User bidder = new User();
-                bidder.setId(rs.getString("id"));
-                bidder.setUsername(rs.getString("username"));
-                bidder.setFullname(rs.getString("fullname"));
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    User bidder = new User();
+                    bidder.setId(rs.getString("id"));
+                    bidder.setUsername(rs.getString("username"));
+                    bidder.setFullname(rs.getString("fullname"));
 
-                // 2. tạo bid và set data
-                Bid bid = new Bid();
-                bid.setBidder(bidder);
-                bid.setAmount(rs.getBigDecimal("bid_amount"));
-                bid.setTime(rs.getTimestamp("bid_time").toLocalDateTime());
+                    Bid bid = new Bid();
+                    bid.setBidder(bidder);
+                    bid.setAmount(rs.getBigDecimal("bid_amount"));
 
-                bids.add(bid);
+                    Timestamp ts = rs.getTimestamp("bid_time");
+                    if (ts != null) bid.setTime(ts.toLocalDateTime());
+
+                    bids.add(bid);
+                }
             }
         } catch (SQLException e) {
             System.err.println("SQL Error in getBidsByAuctionId: " + e.getMessage());
@@ -62,12 +63,12 @@ public class BidDAO {
         return bids;
     }
 
-    public static BigDecimal getHighestBidAmount(int auctionId) {
+    public static BigDecimal getHighestBidAmount(String auctionId) {
         String sql = "SELECT MAX(bid_amount) FROM bids WHERE auction_id = ?";
         try (Connection conn = DatabaseService.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setInt(1, auctionId);
+            pstmt.setString(1, auctionId);
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
                 BigDecimal max = rs.getBigDecimal(1);

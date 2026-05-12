@@ -1,267 +1,101 @@
 package client.network;
 
-import common.Command;
-
+import common.*;
+import model.*;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-
 import java.net.Socket;
-
-import java.util.function.Consumer;
 
 public class ClientSocket {
 
+    private static ClientSocket instance;
+
     private Socket socket;
-
     private BufferedReader in;
-
     private PrintWriter out;
-
     private boolean listening = false;
 
-    public ClientSocket() throws Exception {
-
-        socket =
-                new Socket(
-                        "localhost",
-                        9999
-                );
-
-        in =
-                new BufferedReader(
-                        new InputStreamReader(
-                                socket.getInputStream()
-                        )
-                );
-
-        out =
-                new PrintWriter(
-                        socket.getOutputStream(),
-                        true
-                );
-
-        System.out.println(
-                "Connected to server"
-        );
+    private ClientSocket() throws Exception {
+        if (socket == null || socket.isClosed()) {
+            socket = new Socket("localhost", 9999);
+            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            out = new PrintWriter(socket.getOutputStream(), true);
+            System.out.println("Connected to server");
+        }
     }
 
-    // LISTEN SERVER
-
-    public void listen(
-            Consumer<String> callback
-    ) {
-
-        // tránh tạo nhiều thread listen
-        if (listening) {
-            return;
+    public static ClientSocket getInstance() {
+        if (instance == null) {
+            try {
+                instance = new ClientSocket();
+            } catch (Exception e) {
+                System.err.println("Could not connect to server: " + e.getMessage());
+                return null;
+            }
         }
+        return instance;
+    }
 
+    // --- LISTEN SERVER ---
+    public void listen() {
+        if (listening) return;
         listening = true;
 
-        new Thread(() -> {
-
+        Thread t = new Thread(() -> {
             try {
-
                 String msg;
-
-                while (
-                        (msg = in.readLine()) != null
-                ) {
-
-                    System.out.println(
-                            "FROM SERVER: "
-                                    + msg
-                    );
-
-                    callback.accept(msg);
+                while (listening && (msg = in.readLine()) != null) {
+                    System.out.println("FROM SERVER: " + msg);
+                    ResponseHandler.handle(msg);
                 }
-
             } catch (Exception e) {
-
-                e.printStackTrace();
-
-                callback.accept(
-                        "DISCONNECTED"
-                );
-
+                if (listening) {
+                    System.err.println("Connection error: " + e.getMessage());
+                    ResponseHandler.handle("DISCONNECTED");
+                }
             } finally {
-
                 listening = false;
             }
-
-        }).start();
+        });
+        t.setDaemon(true); // Luồng này tự tắt khi đóng App
+        t.start();
     }
 
-    // GENERIC SEND
-
-    private void send(
-            Command command,
-            String... data
-    ) {
-
-        if (
-                socket == null
-                        || socket.isClosed()
-        ) {
-
-            System.out.println(
-                    "Socket closed!"
-            );
-
+    // --- GENERIC SEND ---
+    private void send(Command command, String... data) {
+        if (socket == null || socket.isClosed()) {
+            System.out.println("Socket closed!");
             return;
         }
-
-        StringBuilder sb =
-                new StringBuilder(
-                        command.name()
-                );
-
-        for (String s : data) {
-
-            sb.append("|")
-                    .append(s);
-        }
-
-        String msg =
-                sb.toString();
-
+        String msg = CommandBuilder.build(command, data);
         out.println(msg);
-
         out.flush();
-
-        System.out.println(
-                "SEND: " + msg
-        );
+        System.out.println("SEND: " + msg);
     }
 
-    // LOGIN
+    public void sendLogin(String username, String password) { send(Command.LOGIN, username, password); }
+    public void sendRegister(String fn, String un, String em, String pw, String dob) { send(Command.REGISTER, fn, un, em, pw, dob); }
+    public void sendLogout() { send(Command.LOGOUT); }
+    public void sendList() { send(Command.LIST); }
+    public void sendJoin(String auctionId) { send(Command.JOIN, auctionId); }
+    public void sendBid(String auctionId, String amount) { send(Command.BID, auctionId, amount); }
 
-    public void sendLogin(
-            String username,
-            String password
-    ) {
-
-        send(
-                Command.LOGIN,
-                username,
-                password
-        );
+    public void sendCreate(Auction auction) {
+        Item item = auction.getItem();
+        String images = (item.getImages() != null) ? String.join(",", item.getImages()) : "";
+        send(Command.CREATE, auction.getId(), item.getId(), item.getName(), item.getDescription(),
+                item.getCategory().name(), images, auction.getCurrentPrice().toString(),
+                auction.getMinIncrement().toString(), auction.getStartTime().toString(), auction.getEndTime().toString());
     }
-
-    // REGISTER
-
-    public void sendRegister(
-            String fullname,
-            String username,
-            String email,
-            String password,
-            String dob
-    ) {
-
-        send(
-                Command.REGISTER,
-                fullname,
-                username,
-                email,
-                password,
-                dob
-        );
-    }
-
-    // LOGOUT
-
-    public void sendLogout() {
-
-        send(
-                Command.LOGOUT
-        );
-    }
-
-    // LIST
-
-    public void sendList() {
-
-        send(
-                Command.LIST
-        );
-    }
-
-    // JOIN
-
-    public void sendJoin(
-            String auctionId
-    ) {
-
-        send(
-                Command.JOIN,
-                auctionId
-        );
-    }
-
-    // BID
-
-    public void sendBid(
-            String auctionId,
-            String amount
-    ) {
-
-        send(
-                Command.BID,
-                auctionId,
-                amount
-        );
-    }
-
-    // CREATE
-
-    public void sendCreate(
-            String name,
-            String category,
-            String price
-    ) {
-
-        send(
-                Command.CREATE,
-                name,
-                category,
-                price
-        );
-    }
-
-    // CLOSE
 
     public void close() {
-
         try {
-
             listening = false;
-
-            if (in != null) {
-
-                in.close();
-            }
-
-            if (out != null) {
-
-                out.close();
-            }
-
-            if (
-                    socket != null
-                            && !socket.isClosed()
-            ) {
-
-                socket.close();
-            }
-
-            System.out.println(
-                    "Socket closed"
-            );
-
-        } catch (Exception e) {
-
-            e.printStackTrace();
-        }
+            if (in != null) in.close();
+            if (out != null) out.close();
+            if (socket != null && !socket.isClosed()) socket.close();
+            System.out.println("Socket closed");
+        } catch (Exception e) { e.printStackTrace(); }
     }
 }

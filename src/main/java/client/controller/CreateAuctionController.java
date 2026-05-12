@@ -1,83 +1,65 @@
 package client.controller;
-import javafx.scene.control.*;
-import javafx.scene.layout.VBox;
-import javafx.stage.FileChooser;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import javafx.fxml.FXML;
-import javafx.scene.control.Alert.AlertType;
 
-import java.time.LocalDateTime;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.scene.layout.HBox;
-import javafx.stage.Stage;
-import javafx.scene.Node;
+import client.network.ClientSocket;
+import client.network.ResponseHandler;
+import static client.util.NavigationUtils.*;
+
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
-import model.*;
+import javafx.fxml.FXML;
+import javafx.scene.Node;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
+import model.*;
 
+import java.io.File;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 public class CreateAuctionController {
 
     private List<File> imageFiles = new ArrayList<>();
     private int currentImageIndex = 0;
-    @FXML
-    private ComboBox<String> cbCategory;
-    @FXML private TextField txtName;
+
+    @FXML private ComboBox<String> cbCategory;
+    @FXML private TextField txtName, txtStartingBid, txtMinIncrement;
     @FXML private TextArea txtDescription;
-    @FXML private TextField txtStartingBid;
-    @FXML private TextField txtMinIncrement;
     @FXML private VBox imgItems;
     @FXML private ImageView imagePreview;
+    @FXML private TextField txtStartHour, txtStartMin, txtEndHour, txtEndMin;
+    @FXML private DatePicker dpStartDate, dpEndDate;
 
-    // Thành phần thời gian bắt đầu
-    @FXML private TextField txtStartHour;
-    @FXML private TextField txtStartMin;
-    @FXML private DatePicker dpStartDate;
-
-    // Thành phần thời gian kết thúc
-    @FXML private TextField txtEndHour;
-    @FXML private TextField txtEndMin;
-    @FXML private DatePicker dpEndDate;
-
+    @FXML
+    public void initialize() {
+        Platform.runLater(() -> {
+            if (txtName != null && txtName.getScene() != null) {
+                Stage stage = (Stage) txtName.getScene().getWindow();
+                ResponseHandler.setMainStage(stage);
+            }
+        });
+    }
 
     @FXML
     private void handleCreate(ActionEvent event) {
         try {
             // --- BƯỚC 1: VALIDATION ---
-
-            if (txtName.getText().isEmpty()
-                    || txtDescription.getText().isEmpty()
-                    || txtStartingBid.getText().isEmpty()
-                    || txtMinIncrement.getText().isEmpty()
-                    || txtStartHour.getText().isEmpty()
-                    || txtStartMin.getText().isEmpty()
-                    || txtEndHour.getText().isEmpty()
-                    || txtEndMin.getText().isEmpty()
-                    || dpStartDate.getValue() == null
-                    || dpEndDate.getValue() == null) {
-
-                showAlert("Error", "Please fill in all information");
-                return;
-
-            }
-            if (cbCategory.getValue() == null) {
-                showAlert("Error", "Please choose category");
+            if (txtName.getText().isEmpty() || txtStartingBid.getText().isEmpty() ||
+                    dpStartDate.getValue() == null || dpEndDate.getValue() == null) {
+                showError("Please fill in all information");
                 return;
             }
-
 
             if (imageFiles.isEmpty()) {
-
-                showAlert("Error", "Please upload at least one image");
+                showError("Please upload at least one image");
                 return;
             }
-
 
             // --- BƯỚC 2: XỬ LÝ THỜI GIAN ---
             int startH = Integer.parseInt(txtStartHour.getText());
@@ -86,94 +68,54 @@ public class CreateAuctionController {
 
             int endH = Integer.parseInt(txtEndHour.getText());
             int endM = Integer.parseInt(txtEndMin.getText());
-
-            if (startH < 0 || startH > 23
-                    || startM < 0 || startM > 59
-                    || endH < 0 || endH > 23
-                    || endM < 0 || endM > 59) {
-
-                showAlert("Error", "Invalid time format");
-                return;
-            }
-
             LocalDateTime endDateTime = dpEndDate.getValue().atTime(endH, endM);
+
             if (endDateTime.isBefore(startDateTime)) {
-                showAlert("Error", "End time must be after start time!");
+                showError("End time must be after start time!");
                 return;
             }
 
             // --- BƯỚC 3: TẠO ĐỐI TƯỢNG DỮ LIỆU ---
-
-            // 1. Tạo Item chứa thông tin cơ bản
             Item item = new Item();
+            item.setId("ITM" + UUID.randomUUID().toString().substring(0, 8)); // Tạo ID tránh null
             item.setName(txtName.getText());
             item.setDescription(txtDescription.getText());
-            item.setCategory(
-                    Category.valueOf(
-                            cbCategory.getValue()
-                    )
-            );
+            item.setCategory(Category.valueOf(cbCategory.getValue()));
 
-            //xli anh
-            java.util.List<String> imagePaths = new java.util.ArrayList<>();
-            for (File file : imageFiles) {
-                // Chuyển từng file ảnh sang dạng String URI
-                imagePaths.add(file.toURI().toString());
-            }
+            List<String> imagePaths = new ArrayList<>();
+            for (File file : imageFiles) imagePaths.add(file.toURI().toString());
             item.setImages(imagePaths);
 
-
-
-            // 2. Tạo Auction chứa thông tin đấu giá (Thay thế cho AuctionItem cũ)
             Auction newAuction = new Auction();
+            newAuction.setId("AUC" + UUID.randomUUID().toString().substring(0, 8)); // Tạo ID tránh null
             newAuction.setItem(item);
             newAuction.setCurrentPrice(new java.math.BigDecimal(txtStartingBid.getText()));
             newAuction.setMinIncrement(new java.math.BigDecimal(txtMinIncrement.getText()));
+            newAuction.setStartTime(startDateTime);
             newAuction.setEndTime(endDateTime);
             newAuction.setStatus(AuctionStatus.ACTIVE);
 
-            // --- BƯỚC 4: CHUYỂN TRANG VÀ HIỂN THỊ ---
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/HomePage.fxml"));
-            Parent userViewParent = loader.load();
+            // --- BƯỚC 4: GỬI LÊN SERVER ---
+            ResponseHandler.setMainStage((Stage) ((Node) event.getSource()).getScene().getWindow());
 
-            HomePageController userController = loader.getController();
-
-            // Truyền newAuction
-            userController.addNewAuctionCard(newAuction);
-
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            stage.setScene(new Scene(userViewParent));
-            stage.show();
+            ClientSocket socket = ClientSocket.getInstance();
+            if (socket == null) {
+                showError("Not connected to server."); return;
+            }
+            socket.sendCreate(newAuction);
 
         } catch (NumberFormatException e) {
-            showAlert("Format Error", "Price, hour, and minutes must be numeric value");
-        } catch (IOException e) {
-            e.printStackTrace();
-            showAlert("System Error", "Could not load the display interface");
+            showError("Price and time must be numeric values");
         }
     }
+
     @FXML
     private void handleCancel(ActionEvent event) {
-        try {
-            // 1. Tải file FXML của trang chủ
-            // Lưu ý: Thay "HomeView.fxml" bằng tên file thực tế của bạn
-            Parent homePage = FXMLLoader.load(getClass().getResource("/fxml/HomePage.fxml"));
-
-            // 2. Tạo một Scene mới với trang chủ
-            Scene homeScene = new Scene(homePage);
-
-            // 3. Lấy Stage (cửa sổ) hiện tại từ sự kiện nhấn nút
-            Stage appStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-
-            // 4. Đặt Scene mới lên Stage và hiển thị
-            appStage.setScene(homeScene);
-            appStage.show();
-
-        } catch (IOException e) {
-            System.out.println("Could not find HomePage.fxml");
-            e.printStackTrace();
-        }
+        Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+        switchScene(stage, "/fxml/HomePage.fxml", "Auction Home");
     }
+
+    // --- HÀM XỬ LÝ ẢNH ---
     @FXML
     private void handleUploadImages() {
 
@@ -249,14 +191,5 @@ public class CreateAuctionController {
         }
 
         showImage(currentImageIndex);
-    }
-
-    // Hàm tiện ích để hiện thông báo
-    private void showAlert(String title, String content) {
-        Alert alert = new Alert(AlertType.INFORMATION);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(content);
-        alert.showAndWait();
     }
 }
