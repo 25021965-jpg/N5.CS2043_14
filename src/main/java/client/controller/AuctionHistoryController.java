@@ -170,10 +170,10 @@ public class AuctionHistoryController implements UserDataReceiver {
         );
 
         balanceBtn.setOnAction(
-                e -> {
-                    // TODO:
-                    // open balance page
-                }
+                e -> openPage(
+                        "/fxml/accountBalance-view.fxml",
+                        "Account Balance"
+                )
         );
     }
 

@@ -11,7 +11,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="720.0" prefWidth="1080.0" style="             -fx-background-color: #F8FAFC;             -fx-border-color: #D4AF37;             -fx-border-width: 6;         " xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controller.YourAuctionsController">
+<AnchorPane prefHeight="720.0" prefWidth="1080.0" style="             -fx-background-color: #F8FAFC;             -fx-border-color: #D4AF37;             -fx-border-width: 6;         " xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controller.YourAuctionsController">
 
     <!-- LEFT MENU -->
     <VBox prefWidth="250.0" spacing="18" style="                 -fx-background-color: #000000;                 -fx-border-color: #D4AF37;                 -fx-border-width: 0 3 0 0;                 -fx-padding: 30 20 20 20;             " AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0">
@@ -32,7 +32,7 @@
         <Separator style="-fx-background-color: #334155;" />
 
         <!-- PROFILE -->
-        <Button fx:id="infoBtn" prefHeight="45" prefWidth="210" style="                     -fx-background-color: #475569;                     -fx-text-fill: white;                     -fx-font-size: 15px;                     -fx-font-family: 'Berlin Sans FB Demi Bold';                     -fx-font-weight: bold;                     -fx-background-radius: 8;                 " text="Profile">
+        <Button fx:id="infoBtn" prefHeight="45" prefWidth="210" style="-fx-background-color: #334155; -fx-text-fill: white; -fx-font-size: 15px; -fx-font-family: 'Berlin Sans FB Demi Bold'; -fx-font-weight: bold; -fx-background-radius: 8;" text="Profile">
 
             <font>
                 <Font name="Berlin Sans FB Demi Bold" size="14.0" />
@@ -50,7 +50,7 @@
         </Button>
 
         <!-- YOUR AUCTIONS -->
-        <Button fx:id="createdAuctionBtn" prefHeight="45" prefWidth="210" style="                     -fx-background-color: #334155;                     -fx-text-fill: white;                     -fx-font-size: 15px;                     -fx-font-family: 'Berlin Sans FB Demi Bold';                     -fx-font-weight: bold;                     -fx-background-radius: 8;                 " text="Your Auctions">
+        <Button fx:id="createdAuctionBtn" prefHeight="45" prefWidth="210" style="-fx-background-color: #475569; -fx-text-fill: white; -fx-font-size: 15px; -fx-font-family: 'Berlin Sans FB Demi Bold'; -fx-font-weight: bold; -fx-background-radius: 8;" text="Your Auctions">
 
             <font>
                 <Font name="Berlin Sans FB Demi Bold" size="14.0" />
@@ -143,51 +143,26 @@
 
 
     <!-- AUCTION LIST -->
-    <ScrollPane fitToWidth="true"
-                layoutX="290.0"
-                layoutY="160.0"
-                prefHeight="520.0"
-                prefWidth="760.0"
-                style="-fx-background-color: transparent; -fx-background: transparent;">
+    <ScrollPane fitToWidth="true" layoutX="290.0" layoutY="160.0" prefHeight="520.0" prefWidth="760.0" style="-fx-background-color: transparent; -fx-background: transparent;">
 
-        <VBox prefWidth="730"
-              spacing="20"
-              style="-fx-padding: 10;">
+        <VBox prefWidth="730" spacing="20" style="-fx-padding: 10;">
 
             <!-- AUCTION CARD -->
-            <HBox prefHeight="150"
-                  prefWidth="730"
-                  spacing="20"
-                  style="-fx-background-color: white;
-                     -fx-background-radius: 15;
-                     -fx-border-radius: 15;
-                     -fx-border-color: #D4AF37;
-                     -fx-border-width: 2;
-                     -fx-padding: 15;">
+            <HBox prefHeight="150" prefWidth="730" spacing="20" style="-fx-background-color: white;                      -fx-background-radius: 15;                      -fx-border-radius: 15;                      -fx-border-color: #D4AF37;                      -fx-border-width: 2;                      -fx-padding: 15;">
 
                 <!-- IMAGE -->
-                <Region prefHeight="120"
-                        prefWidth="130"
-                        style="-fx-background-color: #E2E8F0;
-                           -fx-background-radius: 10;" />
+                <Region prefHeight="120" prefWidth="130" style="-fx-background-color: #E2E8F0;                            -fx-background-radius: 10;" />
 
                 <!-- INFO -->
                 <VBox spacing="10">
 
                     <Label style="-fx-font-size: 20px;                                   -fx-font-weight: bold;                                   -fx-text-fill: #0F172A;" text="Auction Item" />
 
-                    <Label style="-fx-font-size: 15px;
-               -fx-text-fill: #334155;"
-                           text="Current Price: -- VNĐ" />
+                    <Label style="-fx-font-size: 15px;                -fx-text-fill: #334155;" text="Current Price: -- VNĐ" />
 
-                    <Label style="-fx-font-size: 15px;
-               -fx-text-fill: #7C3AED;
-               -fx-font-weight: bold;"
-                           text="Category: Electronics" />
+                    <Label style="-fx-font-size: 15px;                -fx-text-fill: #7C3AED;                -fx-font-weight: bold;" text="Category: Electronics" />
 
-                    <Label style="-fx-font-size: 15px;
-               -fx-text-fill: #64748B;"
-                           text="End Date: --/--/----" />
+                    <Label style="-fx-font-size: 15px;                -fx-text-fill: #64748B;" text="End Date: --/--/----" />
 
                     <Label style="-fx-font-size: 15px;                                   -fx-font-weight: bold;                                   -fx-text-fill: #16A34A;" text="Status: Active" />
 
@@ -195,23 +170,9 @@
                     <!-- ACTION BUTTONS -->
                     <HBox spacing="10">
 
-                        <Button text="View"
-                                prefHeight="35"
-                                prefWidth="100"
-                                style="-fx-background-color: #2563EB;
-                                   -fx-text-fill: white;
-                                   -fx-font-weight: bold;
-                                   -fx-background-radius: 8;" />
+                        <Button prefHeight="35" prefWidth="100" style="-fx-background-color: #2563EB;                                    -fx-text-fill: white;                                    -fx-font-weight: bold;                                    -fx-background-radius: 8;" text="View" />
 
-                        <Button fx:id="cancelAuctionBtn"
-                                onAction="#handleCancelAuction"
-                                text="Cancel Auction"
-                                prefHeight="35"
-                                prefWidth="140"
-                                style="-fx-background-color: #EF4444;
-                                   -fx-text-fill: white;
-                                   -fx-font-weight: bold;
-                                   -fx-background-radius: 8;" />
+                        <Button fx:id="cancelAuctionBtn" onAction="#handleCancelAuction" prefHeight="35" prefWidth="140" style="-fx-background-color: #EF4444;                                    -fx-text-fill: white;                                    -fx-font-weight: bold;                                    -fx-background-radius: 8;" text="Cancel Auction" />
 
                     </HBox>
 

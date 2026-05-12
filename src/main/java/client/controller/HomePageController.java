@@ -382,15 +382,6 @@ public class HomePageController implements UserDataReceiver {
         );
     }
 
-    @FXML
-    private void openProfileDirect(
-            ActionEvent event
-    ) {
-
-        openProfile(
-                event
-        );
-    }
 
     @FXML
     private void openHistory(
@@ -433,8 +424,9 @@ public class HomePageController implements UserDataReceiver {
             ActionEvent event
     ) {
 
-        // TODO:
-        // open balance page
+        openPage("/fxml/accountBalance-view.fxml",
+                "Favourite",
+                event);
     }
 
     // ================= ALERT =================
