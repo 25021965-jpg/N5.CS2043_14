@@ -10,6 +10,8 @@ import javafx.scene.Scene;
 
 import javafx.scene.control.*;
 
+import javafx.scene.layout.HBox;
+
 import javafx.stage.Stage;
 
 import model.User;
@@ -19,8 +21,6 @@ import java.util.Optional;
 
 public class YourAuctionsController implements UserDataReceiver{
 
-    @FXML
-    private ComboBox<String> categoryFilterComboBox;
     private ClientSocket client;
 
     private User currentUser;
@@ -52,6 +52,15 @@ public class YourAuctionsController implements UserDataReceiver{
     @FXML
     private ComboBox<String> statusFilterComboBox;
 
+    @FXML
+    private ComboBox<String> categoryFilterComboBox;
+
+    @FXML
+    private HBox auctionCard;
+
+    @FXML
+    private Button cancelAuctionBtn;
+
     public void setClient(
             ClientSocket client
     ) {
@@ -76,6 +85,7 @@ public class YourAuctionsController implements UserDataReceiver{
         setupStatusFilter();
         setupCategoryFilter();
         setupMenuEvents();
+        setupCardEvents();
     }
 
     private void setupStatusFilter() {
@@ -117,7 +127,52 @@ public class YourAuctionsController implements UserDataReceiver{
                 e -> filterAuctions()
         );
     }
-    
+
+    private void setupCardEvents() {
+
+        auctionCard.setOnMouseClicked(e -> {
+
+            System.out.println(
+                    "Opening auction detail..."
+            );
+
+            openPage(
+                    "/fxml/items-view.fxml",
+                    "Auction Detail"
+            );
+        });
+
+        auctionCard.setOnMouseEntered(e -> {
+
+            auctionCard.setStyle(
+                    "-fx-background-color: #F8FAFC;" +
+                            "-fx-background-radius: 15;" +
+                            "-fx-border-radius: 15;" +
+                            "-fx-border-color: #D4AF37;" +
+                            "-fx-border-width: 2;" +
+                            "-fx-padding: 15;" +
+                            "-fx-cursor: hand;"
+            );
+        });
+
+        auctionCard.setOnMouseExited(e -> {
+
+            auctionCard.setStyle(
+                    "-fx-background-color: white;" +
+                            "-fx-background-radius: 15;" +
+                            "-fx-border-radius: 15;" +
+                            "-fx-border-color: #D4AF37;" +
+                            "-fx-border-width: 2;" +
+                            "-fx-padding: 15;" +
+                            "-fx-cursor: hand;"
+            );
+        });
+
+        cancelAuctionBtn.setOnMouseClicked(
+                e -> e.consume()
+        );
+    }
+
     private void setupMenuEvents() {
 
         infoBtn.setOnAction(
@@ -164,10 +219,10 @@ public class YourAuctionsController implements UserDataReceiver{
         );
 
         balanceBtn.setOnAction(
-                e -> {
-                    // TODO:
-                    // open balance page
-                }
+                e -> openPage(
+                        "/fxml/accountBalance-view.fxml",
+                        "Account Balance"
+                )
         );
     }
 

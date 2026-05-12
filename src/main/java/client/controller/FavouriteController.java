@@ -10,6 +10,8 @@ import javafx.scene.Scene;
 
 import javafx.scene.control.*;
 
+import javafx.scene.layout.HBox;
+
 import javafx.stage.Stage;
 
 import model.User;
@@ -48,6 +50,9 @@ public class FavouriteController implements UserDataReceiver {
     private Button backHomeBtn;
 
     @FXML
+    private HBox favouriteCard;
+
+    @FXML
     private ComboBox<String> statusFilterComboBox;
 
     @FXML
@@ -63,6 +68,7 @@ public class FavouriteController implements UserDataReceiver {
         setupStatusFilter();
         setupCategoryFilter();
         setupMenuEvents();
+        setupCardEvents();
     }
 
     public void setClient(
@@ -119,6 +125,47 @@ public class FavouriteController implements UserDataReceiver {
         );
     }
 
+    private void setupCardEvents() {
+
+        favouriteCard.setOnMouseClicked(e -> {
+
+            System.out.println(
+                    "Opening favourite auction..."
+            );
+
+            openPage(
+                    "/fxml/items-view.fxml",
+                    "Auction Detail"
+            );
+        });
+
+        favouriteCard.setOnMouseEntered(e -> {
+
+            favouriteCard.setStyle(
+                    "-fx-background-color: #F8FAFC;" +
+                            "-fx-background-radius: 15;" +
+                            "-fx-border-radius: 15;" +
+                            "-fx-border-color: #D4AF37;" +
+                            "-fx-border-width: 2;" +
+                            "-fx-padding: 15;" +
+                            "-fx-cursor: hand;"
+            );
+        });
+
+        favouriteCard.setOnMouseExited(e -> {
+
+            favouriteCard.setStyle(
+                    "-fx-background-color: white;" +
+                            "-fx-background-radius: 15;" +
+                            "-fx-border-radius: 15;" +
+                            "-fx-border-color: #D4AF37;" +
+                            "-fx-border-width: 2;" +
+                            "-fx-padding: 15;" +
+                            "-fx-cursor: hand;"
+            );
+        });
+    }
+
     private void setupMenuEvents() {
 
         infoBtn.setOnAction(
@@ -165,10 +212,10 @@ public class FavouriteController implements UserDataReceiver {
         );
 
         balanceBtn.setOnAction(
-                e -> {
-                    // TODO:
-                    // open balance page
-                }
+                e -> openPage(
+                        "/fxml/accountBalance-view.fxml",
+                        "Account Balance"
+                )
         );
     }
 
