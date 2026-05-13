@@ -6,72 +6,122 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 public class DatabaseService {
+    // Đọc thông tin từ Environment Variables để bảo mật
+    private static final String HOST = System.getenv("TIDB_HOST");
+    private static final String USER = System.getenv("TIDB_USER");
+    private static final String PASS = System.getenv("TIDB_PASS");
     private static final String DB_NAME = "auction_system";
-    private static final String URL = "jdbc:mysql://localhost:3306/" + DB_NAME;
-    private static final String USER = "root";
-    private static final String PASSWORD = "Pass102938@";
+
+    private static final String URL =
+            "jdbc:mysql://" + HOST + ":4000/" + DB_NAME +
+                    "?sslMode=REQUIRED&useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC";
 
     public static Connection getConnection() throws SQLException {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            return DriverManager.getConnection(URL, USER, PASSWORD);
+            return DriverManager.getConnection(URL, USER, PASS);
         } catch (ClassNotFoundException e) {
-            throw new SQLException("Driver not found!", e);
+            throw new SQLException("MySQL Driver not found!", e);
         }
     }
 
     public static void initDatabase() {
-        String serverURL = "jdbc:mysql://localhost:3306/";
-        try (Connection conn = DriverManager.getConnection(serverURL, USER, PASSWORD);
+
+        String serverURL =
+                "jdbc:mysql://" + HOST + ":4000/test?sslMode=REQUIRED";
+
+        try (Connection conn = DriverManager.getConnection(serverURL, USER, PASS);
              Statement stmt = conn.createStatement()) {
 
-            // 1. Tạo database đồng nhất
+            // 1. Khởi tạo Database
             stmt.executeUpdate("CREATE DATABASE IF NOT EXISTS " + DB_NAME);
             stmt.executeUpdate("USE " + DB_NAME);
 
-            // 2. Tạo bảng Users
-            stmt.executeUpdate("CREATE TABLE IF NOT EXISTS users (" +
-                    "id VARCHAR(50) PRIMARY KEY, " +
-                    "fullname VARCHAR(100), " +
-                    "username VARCHAR(50) UNIQUE, " +
-                    "email VARCHAR(100) UNIQUE, " +
-                    "password VARCHAR(255), " +
-                    "dob VARCHAR(20), " +
-                    "balance DECIMAL(15,2) DEFAULT 0, " +
-                    "verified BOOLEAN DEFAULT TRUE)");
+            // 2. Bảng Người dùng
+            stmt.executeUpdate("""
+                CREATE TABLE IF NOT EXISTS users (
+                    user_id CHAR(36) PRIMARY KEY,
+                    full_name VARCHAR(50) NOT NULL,
+                    username VARCHAR(15) UNIQUE NOT NULL,
+                    email VARCHAR(100) UNIQUE NOT NULL,
+                    password VARCHAR(255) NOT NULL,
+                    dob DATE,
+                    balance DECIMAL(15,2) DEFAULT 0,
+                    role ENUM('BIDDER', 'SELLER', 'ADMIN') DEFAULT 'SELLER',
+                    verified BOOLEAN DEFAULT TRUE,
+                    CHECK (username NOT LIKE '% %')
+                )""");
 
-            // 3. Tạo bảng Items
-            stmt.executeUpdate("CREATE TABLE IF NOT EXISTS items (" +
-                    "id VARCHAR(50) PRIMARY KEY, " +
-                    "name VARCHAR(255), " +
-                    "description TEXT, " +
-                    "image_path VARCHAR(255), " +
-                    "category VARCHAR(50))");
+            // 3. Bảng Vật phẩm
+            stmt.executeUpdate("""
+                CREATE TABLE IF NOT EXISTS items (
+                    item_id CHAR(36) PRIMARY KEY,
+                    name VARCHAR(100) NOT NULL,
+                    description VARCHAR(500),
+                    category VARCHAR(50)
+                )""");
 
-            // 4. Tạo bảng Auctions
-            stmt.executeUpdate("CREATE TABLE IF NOT EXISTS auctions (" +
-                    "id VARCHAR(50) PRIMARY KEY, " +
-                    "item_id VARCHAR(50), " +
-                    "seller_id VARCHAR(50), " +
-                    "current_price DECIMAL(15,2), " +
-                    "min_increment DECIMAL(15,2), " +
-                    "start_time DATETIME, " +
-                    "end_time DATETIME, " +
-                    "status VARCHAR(20), " +
-                    "FOREIGN KEY (item_id) REFERENCES items(id), " +
-                    "FOREIGN KEY (seller_id) REFERENCES users(id))");
+            // 4. Bảng Hình ảnh Vật phẩm
+            stmt.executeUpdate("""
+                CREATE TABLE IF NOT EXISTS item_images (
+                    image_id CHAR(36) PRIMARY KEY,
+                    item_id CHAR(36) NOT NULL,
+                    image_url TEXT NOT NULL,
+                    FOREIGN KEY(item_id) REFERENCES items(item_id) ON DELETE CASCADE
+                )""");
 
-            // 5. Tạo bảng Bids
-            stmt.executeUpdate("CREATE TABLE IF NOT EXISTS bids (" +
-                    "id INT AUTO_INCREMENT PRIMARY KEY, " +
-                    "auction_id VARCHAR(50), " +
-                    "user_id VARCHAR(50), " +
-                    "bid_amount DECIMAL(15,2), " +
-                    "bid_time DATETIME, " +
-                    "FOREIGN KEY (auction_id) REFERENCES auctions(id))");
+            // 5. Bảng Phiên đấu giá
+            stmt.executeUpdate("""
+                CREATE TABLE IF NOT EXISTS auctions (
+                    auction_id CHAR(36) PRIMARY KEY,
+                    item_id CHAR(36) UNIQUE NOT NULL,
+                    seller_id CHAR(36) NOT NULL,
+                    starting_price DECIMAL(15,2) NOT NULL,
+                    current_price DECIMAL(15,2) NOT NULL,
+                    min_increment DECIMAL(15,2) NOT NULL,
+                    start_time DATETIME NOT NULL,
+                    end_time DATETIME NOT NULL,
+                    is_cancelled BOOLEAN DEFAULT FALSE,
+                    FOREIGN KEY(item_id) REFERENCES items(item_id) ON DELETE CASCADE,
+                    FOREIGN KEY(seller_id) REFERENCES users(user_id) ON DELETE CASCADE
+                )""");
 
-            System.out.println("✓ Database & All Tables initialized successfully!");
+            // 6. Bảng Lượt đấu giá
+            stmt.executeUpdate("""
+                CREATE TABLE IF NOT EXISTS bids (
+                    bid_id CHAR(36) PRIMARY KEY,
+                    auction_id CHAR(36) NOT NULL,
+                    bidder_id CHAR(36) NOT NULL,
+                    bid_amount DECIMAL(15,2) NOT NULL,
+                    bid_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY(auction_id) REFERENCES auctions(auction_id) ON DELETE CASCADE,
+                    FOREIGN KEY(bidder_id) REFERENCES users(user_id) ON DELETE CASCADE
+                )""");
+
+            // 7. Bảng Yêu thích
+            stmt.executeUpdate("""
+                CREATE TABLE IF NOT EXISTS favourites (
+                    user_id CHAR(36),
+                    item_id CHAR(36),
+                    PRIMARY KEY(user_id, item_id),
+                    FOREIGN KEY(user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+                    FOREIGN KEY(item_id) REFERENCES items(item_id) ON DELETE CASCADE
+                )""");
+
+            // 8. Bảng Giao dịch
+            stmt.executeUpdate("""
+                CREATE TABLE IF NOT EXISTS transactions (
+                    transaction_id CHAR(36) PRIMARY KEY,
+                    user_id CHAR(36) NOT NULL,
+                    amount DECIMAL(15,2) NOT NULL,
+                    type ENUM('DEPOSIT', 'WITHDRAW') NOT NULL,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY(user_id) REFERENCES users(user_id) ON DELETE CASCADE
+                )""");
+
+            System.out.println("✓ TiDB Cloud: Database and tables initialized successfully");
         } catch (SQLException e) {
+            System.err.println("✕ TiDB Initialization Error: " + e.getMessage());
             e.printStackTrace();
         }
     }
