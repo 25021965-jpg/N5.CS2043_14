@@ -7,12 +7,17 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
+import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
 import javafx.scene.Node;
+import java.lang.String;
 
+import client.manager.FavouriteManager;
+
+import model.User;
 import model.Auction;
 
 import java.io.IOException;
@@ -20,6 +25,10 @@ import java.io.IOException;
 public class ItemViewController {
     private Auction auction;
     private int currentImageIndex = 0;
+    private User currentUser;
+    public void setCurrentUser(User user) {
+        this.currentUser = user;
+    }
 
     @FXML
     private Label lblName;
@@ -42,6 +51,11 @@ public class ItemViewController {
     @FXML
     private ImageView imgItem;
 
+    @FXML
+    private Button btnJoinAuction;
+
+    @FXML
+    private Button btnFavourite;
 
 
     public void setAuctionData(Auction auction) {
@@ -76,6 +90,17 @@ public class ItemViewController {
         );
         currentImageIndex = 0;
         showImage(currentImageIndex);
+
+        // Ẩn nút join nếu là chủ auction
+        if (
+                currentUser != null &&
+                        auction.getSellerId().equals(
+                                currentUser.getId()
+                        )        ) {
+
+            btnJoinAuction.setVisible(false);
+            btnJoinAuction.setManaged(false);
+        }
 
     }
     private void showImage(int index) {
@@ -113,22 +138,70 @@ public class ItemViewController {
     }
     @FXML
     private void handleAddToFavourite(ActionEvent event) {
-        // 1. Thêm vào danh sách tĩnh
-        /*if (!FavouriteManager.favouriteAuctions.contains(this.auction)) {  //model lưu trữ
-            FavouriteManager.favouriteAuctions.add(this.auction);
 
-            // 2. Hiện thông báo thành công
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("Success");
+        boolean isFavourite =
+                FavouriteManager
+                        .favouriteAuctions
+                        .contains(auction);
+
+        Alert alert;
+
+        if (isFavourite) {
+
+            FavouriteManager
+                    .favouriteAuctions
+                    .remove(auction);
+
+            btnFavourite.setText(
+                    "Add To Favourite"
+            );
+            btnFavourite.setStyle(
+                    "-fx-background-color: #d4af37;" +
+                            "-fx-text-fill: black;" +
+                            "-fx-font-weight: bold;" +
+                            "-fx-background-radius: 12;" +
+                            "-fx-font-size: 15px;" +
+                            "-fx-cursor: hand;"
+            );
+
+            alert = new Alert(
+                    Alert.AlertType.INFORMATION
+            );
+
             alert.setHeaderText(null);
-            alert.setContentText("Add success!");
-            alert.showAndWait();
+            alert.setContentText(
+                    "Removed from favourites!"
+            );
+
         } else {
-            // Thông báo nếu đã có rồi (tùy chọn) */
-            Alert alert = new Alert(Alert.AlertType.WARNING);
-            alert.setContentText("This item is already in your favourites!");
-            alert.showAndWait();
-     //   }
+
+            FavouriteManager
+                    .favouriteAuctions
+                    .add(auction);
+
+            btnFavourite.setText(
+                    "Remove From Favourite"
+            );
+            btnFavourite.setStyle(
+                    "-fx-background-color: #EF4444;" +
+                            "-fx-text-fill: white;" +
+                            "-fx-font-weight: bold;" +
+                            "-fx-background-radius: 12;" +
+                            "-fx-font-size: 15px;" +
+                            "-fx-cursor: hand;"
+            );
+
+            alert = new Alert(
+                    Alert.AlertType.INFORMATION
+            );
+
+            alert.setHeaderText(null);
+            alert.setContentText(
+                    "Added to favourites!"
+            );
+        }
+
+        alert.showAndWait();
     }
 
     @FXML
