@@ -22,6 +22,7 @@ import java.util.Optional;
 
 public class ProfileController implements UserDataReceiver {
 
+    public Button infoBtn;
     @FXML
     private Button logoutBtn;
 

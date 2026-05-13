@@ -9,7 +9,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
-
+<?import javafx.scene.text.Font?>
 <AnchorPane
         prefHeight="720.0"
         prefWidth="1080.0"
@@ -71,14 +71,35 @@
                 text="Profile"
                 prefHeight="45"
                 prefWidth="210"
-                styleClass="menu-button"/>
+                style="
+                    -fx-background-color: #334155;
+                    -fx-text-fill: white;
+                    -fx-font-size: 15px;
+                    -fx-font-weight: bold;
+                    -fx-background-radius: 8;
+                ">
+            <font>
+                <Font name="Berlin Sans FB Demi Bold" size="14.0"/>
+            </font>
+        </Button>
+
 
         <Button
                 fx:id="historyBtn"
                 text="Auction History"
                 prefHeight="45"
                 prefWidth="210"
-                styleClass="menu-button"/>
+                style="
+                    -fx-background-color: #334155;
+                    -fx-text-fill: white;
+                    -fx-font-size: 15px;
+                    -fx-font-weight: bold;
+                    -fx-background-radius: 8;
+                ">
+            <font>
+                <Font name="Berlin Sans FB Demi Bold" size="14.0"/>
+            </font>
+        </Button>
 
         <Button
                 fx:id="createdAuctionBtn"
@@ -92,53 +113,82 @@
                     -fx-font-size: 15px;
                     -fx-font-weight: bold;
                     -fx-background-radius: 8;
-                "/>
+                ">
+            <font>
+                <Font name="Berlin Sans FB Demi Bold" size="14.0"/>
+            </font>
+        </Button>
 
         <Button
                 fx:id="favoriteBtn"
                 text="Favourite"
                 prefHeight="45"
                 prefWidth="210"
-                styleClass="menu-button"/>
+                style="
+                    -fx-background-color: #334155;
+                    -fx-text-fill: white;
+                    -fx-font-size: 15px;
+                    -fx-font-weight: bold;
+                    -fx-background-radius: 8;
+                ">
+            <font>
+                <Font name="Berlin Sans FB Demi Bold" size="14.0"/>
+            </font>
+        </Button>
 
         <Button
                 fx:id="balanceBtn"
                 text="Account Balance"
                 prefHeight="45"
                 prefWidth="210"
-                styleClass="menu-button"/>
+                style="
+                    -fx-background-color: #334155;
+                    -fx-text-fill: white;
+                    -fx-font-size: 15px;
+                    -fx-font-weight: bold;
+                    -fx-background-radius: 8;
+                ">
+            <font>
+                <Font name="Berlin Sans FB Demi Bold" size="14.0"/>
+            </font>
+        </Button>
 
         <!-- LOGOUT -->
         <Button
                 fx:id="logoutBtn"
                 text="Log Out"
-
                 prefHeight="48"
                 prefWidth="210"
-
                 style="
                     -fx-background-color: #D4AF37;
                     -fx-text-fill: white;
                     -fx-font-size: 15px;
                     -fx-font-weight: bold;
                     -fx-background-radius: 8;
-                "/>
+                ">
+            <font>
+                <Font name="Berlin Sans FB Demi Bold" size="14.0"/>
+            </font>
+        </Button>
+
 
         <!-- DELETE -->
         <Button
                 fx:id="deleteAccountBtn"
                 text="DELETE ACCOUNT"
-
                 prefHeight="48"
                 prefWidth="210"
-
                 style="
                     -fx-background-color: #EF4444;
                     -fx-text-fill: white;
                     -fx-font-size: 15px;
                     -fx-font-weight: bold;
                     -fx-background-radius: 8;
-                "/>
+                ">
+            <font>
+                <Font name="Berlin Sans FB Demi Bold" size="14.0"/>
+            </font>
+        </Button>
 
         <Region VBox.vgrow="ALWAYS"/>
 
@@ -146,17 +196,19 @@
         <Button
                 fx:id="backHomeBtn"
                 text="← Back To Home"
-
                 prefHeight="48"
                 prefWidth="210"
-
                 style="
                     -fx-background-color: #2563EB;
                     -fx-text-fill: white;
                     -fx-font-size: 15px;
                     -fx-font-weight: bold;
                     -fx-background-radius: 8;
-                "/>
+                ">
+            <font>
+                <Font name="Berlin Sans FB Demi Bold" size="14.0"/>
+            </font>
+        </Button>
 
     </VBox>
 
