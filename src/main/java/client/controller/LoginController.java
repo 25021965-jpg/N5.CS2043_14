@@ -94,4 +94,16 @@ public class LoginController {
 
         }
     }
+    @FXML
+    private void goforgotPass(ActionEvent event) {
+        try {
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            ResponseHandler.setMainStage(stage);
+            switchScene(stage, "/fxml/forgotPass-view.fxml", "Forgot Password");
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Cannot open forgot pass screen", e);
+            showError("Cannot open forgot password screen!");
+
+        }
+    }
 }
