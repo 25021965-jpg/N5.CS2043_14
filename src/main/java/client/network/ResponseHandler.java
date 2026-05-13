@@ -38,7 +38,7 @@ public class ResponseHandler {
                     // Parse user từ response trước khi chuyển scene
                     User loginUser = parseUser(data);
                     NavigationUtils.switchScene(mainStage, "/fxml/HomePage.fxml", "Auction Dashboard");
-                    // Truyền user xuống sau khi scene đã load (HomePageController.instance đã được set)
+                    // Truyền user xuống sau khi scene đã load
                     if (HomePageController.getInstance() != null && loginUser != null) {
                         HomePageController.getInstance().setUser(loginUser);
                     }
@@ -119,15 +119,16 @@ public class ResponseHandler {
             try {
                 String[] p = token.split(";", -1);
 
-                if (p.length < 8) continue;
+                if (p.length < 9) continue;
 
                 Auction a = new Auction();
                 a.setId(p[0]);
 
                 Item item = new Item();
                 item.setName(p[1]);
-
                 item.setCategory(Category.valueOf(p[7]));
+                item.setDescription(p[8]);
+
                 a.setItem(item);
 
                 a.setCurrentPrice(new BigDecimal(p[2]));

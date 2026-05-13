@@ -171,6 +171,8 @@ public class ClientHandler implements Runnable {
                 String endTimeStr = (a.getEndTime() != null) ? a.getEndTime().toString() : "";
                 String categoryStr = (a.getItem().getCategory() != null) ? a.getItem().getCategory().name() : "OTHER";
 
+                String descriptionStr = (a.getItem().getDescription() != null) ? a.getItem().getDescription() : "";
+
                 sb.append("|")
                         .append(a.getId()).append(";")
                         .append(a.getItem().getName()).append(";")
@@ -179,7 +181,8 @@ public class ClientHandler implements Runnable {
                         .append(firstImg).append(";")
                         .append(startTimeStr).append(";")
                         .append(endTimeStr).append(";")
-                        .append(categoryStr);
+                        .append(categoryStr).append(";")
+                        .append(descriptionStr);
 
             }
             return sb.toString();
