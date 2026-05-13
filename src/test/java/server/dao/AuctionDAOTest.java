@@ -50,7 +50,7 @@ public class AuctionDAOTest {
         mockSeller.setId("user01");
 
         Auction auction = new Auction();
-        auction.setId(testId);
+        auction.setAuction_id(testId);
         auction.setItem(mockItem);
         auction.setSeller(mockSeller);
         auction.setCurrentPrice(new BigDecimal("1500.00"));

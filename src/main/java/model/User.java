@@ -1,120 +1,57 @@
 package model;
 
-import java.io.Serializable;
 import java.math.BigDecimal;
-import java.util.List;
-import java.util.UUID;
 
-public class User implements Serializable {
-
-    private String id;
-    private String fullname;
+public class User {
+    private String user_id;
     private String username;
+    private String password;
+    private String fullname;
     private String email;
     private String dob;
-    private String password;
-    private List<Role> roles;
     private BigDecimal balance;
     private boolean verified;
 
-    public User(
-            String id,
-            String fullname,
-            String username,
-            String email,
-            String password,
-            List<Role> roles
-    ) {
+    private Role role = Role.BIDDER; // Mặc định là người mua
 
-        this.id = id;
-        this.fullname = fullname;
-        this.username = username;
-        this.email = email;
-        this.password = password;
-        this.roles = roles;
+    public User() {}
 
-        this.balance = BigDecimal.ZERO;
-        this.verified = true;
+    // Getter và Setter cho Role
+    public Role getRole() {
+        return role;
     }
 
-    public User() {
+    public void setRole(Role role) {
+        this.role = role;
     }
 
-    public boolean hasRole(Role role) {
-
-        return roles != null
-                && roles.contains(role);
+    // Hàm để check quyền
+    public boolean hasRole(Role requiredRole) {
+        return this.role == requiredRole || this.role == Role.ADMIN;
     }
 
-    public String getId() {
-        return id;
-    }
+    // Getter/setter khác
+    public String getUser_id() { return user_id; }
+    public void setUser_id(String user_id) { this.user_id = user_id; }
 
-    public void setId(String id) {
-        this.id = id;
-    }
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
 
-    public String getFullname() {
-        return fullname;
-    }
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
 
-    public void setFullname(String fullname) {
-        this.fullname = fullname;
-    }
+    public BigDecimal getBalance() { return balance; }
+    public void setBalance(BigDecimal balance) { this.balance = balance; }
 
-    public String getUsername() {
-        return username;
-    }
+    public boolean isVerified() { return verified; }
+    public void setVerified(boolean verified) { this.verified = verified; }
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
+    public String getFullname() { return fullname; }
+    public void setFullname(String fullname) { this.fullname = fullname; }
 
-    public String getEmail() {
-        return email;
-    }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getDob() {
-        return dob;
-    }
-
-    public void setDob(String dob) {
-        this.dob = dob;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public List<Role> getRoles() {
-        return roles;
-    }
-
-    public void setRoles(List<Role> roles) {
-        this.roles = roles;
-    }
-
-    public BigDecimal getBalance() {
-        return balance;
-    }
-
-    public void setBalance(BigDecimal balance) {
-        this.balance = balance;
-    }
-
-    public boolean isVerified() {
-        return verified;
-    }
-
-    public void setVerified(boolean verified) {
-        this.verified = verified;
-    }
+    public String getDob() { return dob; }
+    public void setDob(String dob) { this.dob = dob; }
 }

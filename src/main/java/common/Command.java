@@ -4,10 +4,10 @@ public enum Command {
     LOGIN,
     REGISTER,
     LOGOUT,
-    LIST,
-    JOIN,
-    BID,
     CREATE,
+    JOIN,
+    LIST,
+    BID,
     GET_PROFILE;
 
     // parse an toàn (tránh crash)

@@ -1,7 +1,5 @@
 package common;
 
-import common.Command;
-
 public class CommandBuilder {
 
     public static String build(Command cmd, String... args) {

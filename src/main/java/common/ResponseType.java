@@ -7,8 +7,12 @@ public enum ResponseType {
     REGISTER_FAILED,
     CREATE_SUCCESS,
     CREATE_FAILED,
+    JOIN_SUCCESS,
+    JOIN_FAILED,
     LIST_SUCCESS,
     LIST_EMPTY,
+    BID_SUCCESS,
+    BID_FAILED,
     ERROR,
     DISCONNECTED;
 

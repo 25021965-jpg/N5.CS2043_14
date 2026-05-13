@@ -2,7 +2,7 @@ package server.network;
 
 import common.Command;
 import model.*;
-import server.dao.AuctionDAO;
+import server.service.*;
 import server.dao.UserDAO;
 
 import java.io.BufferedReader;
@@ -11,17 +11,15 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.net.Socket;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 public class ClientHandler implements Runnable {
 
     private Socket socket;
     private BufferedReader reader;
     private PrintWriter writer;
-    private User currentUser; // Dùng để gán seller cho Auction
+    private User currentUser;
 
     public ClientHandler(Socket socket) {
         this.socket = socket;
@@ -29,136 +27,149 @@ public class ClientHandler implements Runnable {
 
     @Override
     public void run() {
+        String clientInfo = socket.getInetAddress().toString();
         try {
             reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             writer = new PrintWriter(socket.getOutputStream(), true);
 
+            System.out.println("[NEW CONNECTION] Client connected from: " + clientInfo);
+
             String clientMessage;
             while ((clientMessage = reader.readLine()) != null) {
-                System.out.println("Received from client: " + clientMessage);
+
+                System.out.println("[RECEIVE FROM " + (currentUser != null ? currentUser.getUsername() : clientInfo) + "]: " + clientMessage);
+
                 String response = handleRequest(clientMessage);
-                System.out.println("Response: " + response);
+
+                System.out.println("[RESPONSE TO CLIENT]: " + (response.length() > 100 ? response.substring(0, 100) + "..." : response));
+
                 writer.println(response);
             }
         } catch (IOException e) {
-            System.out.println("Client disconnected: " + socket.getInetAddress());
+            System.out.println("[DISCONNECTED] Client " + clientInfo + " left the building.");
         } finally {
             closeConnection();
         }
     }
 
     private String handleRequest(String message) {
-        // Sử dụng regex | để bóc tách mảng data
         String[] data = message.split("\\|");
         if (data.length == 0) return "ERROR|Empty command";
 
         try {
-            Command cmd = Command.valueOf(data[0]);
+            Command cmd = Command.valueOf(data[0].toUpperCase());
+
+            System.out.println("  → Processing Command: " + cmd);
 
             switch (cmd) {
-                case LOGIN:
-                    return handleLogin(data);
-                case REGISTER:
-                    return handleRegister(data);
-                case CREATE:
-                    return handleCreate(data);
-                case LIST:
-                    return handleList();
-                default:
-                    return "ERROR|Command not supported yet";
+                case LOGIN: return handleLogin(data);
+                case REGISTER: return handleRegister(data);
+                case CREATE: return handleCreate(data);
+                case LIST: return handleList();
+                case BID: return handleBid(data);
+                case LOGOUT:
+                    System.out.println("  → User " + (currentUser != null ? currentUser.getUsername() : "Unknown") + " logged out.");
+                    this.currentUser = null;
+                    return "LOGOUT_SUCCESS";
+                default: return "ERROR|Command not supported";
             }
         } catch (IllegalArgumentException e) {
-            return "ERROR|Unknown Command: " + data[0];
+            System.err.println("  ✕ Unknown Command: " + data[0]);
+            return "ERROR|Invalid Command";
         } catch (Exception e) {
-            e.printStackTrace();
-            return "ERROR|Server Process Error";
+            System.err.println("  ✕ Server Logic Error: " + e.getMessage());
+            return "ERROR|Server Error: " + e.getMessage();
         }
     }
 
     private String handleLogin(String[] data) {
         if (data.length < 3) return "LOGIN_FAILED";
-        String input = data[1].trim();
-        String password = data[2].trim();
+        System.out.print("  → Attempting login for: " + data[1]);
 
-        if (UserDAO.login(input, password)) {
-            this.currentUser = new UserDAO().findByUsernameOrEmail(input);
-            if (this.currentUser == null) return "LOGIN_FAILED";
+        User user = AuthService.login(data[1].trim(), data[2].trim());
 
-            return "LOGIN_SUCCESS|" + currentUser.getId() + "|" + currentUser.getFullname() + "|"
-                    + currentUser.getUsername() + "|" + currentUser.getEmail() + "|"
-                    + (currentUser.getDob() == null ? "" : currentUser.getDob());
+        if (user != null) {
+            this.currentUser = user;
+            System.out.println(" [SUCCESS]");
+            return "LOGIN_SUCCESS|" + user.getUser_id() + "|" + user.getFullname() + "|"
+                    + user.getUsername() + "|" + user.getEmail() + "|"
+                    + (user.getDob() == null ? "" : user.getDob()) + "|"
+                    + user.getRole().name(); // Gửi thêm Role về để ResponseHandler parse
         }
+        System.out.println(" [FAILED]");
         return "LOGIN_FAILED";
     }
 
     private String handleRegister(String[] data) {
         if (data.length < 6) return "REGISTER_FAILED";
+        System.out.println("  → Registering new user: " + data[2]);
 
-        UserDAO userDAO = new UserDAO();
-        // Kiểm tra trùng lặp trước khi lưu
-        if (userDAO.findByEmail(data[3]) != null || userDAO.findByUsername(data[2]) != null) {
-            return "REGISTER_FAILED";
-        }
-
-        User user = new User();
-        user.setId("USR" + UUID.randomUUID().toString().replace("-", "").substring(0, 7).toUpperCase());
-        user.setFullname(data[1]);
-        user.setUsername(data[2]);
-        user.setEmail(data[3]);
-        user.setPassword(data[4]);
-        user.setDob(data[5]);
-
-        try {
-            userDAO.save(user);
-            return "REGISTER_SUCCESS";
-        } catch (Exception e) {
-            return "REGISTER_FAILED";
-        }
+        User user = AuthService.register(data[1], data[2], data[3], data[4], data[5]);
+        return (user != null) ? "REGISTER_SUCCESS" : "REGISTER_FAILED|Username/Email already exists";
     }
 
     private String handleCreate(String[] data) {
         try {
-            if (this.currentUser == null) return "ERROR|Unauthorized. Please login first.";
-            if (data.length < 11) return "ERROR|Missing auction data";
+            if (this.currentUser == null) return "ERROR|Please login first";
+            System.out.println("  → User " + currentUser.getUsername() + " is creating a new auction: " + data[3]);
 
-            // 1. Map Item
             Item item = new Item();
-            item.setId(data[2]);
+            item.setItem_id(data[2]);
             item.setName(data[3]);
             item.setDescription(data[4]);
-            item.setCategory(Category.valueOf(data[5]));
+            item.setCategory(Category.valueOf(data[5].toUpperCase()));
 
             List<String> imageList = new ArrayList<>();
-            if (!data[6].isEmpty()) {
+            if (!data[6].isEmpty() && !data[6].equals("NO_IMAGE")) {
                 for (String path : data[6].split(",")) imageList.add(path);
             }
             item.setImages(imageList);
 
-            // 2. Map Auction
-            Auction auction = new Auction();
-            auction.setId(data[1]);
-            auction.setItem(item);
-            auction.setSeller(this.currentUser); // Gán người tạo từ session login
-            auction.setCurrentPrice(new BigDecimal(data[7]));
-            auction.setMinIncrement(new BigDecimal(data[8]));
-            auction.setStartTime(LocalDateTime.parse(data[9]));
-            auction.setEndTime(LocalDateTime.parse(data[10]));
-            auction.setStatus(AuctionStatus.ACTIVE);
+            AuctionService.createAuction(
+                    this.currentUser,
+                    item,
+                    new BigDecimal(data[7]),
+                    new BigDecimal(data[8]),
+                    data[9],
+                    data[10]
+            );
 
-            // 3. Lưu (lưu cả Item và Auction)
-            AuctionDAO.save(auction);
-
-            return "CREATE_SUCCESS|Auction created!";
+            System.out.println("  → Create Success!");
+            return "CREATE_SUCCESS";
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("  → Create Failed: " + e.getMessage());
             return "CREATE_FAILED|" + e.getMessage();
         }
     }
 
-    private String handleList() {
+    private String handleBid(String[] data) {
+        if (this.currentUser == null) return "ERROR|Unauthorized";
         try {
-            List<Auction> auctions = AuctionDAO.findAll();
-            if (auctions.isEmpty()) return "LIST_EMPTY";
+            String auctionId = data[1];
+            BigDecimal amount = new BigDecimal(data[2]);
+            System.out.println("  → User " + currentUser.getUsername() + " bids " + amount + " on Auction " + auctionId);
+
+            Auction auction = AuctionService.getAuctionById(auctionId);
+            if (auction == null) return "ERROR|Auction not found";
+
+            String result = BidService.placeBid(this.currentUser, auction, amount);
+            System.out.println("  → Bid result: " + result);
+            return result;
+
+        } catch (Exception e) {
+            System.err.println("  → Bid Error: " + e.getMessage());
+            return "BID_FAILED|" + e.getMessage();
+        }
+    }
+
+    private String handleList() {
+        System.out.print("  → Fetching auction list...");
+        try {
+            List<Auction> auctions = AuctionService.getAllAuctions();
+            if (auctions.isEmpty()) {
+                System.out.println(" [EMPTY]");
+                return "LIST_EMPTY";
+            }
 
             StringBuilder sb = new StringBuilder("LIST_SUCCESS");
             for (Auction a : auctions) {
@@ -167,26 +178,25 @@ public class ClientHandler implements Runnable {
                 String firstImg = (a.getItem().getImages() != null && !a.getItem().getImages().isEmpty())
                         ? a.getItem().getImages().get(0) : "NO_IMAGE";
 
-                String startTimeStr = (a.getStartTime() != null) ? a.getStartTime().toString() : "";
-                String endTimeStr = (a.getEndTime() != null) ? a.getEndTime().toString() : "";
-                String categoryStr = (a.getItem().getCategory() != null) ? a.getItem().getCategory().name() : "OTHER";
-
-                String descriptionStr = (a.getItem().getDescription() != null) ? a.getItem().getDescription() : "";
+                String cleanDesc = (a.getItem().getDescription() != null)
+                        ? a.getItem().getDescription().replace(";", ",") : "";
 
                 sb.append("|")
-                        .append(a.getId()).append(";")
+                        .append(a.getAuction_id()).append(";")
                         .append(a.getItem().getName()).append(";")
                         .append(a.getCurrentPrice()).append(";")
                         .append(a.getMinIncrement()).append(";")
                         .append(firstImg).append(";")
-                        .append(startTimeStr).append(";")
-                        .append(endTimeStr).append(";")
-                        .append(categoryStr).append(";")
-                        .append(descriptionStr);
-
+                        .append(a.getStartTime()).append(";")
+                        .append(a.getEndTime()).append(";")
+                        .append(a.getItem().getCategory().name()).append(";")
+                        .append(cleanDesc).append(";")
+                        .append(a.getStatus().name());
             }
+            System.out.println(" [SUCCESS - " + auctions.size() + " items]");
             return sb.toString();
         } catch (Exception e) {
+            System.err.println(" [FAILED]");
             return "ERROR|Could not load auctions";
         }
     }
@@ -196,6 +206,7 @@ public class ClientHandler implements Runnable {
             if (reader != null) reader.close();
             if (writer != null) writer.close();
             if (socket != null && !socket.isClosed()) socket.close();
+            System.out.println("[CLOSED] Resources cleaned up for a client.");
         } catch (IOException e) {
             e.printStackTrace();
         }

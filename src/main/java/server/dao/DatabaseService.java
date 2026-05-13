@@ -41,7 +41,7 @@ public class DatabaseService {
             stmt.executeUpdate("""
                 CREATE TABLE IF NOT EXISTS users (
                     user_id CHAR(36) PRIMARY KEY,
-                    full_name VARCHAR(50) NOT NULL,
+                    fullname VARCHAR(50) NOT NULL,
                     username VARCHAR(15) UNIQUE NOT NULL,
                     email VARCHAR(100) UNIQUE NOT NULL,
                     password VARCHAR(255) NOT NULL,

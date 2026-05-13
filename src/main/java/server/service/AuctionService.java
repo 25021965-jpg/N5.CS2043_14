@@ -2,75 +2,57 @@ package server.service;
 
 import model.*;
 import server.dao.AuctionDAO;
-
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class AuctionService {
 
-    private final List<Auction> auctions = new ArrayList<>();
-    private final AuctionDAO auctionDAO = new AuctionDAO(); // Khởi tạo DAO
-
-    public AuctionService() {
-
-        List<Auction> loaded = AuctionDAO.findAll();
-
-        if (!loaded.isEmpty()) {
-            auctions.addAll(loaded);
-        }
-    }
-
-    //tránh race condition
-    public synchronized Auction createAuction(User seller, Item item, BigDecimal startPrice) {
-
-        if (seller == null || !seller.hasRole(Role.SELLER)) {
-            throw new RuntimeException("User is not seller");
+    public static Auction createAuction(User seller, Item item, BigDecimal startPrice, BigDecimal minIncrement, String startTime, String endTime) {
+        // Kiểm tra quyền
+        if (!seller.hasRole(Role.SELLER)) {
+            throw new RuntimeException("You do not have permission to sell!");
         }
 
+        // Khởi tạo đối tượng Auction
         Auction auction = new Auction();
-        auction.setId(generateId());
+        auction.setAuction_id(UUID.randomUUID().toString());
         auction.setSeller(seller);
         auction.setItem(item);
+        auction.setStartingPrice(startPrice);
         auction.setCurrentPrice(startPrice);
-        auction.setMinIncrement(BigDecimal.TEN);
-        auction.setStatus(AuctionStatus.ACTIVE);
+        auction.setMinIncrement(minIncrement);
 
-        // Lưu vào db trước
+        try {
+            auction.setStartTime(java.time.LocalDateTime.parse(startTime));
+            auction.setEndTime(java.time.LocalDateTime.parse(endTime));
+        } catch (Exception e) {
+            throw new RuntimeException("Invalid date format. Use yyyy-MM-ddTHH:mm:ss");
+        }
+
+        // Lưu vào Database thông qua DAO
+        // DAO đã xử lý lưu cả Item và Auction
         AuctionDAO.save(auction);
-
-        // Sau đó mới thêm vào list bộ nhớ tạm
-        auctions.add(auction);
 
         return auction;
     }
 
-    public synchronized List<Auction> getAllAuctions() {
-        return new ArrayList<>(auctions); // tránh sửa trực tiếp
+    public static List<Auction> getAllAuctions() {
+        return AuctionDAO.findAll();
     }
 
-    public synchronized Auction getAuctionById(String id) {
-        for (Auction a : auctions) {
-            if (a.getId().equals(id)) {
+    public static Auction getAuctionById(String id) {
+        // Tìm trong list từ DB
+        List<Auction> all = AuctionDAO.findAll();
+        for (Auction a : all) {
+            if (a.getAuction_id().equals(id)) {
                 return a;
             }
         }
         return null;
     }
 
-    public synchronized void closeAuction(String id) {
-        Auction auction = getAuctionById(id);
-
-        if (auction == null) {
-            throw new RuntimeException("Auction not found");
-        }
-
-        auction.setStatus(AuctionStatus.ENDED);
-        AuctionDAO.updateStatus(id, AuctionStatus.ENDED);
-    }
-
-    // ID an toàn hơn
-    private String generateId() {
-        return String.valueOf(System.currentTimeMillis());
+    public static void cancelAuction(String id) {
+        AuctionDAO.cancelAuction(id);
     }
 }

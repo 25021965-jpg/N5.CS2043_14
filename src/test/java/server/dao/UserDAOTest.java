@@ -21,7 +21,7 @@ public class UserDAOTest {
     // Hàm hỗ trợ tạo User chuẩn, tránh lỗi thiếu trường (NOT NULL) ở mọi Test Case
     private User createTestUser(String suffix) {
         User u = new User();
-        u.setId(PREFIX + "ID_" + suffix);
+        u.setUser_id(PREFIX + "ID_" + suffix);
         u.setFullname("Test User " + suffix);
         u.setUsername(PREFIX + "U_" + suffix);
         u.setEmail(PREFIX + "E_" + suffix + "@test.com");
@@ -53,15 +53,6 @@ public class UserDAOTest {
         // 1. Test Save
         assertDoesNotThrow(() -> userDAO.save(u));
 
-        // 2. Test findByUsername
-        User foundByNick = userDAO.findByUsername(u.getUsername());
-        assertNotNull(foundByNick, "Should find user by username after saving");
-        assertEquals(u.getEmail(), foundByNick.getEmail());
-
-        // 3. Test findByEmail
-        User foundByMail = userDAO.findByEmail(u.getEmail());
-        assertNotNull(foundByMail, "Should find user by email after saving");
-
         // 4. Test login (Success & Failure)
         assertTrue(UserDAO.login(u.getUsername(), "password123"), "Login should succeed");
         assertFalse(UserDAO.login(u.getUsername(), "wrong_pass"), "Login should fail with wrong password");
@@ -88,9 +79,9 @@ public class UserDAOTest {
     void testNegativeCases() {
         String fakeKey = "NON_EXISTENT_" + UUID.randomUUID();
 
-        assertNull(userDAO.findByUsername(fakeKey));
-        assertNull(userDAO.findByEmail(fakeKey + "@test.com"));
         assertNull(userDAO.findByUsernameOrEmail(fakeKey));
+        assertNull(userDAO.findByUsernameOrEmail(fakeKey + "@test.com"));
+        assertNull(UserDAO.findByUsernameOrEmail(fakeKey));
 
         assertFalse(UserDAO.login("fake_user_abc", "fake_pass"));
     }
@@ -104,12 +95,12 @@ public class UserDAOTest {
 
         // Test tìm kiếm bằng Username
         User byUser = userDAO.findByUsernameOrEmail(u.getUsername());
-        assertNotNull(byUser, "Hàm findByUsernameOrEmail trả về null khi tìm bằng Username");
+        assertNotNull(byUser, "The findByUsernameOrEmail function returns null when searching by username");
 
         // Test tìm kiếm bằng Email
         User byEmail = userDAO.findByUsernameOrEmail(u.getEmail());
-        assertNotNull(byEmail, "Hàm findByUsernameOrEmail trả về null khi tìm bằng Email");
+        assertNotNull(byEmail, "The findByUsernameOrEmail function returns null when searching by email");
 
-        assertEquals(byUser.getId(), byEmail.getId(), "Both searches must return the same user ID");
+        assertEquals(byUser.getUser_id(), byEmail.getUser_id(), "Both searches must return the same user ID");
     }
 }

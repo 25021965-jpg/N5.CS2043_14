@@ -5,17 +5,12 @@ import client.util.NavigationUtils;
 import common.ResponseType;
 import javafx.application.Platform;
 import javafx.stage.Stage;
-import model.Auction;
-import model.AuctionStatus;
-import model.Item;
-import model.Category;
-import model.User;
+import model.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 
 public class ResponseHandler {
 
@@ -26,55 +21,59 @@ public class ResponseHandler {
     }
 
     public static void handle(String rawMessage) {
-        ResponseType type = ResponseType.from(rawMessage);
-        if (type == null) return;
+        if (rawMessage == null || rawMessage.isEmpty()) return;
 
-        String data = rawMessage.contains("|")
-                ? rawMessage.substring(rawMessage.indexOf("|") + 1) : "";
+        String[] parts = rawMessage.split("\\|", 2);
+        String header = parts[0];
+        String data = (parts.length > 1) ? parts[1] : "";
+
+        ResponseType type;
+        try {
+            type = ResponseType.valueOf(header);
+        } catch (Exception e) {
+            return;
+        }
 
         Platform.runLater(() -> {
             switch (type) {
-
                 case LOGIN_SUCCESS:
                     User loginUser = parseUser(data);
-                    NavigationUtils.showToast(
-                            mainStage,
-                            "Login successful!"
-                    );
-                    NavigationUtils.switchScene(
-                            mainStage,
-                            "/fxml/HomePage.fxml",
-                            "Auction Dashboard"
-                    );
-
-                    if (HomePageController.getInstance() != null && loginUser != null) {
-                        HomePageController
-                                .getInstance()
-                                .setUser(loginUser);
+                    if (loginUser != null) {
+                        NavigationUtils.showToast(mainStage, "Welcome back, " + loginUser.getFullname());
+                        NavigationUtils.switchScene(mainStage, "/fxml/HomePage.fxml", "Auction Dashboard");
+                        Platform.runLater(() -> {
+                            if (HomePageController.getInstance() != null) {
+                                HomePageController.getInstance().setUser(loginUser);
+                            }
+                        });
                     }
-
                     break;
-
                 case LOGIN_FAILED:
-                    NavigationUtils.showError("Login Failed: Invalid username or password.");
+                    NavigationUtils.showError("Login Failed: " + (data.isEmpty() ? "Invalid credentials." : data));
                     break;
 
                 case REGISTER_SUCCESS:
                     NavigationUtils.switchScene(mainStage, "/fxml/login-view.fxml", "Login");
                     NavigationUtils.showInfo("Registration successful! You can now log in.");
                     break;
-
                 case REGISTER_FAILED:
-                    NavigationUtils.showError("Registration Failed: Username or email exists.");
+                    NavigationUtils.showError("Registration Failed: " + (data.isEmpty() ? "Username or email exists." : data));
                     break;
 
                 case CREATE_SUCCESS:
-                    NavigationUtils.switchScene(mainStage, "/fxml/HomePage.fxml", "Auction Dashboard");
                     NavigationUtils.showInfo("Success! Your auction has been listed.");
+                    ClientSocket.getInstance().sendList(); // Load lại danh sách ngay
+                    break;
+                case CREATE_FAILED:
+                    NavigationUtils.showError("Create Failed: " + (data.isEmpty() ? "Check your input or permissions." : data));
                     break;
 
-                case CREATE_FAILED:
-                    NavigationUtils.showError("Create Failed: " + (data.isEmpty() ? "Check your input data." : data));
+                case BID_SUCCESS:
+                    NavigationUtils.showToast(mainStage, "Bid placed successfully!");
+                    ClientSocket.getInstance().sendList(); // Cập nhật giá mới nhất lên màn hình
+                    break;
+                case BID_FAILED:
+                    NavigationUtils.showError("Bid Rejected: " + (data.isEmpty() ? "Invalid bid amount." : data));
                     break;
 
                 case LIST_SUCCESS:
@@ -83,81 +82,86 @@ public class ResponseHandler {
                         HomePageController.getInstance().updateAuctionList(list);
                     }
                     break;
-
                 case LIST_EMPTY:
                     if (HomePageController.getInstance() != null) {
                         HomePageController.getInstance().updateAuctionList(new ArrayList<>());
                     }
                     break;
 
+                case JOIN_SUCCESS:
+                    NavigationUtils.switchScene(mainStage, "/fxml/auctionRoom-view.fxml", "Login");
+                    System.out.println("Joined auction room: " + data);
+                    break;
+                case JOIN_FAILED:
+                    NavigationUtils.showError("Could not join: " + data);
+                    break;
+
                 case ERROR:
-                    NavigationUtils.showError("Server Error: " + data);
+                    NavigationUtils.showError("System Error: " + data);
                     break;
 
                 case DISCONNECTED:
-                    NavigationUtils.showError("Connection Lost: Server is currently unavailable.");
+                    NavigationUtils.showError("Connection Lost: Please check your internet or Server status.");
+                    break;
+
+                default:
+                    System.out.println("Unhandled response type: " + type);
                     break;
             }
         });
     }
 
+    private static void handleLoginSuccess(String data) {
+        User loginUser = parseUser(data);
+        if (loginUser != null) {
+            NavigationUtils.showToast(mainStage, "Welcome, " + loginUser.getFullname());
+            NavigationUtils.switchScene(mainStage, "/fxml/HomePage.fxml", "Auction Dashboard");
+
+            Platform.runLater(() -> {
+                if (HomePageController.getInstance() != null) {
+                    HomePageController.getInstance().setUser(loginUser);
+                }
+            });
+        }
+    }
+
+    // Các hàm parseUser và parseAuctionList giữ nguyên như bản trước của mày...
     private static User parseUser(String data) {
-        if (data == null || data.isEmpty()) return null;
         try {
             String[] p = data.split("\\|", -1);
             User u = new User();
-            if (p.length > 0) u.setId(p[0]);
-            if (p.length > 1) u.setFullname(p[1]);
-            if (p.length > 2) u.setUsername(p[2]);
-            if (p.length > 3) u.setEmail(p[3]);
-            if (p.length > 4) u.setDob(p[4].isEmpty() ? null : p[4]);
+            u.setUser_id(p[0]);
+            u.setFullname(p[1]);
+            u.setUsername(p[2]);
+            u.setEmail(p[3]);
+            u.setDob(p[4].isEmpty() ? null : p[4]);
+            if (p.length > 5) u.setRole(Role.valueOf(p[5]));
             return u;
-        } catch (Exception e) {
-            System.err.println("[ResponseHandler] Failed to parse user: " + e.getMessage());
-            return null;
-        }
+        } catch (Exception e) { return null; }
     }
 
     private static List<Auction> parseAuctionList(String data) {
         List<Auction> list = new ArrayList<>();
         if (data == null || data.isEmpty()) return list;
-
-        String[] tokens = data.split("\\|");
-        for (String token : tokens) {
-            if (token == null || token.trim().isEmpty() || token.equalsIgnoreCase("LIST_SUCCESS")) {
-                continue;
-            }
+        String[] auctionTokens = data.split("\\|");
+        for (String token : auctionTokens) {
             try {
                 String[] p = token.split(";", -1);
-
-                if (p.length < 9) continue;
-
+                if (p.length < 10) continue;
                 Auction a = new Auction();
-                a.setId(p[0]);
-
+                a.setAuction_id(p[0]);
                 Item item = new Item();
                 item.setName(p[1]);
-                item.setCategory(Category.valueOf(p[7]));
+                item.setCategory(Category.valueOf(p[7].toUpperCase()));
                 item.setDescription(p[8]);
-
+                if (!p[4].equals("NO_IMAGE")) item.setImages(Collections.singletonList(p[4]));
                 a.setItem(item);
-
                 a.setCurrentPrice(new BigDecimal(p[2]));
-
-                if (!p[3].equals("NO_IMAGE")) {
-                    item.setImages(java.util.Collections.singletonList(p[4]));
-                }
-
-                a.setEndTime(LocalDateTime.parse(p[6]));
-
                 a.setMinIncrement(new BigDecimal(p[3]));
-
                 a.setStartTime(LocalDateTime.parse(p[5]));
-
+                a.setEndTime(LocalDateTime.parse(p[6]));
                 list.add(a);
-            } catch (Exception e) {
-                System.err.println("Lỗi parse: " + e.getMessage());
-            }
+            } catch (Exception e) { System.err.println("Parse Error: " + e.getMessage()); }
         }
         return list;
     }

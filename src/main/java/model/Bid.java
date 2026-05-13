@@ -1,10 +1,9 @@
 package model;
 
-import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-public class Bid implements Serializable {
+public class Bid  {
 
     private User bidder;
     private BigDecimal amount;

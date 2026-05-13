@@ -17,7 +17,6 @@ import javafx.stage.Stage;
 import model.*;
 
 import java.io.File;
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,45 +48,55 @@ public class CreateAuctionController {
     @FXML
     private void handleCreate(ActionEvent event) {
         try {
-            // --- BƯỚC 1: VALIDATION ---
-            if (txtName.getText().isEmpty() || txtStartingBid.getText().isEmpty() ||
-                    dpStartDate.getValue() == null || dpEndDate.getValue() == null) {
-                showError("Please fill in all information");
+            // --- VALIDATION ---
+            if (txtName.getText().trim().isEmpty() || txtStartingBid.getText().isEmpty() ||
+                    dpStartDate.getValue() == null || dpEndDate.getValue() == null ||
+                    cbCategory.getValue() == null) {
+                showError("Please fill in all information and select a category!");
                 return;
             }
 
-            if (imageFiles.isEmpty()) {
-                showError("Please upload at least one image");
-                return;
-            }
+            // --- DATA CLEANING ---
+            // Thay thế các ký tự gây vỡ chuỗi
+            String cleanName = txtName.getText().replace("|", "-").replace(";", ",");
+            String cleanDesc = txtDescription.getText().replace("|", "-").replace(";", ",").replace("\n", " ");
 
-            // --- BƯỚC 2: XỬ LÝ THỜI GIAN ---
-            int startH = Integer.parseInt(txtStartHour.getText());
-            int startM = Integer.parseInt(txtStartMin.getText());
+            // --- TIME PROCESSING ---
+            // Dùng mặc định là 00:00 nếu người dùng quên nhập giờ/phút
+            int startH = txtStartHour.getText().isEmpty() ? 0 : Integer.parseInt(txtStartHour.getText());
+            int startM = txtStartMin.getText().isEmpty() ? 0 : Integer.parseInt(txtStartMin.getText());
             LocalDateTime startDateTime = dpStartDate.getValue().atTime(startH, startM);
 
-            int endH = Integer.parseInt(txtEndHour.getText());
-            int endM = Integer.parseInt(txtEndMin.getText());
+            int endH = txtEndHour.getText().isEmpty() ? 0 : Integer.parseInt(txtEndHour.getText());
+            int endM = txtEndMin.getText().isEmpty() ? 0 : Integer.parseInt(txtEndMin.getText());
             LocalDateTime endDateTime = dpEndDate.getValue().atTime(endH, endM);
 
-            if (endDateTime.isBefore(startDateTime)) {
+            if (!endDateTime.isAfter(startDateTime)) {
                 showError("End time must be after start time!");
                 return;
             }
 
-            // --- BƯỚC 3: TẠO ĐỐI TƯỢNG DỮ LIỆU ---
+            // --- MAP ---
             Item item = new Item();
-            item.setId("ITM" + UUID.randomUUID().toString().substring(0, 8)); // Tạo ID tránh null
-            item.setName(txtName.getText());
-            item.setDescription(txtDescription.getText());
-            item.setCategory(Category.valueOf(cbCategory.getValue()));
+            // Để Server tự sinh ID hoặc dùng UUID ngắn gọn
+            item.setItem_id("ITM" + UUID.randomUUID().toString().substring(0, 8));
+            item.setName(cleanName);
+            item.setDescription(cleanDesc);
+
+            // Đảm bảo Category khớp với Enum (toUpperCase)
+            try {
+                item.setCategory(Category.valueOf(cbCategory.getValue().toUpperCase()));
+            } catch (Exception e) {
+                item.setCategory(Category.OTHER);
+            }
 
             List<String> imagePaths = new ArrayList<>();
+            // Nếu không có ảnh, ta gửi chuỗi NO_IMAGE (đã xử lý ở ClientSocket)
             for (File file : imageFiles) imagePaths.add(file.toURI().toString());
             item.setImages(imagePaths);
 
             Auction newAuction = new Auction();
-            newAuction.setId("AUC" + UUID.randomUUID().toString().substring(0, 8)); // Tạo ID tránh null
+            newAuction.setAuction_id("AUC" + UUID.randomUUID().toString().substring(0, 8));
             newAuction.setItem(item);
             newAuction.setCurrentPrice(new java.math.BigDecimal(txtStartingBid.getText()));
             newAuction.setMinIncrement(new java.math.BigDecimal(txtMinIncrement.getText()));
@@ -95,17 +104,20 @@ public class CreateAuctionController {
             newAuction.setEndTime(endDateTime);
             newAuction.setStatus(AuctionStatus.ACTIVE);
 
-            // --- BƯỚC 4: GỬI LÊN SERVER ---
-            ResponseHandler.setMainStage((Stage) ((Node) event.getSource()).getScene().getWindow());
-
+            // --- SEND ---
             ClientSocket socket = ClientSocket.getInstance();
-            if (socket == null) {
-                showError("Not connected to server."); return;
+            if (socket != null) {
+                System.out.println("→ Sending CREATE command for item: " + cleanName);
+                socket.sendCreate(newAuction);
+            } else {
+                showError("Connection Error: Not connected to server!");
             }
-            socket.sendCreate(newAuction);
 
         } catch (NumberFormatException e) {
-            showError("Price and time must be numeric values");
+            showError("Invalid input: Price and time must be numeric values!");
+        } catch (Exception e) {
+            showError("System Error: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 

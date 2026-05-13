@@ -9,13 +9,15 @@ import java.util.UUID;
 
 public class Auction implements Serializable {
 
-    private String id;
+    private String auction_id;
 
-    private UUID sellerId;
+    private String seller_Id;
 
     private Item item;
 
     private User seller;
+
+    private BigDecimal startingPrice;
 
     private BigDecimal currentPrice;
 
@@ -26,6 +28,8 @@ public class Auction implements Serializable {
     private LocalDateTime startTime;
 
     private LocalDateTime endTime;
+
+    private boolean is_cancelled;
 
     private List<Bid> bids = new ArrayList<>();
 
@@ -52,20 +56,20 @@ public class Auction implements Serializable {
         return bids.get(bids.size() - 1);
     }
 
-    public String getId() {
-        return id;
+    public String getAuction_id() {
+        return auction_id;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setAuction_id(String auction_id) {
+        this.auction_id = auction_id;
     }
 
-    public UUID getSellerId() {
-        return sellerId;
+    public String getSeller_Id() {
+        return seller_Id;
     }
 
-    public void setSellerId(UUID sellerId) {
-        this.sellerId = sellerId;
+    public void setSeller_Id(String seller_Id) {
+        this.seller_Id = seller_Id;
     }
 
     public Item getItem() {
@@ -82,6 +86,14 @@ public class Auction implements Serializable {
 
     public void setSeller(User seller) {
         this.seller = seller;
+    }
+
+    public BigDecimal getStartingPrice() {
+        return startingPrice;
+    }
+
+    public void setStartingPrice(BigDecimal startingPrice) {
+        this.startingPrice = startingPrice;
     }
 
     public BigDecimal getCurrentPrice() {
@@ -120,9 +132,7 @@ public class Auction implements Serializable {
         return startTime;
     }
 
-    public void setStartTime(
-            LocalDateTime startTime
-    ) {
+    public void setStartTime(LocalDateTime startTime) {
         this.startTime = startTime;
     }
 
@@ -130,9 +140,31 @@ public class Auction implements Serializable {
         return endTime;
     }
 
-    public void setEndTime(
-            LocalDateTime endTime
-    ) {
+    public void setEndTime(LocalDateTime endTime) {
         this.endTime = endTime;
     }
+
+    public boolean isCancelled() {
+        return is_cancelled;
+    }
+
+    public void setCancelled(boolean isCancelled) {
+        this.is_cancelled = isCancelled;
+    }
+
+    public AuctionStatus getStatus(Auction auction) {
+        LocalDateTime now = LocalDateTime.now();
+        if (auction.isCancelled()) {
+            return AuctionStatus.CANCELLED;
+        }
+        if (now.isBefore(auction.getStartTime())) {
+            return AuctionStatus.UPCOMING;
+        }
+        if (now.isAfter(auction.getEndTime())) {
+            return AuctionStatus.ENDED;
+        }
+        return AuctionStatus.ACTIVE;
+    }
+
+
 }

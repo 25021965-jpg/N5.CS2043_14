@@ -6,32 +6,52 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.math.BigDecimal;
+import java.util.UUID;
 
 public class BidDAO {
 
     public static boolean placeBid(String auctionId, String userId, BigDecimal amount) {
-        String sql = "INSERT INTO bids (auction_id, user_id, bid_amount, bid_time) VALUES (?, ?, ?, NOW())";
 
-        try (Connection conn = DatabaseService.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        String sqlBid = "INSERT INTO bids (bid_id, auction_id, bidder_id, bid_amount, bid_time) VALUES (?, ?, ?, ?, NOW())";
+        String sqlUpdateAuction = "UPDATE auctions SET current_price = ? WHERE auction_id = ?";
 
-            pstmt.setString(1, auctionId);
-            pstmt.setString(2, userId);
-            pstmt.setBigDecimal(3, amount);
+        try (Connection conn = DatabaseService.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                // Chèn lượt Bid mới
+                try (PreparedStatement pstmt = conn.prepareStatement(sqlBid)) {
+                    pstmt.setString(1, UUID.randomUUID().toString());
+                    pstmt.setString(2, auctionId);
+                    pstmt.setString(3, userId);
+                    pstmt.setBigDecimal(4, amount);
+                    pstmt.executeUpdate();
+                }
 
-            return pstmt.executeUpdate() > 0;
+                // Cập nhật giá cao nhất vào bảng Auctions
+                try (PreparedStatement pstmt = conn.prepareStatement(sqlUpdateAuction)) {
+                    pstmt.setBigDecimal(1, amount);
+                    pstmt.setString(2, auctionId);
+                    pstmt.executeUpdate();
+                }
+
+                conn.commit();
+                return true;
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            }
         } catch (SQLException e) {
-            System.err.println("SQL Error in placeBid: " + e.getMessage());
+            System.err.println("✕ placeBid Error: " + e.getMessage());
             return false;
         }
     }
 
     public static List<Bid> getBidsByAuctionId(String auctionId) {
         List<Bid> bids = new ArrayList<>();
-        // Join with users table to populate the User object inside Bid
-        String sql = "SELECT b.bid_amount, b.bid_time, u.id, u.username, u.fullname " +
+
+        String sql = "SELECT b.bid_amount, b.bid_time, u.user_id, u.username, u.fullname " +
                 "FROM bids b " +
-                "JOIN users u ON b.user_id = u.id " +
+                "JOIN users u ON b.bidder_id = u.user_id " +
                 "WHERE b.auction_id = ? " +
                 "ORDER BY b.bid_amount DESC";
 
@@ -43,7 +63,7 @@ public class BidDAO {
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
                     User bidder = new User();
-                    bidder.setId(rs.getString("id"));
+                    bidder.setUser_id(rs.getString("user_id")); // Đồng bộ với UserDAO
                     bidder.setUsername(rs.getString("username"));
                     bidder.setFullname(rs.getString("fullname"));
 
@@ -58,24 +78,26 @@ public class BidDAO {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("SQL Error in getBidsByAuctionId: " + e.getMessage());
+            System.err.println("✕ getBidsByAuctionId Error: " + e.getMessage());
         }
         return bids;
     }
 
     public static BigDecimal getHighestBidAmount(String auctionId) {
+
         String sql = "SELECT MAX(bid_amount) FROM bids WHERE auction_id = ?";
         try (Connection conn = DatabaseService.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, auctionId);
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next()) {
-                BigDecimal max = rs.getBigDecimal(1);
-                return max != null ? max : BigDecimal.ZERO;
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    BigDecimal max = rs.getBigDecimal(1);
+                    return max != null ? max : BigDecimal.ZERO;
+                }
             }
         } catch (SQLException e) {
-            System.err.println("SQL Error in getHighestBidAmount: " + e.getMessage());
+            System.err.println("✕ getHighestBidAmount Error: " + e.getMessage());
         }
         return BigDecimal.ZERO;
     }

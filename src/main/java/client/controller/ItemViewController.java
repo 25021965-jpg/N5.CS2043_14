@@ -6,7 +6,6 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
@@ -95,8 +94,8 @@ public class ItemViewController {
         // Ẩn nút join nếu là chủ auction
         if (
                 currentUser != null &&
-                        auction.getSellerId().equals(
-                                currentUser.getId()
+                        auction.getSeller_Id().equals(
+                                currentUser.getUser_id()
                         )        ) {
 
             btnJoinAuction.setVisible(false);

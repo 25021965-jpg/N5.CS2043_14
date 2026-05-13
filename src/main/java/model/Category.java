@@ -1,8 +1,6 @@
 package model;
 
-import java.io.Serializable;
-
-public enum Category implements Serializable {
+public enum Category {
     ACCESSORIES,
     COLLECTIBLES,
     ELECTRONICS,

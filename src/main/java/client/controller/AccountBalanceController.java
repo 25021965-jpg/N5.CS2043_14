@@ -314,7 +314,7 @@ public class AccountBalanceController implements UserDataReceiver {
 
         NumberFormat format =
                 NumberFormat.getInstance(
-                        new Locale(
+                        Locale.of(
                                 "vi",
                                 "VN"
                         )
