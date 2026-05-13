@@ -253,13 +253,13 @@ public class FavouriteController implements UserDataReceiver {
                 );
 
         alert.setTitle(
-                "Remove Favourite"
+                "Remove this auction from favourite?"
         );
 
         alert.setHeaderText(null);
 
         alert.setContentText(
-                "Remove this auction from favourite? This auction will no longer appear in your favourite list."
+                "This auction will no longer appear in your favourite list."
         );
 
         ButtonType removeButton =

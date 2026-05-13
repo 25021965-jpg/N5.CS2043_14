@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 public class ResponseHandler {
 
@@ -35,13 +36,23 @@ public class ResponseHandler {
             switch (type) {
 
                 case LOGIN_SUCCESS:
-                    // Parse user từ response trước khi chuyển scene
                     User loginUser = parseUser(data);
-                    NavigationUtils.switchScene(mainStage, "/fxml/HomePage.fxml", "Auction Dashboard");
-                    // Truyền user xuống sau khi scene đã load
+                    NavigationUtils.showToast(
+                            mainStage,
+                            "Login successful!"
+                    );
+                    NavigationUtils.switchScene(
+                            mainStage,
+                            "/fxml/HomePage.fxml",
+                            "Auction Dashboard"
+                    );
+
                     if (HomePageController.getInstance() != null && loginUser != null) {
-                        HomePageController.getInstance().setUser(loginUser);
+                        HomePageController
+                                .getInstance()
+                                .setUser(loginUser);
                     }
+
                     break;
 
                 case LOGIN_FAILED:

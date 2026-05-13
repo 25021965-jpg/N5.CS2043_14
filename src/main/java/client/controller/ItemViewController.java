@@ -1,5 +1,6 @@
 package client.controller;
 
+import client.util.NavigationUtils;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -144,7 +145,11 @@ public class ItemViewController {
                         .favouriteAuctions
                         .contains(auction);
 
-        Alert alert;
+        Stage stage =
+                (Stage)
+                        ((Node) event.getSource())
+                                .getScene()
+                                .getWindow();
 
         if (isFavourite) {
 
@@ -155,6 +160,7 @@ public class ItemViewController {
             btnFavourite.setText(
                     "Add To Favourite"
             );
+
             btnFavourite.setStyle(
                     "-fx-background-color: #d4af37;" +
                             "-fx-text-fill: black;" +
@@ -164,13 +170,9 @@ public class ItemViewController {
                             "-fx-cursor: hand;"
             );
 
-            alert = new Alert(
-                    Alert.AlertType.INFORMATION
-            );
-
-            alert.setHeaderText(null);
-            alert.setContentText(
-                    "Removed from favourites!"
+            NavigationUtils.showToast(
+                    stage,
+                    "Removed from favourite!"
             );
 
         } else {
@@ -182,6 +184,7 @@ public class ItemViewController {
             btnFavourite.setText(
                     "Remove From Favourite"
             );
+
             btnFavourite.setStyle(
                     "-fx-background-color: #EF4444;" +
                             "-fx-text-fill: white;" +
@@ -191,17 +194,11 @@ public class ItemViewController {
                             "-fx-cursor: hand;"
             );
 
-            alert = new Alert(
-                    Alert.AlertType.INFORMATION
-            );
-
-            alert.setHeaderText(null);
-            alert.setContentText(
-                    "Added to favourites!"
+            NavigationUtils.showToast(
+                    stage,
+                    "Added to favourite!"
             );
         }
-
-        alert.showAndWait();
     }
 
     @FXML

@@ -7,6 +7,7 @@ import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
+import javafx.scene.control.Alert;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
@@ -82,6 +83,20 @@ public class LoginController {
         client.sendLogin(username, password);
     }
 
+    private void showAlert(
+            String title,
+            String content
+    ) {
+
+        Alert alert =
+                new Alert(Alert.AlertType.INFORMATION);
+
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
+    }
+
     @FXML
     private void goToRegister(ActionEvent event) {
         try {
@@ -106,4 +121,5 @@ public class LoginController {
 
         }
     }
+
 }
