@@ -41,8 +41,16 @@ public class ClientHandler implements Runnable {
 
                 String response = handleRequest(clientMessage);
 
-                System.out.println("[RESPONSE TO CLIENT]: " + (response.length() > 100 ? response.substring(0, 100) + "..." : response));
+                if (response == null) {
+                    response = "ERROR|Null response";
+                }
 
+                System.out.println(
+                        "[RESPONSE TO CLIENT]: "
+                                + (response.length() > 100
+                                ? response.substring(0, 100) + "..."
+                                : response)
+                );
                 writer.println(response);
             }
         } catch (IOException e) {
@@ -109,6 +117,9 @@ public class ClientHandler implements Runnable {
     }
 
     private String handleCreate(String[] data) {
+        if (data.length < 11) {
+            return "CREATE_FAILED|Invalid auction data";
+        }
         try {
             if (this.currentUser == null) return "ERROR|Please login first";
             System.out.println("  → User " + currentUser.getUsername() + " is creating a new auction: " + data[3]);
@@ -124,6 +135,20 @@ public class ClientHandler implements Runnable {
                 for (String path : data[6].split(",")) imageList.add(path);
             }
             item.setImages(imageList);
+
+            if (currentUser.getRole() == Role.BIDDER) {
+
+                UserDAO userDAO = new UserDAO();
+
+                userDAO.updateRole(
+                        currentUser.getUser_id(),
+                        "SELLER"
+                );
+
+                currentUser.setRole(Role.SELLER);
+
+                System.out.println("  → Auto upgraded user to SELLER");
+            }
 
             AuctionService.createAuction(
                     this.currentUser,
@@ -163,41 +188,91 @@ public class ClientHandler implements Runnable {
     }
 
     private String handleList() {
+
         System.out.print("  → Fetching auction list...");
+
         try {
+
             List<Auction> auctions = AuctionService.getAllAuctions();
-            if (auctions.isEmpty()) {
+
+            if (auctions == null || auctions.isEmpty()) {
                 System.out.println(" [EMPTY]");
                 return "LIST_EMPTY";
             }
 
             StringBuilder sb = new StringBuilder("LIST_SUCCESS");
+
             for (Auction a : auctions) {
-                if (a.getItem() == null) continue;
 
-                String firstImg = (a.getItem().getImages() != null && !a.getItem().getImages().isEmpty())
-                        ? a.getItem().getImages().get(0) : "NO_IMAGE";
+                try {
 
-                String cleanDesc = (a.getItem().getDescription() != null)
-                        ? a.getItem().getDescription().replace(";", ",") : "";
+                    if (a == null) continue;
 
-                sb.append("|")
-                        .append(a.getAuction_id()).append(";")
-                        .append(a.getItem().getName()).append(";")
-                        .append(a.getCurrentPrice()).append(";")
-                        .append(a.getMinIncrement()).append(";")
-                        .append(firstImg).append(";")
-                        .append(a.getStartTime()).append(";")
-                        .append(a.getEndTime()).append(";")
-                        .append(a.getItem().getCategory().name()).append(";")
-                        .append(cleanDesc).append(";")
-                        .append(a.getStatus().name());
+                    Item item = a.getItem();
+
+                    if (item == null) {
+                        System.err.println("Auction has null item: " + a.getAuction_id());
+                        continue;
+                    }
+
+                    String firstImg =
+                            (item.getImages() != null
+                                    && !item.getImages().isEmpty()
+                                    && item.getImages().get(0) != null)
+                                    ? item.getImages().get(0)
+                                    : "NO_IMAGE";
+
+                    String cleanDesc =
+                            (item.getDescription() != null)
+                                    ? item.getDescription().replace(";", ",")
+                                    : "";
+
+                    String category =
+                            (item.getCategory() != null)
+                                    ? item.getCategory().name()
+                                    : "UNKNOWN";
+
+                    String status =
+                            (a.getStatus() != null)
+                                    ? a.getStatus().name()
+                                    : "UNKNOWN";
+
+                    sb.append("|")
+                            .append(a.getAuction_id() != null ? a.getAuction_id() : "NULL").append(";")
+                            .append(item.getName() != null ? item.getName() : "Unnamed").append(";")
+                            .append(a.getCurrentPrice() != null ? a.getCurrentPrice() : "0").append(";")
+                            .append(a.getMinIncrement() != null ? a.getMinIncrement() : "0").append(";")
+                            .append(firstImg).append(";")
+                            .append(a.getStartTime() != null ? a.getStartTime() : "").append(";")
+                            .append(a.getEndTime() != null ? a.getEndTime() : "").append(";")
+                            .append(category).append(";")
+                            .append(cleanDesc).append(";")
+                            .append(status);
+
+                }
+                catch (Exception ex) {
+
+                    System.err.println("Auction Parse Error:");
+
+                    if (a != null) {
+                        System.err.println("Auction ID = " + a.getAuction_id());
+                    }
+
+                    ex.printStackTrace();
+                }
             }
+
             System.out.println(" [SUCCESS - " + auctions.size() + " items]");
+
             return sb.toString();
-        } catch (Exception e) {
+
+        }
+        catch (Exception e) {
+
             System.err.println(" [FAILED]");
-            return "ERROR|Could not load auctions";
+            e.printStackTrace();
+
+            return "ERROR|Could not load auctions: " + e.getMessage();
         }
     }
 

@@ -2,18 +2,36 @@ package server.service;
 
 import model.*;
 import server.dao.AuctionDAO;
+import server.dao.UserDAO;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
 public class AuctionService {
 
-    public static Auction createAuction(User seller, Item item, BigDecimal startPrice, BigDecimal minIncrement, String startTime, String endTime) {
-        // Kiểm tra quyền
-        if (!seller.hasRole(Role.SELLER)) {
-            throw new RuntimeException("You do not have permission to sell!");
-        }
+    public static Auction createAuction(
+            User seller,
+            Item item,
+            BigDecimal startPrice,
+            BigDecimal minIncrement,
+            String startTime,
+            String endTime
+    ) {
 
+        // Auto upgrade BIDDER -> SELLER
+        if (seller.getRole() == Role.BIDDER) {
+
+            seller.setRole(Role.SELLER);
+
+            UserDAO userDAO = new UserDAO();
+
+            userDAO.updateRole(
+                    seller.getUser_id(),
+                    "SELLER"
+            );
+
+            System.out.println("→ User upgraded to SELLER");
+        }
         // Khởi tạo đối tượng Auction
         Auction auction = new Auction();
         auction.setAuction_id(UUID.randomUUID().toString());
@@ -22,6 +40,7 @@ public class AuctionService {
         auction.setStartingPrice(startPrice);
         auction.setCurrentPrice(startPrice);
         auction.setMinIncrement(minIncrement);
+        auction.setStatus(AuctionStatus.ACTIVE);
 
         try {
             auction.setStartTime(java.time.LocalDateTime.parse(startTime));

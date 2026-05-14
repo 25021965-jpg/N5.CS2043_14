@@ -25,7 +25,7 @@ public class BidDAOTest {
     @Order(2)
     @DisplayName("Test Highest Bid")
     void testGetHighestBid() {
-        BigDecimal highest = BidDAO.getHighestBidAmount(999);
+        BigDecimal highest = BidDAO.getHighestBidAmount("999");
         assertNotNull(highest);
     }
 
@@ -33,7 +33,7 @@ public class BidDAOTest {
     @Order(3)
     @DisplayName("Test Get Bids History")
     void testGetBidsByAuctionId() {
-        List<Bid> bids = BidDAO.getBidsByAuctionId(999);
+        List<Bid> bids = BidDAO.getBidsByAuctionId("999");
         assertNotNull(bids);
     }
 

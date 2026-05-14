@@ -62,8 +62,14 @@ public class ResponseHandler {
 
                 case CREATE_SUCCESS:
                     NavigationUtils.showInfo("Success! Your auction has been listed.");
-                    ClientSocket.getInstance().sendList(); // Load lại danh sách ngay
+
+                    client.util.NavigationUtils.switchScene(
+                            mainStage,
+                            "/fxml/HomePage.fxml",
+                            "Auction Home"
+                    );
                     break;
+
                 case CREATE_FAILED:
                     NavigationUtils.showError("Create Failed: " + (data.isEmpty() ? "Check your input or permissions." : data));
                     break;
@@ -160,8 +166,22 @@ public class ResponseHandler {
                 a.setMinIncrement(new BigDecimal(p[3]));
                 a.setStartTime(LocalDateTime.parse(p[5]));
                 a.setEndTime(LocalDateTime.parse(p[6]));
+                try {
+                    a.setStatus(
+                            AuctionStatus.valueOf(
+                                    p[9].trim().toUpperCase()
+                            )
+                    );
+
+                } catch (Exception e) {
+
+                    a.setStatus(AuctionStatus.ACTIVE);
+                }
                 list.add(a);
-            } catch (Exception e) { System.err.println("Parse Error: " + e.getMessage()); }
+            } catch (Exception e) {
+                System.err.println("Parse Error Token = " + token);
+                e.printStackTrace();
+            }
         }
         return list;
     }

@@ -23,7 +23,6 @@ public class HomePageController {
     private static HomePageController instance;
     private static final int MAX_COLUMNS = 3;
 
-    private User currentUser;
     private final List<Auction> auctionList = new ArrayList<>();
 
     // Filter states
@@ -59,7 +58,6 @@ public class HomePageController {
     }
 
     public void setUser(User user) {
-        this.currentUser = user;
         if (user != null) log("Logged in as: " + user.getUsername());
     }
 
@@ -94,6 +92,7 @@ public class HomePageController {
     @FXML private void showAllStatus() { selectedStatus = null; applyFilters(); }
     @FXML private void showActive() { selectedStatus = "ACTIVE"; applyFilters(); }
     @FXML private void showEnded() { selectedStatus = "ENDED"; applyFilters(); }
+    @FXML private void showCancelled() { selectedStatus = "CANCELLED"; applyFilters(); }
     @FXML private void showUpcoming() { selectedStatus = "UPCOMING"; applyFilters(); }
 
     private void filterByCategory(Category category) {

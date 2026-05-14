@@ -112,8 +112,32 @@ public class UserDAO {
         u.setVerified(rs.getBoolean("verified"));
 
         String roleStr = rs.getString("role");
-        if (roleStr != null) u.setRole(Role.valueOf(roleStr));
+        if (roleStr != null && !roleStr.isEmpty()) {
+            u.setRole(
+                    Role.valueOf(roleStr.toUpperCase())
+            );
+        }
 
         return u;
+    }
+
+    // đổi role bidder -> seller khi create auction
+    public void updateRole(String userId, String role) {
+
+        String sql = "UPDATE users SET role = ? WHERE user_id = ?";
+
+        try (
+                Connection conn = DatabaseService.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
+
+            ps.setString(1, role);
+            ps.setString(2, userId);
+
+            ps.executeUpdate();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

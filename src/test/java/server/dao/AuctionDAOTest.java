@@ -26,11 +26,11 @@ public class AuctionDAOTest {
              Statement stmt = conn.createStatement()) {
 
             // Chèn user mẫu nếu chưa tồn tại
-            stmt.executeUpdate("INSERT IGNORE INTO users (id, username, password, fullname) " +
+            stmt.executeUpdate("INSERT IGNORE INTO users (user_id, username, password, fullname) " +
                     "VALUES ('user01', 'test_seller', '123', 'Seller Test')");
 
             // Chèn item mẫu nếu chưa tồn tại
-            stmt.executeUpdate("INSERT IGNORE INTO items (id, name, description) " +
+            stmt.executeUpdate("INSERT IGNORE INTO items (item_id, name, description) " +
                     "VALUES ('item01', 'Sản phẩm Test', 'Mô tả test tự động')");
 
             System.out.println(">>> Dữ liệu test đã sẵn sàng.");
@@ -44,10 +44,10 @@ public class AuctionDAOTest {
     @DisplayName("Test Save: Lưu đấu giá mới vào DB")
     void testSaveAuction() {
         Item mockItem = new Item();
-        mockItem.setId("item01");
+        mockItem.setItem_id("item01");
 
         User mockSeller = new User();
-        mockSeller.setId("user01");
+        mockSeller.setUser_id("user01");
 
         Auction auction = new Auction();
         auction.setAuction_id(testId);
@@ -72,7 +72,7 @@ public class AuctionDAOTest {
         // Debug: In ra để kiểm tra nếu cần
         System.out.println(">>> Số lượng đấu giá hiện tại: " + list.size());
 
-        boolean found = list.stream().anyMatch(a -> a.getId().equals(testId));
+        boolean found = list.stream().anyMatch(a -> a.getAuction_id().equals(testId));
         assertTrue(found, "Lỗi: Không tìm thấy ID " + testId + " trong Database!");
     }
 
@@ -86,7 +86,7 @@ public class AuctionDAOTest {
         // Kiểm tra lại kết quả
         List<Auction> list = AuctionDAO.findAll();
         Auction updated = list.stream()
-                .filter(a -> a.getId().equals(testId))
+                .filter(a -> a.getAuction_id().equals(testId))
                 .findFirst()
                 .orElse(null);
 
@@ -100,7 +100,7 @@ public class AuctionDAOTest {
         // DỌN DẸP DỮ LIỆU RÁC (Chỉ xóa bản ghi Test)
         System.out.println(">>> Đang dọn dẹp dữ liệu Test (" + testId + ")...");
         try (Connection conn = DatabaseService.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement("DELETE FROM auctions WHERE id = ?")) {
+             PreparedStatement pstmt = conn.prepareStatement("DELETE FROM auctions WHERE auction_id = ?")) {
             pstmt.setString(1, testId);
             pstmt.executeUpdate();
             System.out.println(">>> Database sạch sẽ.");

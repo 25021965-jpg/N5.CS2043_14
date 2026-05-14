@@ -35,6 +35,17 @@ public class AuctionDAO {
 
                 auction.setCancelled(rs.getBoolean("is_cancelled"));
 
+                String statusStr = rs.getString("status");
+                if (statusStr != null) {
+                    auction.setStatus(
+                            AuctionStatus.valueOf(
+                                    statusStr.toUpperCase()
+                            )
+                    );
+                } else {
+                    auction.setStatus(AuctionStatus.ACTIVE);
+                }
+
                 // --- MAP SELLER ---
                 User seller = new User();
                 seller.setUser_id(rs.getString("seller_id"));
@@ -49,8 +60,11 @@ public class AuctionDAO {
                 item.setDescription(rs.getString("item_desc"));
 
                 String catStr = rs.getString("category");
-                item.setCategory(catStr != null ? Category.valueOf(catStr) : Category.OTHER);
-
+                item.setCategory(
+                        catStr != null
+                                ? Category.valueOf(catStr.toUpperCase())
+                                : Category.OTHER
+                );
                 item.setImages(getItemImages(conn, item.getItem_id()));
 
                 auction.setItem(item);
@@ -66,8 +80,8 @@ public class AuctionDAO {
         if (auction == null || auction.getItem() == null || auction.getSeller() == null) return;
 
         String sql = "INSERT INTO auctions " +
-                "(auction_id, item_id, seller_id, starting_price, current_price, min_increment, start_time, end_time, is_cancelled) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                "(auction_id, item_id, seller_id, starting_price, current_price, min_increment, start_time, end_time, is_cancelled, status) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = DatabaseService.getConnection()) {
             conn.setAutoCommit(false);
@@ -84,7 +98,7 @@ public class AuctionDAO {
                     pstmt.setTimestamp(7, Timestamp.valueOf(auction.getStartTime()));
                     pstmt.setTimestamp(8, Timestamp.valueOf(auction.getEndTime()));
                     pstmt.setBoolean(9, auction.isCancelled());
-
+                    pstmt.setString(10, auction.getStatus().name());
                     pstmt.executeUpdate();
                 }
                 conn.commit();
@@ -144,5 +158,24 @@ public class AuctionDAO {
             pstmt.setString(1, id);
             pstmt.executeUpdate();
         } catch (SQLException e) { e.printStackTrace(); }
+    }
+
+    public void updateStatus(String auctionId, AuctionStatus status) {
+
+        String sql = "UPDATE auctions SET status = ? WHERE auction_id = ?";
+
+        try (
+                Connection conn = DatabaseService.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
+
+            ps.setString(1, status.name());
+            ps.setString(2, auctionId);
+
+            ps.executeUpdate();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

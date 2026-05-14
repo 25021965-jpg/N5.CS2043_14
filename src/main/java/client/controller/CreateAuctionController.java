@@ -102,7 +102,13 @@ public class CreateAuctionController {
             newAuction.setMinIncrement(new java.math.BigDecimal(txtMinIncrement.getText()));
             newAuction.setStartTime(startDateTime);
             newAuction.setEndTime(endDateTime);
-            newAuction.setStatus(AuctionStatus.ACTIVE);
+
+            //check nếu tgian start xa hơn tgian hện tại thì đổi status thành upcoming
+            AuctionStatus status =
+                    startDateTime.isAfter(LocalDateTime.now())
+                            ? AuctionStatus.UPCOMING
+                            : AuctionStatus.ACTIVE;
+            newAuction.setStatus(status);
 
             // --- SEND ---
             ClientSocket socket = ClientSocket.getInstance();
