@@ -7,6 +7,9 @@ public enum Command {
     CREATE,
     JOIN,
     LIST,
+    LIST_USERS,
+    DELETE_USER,
+    FORGOT_PASSWORD,
     BID,
     GET_PROFILE;
 
