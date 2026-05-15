@@ -136,7 +136,6 @@ public class ClientSocket {
             if (socket != null && !socket.isClosed()) socket.close();
             System.out.println("✓ Socket closed safely");
         } catch (Exception e) {
-            e.printStackTrace();
-        }
+            System.err.println("Error: " + e.getMessage());        }
     }
 }

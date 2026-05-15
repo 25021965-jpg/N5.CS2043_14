@@ -109,7 +109,6 @@ public class RegisterController {
 
             System.out.println("Back to Login");
         } catch (Exception e) {
-            e.printStackTrace();
-        }
+            System.err.println("Error: " + e.getMessage());        }
     }
 }

@@ -85,8 +85,7 @@ public class ForgotPassController {
             stage.show();
 
         } catch (Exception e) {
-            e.printStackTrace();
-        }
+            System.err.println("Error: " + e.getMessage());        }
     }
 
     /*

@@ -123,8 +123,7 @@ public class CreateAuctionController {
             showError("Invalid input: Price and time must be numeric values!");
         } catch (Exception e) {
             showError("System Error: " + e.getMessage());
-            e.printStackTrace();
-        }
+            System.err.println("Error: " + e.getMessage());        }
     }
 
     @FXML

@@ -72,7 +72,7 @@ public class NavigationUtils {
                 stage.setTitle(title);
                 stage.centerOnScreen();
             } catch (IOException e) {
-                e.printStackTrace();
+                System.err.println("Error: " + e.getMessage());
                 showError("Could not load screen: " + title);
             }
     }

@@ -1,5 +1,6 @@
 package client.controller;
 
+import client.manager.UserSession;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -60,8 +61,7 @@ public class ItemCardController {
                     System.out.println("Image loading error: " + firstImagePath);
                 }
             } catch (Exception e) {
-                e.printStackTrace();
-            }
+                System.err.println("Error: " + e.getMessage());            }
         } else {
             // Nếu không có ảnh, có thể set một ảnh mặc định (placeholder)
             // imgProduct.setImage(new Image("/images/no-image.png"));
@@ -91,6 +91,7 @@ public class ItemCardController {
             // Truyền dữ liệu sang trang chi tiết
             ItemViewController controller = loader.getController();
             if (controller != null) {
+                controller.setCurrentUser(UserSession.getCurrentUser());
                 controller.setAuctionData(this.auction);
             }
 
@@ -102,7 +103,6 @@ public class ItemCardController {
 
         } catch (IOException e) {
             System.err.println("Page loading error: " + e.getMessage());
-            e.printStackTrace();
-        }
+            System.err.println("Error: " + e.getMessage());        }
     }
 }

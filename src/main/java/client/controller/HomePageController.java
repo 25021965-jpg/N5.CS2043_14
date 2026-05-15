@@ -199,8 +199,7 @@ public class HomePageController {
                 if (col == MAX_COLUMNS) { col = 0; row++; }
                 itemGrid.add(card, col++, row);
             } catch (IOException e) {
-                e.printStackTrace();
-            }
+                System.err.println("Error: " + e.getMessage());            }
         }
     }
 
