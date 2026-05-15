@@ -101,7 +101,13 @@ public class ResponseHandler {
                 case JOIN_FAILED:
                     NavigationUtils.showError("Could not join: " + data);
                     break;
-
+                case FORGOT_SUCCESS:
+                    NavigationUtils.showInfo("Password reset successfully! Please log in.");
+                    NavigationUtils.switchScene(mainStage, "/fxml/login-view.fxml", "Login");
+                    break;
+                case FORGOT_FAILED:
+                    NavigationUtils.showError("Verification Failed: " + (data.isEmpty() ? "Information does not match." : data));
+                    break;
                 case ERROR:
                     NavigationUtils.showError("System Error: " + data);
                     break;
