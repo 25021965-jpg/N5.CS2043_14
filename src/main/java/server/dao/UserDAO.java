@@ -6,53 +6,8 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.math.BigDecimal;
 
 public class UserDAO {
-
-    public static List<User> findAll() {
-        List<User> users = new ArrayList<>();
-        // Lấy các trường cần thiết để hiển thị lên TableView
-        String sql = "SELECT user_id, fullname, username, email, role FROM users";
-        try (Connection conn = DatabaseService.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql);
-             ResultSet rs = pstmt.executeQuery()) {
-            while (rs.next()) {
-                User u = new User();
-                u.setUser_id(rs.getString("user_id"));
-                u.setFullname(rs.getString("fullname"));
-                u.setUsername(rs.getString("username"));
-                u.setEmail(rs.getString("email"));
-
-                // Xử lý Role an toàn
-                String roleStr = rs.getString("role");
-                if (roleStr != null) {
-                    try {
-                        u.setRole(Role.valueOf(roleStr.toUpperCase()));
-                    } catch (IllegalArgumentException e) {
-                        u.setRole(Role.BIDDER); // Mặc định
-                    }
-                }
-                users.add(u);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return users;
-    }
-
-    public static boolean deleteUser(String userId) {
-        String sql = "DELETE FROM users WHERE user_id = ?";
-        try (Connection conn = DatabaseService.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, userId);
-            int affectedRows = ps.executeUpdate();
-            return affectedRows > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
 
     public static boolean login(String input, String password) {
         String sql = "SELECT 1 FROM users WHERE (username = ? OR email = ?) AND password = ?";
@@ -107,7 +62,7 @@ public class UserDAO {
             pstmt.setBoolean(8, user.isVerified());
             pstmt.setString(9, user.getRole().name());
 
-            // Update
+            // UPDATE
             pstmt.setString(10, user.getFullname());
             pstmt.setString(11, user.getPassword());
             if (user.getDob() == null || user.getDob().isEmpty()) pstmt.setNull(12, Types.DATE);
@@ -133,16 +88,15 @@ public class UserDAO {
         return null;
     }
 
-    public void updateRole(String userId, String role) {
-        String sql = "UPDATE users SET role = ? WHERE user_id = ?";
+    public static List<User> findAll() {
+        List<User> list = new ArrayList<>();
+        String sql = "SELECT * FROM users";
         try (Connection conn = DatabaseService.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, role);
-            ps.setString(2, userId);
-            ps.executeUpdate();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) { list.add(map(rs)); }
+        } catch (Exception e) { e.printStackTrace(); }
+        return list;
     }
 
     private static User map(ResultSet rs) throws SQLException {
@@ -159,12 +113,31 @@ public class UserDAO {
 
         String roleStr = rs.getString("role");
         if (roleStr != null && !roleStr.isEmpty()) {
-            try {
-                u.setRole(Role.valueOf(roleStr.toUpperCase()));
-            } catch (Exception e) {
-                u.setRole(Role.BIDDER);
-            }
+            u.setRole(
+                    Role.valueOf(roleStr.toUpperCase())
+            );
         }
+
         return u;
+    }
+
+    // đổi role bidder -> seller khi create auction
+    public void updateRole(String userId, String role) {
+
+        String sql = "UPDATE users SET role = ? WHERE user_id = ?";
+
+        try (
+                Connection conn = DatabaseService.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
+
+            ps.setString(1, role);
+            ps.setString(2, userId);
+
+            ps.executeUpdate();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

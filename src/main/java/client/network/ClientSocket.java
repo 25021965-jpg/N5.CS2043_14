@@ -94,6 +94,9 @@ public class ClientSocket {
     public void sendLogout() {
         send(Command.LOGOUT);
     }
+    public void sendForgotPassword(String fullName, String dob, String username, String email, String newPassword) {
+        send(Command.FORGOT_PASSWORD, fullName, dob, username, email, newPassword);
+    }
 
     public void sendList() {
         send(Command.LIST);

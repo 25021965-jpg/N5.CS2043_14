@@ -57,7 +57,7 @@ public class ItemCardController {
                 if (!image.isError()) {
                     imgProduct.setImage(image);
                 } else {
-                    System.out.println("Lỗi load ảnh tại: " + firstImagePath);
+                    System.out.println("Image loading error: " + firstImagePath);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -81,7 +81,7 @@ public class ItemCardController {
 
             java.net.URL fxmlLocation = getClass().getResource(fxmlPath);
             if (fxmlLocation == null) {
-                System.err.println("Không tìm thấy file FXML tại: " + fxmlPath);
+                System.err.println("Cannot find FXML file at: " + fxmlPath);
                 return;
             }
 
@@ -97,11 +97,11 @@ public class ItemCardController {
             // Chuyển màn hình
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.setScene(new Scene(root));
-            stage.setTitle("Chi tiết sản phẩm: " + auction.getItem().getName());
+            stage.setTitle("Product's Information: " + auction.getItem().getName());
             stage.show();
 
         } catch (IOException e) {
-            System.err.println("Lỗi khi load trang chi tiết: " + e.getMessage());
+            System.err.println("Page loading error: " + e.getMessage());
             e.printStackTrace();
         }
     }

@@ -18,7 +18,9 @@ public enum ResponseType {
     DELETE_USER_SUCCESS,
     DELETE_USER_FAILED,
     ERROR,
-    DISCONNECTED;
+    DISCONNECTED,
+    FORGOT_SUCCESS,
+    FORGOT_FAILED;
 
     public static ResponseType from(String msg) {
         if (msg == null || msg.isBlank()) return null;

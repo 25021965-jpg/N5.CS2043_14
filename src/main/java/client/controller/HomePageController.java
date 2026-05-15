@@ -25,12 +25,25 @@ public class HomePageController {
 
     private final List<Auction> auctionList = new ArrayList<>();
 
+    private final String DEFAULT_STYLE =
+            "-fx-background-color: #d4af37;";
+
+    private final String ACTIVE_STYLE =
+            "-fx-background-color: #ffe082;";
     // Filter states
     private Category selectedCategory = null;
     private String selectedStatus = null;
 
     @FXML private GridPane itemGrid;
     @FXML private TextField txtSearch;
+    @FXML private Button btnAll;
+    @FXML private Button btnAccessories;
+    @FXML private Button btnCollectibles;
+    @FXML private Button btnElectronics;
+    @FXML private Button btnFashion;
+    @FXML private Button btnHomeAppliances;
+    @FXML private Button btnVehicles;
+    @FXML private Button btnOther;
 
     public HomePageController() {
         instance = this;
@@ -55,6 +68,8 @@ public class HomePageController {
         if (socket != null) {
             socket.sendList();
         }
+
+        Platform.runLater(() -> highlight(btnAll));
     }
 
     public void setUser(User user) {
@@ -80,14 +95,48 @@ public class HomePageController {
         applyFilters();
     }
 
-    @FXML private void showAll() { selectedCategory = null; selectedStatus = null; applyFilters(); }
-    @FXML private void showAccessories() { filterByCategory(Category.ACCESSORIES); }
-    @FXML private void showCollectibles() { filterByCategory(Category.COLLECTIBLES); }
-    @FXML private void showElectronics() { filterByCategory(Category.ELECTRONICS); }
-    @FXML private void showFashion() { filterByCategory(Category.FASHION); }
-    @FXML private void showHomeAppliances() { filterByCategory(Category.HOME_APPLIANCES); }
-    @FXML private void showVehicles() { filterByCategory(Category.VEHICLES); }
-    @FXML private void showOther() { filterByCategory(Category.OTHER); }
+    @FXML
+    private void showAll() {
+        highlight(btnAll);
+        selectedCategory = null;
+        selectedStatus = null;
+        applyFilters();
+    }
+    @FXML
+    private void showAccessories() {
+        highlight(btnAccessories);
+        filterByCategory(Category.ACCESSORIES);
+    }
+    @FXML
+    private void showCollectibles() {
+        highlight(btnCollectibles);
+        filterByCategory(Category.COLLECTIBLES);
+    }
+    @FXML
+    private void showElectronics() {
+        highlight(btnElectronics);
+        filterByCategory(Category.ELECTRONICS);
+    }
+    @FXML
+    private void showFashion() {
+        highlight(btnFashion);
+        filterByCategory(Category.FASHION);
+    }
+    @FXML
+    private void showHomeAppliances() {
+        highlight(btnHomeAppliances);
+        filterByCategory(Category.HOME_APPLIANCES);
+    }
+    @FXML
+    private void showVehicles() {
+        highlight(btnVehicles);
+        filterByCategory(Category.VEHICLES);
+    }
+    @FXML
+    private void showOther() {
+        highlight(btnOther);
+        filterByCategory(Category.OTHER);
+    }
 
     @FXML private void showAllStatus() { selectedStatus = null; applyFilters(); }
     @FXML private void showActive() { selectedStatus = "ACTIVE"; applyFilters(); }
@@ -98,6 +147,22 @@ public class HomePageController {
     private void filterByCategory(Category category) {
         this.selectedCategory = category;
         applyFilters();
+    }
+
+    private void resetCategoryStyles() {
+        btnAll.setStyle(DEFAULT_STYLE);
+        btnAccessories.setStyle(DEFAULT_STYLE);
+        btnCollectibles.setStyle(DEFAULT_STYLE);
+        btnElectronics.setStyle(DEFAULT_STYLE);
+        btnFashion.setStyle(DEFAULT_STYLE);
+        btnHomeAppliances.setStyle(DEFAULT_STYLE);
+        btnVehicles.setStyle(DEFAULT_STYLE);
+        btnOther.setStyle(DEFAULT_STYLE);
+    }
+
+    private void highlight(Button btn) {
+        resetCategoryStyles();
+        btn.setStyle(ACTIVE_STYLE);
     }
 
     private void applyFilters() {

@@ -133,8 +133,7 @@
             <Separator prefWidth="140.0" />
 
             <!-- CATEGORY BUTTONS -->
-            <!-- CATEGORY BUTTONS -->
-            <Button mnemonicParsing="false" onAction="#showAll" prefHeight="45.0" prefWidth="140.0" style="-fx-background-color: #d4af37;" text="All">
+            <Button fx:id="btnAll" mnemonicParsing="false" onAction="#showAll" prefHeight="45.0" prefWidth="140.0" style="-fx-background-color: #d4af37;" text="All">
 
                 <font>
                     <Font name="Berlin Sans FB Demi Bold" size="14.0" />
@@ -142,7 +141,7 @@
 
             </Button>
 
-            <Button mnemonicParsing="false" onAction="#showAccessories" prefHeight="45.0" prefWidth="140.0" style="-fx-background-color: #d4af37;" text="Accessories">
+            <Button fx:id="btnAccessories" mnemonicParsing="false" onAction="#showAccessories" prefHeight="45.0" prefWidth="140.0" style="-fx-background-color: #d4af37;" text="Accessories">
 
                 <font>
                     <Font name="Berlin Sans FB Demi Bold" size="14.0" />
@@ -150,7 +149,7 @@
 
             </Button>
 
-            <Button mnemonicParsing="false" onAction="#showCollectibles" prefHeight="45.0" prefWidth="140.0" style="-fx-background-color: #d4af37;" text="Collectibles">
+            <Button fx:id="btnCollectibles" mnemonicParsing="false" onAction="#showCollectibles" prefHeight="45.0" prefWidth="140.0" style="-fx-background-color: #d4af37;" text="Collectibles">
 
                 <font>
                     <Font name="Berlin Sans FB Demi Bold" size="14.0" />
@@ -158,7 +157,7 @@
 
             </Button>
 
-            <Button mnemonicParsing="false" onAction="#showElectronics" prefHeight="45.0" prefWidth="140.0" style="-fx-background-color: #d4af37;" text="Electronics">
+            <Button fx:id="btnElectronics" mnemonicParsing="false" onAction="#showElectronics" prefHeight="45.0" prefWidth="140.0" style="-fx-background-color: #d4af37;" text="Electronics">
 
                 <font>
                     <Font name="Berlin Sans FB Demi Bold" size="14.0" />
@@ -166,7 +165,7 @@
 
             </Button>
 
-            <Button mnemonicParsing="false" onAction="#showFashion" prefHeight="45.0" prefWidth="140.0" style="-fx-background-color: #d4af37;" text="Fashion">
+            <Button fx:id="btnFashion" mnemonicParsing="false" onAction="#showFashion" prefHeight="45.0" prefWidth="140.0" style="-fx-background-color: #d4af37;" text="Fashion">
 
                 <font>
                     <Font name="Berlin Sans FB Demi Bold" size="14.0" />
@@ -174,7 +173,7 @@
 
             </Button>
 
-            <Button mnemonicParsing="false" onAction="#showHomeAppliances" prefHeight="45.0" prefWidth="140.0" style="-fx-background-color: #d4af37;" text="Home Appliances">
+            <Button fx:id="btnHomeAppliances" mnemonicParsing="false" onAction="#showHomeAppliances" prefHeight="45.0" prefWidth="140.0" style="-fx-background-color: #d4af37;" text="Home Appliances">
 
                 <font>
                     <Font name="Berlin Sans FB Demi Bold" size="14.0" />
@@ -182,7 +181,7 @@
 
             </Button>
 
-            <Button mnemonicParsing="false" onAction="#showVehicles" prefHeight="45.0" prefWidth="140.0" style="-fx-background-color: #d4af37;" text="Vehicles">
+            <Button fx:id="btnVehicles" mnemonicParsing="false" onAction="#showVehicles" prefHeight="45.0" prefWidth="140.0" style="-fx-background-color: #d4af37;" text="Vehicles">
 
                 <font>
                     <Font name="Berlin Sans FB Demi Bold" size="14.0" />
@@ -190,7 +189,7 @@
 
             </Button>
 
-            <Button mnemonicParsing="false" onAction="#showOther" prefHeight="45.0" prefWidth="140.0" style="-fx-background-color: #d4af37;" text="Other">
+            <Button fx:id="btnOther" mnemonicParsing="false" onAction="#showOther" prefHeight="45.0" prefWidth="140.0" style="-fx-background-color: #d4af37;" text="Other">
 
                 <font>
                     <Font name="Berlin Sans FB Demi Bold" size="14.0" />

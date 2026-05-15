@@ -82,6 +82,7 @@ public class ClientHandler implements Runnable {
                     System.out.println("  → User " + (currentUser != null ? currentUser.getUsername() : "Unknown") + " logged out.");
                     this.currentUser = null;
                     return "LOGOUT_SUCCESS";
+                case FORGOT_PASSWORD: return handleForgotPassword(data);
                 default: return "ERROR|Command not supported";
             }
         } catch (IllegalArgumentException e) {
@@ -227,6 +228,20 @@ public class ClientHandler implements Runnable {
         } catch (Exception e) {
             return "ERROR|" + e.getMessage();
         }
+    }
+    private String handleForgotPassword(String[] data) {
+        // data[0] = FORGOT_PASSWORD, [1]=fullname, [2]=dob, [3]=username, [4]=email, [5]=newPassword
+        if (data.length < 6) return "FORGOT_FAILED|Missing information";
+
+        boolean success = AuthService.resetPassword(
+                data[1].trim(),
+                data[2].trim(),
+                data[3].trim(),
+                data[4].trim(),
+                data[5].trim()
+        );
+
+        return success ? "FORGOT_SUCCESS" : "FORGOT_FAILED|Information does not match";
     }
 
     private void closeConnection() {
