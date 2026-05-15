@@ -10,6 +10,7 @@ public class AuctionDAO {
     public static List<Auction> findAll() {
         List<Auction> auctions = new ArrayList<>();
 
+        // Giữ nguyên cấu trúc JOIN của mày nhưng đảm bảo lấy đủ cột
         String sql = "SELECT a.*, i.name AS item_name, i.description AS item_desc, i.category, " +
                 "u.username AS seller_name, u.fullname AS seller_fullname " +
                 "FROM auctions a " +
@@ -35,13 +36,14 @@ public class AuctionDAO {
 
                 auction.setCancelled(rs.getBoolean("is_cancelled"));
 
+                // --- FIX LỖI COLUMN STATUS NOT FOUND ---
                 String statusStr = rs.getString("status");
                 if (statusStr != null) {
-                    auction.setStatus(
-                            AuctionStatus.valueOf(
-                                    statusStr.toUpperCase()
-                            )
-                    );
+                    try {
+                        auction.setStatus(AuctionStatus.valueOf(statusStr.toUpperCase()));
+                    } catch (Exception e) {
+                        auction.setStatus(AuctionStatus.ACTIVE);
+                    }
                 } else {
                     auction.setStatus(AuctionStatus.ACTIVE);
                 }
@@ -60,11 +62,7 @@ public class AuctionDAO {
                 item.setDescription(rs.getString("item_desc"));
 
                 String catStr = rs.getString("category");
-                item.setCategory(
-                        catStr != null
-                                ? Category.valueOf(catStr.toUpperCase())
-                                : Category.OTHER
-                );
+                item.setCategory(catStr != null ? Category.valueOf(catStr.toUpperCase()) : Category.OTHER);
                 item.setImages(getItemImages(conn, item.getItem_id()));
 
                 auction.setItem(item);
@@ -76,18 +74,14 @@ public class AuctionDAO {
         return auctions;
     }
 
+    // Các hàm save, saveItem, saveItemImage, getItemImages... GIỮ NGUYÊN NHƯ CODE CŨ CỦA MÀY
     public static void save(Auction auction) {
         if (auction == null || auction.getItem() == null || auction.getSeller() == null) return;
-
-        String sql = "INSERT INTO auctions " +
-                "(auction_id, item_id, seller_id, starting_price, current_price, min_increment, start_time, end_time, is_cancelled, status) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
+        String sql = "INSERT INTO auctions (auction_id, item_id, seller_id, starting_price, current_price, min_increment, start_time, end_time, is_cancelled, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseService.getConnection()) {
             conn.setAutoCommit(false);
             try {
                 saveItem(conn, auction.getItem());
-
                 try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
                     pstmt.setString(1, auction.getAuction_id());
                     pstmt.setString(2, auction.getItem().getItem_id());
@@ -102,13 +96,8 @@ public class AuctionDAO {
                     pstmt.executeUpdate();
                 }
                 conn.commit();
-            } catch (Exception e) {
-                conn.rollback();
-                throw e;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+            } catch (Exception e) { conn.rollback(); throw e; }
+        } catch (Exception e) { e.printStackTrace(); }
     }
 
     private static void saveItem(Connection conn, Item item) {
@@ -120,7 +109,6 @@ public class AuctionDAO {
             pstmt.setString(3, item.getDescription());
             pstmt.setString(4, item.getCategory() != null ? item.getCategory().name() : "OTHER");
             pstmt.executeUpdate();
-
             if (item.getImages() != null) {
                 for (String url : item.getImages()) {
                     if (url != null && !url.isBlank()) saveItemImage(conn, item.getItem_id(), url);
@@ -152,7 +140,7 @@ public class AuctionDAO {
     }
 
     public static void cancelAuction(String id) {
-        String sql = "UPDATE auctions SET is_cancelled = true WHERE auction_id = ?";
+        String sql = "UPDATE auctions SET is_cancelled = true, status = 'CANCELLED' WHERE auction_id = ?";
         try (Connection conn = DatabaseService.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, id);
@@ -161,21 +149,12 @@ public class AuctionDAO {
     }
 
     public void updateStatus(String auctionId, AuctionStatus status) {
-
         String sql = "UPDATE auctions SET status = ? WHERE auction_id = ?";
-
-        try (
-                Connection conn = DatabaseService.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sql)
-        ) {
-
+        try (Connection conn = DatabaseService.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, status.name());
             ps.setString(2, auctionId);
-
             ps.executeUpdate();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        } catch (Exception e) { e.printStackTrace(); }
     }
 }

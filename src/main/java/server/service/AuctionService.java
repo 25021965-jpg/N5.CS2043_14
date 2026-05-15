@@ -6,6 +6,7 @@ import server.dao.UserDAO;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
+import java.time.LocalDateTime;
 
 public class AuctionService {
 
@@ -17,22 +18,15 @@ public class AuctionService {
             String startTime,
             String endTime
     ) {
-
-        // Auto upgrade BIDDER -> SELLER
+        // 1. Tự động nâng cấp quyền nếu là BIDDER
         if (seller.getRole() == Role.BIDDER) {
-
             seller.setRole(Role.SELLER);
-
-            UserDAO userDAO = new UserDAO();
-
-            userDAO.updateRole(
-                    seller.getUser_id(),
-                    "SELLER"
-            );
-
-            System.out.println("→ User upgraded to SELLER");
+            // Dùng static nếu updateRole là static, hoặc giữ nguyên như mày nếu là instance method
+            new UserDAO().updateRole(seller.getUser_id(), "SELLER");
+            System.out.println("→ User " + seller.getUsername() + " upgraded to SELLER");
         }
-        // Khởi tạo đối tượng Auction
+
+        // 2. Khởi tạo Auction
         Auction auction = new Auction();
         auction.setAuction_id(UUID.randomUUID().toString());
         auction.setSeller(seller);
@@ -41,16 +35,17 @@ public class AuctionService {
         auction.setCurrentPrice(startPrice);
         auction.setMinIncrement(minIncrement);
         auction.setStatus(AuctionStatus.ACTIVE);
+        auction.setCancelled(false);
 
+        // 3. Parse thời gian (Nên để LocalDateTime ngay từ đầu nếu có thể)
         try {
-            auction.setStartTime(java.time.LocalDateTime.parse(startTime));
-            auction.setEndTime(java.time.LocalDateTime.parse(endTime));
+            auction.setStartTime(LocalDateTime.parse(startTime));
+            auction.setEndTime(LocalDateTime.parse(endTime));
         } catch (Exception e) {
-            throw new RuntimeException("Invalid date format. Use yyyy-MM-ddTHH:mm:ss");
+            throw new RuntimeException("Invalid date format. Use yyyy-MM-ddTHH:mm:ss (Ex: 2023-12-31T23:59:59)");
         }
 
-        // Lưu vào Database thông qua DAO
-        // DAO đã xử lý lưu cả Item và Auction
+        // 4. Lưu vào DB (DAO xử lý cả Item và Auction như mày viết là chuẩn)
         AuctionDAO.save(auction);
 
         return auction;
@@ -61,8 +56,10 @@ public class AuctionService {
     }
 
     public static Auction getAuctionById(String id) {
-        // Tìm trong list từ DB
+
         List<Auction> all = AuctionDAO.findAll();
+        if (all == null) return null;
+
         for (Auction a : all) {
             if (a.getAuction_id().equals(id)) {
                 return a;
