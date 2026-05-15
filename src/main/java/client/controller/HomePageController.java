@@ -1,5 +1,6 @@
 package client.controller;
 
+import client.manager.UserSession;
 import client.network.ClientSocket;
 import client.network.ResponseHandler;
 import client.util.NavigationUtils;
@@ -232,13 +233,30 @@ public class HomePageController {
 
     @FXML
     private void openBalance(ActionEvent event) {
-        NavigationUtils.showInfo("Balance feature coming soon!");
-    }
+        NavigationUtils.switchScene(getStage(event), "/fxml/accountBalance-view.fxml", "Account Balance");    }
 
     @FXML
     private void handleLogout(ActionEvent event) {
-        if (NavigationUtils.showConfirm("Logout", "Are you sure you want to logout?")) {
-            NavigationUtils.switchScene(getStage(event), "/fxml/login-view.fxml", "Login");
+
+        if (NavigationUtils.showConfirm(
+                "Logout",
+                "Are you sure you want to logout?"
+        )) {
+
+            ClientSocket socket =
+                    ClientSocket.getInstance();
+
+            if (socket != null) {
+                socket.logout();
+            }
+
+            UserSession.setCurrentUser(null);
+
+            NavigationUtils.switchScene(
+                    getStage(event),
+                    "/fxml/login-view.fxml",
+                    "Login"
+            );
         }
     }
 

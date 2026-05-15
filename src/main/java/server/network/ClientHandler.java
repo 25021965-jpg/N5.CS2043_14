@@ -148,7 +148,7 @@ public class ClientHandler implements Runnable {
             return "LOGIN_SUCCESS|" + user.getUser_id() + "|" + user.getFullname() + "|"
                     + user.getUsername() + "|" + user.getEmail() + "|"
                     + (user.getDob() == null ? "" : user.getDob()) + "|"
-                    + user.getRole().name();
+                    + user.getRole().name() + "|" + user.getBalance();
         }
         return "LOGIN_FAILED";
     }

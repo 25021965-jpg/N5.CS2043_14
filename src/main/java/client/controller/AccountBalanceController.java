@@ -1,5 +1,6 @@
 package client.controller;
 
+import client.manager.UserSession;
 import client.network.ClientSocket;
 
 import javafx.fxml.FXML;
@@ -11,9 +12,13 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 
 import javafx.scene.layout.VBox;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.Priority;
 import javafx.stage.Stage;
 
 import model.User;
+import server.dao.UserDAO;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -40,7 +45,7 @@ public class AccountBalanceController implements UserDataReceiver {
     private Button favoriteBtn;
 
     @FXML
-    private Button walletBtn;
+    private Button balanceBtn;
 
     @FXML
     private Button logoutBtn;
@@ -76,28 +81,41 @@ public class AccountBalanceController implements UserDataReceiver {
         this.client = client;
     }
 
-    public void setUser(
-            User user
-    ) {
+    @Override
+    public void setUser(User user) {
+
+        if (user == null) {
+            System.out.println("Received NULL user");
+            return;
+        }
 
         this.currentUser = user;
 
+        if (currentUser.getBalance() == null) {
+            currentUser.setBalance(BigDecimal.ZERO);
+        }
+
         updateBalance();
+        loadTransactions();
     }
 
     @FXML
     public void initialize() {
+        System.out.println("Account Balance Loaded");
 
-        System.out.println(
-                "Wallet Loaded"
-        );
+        client = ClientSocket.getInstance();
+        currentUser = UserSession.getCurrentUser();
+
+        if (currentUser != null) {
+            updateBalance();
+            loadTransactions();
+        }
 
         setupMenuEvents();
-        setupWalletEvents();
+        setupBalanceEvents();
     }
 
-    private void setupWalletEvents() {
-
+    private void setupBalanceEvents() {
         depositBtn.setOnAction(
                 e -> handleDeposit()
         );
@@ -108,7 +126,6 @@ public class AccountBalanceController implements UserDataReceiver {
     }
 
     private void setupMenuEvents() {
-
         infoBtn.setOnAction(
                 e -> openPage(
                         "/fxml/userProfile-view.fxml",
@@ -137,10 +154,10 @@ public class AccountBalanceController implements UserDataReceiver {
                 )
         );
 
-        walletBtn.setOnAction(
+        balanceBtn.setOnAction(
                 e -> openPage(
-                        "/fxml/wallet-view.fxml",
-                        "E-Wallet"
+                        "/fxml/accountBalance-view.fxml",
+                        "Account Balance"
                 )
         );
 
@@ -162,47 +179,62 @@ public class AccountBalanceController implements UserDataReceiver {
 
     @FXML
     private void handleDeposit() {
+        if (currentUser == null) {
+            showAlert(
+                    Alert.AlertType.ERROR,
+                    "Error",
+                    "No user logged in."
+            );
+            return;
+        }
 
-        String input =
-                depositField.getText().trim();
+        String input = depositField.getText().trim();
 
         if (input.isEmpty()) {
-
             showAlert(
                     Alert.AlertType.ERROR,
                     "Deposit Error",
                     "Please enter an amount."
             );
-
             return;
         }
 
         try {
-
-            BigDecimal amount =
-                    new BigDecimal(input);
+            BigDecimal amount = new BigDecimal(input);
 
             if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-
                 showAlert(
                         Alert.AlertType.ERROR,
                         "Deposit Error",
                         "Amount must be greater than 0."
                 );
-
                 return;
             }
 
-            /*
-                TODO:
-                send deposit request to server
-             */
-
+            // tính số dư mới
             BigDecimal newBalance =
                     currentUser.getBalance().add(amount);
+
+            // cập nhật user
             currentUser.setBalance(newBalance);
 
+            boolean saved =
+                    UserDAO.updateBalance(
+                            currentUser.getUser_id(),
+                            newBalance
+                    );
+
+            if(saved){
+                UserSession.setCurrentUser(currentUser);
+            }
+
+            // lưu lịch sử
+            currentUser.addTransaction(
+                    "Deposit: +" + amount + " VNĐ"
+            );
+
             updateBalance();
+            loadTransactions();
 
             depositField.clear();
 
@@ -213,8 +245,7 @@ public class AccountBalanceController implements UserDataReceiver {
             );
 
             System.out.println(
-                    "Deposited: "
-                            + amount
+                    "Deposited: " + amount
             );
 
         } catch (NumberFormatException e) {
@@ -226,8 +257,17 @@ public class AccountBalanceController implements UserDataReceiver {
             );
         }
     }
+
     @FXML
     private void handleWithdraw() {
+        if (currentUser == null) {
+            showAlert(
+                    Alert.AlertType.ERROR,
+                    "Error",
+                    "No user logged in."
+            );
+            return;
+        }
 
         String input =
                 withdrawField.getText().trim();
@@ -269,19 +309,27 @@ public class AccountBalanceController implements UserDataReceiver {
                 return;
             }
 
-            /*
-                TODO:
-                send withdraw request to server
-             */
-
             BigDecimal newBalance = currentUser.getBalance().subtract(amount);
 
 
-            currentUser.setBalance(
-                    newBalance
+            currentUser.setBalance(newBalance);
+
+            boolean saved =
+                    UserDAO.updateBalance(
+                            currentUser.getUser_id(),
+                            newBalance
+                    );
+
+            if(saved){
+                UserSession.setCurrentUser(currentUser);
+            }
+
+            currentUser.addTransaction(
+                    "Withdraw: -" + amount + " VNĐ"
             );
 
             updateBalance();
+            loadTransactions();
 
             withdrawField.clear();
 
@@ -312,6 +360,10 @@ public class AccountBalanceController implements UserDataReceiver {
             return;
         }
 
+        if (currentUser.getBalance() == null) {
+            currentUser.setBalance(BigDecimal.ZERO);
+        }
+
         NumberFormat format =
                 NumberFormat.getInstance(
                         Locale.of(
@@ -326,28 +378,112 @@ public class AccountBalanceController implements UserDataReceiver {
                 ) + " VNĐ"
         );
     }
+
+    private void loadTransactions() {
+
+        transactionContainer.getChildren().clear();
+
+        if (currentUser == null ||
+                currentUser.getTransactions() == null ||
+                currentUser.getTransactions().isEmpty()) {
+            return;
+        }
+
+        for (String tx : currentUser.getTransactions()) {
+
+            HBox card = new HBox(20);
+            card.setStyle("""
+            -fx-background-color: white;
+            -fx-background-radius: 12;
+            -fx-border-radius: 12;
+            -fx-border-color: #E2E8F0;
+            -fx-padding: 15;
+        """);
+
+            VBox left = new VBox(5);
+
+            Label title = new Label(
+                    tx.startsWith("Deposit")
+                            ? "Deposit Successfully"
+                            : "Withdraw Successfully"
+            );
+
+            title.setStyle("""
+            -fx-font-size: 16px;
+            -fx-font-weight: bold;
+            -fx-text-fill: #0F172A;
+        """);
+
+            Label time = new Label(
+                    java.time.LocalDateTime.now()
+                            .format(
+                                    java.time.format.DateTimeFormatter.ofPattern(
+                                            "dd/MM/yyyy - HH:mm"
+                                    )
+                            )
+            );
+
+            time.setStyle("""
+            -fx-text-fill: #64748B;
+            -fx-font-size: 13px;
+        """);
+
+            left.getChildren().addAll(title, time);
+
+            Region spacer = new Region();
+            HBox.setHgrow(
+                    spacer,
+                    Priority.ALWAYS
+            );
+
+            Label amount = getLabel(tx);
+
+            card.getChildren().addAll(
+                    left,
+                    spacer,
+                    amount
+            );
+
+            transactionContainer.getChildren().add(card);
+        }
+    }
+
+    private static Label getLabel(String tx) {
+        Label amount = new Label(
+                tx.replace("Deposit: ", "")
+                        .replace("Withdraw: ", "")
+        );
+
+        amount.setStyle(tx.startsWith("Deposit")
+                ? """
+            -fx-text-fill: #16A34A;
+            -fx-font-size: 18px;
+            -fx-font-weight: bold;
+        """
+                : """
+            -fx-text-fill: #EF4444;
+            -fx-font-size: 18px;
+            -fx-font-weight: bold;
+        """
+        );
+        return amount;
+    }
+
     @FXML
     private void handleLogout() {
 
-        Alert alert =
-                new Alert(
-                        Alert.AlertType.WARNING
-                );
-
-        alert.setTitle(
-                "Logout"
+        Alert alert = new Alert(
+                Alert.AlertType.CONFIRMATION
         );
 
+        alert.setTitle("Logout");
         alert.setHeaderText(null);
-
         alert.setContentText(
                 "Are you sure you want to logout?"
         );
 
         ButtonType logoutButton =
-                new ButtonType(
-                        "Logout"
-                );
+                new ButtonType("Logout");
 
         ButtonType cancelButton =
                 new ButtonType(
@@ -363,11 +499,17 @@ public class AccountBalanceController implements UserDataReceiver {
         Optional<ButtonType> result =
                 alert.showAndWait();
 
-        if (
-                result.isPresent()
-                        &&
-                        result.get() == logoutButton
-        ) {
+        if (result.isPresent()
+                && result.get() == logoutButton) {
+
+            ClientSocket socket =
+                    ClientSocket.getInstance();
+
+            if (socket != null) {
+                socket.logout();
+            }
+
+            UserSession.setCurrentUser(null);
 
             openPage(
                     "/fxml/login-view.fxml",
@@ -375,6 +517,7 @@ public class AccountBalanceController implements UserDataReceiver {
             );
         }
     }
+
     @FXML
     private void handleDeleteAccount() {
 
@@ -390,7 +533,7 @@ public class AccountBalanceController implements UserDataReceiver {
         alert.setHeaderText(null);
 
         alert.setContentText(
-                "Are you sure you want to delete your account? This action cannot be undone.3"
+                "Are you sure you want to delete your account? This action cannot be undone."
         );
 
         ButtonType deleteButton =
