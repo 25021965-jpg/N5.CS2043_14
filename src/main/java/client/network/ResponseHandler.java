@@ -39,7 +39,8 @@ public class ResponseHandler {
             switch (type) {
                 case LOGIN_SUCCESS:
                     User loginUser = parseUser(data);
-                    UserSession.setCurrentUser(loginUser);
+                    System.out.println("Parsed user = " + loginUser);
+                    System.out.println("Raw login data = " + data);                    UserSession.setCurrentUser(loginUser);
                     if (loginUser != null) {
                         NavigationUtils.showToast(mainStage, "Welcome back, " + loginUser.getFullname());
                         NavigationUtils.switchScene(mainStage, "/fxml/HomePage.fxml", "Auction Dashboard");
@@ -133,19 +134,34 @@ public class ResponseHandler {
         }
     }
 
-    // Các hàm parseUser và parseAuctionList giữ nguyên như bản trước của mày...
     private static User parseUser(String data) {
         try {
             String[] p = data.split("\\|", -1);
+
             User u = new User();
+
             u.setUser_id(p[0]);
             u.setFullname(p[1]);
             u.setUsername(p[2]);
             u.setEmail(p[3]);
-            u.setDob(p[4].isEmpty() ? null : p[4]);
-            if (p.length > 5) u.setRole(Role.valueOf(p[5]));
+            u.setDob(p[4]);
+
+            if (p.length > 5) {
+                u.setRole(Role.valueOf(p[5]));
+            }
+
+            if (p.length > 6 && !p[6].isEmpty()) {
+                u.setBalance(new BigDecimal(p[6]));
+            } else {
+                u.setBalance(BigDecimal.ZERO);
+            }
+
             return u;
-        } catch (Exception e) { return null; }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     private static List<Auction> parseAuctionList(String data) {

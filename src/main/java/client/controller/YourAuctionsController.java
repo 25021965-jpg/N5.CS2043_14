@@ -1,5 +1,6 @@
 package client.controller;
 
+import client.manager.UserSession;
 import client.network.ClientSocket;
 
 import javafx.event.Event;
@@ -300,11 +301,12 @@ public class YourAuctionsController implements UserDataReceiver{
          */
     }
 
+    @FXML
     private void handleLogout() {
 
         Alert alert =
                 new Alert(
-                        Alert.AlertType.WARNING
+                        Alert.AlertType.CONFIRMATION
                 );
 
         alert.setTitle(
@@ -314,7 +316,7 @@ public class YourAuctionsController implements UserDataReceiver{
         alert.setHeaderText(null);
 
         alert.setContentText(
-                "Are you sure you want to logout? You will need to login again."
+                "Are you sure you want to logout?"
         );
 
         ButtonType logoutButton =
@@ -336,15 +338,12 @@ public class YourAuctionsController implements UserDataReceiver{
         Optional<ButtonType> result =
                 alert.showAndWait();
 
-        if (
-                result.isPresent()
-                        &&
-                        result.get() == logoutButton
-        ) {
+        if (result.isPresent()
+                && result.get() == logoutButton) {
 
-            System.out.println(
-                    "Logout clicked"
-            );
+            client.logout();
+
+            UserSession.setCurrentUser(null);
 
             openPage(
                     "/fxml/login-view.fxml",
@@ -353,6 +352,7 @@ public class YourAuctionsController implements UserDataReceiver{
         }
     }
 
+    @FXML
     private void handleDeleteAccount() {
 
         Alert alert =

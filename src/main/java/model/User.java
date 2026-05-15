@@ -1,6 +1,8 @@
 package model;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 public class User {
     private String user_id;
@@ -11,6 +13,7 @@ public class User {
     private String dob;
     private BigDecimal balance;
     private boolean verified;
+    private List<String> transactions = new ArrayList<>();
 
     private Role role = Role.BIDDER; // Mặc định là người mua
 
@@ -54,4 +57,12 @@ public class User {
 
     public String getDob() { return dob; }
     public void setDob(String dob) { this.dob = dob; }
+
+    public List<String> getTransactions() {return transactions;}
+    public void setTransactions(List<String> transactions) {this.transactions = transactions;}
+    public void addTransaction(String transaction) {
+        transactions.add(transaction);
+    }
+
+
 }

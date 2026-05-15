@@ -17,6 +17,7 @@ import javafx.scene.control.*;
 import javafx.stage.Stage;
 
 import model.User;
+import server.dao.UserDAO;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -146,7 +147,13 @@ public class ProfileController implements UserDataReceiver {
                 )
         );
 
-        setUser(UserSession.getCurrentUser());
+        currentUser = UserSession.getCurrentUser();
+
+        if (currentUser != null) {
+            setUser(currentUser);
+        } else {
+            System.out.println("UserSession is NULL");
+        }
     }
 
     public void setClient(ClientSocket client) {
@@ -227,11 +234,7 @@ public class ProfileController implements UserDataReceiver {
     private void resetPassword() {
 
         if (currentUser == null) {
-
-            showError(
-                    "No user data!"
-            );
-
+            showError("No user data!");
             return;
         }
 
@@ -253,18 +256,15 @@ public class ProfileController implements UserDataReceiver {
                         verifyNewPasswordTextField
                 );
 
-        if (oldPass.isEmpty()) {
+        User dbUser =
+                UserDAO.findByUsernameOrEmail(
+                        currentUser.getUsername()
+                );
 
-            showError(
-                    "Enter old password!"
-            );
-
-            return;
-        }
-
-        if (!oldPass.equals(
-                currentUser.getPassword()
-        )) {
+        if (dbUser == null ||
+                !oldPass.equals(
+                        dbUser.getPassword()
+                )) {
 
             showError(
                     "Old password incorrect!"
@@ -273,44 +273,42 @@ public class ProfileController implements UserDataReceiver {
             return;
         }
 
-        if (newPass.isEmpty()) {
-
-            showError(
-                    "Enter new password!"
-            );
-
-            return;
-        }
-
         if (newPass.length() < 6) {
-
-            showError(
-                    "Password must be at least 6 characters!"
-            );
-
+            showError("Password must be at least 6 chars!");
             return;
         }
 
-        if (!newPass.equals(
-                verifyPass
-        )) {
-
-            showError(
-                    "Confirm password does not match!"
-            );
-
+        if (!newPass.equals(verifyPass)) {
+            showError("Confirm password mismatch!");
             return;
         }
 
-        currentUser.setPassword(
-                newPass
-        );
+        boolean updated =
+                UserDAO.updatePassword(
+                        currentUser.getUser_id(),
+                        newPass
+                );
 
-        showInfo(
-                "Password changed successfully!"
-        );
+        if (updated) {
 
-        clearPasswordFields();
+            currentUser.setPassword(newPass);
+
+            UserSession.setCurrentUser(
+                    currentUser
+            );
+
+            showInfo(
+                    "Password changed successfully!"
+            );
+
+            clearPasswordFields();
+
+        } else {
+
+            showError(
+                    "Update password failed!"
+            );
+        }
     }
 
     private String getPasswordValue(
@@ -334,27 +332,21 @@ public class ProfileController implements UserDataReceiver {
         verifyNewPasswordTextField.clear();
     }
 
+    @FXML
     private void handleLogout() {
 
-        Alert alert =
-                new Alert(
-                        Alert.AlertType.WARNING
-                );
-
-        alert.setTitle(
-                "Logout"
+        Alert alert = new Alert(
+                Alert.AlertType.CONFIRMATION
         );
 
+        alert.setTitle("Logout");
         alert.setHeaderText(null);
-
         alert.setContentText(
-                "Are you sure you want to logout? You will need to login again."
+                "Are you sure you want to logout?"
         );
 
         ButtonType logoutButton =
-                new ButtonType(
-                        "Logout"
-                );
+                new ButtonType("Logout");
 
         ButtonType cancelButton =
                 new ButtonType(
@@ -370,16 +362,18 @@ public class ProfileController implements UserDataReceiver {
         Optional<ButtonType> result =
                 alert.showAndWait();
 
-        if (
-                result.isPresent()
-                        &&
-                        result.get() == logoutButton
-        ) {
+        if (result.isPresent()
+                && result.get() == logoutButton) {
 
-            System.out.println(
-                    "Logout clicked"
-            );
-            UserSession.clear();
+            ClientSocket socket =
+                    ClientSocket.getInstance();
+
+            if (socket != null) {
+                socket.logout();
+            }
+
+            UserSession.setCurrentUser(null);
+
             openPage(
                     "/fxml/login-view.fxml",
                     "Login",
@@ -550,7 +544,10 @@ public class ProfileController implements UserDataReceiver {
         if (controller instanceof UserDataReceiver c) {
 
             c.setClient(client);
-            c.setUser(currentUser);
-        }
+            c.setUser(
+                    currentUser != null
+                            ? currentUser
+                            : UserSession.getCurrentUser()
+            );        }
     }
 }

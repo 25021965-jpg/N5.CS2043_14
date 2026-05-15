@@ -176,4 +176,49 @@ public class UserDAO {
         }
         return u;
     }
+
+    public static boolean updateBalance(String userId, BigDecimal balance) {
+        String sql = "UPDATE users SET balance = ? WHERE user_id = ?";
+
+        try (
+                Connection conn = DatabaseService.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
+            ps.setBigDecimal(1, balance);
+            ps.setString(2, userId);
+
+            return ps.executeUpdate() > 0;
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public static boolean updatePassword(
+            String userId,
+            String newPassword
+    ) {
+
+        String sql =
+                "UPDATE users SET password = ? WHERE user_id = ?";
+
+        try (
+                Connection conn =
+                        DatabaseService.getConnection();
+
+                PreparedStatement ps =
+                        conn.prepareStatement(sql)
+        ) {
+
+            ps.setString(1, newPassword);
+            ps.setString(2, userId);
+
+            return ps.executeUpdate() > 0;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }

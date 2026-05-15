@@ -1,5 +1,6 @@
 package client.controller;
 
+import client.manager.UserSession;
 import client.network.ClientSocket;
 
 import javafx.fxml.FXML;
@@ -244,27 +245,21 @@ public class AuctionHistoryController implements UserDataReceiver {
          */
     }
 
+    @FXML
     private void handleLogout() {
 
-        Alert alert =
-                new Alert(
-                        Alert.AlertType.WARNING
-                );
-
-        alert.setTitle(
-                "Logout"
+        Alert alert = new Alert(
+                Alert.AlertType.CONFIRMATION
         );
 
+        alert.setTitle("Logout");
         alert.setHeaderText(null);
-
         alert.setContentText(
-                "Are you sure you want to logout? You will need to login again."
+                "Are you sure you want to logout?"
         );
 
         ButtonType logoutButton =
-                new ButtonType(
-                        "Logout"
-                );
+                new ButtonType("Logout");
 
         ButtonType cancelButton =
                 new ButtonType(
@@ -280,15 +275,17 @@ public class AuctionHistoryController implements UserDataReceiver {
         Optional<ButtonType> result =
                 alert.showAndWait();
 
-        if (
-                result.isPresent()
-                        &&
-                        result.get() == logoutButton
-        ) {
+        if (result.isPresent()
+                && result.get() == logoutButton) {
 
-            System.out.println(
-                    "Logout clicked"
-            );
+            ClientSocket socket =
+                    ClientSocket.getInstance();
+
+            if (socket != null) {
+                socket.logout();
+            }
+
+            UserSession.setCurrentUser(null);
 
             openPage(
                     "/fxml/login-view.fxml",

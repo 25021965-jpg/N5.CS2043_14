@@ -138,4 +138,8 @@ public class ClientSocket {
         } catch (Exception e) {
             System.err.println("Error: " + e.getMessage());        }
     }
+
+    public void logout() {
+        send(Command.LOGOUT);
+    }
 }
