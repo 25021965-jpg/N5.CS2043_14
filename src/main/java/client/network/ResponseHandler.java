@@ -158,8 +158,17 @@ public class ResponseHandler {
                 a.setAuction_id(p[0]);
                 Item item = new Item();
                 item.setName(p[1]);
-                item.setCategory(Category.valueOf(p[7].toUpperCase()));
-                item.setDescription(p[8]);
+                try {
+                    item.setCategory(
+                            Category.valueOf(
+                                    p[7].trim()
+                                            .replace(" ", "_")
+                                            .toUpperCase()
+                            )
+                    );
+                } catch (Exception e) {
+                    item.setCategory(Category.OTHER);
+                }                item.setDescription(p[8]);
                 if (!p[4].equals("NO_IMAGE")) item.setImages(Collections.singletonList(p[4]));
                 a.setItem(item);
                 a.setCurrentPrice(new BigDecimal(p[2]));

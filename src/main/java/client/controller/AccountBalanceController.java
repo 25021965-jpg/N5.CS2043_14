@@ -390,7 +390,7 @@ public class AccountBalanceController implements UserDataReceiver {
         alert.setHeaderText(null);
 
         alert.setContentText(
-                "Are you sure you want to delete your account?"
+                "Are you sure you want to delete your account? This action cannot be undone.3"
         );
 
         ButtonType deleteButton =
