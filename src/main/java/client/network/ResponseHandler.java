@@ -103,13 +103,7 @@ public class ResponseHandler {
                 case JOIN_FAILED:
                     NavigationUtils.showError("Could not join: " + data);
                     break;
-                case FORGOT_SUCCESS:
-                    NavigationUtils.showInfo("Password reset successfully! Please log in.");
-                    NavigationUtils.switchScene(mainStage, "/fxml/login-view.fxml", "Login");
-                    break;
-                case FORGOT_FAILED:
-                    NavigationUtils.showError("Verification Failed: " + (data.isEmpty() ? "Information does not match." : data));
-                    break;
+
                 case ERROR:
                     NavigationUtils.showError("System Error: " + data);
                     break;
@@ -166,17 +160,8 @@ public class ResponseHandler {
                 a.setAuction_id(p[0]);
                 Item item = new Item();
                 item.setName(p[1]);
-                try {
-                    item.setCategory(
-                            Category.valueOf(
-                                    p[7].trim()
-                                            .replace(" ", "_")
-                                            .toUpperCase()
-                            )
-                    );
-                } catch (Exception e) {
-                    item.setCategory(Category.OTHER);
-                }                item.setDescription(p[8]);
+                item.setCategory(Category.valueOf(p[7].toUpperCase()));
+                item.setDescription(p[8]);
                 if (!p[4].equals("NO_IMAGE")) item.setImages(Collections.singletonList(p[4]));
                 a.setItem(item);
                 a.setCurrentPrice(new BigDecimal(p[2]));

@@ -1,9 +1,6 @@
 package server.dao;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 
 public class DatabaseService {
     // Đọc thông tin từ Environment Variables để bảo mật
@@ -118,6 +115,20 @@ public class DatabaseService {
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY(user_id) REFERENCES users(user_id) ON DELETE CASCADE
                 )""");
+
+            // 9. thêm tài khoản Admin
+            String checkAdmin = "SELECT COUNT(*) FROM users WHERE role = 'ADMIN'";
+            try (ResultSet rs = stmt.executeQuery(checkAdmin)) {
+                if (rs.next() && rs.getInt(1) == 0) {
+                    // Nếu chưa có admin nào thì tạo mặc định
+                    String insertAdmin = """
+                    INSERT INTO users (user_id, fullname, username, email, password, role, verified) 
+                    VALUES ('ADM-INIT-001', 'System Admin', 'admin', 'admin@auction.com', 'admin123', 'ADMIN', TRUE)
+                    """;
+                    stmt.executeUpdate(insertAdmin);
+                    System.out.println("✓ Created default admin account: admin/admin123");
+                }
+            }
 
             System.out.println("✓ TiDB Cloud: Database and tables initialized successfully");
         } catch (SQLException e) {

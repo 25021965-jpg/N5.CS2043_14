@@ -7,9 +7,11 @@ public enum Command {
     CREATE,
     JOIN,
     LIST,
+    LIST_USERS,
+    DELETE_USER,
+    FORGOT_PASSWORD,
     BID,
-    GET_PROFILE,
-    FORGOT_PASSWORD;
+    GET_PROFILE;
 
     // parse an toàn (tránh crash)
     public static Command from(String value) {
