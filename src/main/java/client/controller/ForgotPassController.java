@@ -1,6 +1,6 @@
 package client.controller;
 
-
+import client.network.ClientSocket;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -8,12 +8,9 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
-import server.dao.DatabaseService;
-
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.time.LocalDate;
+import common.Command;
+import common.CommandBuilder;
 
 public class ForgotPassController {
 
@@ -40,123 +37,34 @@ public class ForgotPassController {
      */
     @FXML
     private void handleResetPassword() {
-
-        String fullName = fullNameField.getText().trim();
-        LocalDate dob = dobField.getValue();
-        String username = usernameField.getText().trim();
-        String email = emailField.getText().trim();
-        String newPassword = newPasswordField.getText().trim();
+        String fullName       = fullNameField.getText().trim();
+        LocalDate dob         = dobField.getValue();
+        String username       = usernameField.getText().trim();
+        String email          = emailField.getText().trim();
+        String newPassword    = newPasswordField.getText().trim();
         String verifyPassword = verifyPasswordField.getText().trim();
 
-        // CHECK EMPTY
-        if (fullName.isEmpty()
-                || dob == null
-                || username.isEmpty()
-                || email.isEmpty()
-                || newPassword.isEmpty()
-                || verifyPassword.isEmpty()) {
-
-            showAlert(
-                    Alert.AlertType.WARNING,
-                    "Missing Information",
-                    "Please fill all fields."
-            );
-
+        if (fullName.isEmpty() || dob == null || username.isEmpty()
+                || email.isEmpty() || newPassword.isEmpty() || verifyPassword.isEmpty()) {
+            showAlert(Alert.AlertType.WARNING, "Missing Information", "Please fill all fields.");
             return;
         }
 
-        // CHECK PASSWORD MATCH
         if (!newPassword.equals(verifyPassword)) {
-
-            showAlert(
-                    Alert.AlertType.ERROR,
-                    "Password Error",
-                    "Passwords do not match."
-            );
-
+            showAlert(Alert.AlertType.ERROR, "Password Error", "Passwords do not match.");
             newPasswordField.clear();
             verifyPasswordField.clear();
-
             return;
         }
 
-        try {
-
-            Connection conn = DatabaseService.getConnection();
-
-            /*
-                CHECK USER INFO
-             */
-            String sql =
-                    "SELECT * FROM users " +
-                            "WHERE fullname = ? " +
-                            "AND dob = ? " +
-                            "AND username = ? " +
-                            "AND email = ?";
-
-            PreparedStatement pst = conn.prepareStatement(sql);
-
-            pst.setString(1, fullName);
-            pst.setDate(2, java.sql.Date.valueOf(dob));
-            pst.setString(3, username);
-            pst.setString(4, email);
-
-            ResultSet rs = pst.executeQuery();
-
-            /*
-                USER FOUND
-             */
-            if (rs.next()) {
-
-                String updateSql =
-                        "UPDATE users SET password = ? WHERE email = ?";
-
-                PreparedStatement updatePst =
-                        conn.prepareStatement(updateSql);
-
-                updatePst.setString(1, newPassword);
-                updatePst.setString(2, email);
-
-                updatePst.executeUpdate();
-
-                showAlert(
-                        Alert.AlertType.INFORMATION,
-                        "Success",
-                        "Password reset successfully!"
-                );
-
-                clearAllFields();
-
-            }
-
-            /*
-                USER NOT FOUND
-             */
-            else {
-
-                showAlert(
-                        Alert.AlertType.ERROR,
-                        "Verification Failed",
-                        "Information does not match our records.\nPlease re-enter all information."
-                );
-
-                clearAllFields();
-            }
-
-            conn.close();
-
-        } catch (Exception e) {
-
-            e.printStackTrace();
-
-            showAlert(
-                    Alert.AlertType.ERROR,
-                    "Database Error",
-                    "Something went wrong."
-            );
+        ClientSocket socket = ClientSocket.getInstance();
+        if (socket == null) {
+            showAlert(Alert.AlertType.ERROR, "Connection Error", "Could not connect to server.");
+            return;
         }
-    }
 
+        socket.sendForgotPassword(fullName, dob.toString(), username, email, newPassword);
+    }
     /*
         BACK TO LOGIN
      */

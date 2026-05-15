@@ -140,4 +140,32 @@ public class UserDAO {
             e.printStackTrace();
         }
     }
+
+    public static boolean resetPassword(String fullname, String dob, String username, String email, String newPassword) {
+        String checkSql = "SELECT 1 FROM users WHERE fullname = ? AND dob = ? AND username = ? AND email = ?";
+        String updateSql = "UPDATE users SET password = ? WHERE email = ?";
+
+        try (Connection conn = DatabaseService.getConnection();
+             PreparedStatement checkPs = conn.prepareStatement(checkSql)) {
+
+            checkPs.setString(1, fullname);
+            checkPs.setDate(2, Date.valueOf(dob));
+            checkPs.setString(3, username);
+            checkPs.setString(4, email);
+
+            try (ResultSet rs = checkPs.executeQuery()) {
+                if (!rs.next()) return false; // không tìm thấy user
+            }
+
+            try (PreparedStatement updatePs = conn.prepareStatement(updateSql)) {
+                updatePs.setString(1, newPassword);
+                updatePs.setString(2, email);
+                return updatePs.executeUpdate() > 0;
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }

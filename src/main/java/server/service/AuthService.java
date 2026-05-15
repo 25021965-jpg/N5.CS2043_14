@@ -53,4 +53,8 @@ public class AuthService {
     public static List<User> getAllUsersFromDB() {
         return UserDAO.findAll();
     }
+
+    public static boolean resetPassword(String fullname, String dob, String username, String email, String newPassword) {
+        return UserDAO.resetPassword(fullname, dob, username, email, newPassword);
+    }
 }

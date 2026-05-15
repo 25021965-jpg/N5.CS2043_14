@@ -14,7 +14,9 @@ public enum ResponseType {
     BID_SUCCESS,
     BID_FAILED,
     ERROR,
-    DISCONNECTED;
+    DISCONNECTED,
+    FORGOT_SUCCESS,
+    FORGOT_FAILED;
 
     public static ResponseType from(String msg) {
         try {

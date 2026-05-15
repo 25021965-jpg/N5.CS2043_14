@@ -8,7 +8,8 @@ public enum Command {
     JOIN,
     LIST,
     BID,
-    GET_PROFILE;
+    GET_PROFILE,
+    FORGOT_PASSWORD;
 
     // parse an toàn (tránh crash)
     public static Command from(String value) {
