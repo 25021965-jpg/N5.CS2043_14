@@ -64,6 +64,7 @@ public class DatabaseService {
                     image_id CHAR(36) PRIMARY KEY,
                     item_id CHAR(36) NOT NULL,
                     image_url TEXT NOT NULL,
+                    created_at TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP(6), 
                     FOREIGN KEY(item_id) REFERENCES items(item_id) ON DELETE CASCADE
                 )""");
 
@@ -116,7 +117,7 @@ public class DatabaseService {
                     FOREIGN KEY(user_id) REFERENCES users(user_id) ON DELETE CASCADE
                 )""");
 
-            // 9. thêm tài khoản Admin
+            // 9. Thêm tài khoản Admin
             String checkAdmin = "SELECT COUNT(*) FROM users WHERE role = 'ADMIN'";
             try (ResultSet rs = stmt.executeQuery(checkAdmin)) {
                 if (rs.next() && rs.getInt(1) == 0) {

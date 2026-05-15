@@ -21,7 +21,6 @@ public class AuctionService {
         // 1. Tự động nâng cấp quyền nếu là BIDDER
         if (seller.getRole() == Role.BIDDER) {
             seller.setRole(Role.SELLER);
-            // Dùng static nếu updateRole là static, hoặc giữ nguyên như mày nếu là instance method
             new UserDAO().updateRole(seller.getUser_id(), "SELLER");
             System.out.println("→ User " + seller.getUsername() + " upgraded to SELLER");
         }
@@ -37,7 +36,7 @@ public class AuctionService {
         auction.setStatus(AuctionStatus.ACTIVE);
         auction.setCancelled(false);
 
-        // 3. Parse thời gian (Nên để LocalDateTime ngay từ đầu nếu có thể)
+        // 3. Parse thời gian
         try {
             auction.setStartTime(LocalDateTime.parse(startTime));
             auction.setEndTime(LocalDateTime.parse(endTime));

@@ -63,8 +63,6 @@ public class ItemCardController {
             } catch (Exception e) {
                 System.err.println("Error: " + e.getMessage());            }
         } else {
-            // Nếu không có ảnh, có thể set một ảnh mặc định (placeholder)
-            // imgProduct.setImage(new Image("/images/no-image.png"));
         }
 
         if (auction.getEndTime() != null) {

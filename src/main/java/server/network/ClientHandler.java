@@ -222,7 +222,7 @@ public class ClientHandler implements Runnable {
                         .append(a.getEndTime()).append(";")
                         .append(item.getCategory().name()).append(";")
                         .append(item.getDescription().replace(";", ",")).append(";")
-                        .append(a.getStatus().name());
+                        .append(a.getStatus(a).name());
             }
             return sb.toString();
         } catch (Exception e) {

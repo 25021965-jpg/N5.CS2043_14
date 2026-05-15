@@ -35,43 +35,29 @@ public class AuctionDAO {
 
                 auction.setCancelled(rs.getBoolean("is_cancelled"));
 
-                String statusStr = rs.getString("status");
-                if (statusStr != null) {
-                    auction.setStatus(
-                            AuctionStatus.valueOf(
-                                    statusStr.toUpperCase()
-                            )
-                    );
-                } else {
-                    auction.setStatus(AuctionStatus.ACTIVE);
-                }
+                auction.setStatus(auction.getStatus(auction));
 
-                // --- MAP SELLER ---
+                // --- MAP SELLER & ITEM ---
                 User seller = new User();
                 seller.setUser_id(rs.getString("seller_id"));
                 seller.setUsername(rs.getString("seller_name"));
                 seller.setFullname(rs.getString("seller_fullname"));
                 auction.setSeller(seller);
 
-                // --- MAP ITEM ---
                 Item item = new Item();
                 item.setItem_id(rs.getString("item_id"));
                 item.setName(rs.getString("item_name"));
                 item.setDescription(rs.getString("item_desc"));
-
                 String catStr = rs.getString("category");
-                item.setCategory(
-                        catStr != null
-                                ? Category.valueOf(catStr.toUpperCase())
-                                : Category.OTHER
-                );
+                item.setCategory(catStr != null ? Category.valueOf(catStr.toUpperCase()) : Category.OTHER);
                 item.setImages(getItemImages(conn, item.getItem_id()));
 
                 auction.setItem(item);
                 auctions.add(auction);
             }
         } catch (SQLException e) {
-            System.err.println("Error: " + e.getMessage());        }
+            System.err.println("✕ Lỗi load danh sách: " + e.getMessage());
+        }
         return auctions;
     }
 
@@ -79,8 +65,8 @@ public class AuctionDAO {
         if (auction == null || auction.getItem() == null || auction.getSeller() == null) return;
 
         String sql = "INSERT INTO auctions " +
-                "(auction_id, item_id, seller_id, starting_price, current_price, min_increment, start_time, end_time, is_cancelled, status) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                "(auction_id, item_id, seller_id, starting_price, current_price, min_increment, start_time, end_time, is_cancelled) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = DatabaseService.getConnection()) {
             conn.setAutoCommit(false);
@@ -97,7 +83,6 @@ public class AuctionDAO {
                     pstmt.setTimestamp(7, Timestamp.valueOf(auction.getStartTime()));
                     pstmt.setTimestamp(8, Timestamp.valueOf(auction.getEndTime()));
                     pstmt.setBoolean(9, auction.isCancelled());
-                    pstmt.setString(10, auction.getStatus().name());
                     pstmt.executeUpdate();
                 }
                 conn.commit();
@@ -106,7 +91,9 @@ public class AuctionDAO {
                 throw e;
             }
         } catch (Exception e) {
-            System.err.println("Error: " + e.getMessage());        }
+            System.err.println("Error: " + e.getMessage());
+            throw new RuntimeException(e.getMessage());
+        }
     }
 
     private static void saveItem(Connection conn, Item item) {
@@ -139,13 +126,18 @@ public class AuctionDAO {
 
     private static List<String> getItemImages(Connection conn, String itemId) {
         List<String> images = new ArrayList<>();
-        String sql = "SELECT image_url FROM item_images WHERE item_id = ?";
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)){
+        String sql = "SELECT image_url FROM item_images WHERE item_id = ? ORDER BY created_at ASC";
+
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, itemId);
             try (ResultSet rs = pstmt.executeQuery()) {
-                while (rs.next()) { images.add(rs.getString("image_url")); }
+                while (rs.next()) {
+                    images.add(rs.getString("image_url"));
+                }
             }
-        } catch (SQLException e) { System.err.println("Error: " + e.getMessage()); }
+        } catch (SQLException e) {
+            System.err.println("Error fetching images: " + e.getMessage());
+        }
         return images;
     }
 

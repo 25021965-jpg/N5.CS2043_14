@@ -153,10 +153,7 @@ public class UserDAO {
         } catch (Exception e) { e.printStackTrace(); }
     }
 
-    // ==========================================
-    // 4. HÀM TRỢ GIÚP (HELPER METHODS)
-    // ==========================================
-
+    // Helper
     private static User map(ResultSet rs) throws SQLException {
         User u = new User();
         u.setUser_id(rs.getString("user_id"));
