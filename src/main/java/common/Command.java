@@ -8,16 +8,22 @@ public enum Command {
     JOIN,
     LIST,
     BID,
-    GET_PROFILE;
+    GET_PROFILE,
+    LIST_USERS,
+    DELETE_USER,
+    CANCEL_AUCTION;
 
     // parse an toàn (tránh crash)
     public static Command from(String value) {
-        if (value == null) {
+        if (value == null || value.isBlank()) {
             return null;
         }
         try {
-            return Command.valueOf(value.toUpperCase());
-        } catch (Exception e) {
+            // Loại bỏ khoảng trắng và viết hoa để khớp với Enum
+            return Command.valueOf(value.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            // Ghi log nhẹ ở đây để biết Client đang gửi bậy lệnh gì
+            System.err.println("Unknown command: " + value);
             return null;
         }
     }

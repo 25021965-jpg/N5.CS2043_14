@@ -49,7 +49,6 @@ public class ClientSocket {
             try {
                 String msg;
                 while (listening && (msg = in.readLine()) != null) {
-                    // Chuyển dữ liệu cho ResponseHandler xử lý giao diện
                     ResponseHandler.handle(msg);
                 }
             } catch (Exception e) {
@@ -66,18 +65,22 @@ public class ClientSocket {
         t.start();
     }
 
-    // --- GENERIC SEND ---
-    private void send(Command command, String... data) {
+    public void sendRequest(String rawMessage) {
         try {
-            connect(); // Đảm bảo duy trì socket
-
-            String msg = CommandBuilder.build(command, data);
-            out.println(msg);
-            out.flush();
-            System.out.println("→ SENT: " + msg);
+            connect(); // Đảm bảo socket còn
+            if (out != null) {
+                out.println(rawMessage);
+                out.flush();
+                System.out.println("→ REQUEST SENT: " + rawMessage);
+            }
         } catch (Exception e) {
             System.err.println("✕ Send error: " + e.getMessage());
         }
+    }
+
+    private void send(Command command, String... data) {
+        String msg = CommandBuilder.build(command, data);
+        sendRequest(msg);
     }
 
     public void sendLogin(String username, String password) {
@@ -102,28 +105,23 @@ public class ClientSocket {
 
     public void sendCreate(Auction auction) {
         Item item = auction.getItem();
+        String images = (item.getImages() != null && !item.getImages().isEmpty())
+                ? String.join(",", item.getImages()) : "NO_IMAGE";
 
-        // Xử lý danh sách ảnh thành chuỗi "url1,url2" hoặc "NO_IMAGE"
-        String images = "NO_IMAGE";
-        if (item.getImages() != null && !item.getImages().isEmpty()) {
-            images = String.join(",", item.getImages());
-        }
-
-        // Lọc sạch dữ liệu để tránh lỗi split "|" ở Server
         String cleanName = item.getName().replace("|", "-");
         String cleanDesc = item.getDescription().replace("|", "-").replace("\n", " ");
 
         send(Command.CREATE,
-                auction.getAuction_id(),           // data[1]
-                item.getItem_id(),                 // data[2]
-                cleanName,                         // data[3]
-                cleanDesc,                         // data[4]
-                item.getCategory().name(),         // data[5]
-                images,                            // data[6]
-                auction.getCurrentPrice().toString(), // data[7]
-                auction.getMinIncrement().toString(), // data[8]
-                auction.getStartTime().toString(), // data[9]
-                auction.getEndTime().toString()    // data[10]
+                auction.getAuction_id(),
+                item.getItem_id(),
+                cleanName,
+                cleanDesc,
+                item.getCategory().name(),
+                images,
+                auction.getCurrentPrice().toString(),
+                auction.getMinIncrement().toString(),
+                auction.getStartTime().toString(),
+                auction.getEndTime().toString()
         );
     }
 
