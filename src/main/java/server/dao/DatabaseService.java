@@ -122,7 +122,6 @@ public class DatabaseService {
             System.out.println("✓ TiDB Cloud: Database and tables initialized successfully");
         } catch (SQLException e) {
             System.err.println("✕ TiDB Initialization Error: " + e.getMessage());
-            e.printStackTrace();
-        }
+            System.err.println("Error: " + e.getMessage());        }
     }
 }

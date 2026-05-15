@@ -1,6 +1,7 @@
 package client.network;
 
 import client.controller.HomePageController;
+import client.manager.UserSession;
 import client.util.NavigationUtils;
 import common.ResponseType;
 import javafx.application.Platform;
@@ -38,6 +39,7 @@ public class ResponseHandler {
             switch (type) {
                 case LOGIN_SUCCESS:
                     User loginUser = parseUser(data);
+                    UserSession.setCurrentUser(loginUser);
                     if (loginUser != null) {
                         NavigationUtils.showToast(mainStage, "Welcome back, " + loginUser.getFullname());
                         NavigationUtils.switchScene(mainStage, "/fxml/HomePage.fxml", "Auction Dashboard");
@@ -195,8 +197,7 @@ public class ResponseHandler {
                 list.add(a);
             } catch (Exception e) {
                 System.err.println("Parse Error Token = " + token);
-                e.printStackTrace();
-            }
+                System.err.println("Error: " + e.getMessage());            }
         }
         return list;
     }

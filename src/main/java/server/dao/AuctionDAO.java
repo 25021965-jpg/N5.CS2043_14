@@ -71,8 +71,7 @@ public class AuctionDAO {
                 auctions.add(auction);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
-        }
+            System.err.println("Error: " + e.getMessage());        }
         return auctions;
     }
 
@@ -107,8 +106,7 @@ public class AuctionDAO {
                 throw e;
             }
         } catch (Exception e) {
-            e.printStackTrace();
-        }
+            System.err.println("Error: " + e.getMessage());        }
     }
 
     private static void saveItem(Connection conn, Item item) {
@@ -126,7 +124,7 @@ public class AuctionDAO {
                     if (url != null && !url.isBlank()) saveItemImage(conn, item.getItem_id(), url);
                 }
             }
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) { System.err.println("Error: " + e.getMessage()); }
     }
 
     private static void saveItemImage(Connection conn, String itemId, String url) {
@@ -136,7 +134,7 @@ public class AuctionDAO {
             pstmt.setString(2, itemId);
             pstmt.setString(3, url);
             pstmt.executeUpdate();
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) { System.err.println("Error: " + e.getMessage()); }
     }
 
     private static List<String> getItemImages(Connection conn, String itemId) {
@@ -147,7 +145,7 @@ public class AuctionDAO {
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) { images.add(rs.getString("image_url")); }
             }
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) { System.err.println("Error: " + e.getMessage()); }
         return images;
     }
 
@@ -157,7 +155,7 @@ public class AuctionDAO {
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, id);
             pstmt.executeUpdate();
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) { System.err.println("Error: " + e.getMessage()); }
     }
 
     public void updateStatus(String auctionId, AuctionStatus status) {
@@ -175,7 +173,7 @@ public class AuctionDAO {
             ps.executeUpdate();
 
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("Error: " + e.getMessage());
         }
     }
 }

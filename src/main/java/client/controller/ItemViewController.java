@@ -92,14 +92,17 @@ public class ItemViewController {
         showImage(currentImageIndex);
 
         // Ẩn nút join nếu là chủ auction
-        if (
-                currentUser != null &&
-                        auction.getSeller_Id().equals(
-                                currentUser.getUser_id()
-                        )        ) {
+        if (currentUser != null
+                && auction.getSeller_Id() != null
+                && auction.getSeller_Id().equals(currentUser.getUser_id())) {
 
             btnJoinAuction.setVisible(false);
             btnJoinAuction.setManaged(false);
+
+        } else {
+
+            btnJoinAuction.setVisible(true);
+            btnJoinAuction.setManaged(true);
         }
 
     }
@@ -218,8 +221,7 @@ public class ItemViewController {
             stage.show();
 
         } catch (IOException e) {
-            e.printStackTrace();
-        }
+            System.err.println("Error: " + e.getMessage());        }
     }
 
     @FXML
@@ -239,7 +241,6 @@ public class ItemViewController {
             stage.show();
 
         } catch (IOException e) {
-            e.printStackTrace();
-        }
+            System.err.println("Error: " + e.getMessage());        }
     }
 }

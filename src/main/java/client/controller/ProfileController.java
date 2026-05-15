@@ -1,5 +1,6 @@
 package client.controller;
 
+import client.manager.UserSession;
 import client.network.ClientSocket;
 
 import javafx.event.ActionEvent;
@@ -144,6 +145,8 @@ public class ProfileController implements UserDataReceiver {
                         null
                 )
         );
+
+        setUser(UserSession.getCurrentUser());
     }
 
     public void setClient(ClientSocket client) {
@@ -376,7 +379,7 @@ public class ProfileController implements UserDataReceiver {
             System.out.println(
                     "Logout clicked"
             );
-
+            UserSession.clear();
             openPage(
                     "/fxml/login-view.fxml",
                     "Login",
@@ -534,9 +537,7 @@ public class ProfileController implements UserDataReceiver {
             stage.show();
 
         } catch (IOException e) {
-
-            e.printStackTrace();
-
+            System.err.println("Error: " + e.getMessage());
             System.out.println(
                     "Cannot open: "
                             + fxmlPath

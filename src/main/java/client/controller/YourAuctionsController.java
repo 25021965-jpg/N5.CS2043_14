@@ -2,6 +2,7 @@ package client.controller;
 
 import client.network.ClientSocket;
 
+import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 
@@ -142,34 +143,28 @@ public class YourAuctionsController implements UserDataReceiver{
             );
         });
 
-        auctionCard.setOnMouseEntered(e -> {
+        auctionCard.setOnMouseEntered(e -> auctionCard.setStyle(
+                "-fx-background-color: #F8FAFC;" +
+                        "-fx-background-radius: 15;" +
+                        "-fx-border-radius: 15;" +
+                        "-fx-border-color: #D4AF37;" +
+                        "-fx-border-width: 2;" +
+                        "-fx-padding: 15;" +
+                        "-fx-cursor: hand;"
+        ));
 
-            auctionCard.setStyle(
-                    "-fx-background-color: #F8FAFC;" +
-                            "-fx-background-radius: 15;" +
-                            "-fx-border-radius: 15;" +
-                            "-fx-border-color: #D4AF37;" +
-                            "-fx-border-width: 2;" +
-                            "-fx-padding: 15;" +
-                            "-fx-cursor: hand;"
-            );
-        });
-
-        auctionCard.setOnMouseExited(e -> {
-
-            auctionCard.setStyle(
-                    "-fx-background-color: white;" +
-                            "-fx-background-radius: 15;" +
-                            "-fx-border-radius: 15;" +
-                            "-fx-border-color: #D4AF37;" +
-                            "-fx-border-width: 2;" +
-                            "-fx-padding: 15;" +
-                            "-fx-cursor: hand;"
-            );
-        });
+        auctionCard.setOnMouseExited(e -> auctionCard.setStyle(
+                "-fx-background-color: white;" +
+                        "-fx-background-radius: 15;" +
+                        "-fx-border-radius: 15;" +
+                        "-fx-border-color: #D4AF37;" +
+                        "-fx-border-width: 2;" +
+                        "-fx-padding: 15;" +
+                        "-fx-cursor: hand;"
+        ));
 
         cancelAuctionBtn.setOnMouseClicked(
-                e -> e.consume()
+                Event::consume
         );
     }
 
@@ -454,13 +449,8 @@ public class YourAuctionsController implements UserDataReceiver{
             stage.show();
 
         } catch (IOException e) {
-
-            e.printStackTrace();
-
-            System.out.println(
-                    "Cannot open: "
-                            + fxmlPath
-            );
+            System.err.println("Error: " + e.getMessage());
+            System.out.println("Cannot open: " + fxmlPath);
         }
     }
 

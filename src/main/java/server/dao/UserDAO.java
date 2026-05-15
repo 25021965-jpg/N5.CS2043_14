@@ -39,7 +39,7 @@ public class UserDAO {
 
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("Error: " + e.getMessage());
             return false;
         }
     }
@@ -72,7 +72,7 @@ public class UserDAO {
             pstmt.setString(15, user.getRole().name());
 
             pstmt.executeUpdate();
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) { System.err.println("Error: " + e.getMessage()); }
     }
 
     public static User findByUsernameOrEmail(String input) {
@@ -84,7 +84,7 @@ public class UserDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return map(rs);
             }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { System.err.println("Error: " + e.getMessage()); }
         return null;
     }
 
@@ -95,7 +95,7 @@ public class UserDAO {
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) { list.add(map(rs)); }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { System.err.println("Error: " + e.getMessage()); }
         return list;
     }
 
@@ -137,7 +137,7 @@ public class UserDAO {
             ps.executeUpdate();
 
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("Error: " + e.getMessage());
         }
     }
 
@@ -164,7 +164,7 @@ public class UserDAO {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("Error: " + e.getMessage());
             return false;
         }
     }

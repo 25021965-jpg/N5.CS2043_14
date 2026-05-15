@@ -258,9 +258,7 @@ public class ClientHandler implements Runnable {
                     if (a != null) {
                         System.err.println("Auction ID = " + a.getAuction_id());
                     }
-
-                    ex.printStackTrace();
-                }
+                    System.err.println("Error: " + ex.getMessage());                }
             }
 
             System.out.println(" [SUCCESS - " + auctions.size() + " items]");
@@ -271,8 +269,7 @@ public class ClientHandler implements Runnable {
         catch (Exception e) {
 
             System.err.println(" [FAILED]");
-            e.printStackTrace();
-
+            System.err.println("Error: " + e.getMessage());
             return "ERROR|Could not load auctions: " + e.getMessage();
         }
     }
@@ -298,7 +295,6 @@ public class ClientHandler implements Runnable {
             if (socket != null && !socket.isClosed()) socket.close();
             System.out.println("[CLOSED] Resources cleaned up for a client.");
         } catch (IOException e) {
-            e.printStackTrace();
-        }
+            System.err.println("Error: " + e.getMessage());        }
     }
 }

@@ -22,7 +22,7 @@ public class ServerApp {
             System.out.println("✓ Database initialization check completed.");
         } catch (Exception e) {
             System.err.println("CRITICAL ERROR: Could not initialize database!");
-            e.printStackTrace();
+            System.err.println("Error: " + e.getMessage());
             return; // Dừng server nếu không thể kết nối database
         }
 
@@ -41,7 +41,7 @@ public class ServerApp {
             }
         } catch (IOException e) {
             System.err.println("Server Error: " + e.getMessage());
-            e.printStackTrace();
+            System.err.println("Error: " + e.getMessage());
         } finally {
             threadPool.shutdown();
         }

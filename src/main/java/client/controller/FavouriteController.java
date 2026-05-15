@@ -458,13 +458,8 @@ public class FavouriteController implements UserDataReceiver {
             stage.show();
 
         } catch (IOException e) {
-
-            e.printStackTrace();
-
-            System.out.println(
-                    "Cannot open: "
-                            + fxmlPath
-            );
+            System.err.println("Error: " + e.getMessage());
+            System.out.println("Cannot open: " + fxmlPath);
         }
     }
 
