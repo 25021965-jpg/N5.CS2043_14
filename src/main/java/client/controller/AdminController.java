@@ -51,7 +51,7 @@ public class AdminController {
     @FXML
     public void handleManageProducts() {
         Stage stage = (Stage) userTable.getScene().getWindow();
-        NavigationUtils.switchScene(stage, "/fxml/manageProducts-view.fxml", "Manage Products");
+        NavigationUtils.switchScene(stage, "/fxml/manageProduct-view.fxml", "Manage Products");
     }
 
     @FXML
@@ -90,5 +90,36 @@ public class AdminController {
     private void filterUsers(String keyword) {
         if (keyword == null || keyword.isEmpty()) { userTable.setItems(userList); return; }
         userTable.setItems(userList.filtered(u -> u.getUsername().toLowerCase().contains(keyword.toLowerCase())));
+    }
+
+    @FXML
+    private void handleUpdateUser() {
+        User selected = userTable.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            NavigationUtils.showError("Chọn user cần cập nhật!");
+            return;
+        }
+
+        Dialog<String> dialog = new Dialog<>();
+        dialog.setTitle("Update User Role");
+        dialog.setHeaderText("User: " + selected.getUsername());
+
+        ChoiceBox<String> roleChoice = new ChoiceBox<>();
+        roleChoice.getItems().addAll("BIDDER", "SELLER", "ADMIN");
+        roleChoice.setValue(selected.getRole().name());
+
+        javafx.scene.layout.VBox box = new javafx.scene.layout.VBox(10,
+                new Label("Chọn role mới:"), roleChoice
+        );
+        dialog.getDialogPane().setContent(box);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        dialog.setResultConverter(bt -> bt == ButtonType.OK ? roleChoice.getValue() : null);
+
+        dialog.showAndWait().ifPresent(newRole -> {
+            ClientSocket.getInstance().sendRequest(
+                    "UPDATE_USER_ROLE|" + selected.getUser_id() + "|" + newRole
+            );
+        });
     }
 }

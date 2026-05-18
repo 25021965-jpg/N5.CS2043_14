@@ -168,4 +168,100 @@ public class AuctionDAO {
             System.err.println("Error: " + e.getMessage());
         }
     }
+    public static List<String[]> findAuctionHistory() {
+        List<String[]> result = new ArrayList<>();
+        String sql = """
+        SELECT 
+            a.auction_id,
+            i.name AS item_name,
+            u_winner.username AS winner,
+            a.current_price AS final_bid,
+            a.end_time,
+            CASE WHEN a.is_cancelled = TRUE THEN 'CANCELLED'
+                 WHEN NOW() > a.end_time THEN 'ENDED'
+                 ELSE 'ACTIVE' END AS status
+        FROM auctions a
+        LEFT JOIN items i ON a.item_id = i.item_id
+        LEFT JOIN bids b ON a.auction_id = b.auction_id 
+            AND b.bid_amount = a.current_price
+        LEFT JOIN users u_winner ON b.bidder_id = u_winner.user_id
+        WHERE a.is_cancelled = TRUE OR NOW() > a.end_time
+        ORDER BY a.end_time DESC
+        """;
+        try (Connection conn = DatabaseService.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                result.add(new String[]{
+                        rs.getString("auction_id"),
+                        rs.getString("item_name"),
+                        rs.getString("winner") != null ? rs.getString("winner") : "No winner",
+                        rs.getBigDecimal("final_bid").toPlainString(),
+                        rs.getTimestamp("end_time").toLocalDateTime().toString(),
+                        rs.getString("status")
+                });
+            }
+        } catch (SQLException e) {
+            System.err.println("AuctionDAO.findAuctionHistory error: " + e.getMessage());
+        }
+        return result;
+    }
+    // Lấy tất cả auctions dạng String[] để gửi qua socket
+    public static List<String[]> findAllAsStrings() {
+        List<String[]> result = new ArrayList<>();
+        String sql = """
+        SELECT a.auction_id, i.name AS item_name, u.username AS seller,
+               a.current_price,
+               CASE WHEN a.is_cancelled = TRUE THEN 'CANCELLED'
+                    WHEN NOW() < a.start_time THEN 'UPCOMING'
+                    WHEN NOW() > a.end_time THEN 'ENDED'
+                    ELSE 'ACTIVE' END AS status
+        FROM auctions a
+        LEFT JOIN items i ON a.item_id = i.item_id
+        LEFT JOIN users u ON a.seller_id = u.user_id
+        ORDER BY a.start_time DESC
+        """;
+        try (Connection conn = DatabaseService.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                result.add(new String[]{
+                        rs.getString("auction_id"),
+                        rs.getString("item_name"),
+                        rs.getString("seller"),
+                        rs.getBigDecimal("current_price").toPlainString(),
+                        rs.getString("status")
+                });
+            }
+        } catch (SQLException e) {
+            System.err.println("AuctionDAO.findAllAsStrings error: " + e.getMessage());
+        }
+        return result;
+    }
+
+    // Resume auction (bỏ cancel)
+    public static boolean resumeAuction(String id) {
+        String sql = "UPDATE auctions SET is_cancelled = false WHERE auction_id = ?";
+        try (Connection conn = DatabaseService.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, id);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("AuctionDAO.resumeAuction error: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // Stop auction (set end_time = NOW())
+    public static boolean stopAuction(String id) {
+        String sql = "UPDATE auctions SET end_time = NOW() WHERE auction_id = ?";
+        try (Connection conn = DatabaseService.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, id);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("AuctionDAO.stopAuction error: " + e.getMessage());
+            return false;
+        }
+    }
 }

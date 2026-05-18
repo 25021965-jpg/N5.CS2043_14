@@ -11,7 +11,17 @@ public enum Command {
     DELETE_USER,
     FORGOT_PASSWORD,
     BID,
-    GET_PROFILE;
+    GET_PROFILE,
+    LIST_ITEMS,
+    DELETE_ITEM,
+    UPDATE_ITEM,
+    LIST_AUCTION_HISTORY,
+    LIST_ALL_AUCTIONS,
+    STOP_AUCTION,
+    RESUME_AUCTION,
+    CANCEL_AUCTION;
+
+
 
     // parse an toàn (tránh crash)
     public static Command from(String value) {

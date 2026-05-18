@@ -2,6 +2,8 @@ package server.network;
 
 import common.Command;
 import model.*;
+import server.dao.AuctionDAO;
+import server.dao.ItemDAO;
 import server.service.*;
 import server.dao.UserDAO;
 
@@ -77,12 +79,24 @@ public class ClientHandler implements Runnable {
                 // --- XỬ LÝ ADMIN ---
                 case LIST_USERS: return handleListUsers();
                 case DELETE_USER: return handleDeleteUser(data);
+                //-- XU LI ITEM ---
+                case LIST_ITEMS:  return handleListItems();
+                case DELETE_ITEM: return handleDeleteItem(data);
+                case UPDATE_ITEM: return handleUpdateItem(data);
+
+
+                case LIST_AUCTION_HISTORY: return handleListAuctionHistory();
 
                 case LOGOUT:
                     System.out.println("  → User " + (currentUser != null ? currentUser.getUsername() : "Unknown") + " logged out.");
                     this.currentUser = null;
                     return "LOGOUT_SUCCESS";
                 case FORGOT_PASSWORD: return handleForgotPassword(data);
+                //manage auctions
+                case LIST_ALL_AUCTIONS: return handleListAllAuctions();
+                case STOP_AUCTION:      return handleStopAuction(data);
+                case RESUME_AUCTION:    return handleResumeAuction(data);
+                case CANCEL_AUCTION:    return handleCancelAuction(data);
                 default: return "ERROR|Command not supported";
             }
         } catch (IllegalArgumentException e) {
@@ -135,6 +149,42 @@ public class ClientHandler implements Runnable {
 
         boolean success = UserDAO.deleteUser(targetId);
         return success ? "DELETE_USER_SUCCESS" : "DELETE_USER_FAILED";
+    }
+
+    //ITEM
+
+    private String handleListItems() {
+        if (currentUser == null || currentUser.getRole() != Role.ADMIN)
+            return "ERROR|Permission denied";
+
+        List<String[]> items = ItemDAO.findAllWithSeller();
+        if (items.isEmpty()) return "ITEM_LIST_EMPTY";
+
+        StringBuilder sb = new StringBuilder("ITEM_LIST_SUCCESS");
+        for (String[] row : items) {
+            // format: item_id;name;category;seller;status
+            sb.append("|").append(String.join(";", row));
+        }
+        return sb.toString();
+    }
+
+    private String handleDeleteItem(String[] data) {
+        if (currentUser == null || currentUser.getRole() != Role.ADMIN)
+            return "ERROR|Permission denied";
+        if (data.length < 2) return "DELETE_ITEM_FAILED|Missing ID";
+
+        boolean ok = ItemDAO.deleteItem(data[1]);
+        return ok ? "DELETE_ITEM_SUCCESS" : "DELETE_ITEM_FAILED";
+    }
+
+    private String handleUpdateItem(String[] data) {
+        if (currentUser == null || currentUser.getRole() != Role.ADMIN)
+            return "ERROR|Permission denied";
+        // data: UPDATE_ITEM|item_id|newName|newDescription|newCategory
+        if (data.length < 5) return "UPDATE_ITEM_FAILED|Missing data";
+
+        boolean ok = ItemDAO.updateItem(data[1], data[2], data[3], data[4]);
+        return ok ? "UPDATE_ITEM_SUCCESS" : "UPDATE_ITEM_FAILED";
     }
 
     // --- AUTH & AUCTION LOGIC ---
@@ -250,5 +300,55 @@ public class ClientHandler implements Runnable {
             if (writer != null) writer.close();
             if (socket != null && !socket.isClosed()) socket.close();
         } catch (IOException e) { e.printStackTrace(); }
+    }
+    private String handleListAuctionHistory() {
+        if (currentUser == null || currentUser.getRole() != Role.ADMIN)
+            return "ERROR|Permission denied";
+
+        List<String[]> history = AuctionDAO.findAuctionHistory();
+        if (history.isEmpty()) return "AUCTION_HISTORY_EMPTY";
+
+        StringBuilder sb = new StringBuilder("AUCTION_HISTORY_SUCCESS");
+        for (String[] row : history) {
+            // auction_id;item_name;winner;final_bid;end_time;status
+            sb.append("|").append(String.join(";", row));
+        }
+        return sb.toString();
+    }
+    private String handleListAllAuctions() {
+        if (currentUser == null || currentUser.getRole() != Role.ADMIN)
+            return "ERROR|Permission denied";
+
+        List<String[]> auctions = AuctionDAO.findAllAsStrings();
+        if (auctions.isEmpty()) return "ALL_AUCTIONS_EMPTY";
+
+        StringBuilder sb = new StringBuilder("ALL_AUCTIONS_SUCCESS");
+        for (String[] row : auctions)
+            sb.append("|").append(String.join(";", row));
+        return sb.toString();
+    }
+
+    private String handleStopAuction(String[] data) {
+        if (currentUser == null || currentUser.getRole() != Role.ADMIN)
+            return "ERROR|Permission denied";
+        if (data.length < 2) return "STOP_AUCTION_FAILED|Missing ID";
+        boolean ok = AuctionDAO.stopAuction(data[1]);
+        return ok ? "STOP_AUCTION_SUCCESS" : "STOP_AUCTION_FAILED";
+    }
+
+    private String handleResumeAuction(String[] data) {
+        if (currentUser == null || currentUser.getRole() != Role.ADMIN)
+            return "ERROR|Permission denied";
+        if (data.length < 2) return "RESUME_AUCTION_FAILED|Missing ID";
+        boolean ok = AuctionDAO.resumeAuction(data[1]);
+        return ok ? "RESUME_AUCTION_SUCCESS" : "RESUME_AUCTION_FAILED";
+    }
+
+    private String handleCancelAuction(String[] data) {
+        if (currentUser == null || currentUser.getRole() != Role.ADMIN)
+            return "ERROR|Permission denied";
+        if (data.length < 2) return "CANCEL_AUCTION_FAILED|Missing ID";
+        AuctionDAO.cancelAuction(data[1]);
+        return "CANCEL_AUCTION_SUCCESS";
     }
 }
