@@ -96,7 +96,7 @@ public class AdminController {
     private void handleUpdateUser() {
         User selected = userTable.getSelectionModel().getSelectedItem();
         if (selected == null) {
-            NavigationUtils.showError("Chọn user cần cập nhật!");
+            NavigationUtils.showError("Select user to update!");
             return;
         }
 
@@ -109,7 +109,7 @@ public class AdminController {
         roleChoice.setValue(selected.getRole().name());
 
         javafx.scene.layout.VBox box = new javafx.scene.layout.VBox(10,
-                new Label("Chọn role mới:"), roleChoice
+                new Label("Select new role:"), roleChoice
         );
         dialog.getDialogPane().setContent(box);
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);

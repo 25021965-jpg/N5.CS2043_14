@@ -71,7 +71,7 @@ public class AuctionHistoryAdminController {
         // Auction History chỉ xem — không nên xóa thật
         // Nếu muốn xóa thì thêm lệnh DELETE_AUCTION sau
         Alert alert = new Alert(Alert.AlertType.WARNING,
-                "Chức năng này sẽ xóa vĩnh viễn lịch sử. Bạn chắc chắn?",
+                "This action will permanently delete the history and cannot be undone. Are you sure you want to continue?",
                 ButtonType.YES, ButtonType.NO);
         alert.showAndWait().ifPresent(res -> {
             if (res == ButtonType.YES) {

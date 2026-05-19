@@ -47,8 +47,7 @@ public class LoginController {
             LOGGER.info("ClientSocket created");
 
             // ========== QUAN TRỌNG: ĐĂNG KÝ LISTENER ==========
-            client.setMessageListener(this::handleServerMessage);
-
+            client.setMessageListener(ResponseHandler::handle);
             client.listen();
 
             Platform.runLater(() -> {
@@ -67,46 +66,6 @@ public class LoginController {
         LOGGER.info("LoginController initialize() END");
     }
 
-
-    private void handleServerMessage(String msg) {
-        Platform.runLater(() -> {
-            System.out.println("[LoginController] Received: " + msg);
-
-            if (msg.startsWith("LOGIN_SUCCESS")) {
-                String[] parts = msg.split("\\|");
-                if (parts.length >= 5) {
-                    loggedInUser = new User();
-                    loggedInUser.setUser_id(parts[1]);
-                    loggedInUser.setFullname(parts[2]);
-                    loggedInUser.setUsername(parts[3]);
-                    loggedInUser.setEmail(parts[4]);
-                    if (parts.length >= 6) {
-                        loggedInUser.setDob(parts[5]);
-                    }
-                    if (parts.length >= 7) {
-                        loggedInUser.setRole(Role.valueOf(parts[6]));
-                    }
-                    if (parts.length >= 8) {
-                        try {
-                            loggedInUser.setBalance(new BigDecimal(parts[7]));
-                        } catch (Exception e) {
-                            loggedInUser.setBalance(BigDecimal.ZERO);
-                        }
-                    }
-                    loggedInUser.setPassword(passField.getText());
-                }
-
-                showInfo("Login successful!");
-                goToHomePage();
-            } else if (msg.startsWith("LOGIN_FAILED")) {
-                showError("Wrong username or password!");
-                passField.clear();
-                passField.requestFocus();
-            } else if (msg.equals("DISCONNECTED")) {
-                showError("Connection lost! Please check server status.");
-            }
-        });
-    }
     @FXML
     private void handleLogin() {
         if (client == null) {
@@ -132,14 +91,6 @@ public class LoginController {
         client.sendLogin(username, password);
     }
 
-    private void showInfo(String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Success");
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
-    }
-
     private void showError(String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Error");
@@ -147,14 +98,7 @@ public class LoginController {
         alert.setContentText(message);
         alert.showAndWait();
     }
-
-    private void showAlert(String title, String content) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(content);
-        alert.showAndWait();
-    }
+    
 
     @FXML
     private void goToRegister(ActionEvent event) {
