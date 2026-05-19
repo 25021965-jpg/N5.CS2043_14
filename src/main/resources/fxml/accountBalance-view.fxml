@@ -78,7 +78,7 @@
 
         <Label style="                    -fx-text-fill: #64748B;                    -fx-font-size: 18px;                " text="Current Balance" />
 
-        <Label fx:id="balanceLabel" style="                    -fx-text-fill: #16A34A;                    -fx-font-size: 42px;                    -fx-font-weight: bold;                " text="0 VNĐ" />
+        <Label fx:id="balanceLabel" style="                    -fx-text-fill: #16A34A;                    -fx-font-size: 42px;                    -fx-font-weight: bold;                " text="0 USD" />
 
     </VBox>
 
@@ -123,15 +123,9 @@
 
     <Label layoutX="290.0" layoutY="500.0" style="                 -fx-font-size: 26px;                 -fx-font-family: 'Berlin Sans FB Demi Bold';                 -fx-font-weight: bold;                 -fx-text-fill: #0F172A;             " text="Transaction History" />
 
-    <ScrollPane fitToWidth="true"
-                layoutX="290.0"
-                layoutY="545.0"
-                prefHeight="145.0"
-                prefWidth="760.0">
+    <ScrollPane fitToWidth="true" layoutX="290.0" layoutY="545.0" prefHeight="145.0" prefWidth="760.0">
 
-        <VBox fx:id="transactionContainer"
-              spacing="15"
-              style="-fx-padding: 5;">
+        <VBox fx:id="transactionContainer" spacing="15" style="-fx-padding: 5;">
 
         </VBox>
 

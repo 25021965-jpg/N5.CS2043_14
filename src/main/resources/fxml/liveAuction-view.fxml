@@ -11,13 +11,12 @@
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
-<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<AnchorPane prefHeight="750.0" prefWidth="1300.0" style="-fx-background-color: #121212;" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controller.LiveAuctionController">
+<AnchorPane prefHeight="750.0" prefWidth="1300.0" style="-fx-background-color: #121212;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controller.LiveAuctionController">
 
     <VBox spacing="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
 
@@ -54,18 +53,18 @@
                     <Separator style="-fx-background-color: #333333;" />
 
                     <!-- Price Grid -->
-                    <HBox spacing="15.0" alignment="CENTER_LEFT">
+                    <HBox alignment="CENTER_LEFT" spacing="15.0">
                         <VBox spacing="5.0" HBox.hgrow="ALWAYS">
                             <Label style="-fx-text-fill: #B0B0B0; -fx-font-size: 11;" text="💰 CURRENT PRICE" />
-                            <Label fx:id="currentPriceLabel" style="-fx-text-fill: #D4AF37; -fx-font-size: 22; -fx-font-weight: bold;" text="0 ₫" />
+                            <Label fx:id="currentPriceLabel" style="-fx-text-fill: #D4AF37; -fx-font-size: 22; -fx-font-weight: bold;" text="0 USD" />
                         </VBox>
                         <VBox spacing="5.0" HBox.hgrow="ALWAYS">
                             <Label style="-fx-text-fill: #B0B0B0; -fx-font-size: 11;" text="📈 STEP PRICE" />
-                            <Label fx:id="stepPriceLabel" style="-fx-text-fill: #FFFFFF; -fx-font-size: 16; -fx-font-weight: bold;" text="0 ₫" />
+                            <Label fx:id="stepPriceLabel" style="-fx-text-fill: #FFFFFF; -fx-font-size: 16; -fx-font-weight: bold;" text="0 USD" />
                         </VBox>
                         <VBox spacing="5.0" HBox.hgrow="ALWAYS">
                             <Label style="-fx-text-fill: #B0B0B0; -fx-font-size: 11;" text="🎯 FLOOR PRICE" />
-                            <Label fx:id="floorPriceLabel" style="-fx-text-fill: #FFFFFF; -fx-font-size: 14;" text="0 ₫" />
+                            <Label fx:id="floorPriceLabel" style="-fx-text-fill: #FFFFFF; -fx-font-size: 14;" text="0 USD" />
                         </VBox>
                     </HBox>
 
@@ -90,9 +89,9 @@
                 <!-- Balance Card -->
                 <VBox spacing="10.0" style="-fx-background-color: #1E1E1E; -fx-background-radius: 16; -fx-padding: 16;">
                     <Label style="-fx-text-fill: #D4AF37; -fx-font-size: 14; -fx-font-weight: bold;" text="💰 YOUR BALANCE" />
-                    <Label fx:id="estimatedBalanceLabel" style="-fx-text-fill: #FFFFFF; -fx-font-size: 32; -fx-font-weight: bold;" text="0 ₫" />
+                    <Label fx:id="estimatedBalanceLabel" style="-fx-text-fill: #FFFFFF; -fx-font-size: 32; -fx-font-weight: bold;" text="0 USD" />
                     <ProgressBar fx:id="balanceProgressBar" prefHeight="8.0" progress="0.0" style="-fx-accent: #D4AF37; -fx-background-radius: 4;" />
-                    <Label fx:id="maxBidLabel" style="-fx-text-fill: #D4AF37; -fx-font-size: 12;" text="💰 Max possible bid: 0 ₫" />
+                    <Label fx:id="maxBidLabel" style="-fx-text-fill: #D4AF37; -fx-font-size: 12;" text="💰 Max possible bid: 0 USD" />
                 </VBox>
 
                 <!-- Place Bid Card -->
@@ -100,7 +99,7 @@
                     <Label style="-fx-text-fill: #D4AF37; -fx-font-size: 14; -fx-font-weight: bold;" text="📝 PLACE NEW BID" />
 
                     <HBox alignment="CENTER_LEFT" spacing="10.0">
-                        <Label style="-fx-text-fill: #D4AF37; -fx-font-size: 20; -fx-font-weight: bold;" text="₫" />
+                        <Label style="-fx-text-fill: #D4AF37; -fx-font-size: 20; -fx-font-weight: bold;" text="USD" />
                         <TextField fx:id="bidAmountField" promptText="Enter bid amount..." style="-fx-background-color: #2A2A2A; -fx-text-fill: #FFFFFF; -fx-font-size: 15; -fx-border-color: #D4AF37; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 12;" HBox.hgrow="ALWAYS" />
                     </HBox>
 
@@ -115,7 +114,7 @@
                 </VBox>
 
                 <!-- Action Buttons -->
-                <HBox spacing="15.0" alignment="CENTER">
+                <HBox alignment="CENTER" spacing="15.0">
                     <Button fx:id="backHomeBtn" style="-fx-background-color: transparent; -fx-text-fill: #D4AF37; -fx-font-size: 14; -fx-border-color: #D4AF37; -fx-border-radius: 8; -fx-padding: 10 20; -fx-cursor: hand;" text="← BACK TO HOME" HBox.hgrow="ALWAYS" />
                     <Button fx:id="leaveBtn" style="-fx-background-color: #EF4444; -fx-text-fill: white; -fx-font-size: 14; -fx-font-weight: bold; -fx-border-radius: 8; -fx-padding: 10 20; -fx-cursor: hand;" text="🚪 LEAVE AUCTION" HBox.hgrow="ALWAYS" />
                 </HBox>

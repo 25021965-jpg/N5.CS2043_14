@@ -230,7 +230,7 @@ public class AccountBalanceController implements UserDataReceiver {
 
             // lưu lịch sử
             currentUser.addTransaction(
-                    "Deposit: +" + amount + " VNĐ"
+                    "Deposit: +" + amount + " USD"
             );
 
             updateBalance();
@@ -325,7 +325,7 @@ public class AccountBalanceController implements UserDataReceiver {
             }
 
             currentUser.addTransaction(
-                    "Withdraw: -" + amount + " VNĐ"
+                    "Withdraw: -" + amount + " USD"
             );
 
             updateBalance();
@@ -365,17 +365,14 @@ public class AccountBalanceController implements UserDataReceiver {
         }
 
         NumberFormat format =
-                NumberFormat.getInstance(
-                        Locale.of(
-                                "vi",
-                                "VN"
-                        )
+                NumberFormat.getCurrencyInstance(
+                        Locale.US
                 );
 
         balanceLabel.setText(
                 format.format(
                         currentUser.getBalance()
-                ) + " VNĐ"
+                ) + " USD"
         );
     }
 

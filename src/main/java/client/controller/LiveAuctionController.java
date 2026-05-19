@@ -274,7 +274,7 @@ public class LiveAuctionController implements UserDataReceiver {
         }
 
         String amountText = bidAmountField.getText().trim()
-                .replace("₫", "")
+                .replace("USD", "")
                 .replace(".", "")
                 .replace(",", "")
                 .trim();
@@ -504,8 +504,8 @@ public class LiveAuctionController implements UserDataReceiver {
     // ==================== UTILITIES ====================
 
     private String formatPrice(BigDecimal price) {
-        if (price == null) return "0 ₫";
-        return String.format("%,.0f ₫", price);
+        if (price == null) return "0 USD";
+        return String.format("%,.0f USD", price);
     }
 
     private void showInfo(String message) {
