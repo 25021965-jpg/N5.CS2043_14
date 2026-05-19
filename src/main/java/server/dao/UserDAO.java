@@ -26,6 +26,22 @@ public class UserDAO {
         }
     }
 
+    // ==================== UPDATE BALANCE ====================
+    public static boolean updateBalance(String userId, BigDecimal newBalance) {
+        String sql = "UPDATE users SET balance = ? WHERE user_id = ?";
+        try (Connection conn = DatabaseService.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setBigDecimal(1, newBalance);
+            ps.setString(2, userId);
+            int rows = ps.executeUpdate();
+            System.out.println("[UserDAO] updateBalance rows: " + rows);
+            return rows > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     public static boolean register(String fullname, String username, String email, String password, String dob) {
         String sql = "INSERT INTO users(user_id, fullname, username, email, password, dob, balance, verified, role) " +
                 "VALUES (?, ?, ?, ?, ?, ?, 0, true, 'BIDDER')";
@@ -168,30 +184,15 @@ public class UserDAO {
 
         String roleStr = rs.getString("role");
         if (roleStr != null) {
-            try { u.setRole(Role.valueOf(roleStr.toUpperCase())); }
-            catch (Exception e) { u.setRole(Role.BIDDER); }
+            try {
+                u.setRole(Role.valueOf(roleStr.toUpperCase()));
+            } catch (Exception e) {
+                u.setRole(Role.BIDDER);
+            }
         } else {
             u.setRole(Role.BIDDER);
         }
         return u;
-    }
-
-    public static boolean updateBalance(String userId, BigDecimal balance) {
-        String sql = "UPDATE users SET balance = ? WHERE user_id = ?";
-
-        try (
-                Connection conn = DatabaseService.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sql)
-        ) {
-            ps.setBigDecimal(1, balance);
-            ps.setString(2, userId);
-
-            return ps.executeUpdate() > 0;
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
     }
 
     public static boolean updatePassword(

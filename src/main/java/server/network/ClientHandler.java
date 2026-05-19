@@ -8,6 +8,9 @@ import server.service.*;
 import server.dao.UserDAO;
 
 import java.io.BufferedReader;
+import client.manager.RoomManager;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -22,6 +25,7 @@ public class ClientHandler implements Runnable {
     private BufferedReader reader;
     private PrintWriter writer;
     private User currentUser;
+    private String currentAuctionId = null;
 
     public ClientHandler(Socket socket) {
         this.socket = socket;
@@ -75,6 +79,12 @@ public class ClientHandler implements Runnable {
                 case CREATE: return handleCreate(data);
                 case LIST: return handleList();
                 case BID: return handleBid(data);
+                case JOIN:
+                    return handleJoin(data);
+                case LEAVE:
+                    return handleLeave();
+                case GET_BID_HISTORY:
+                    return handleGetBidHistory(data);
 
                 // --- XỬ LÝ ADMIN ---
                 case LIST_USERS: return handleListUsers();
@@ -134,6 +144,58 @@ public class ClientHandler implements Runnable {
         } catch (Exception e) {
             return "ERROR|DB Error: " + e.getMessage();
         }
+    }
+
+    // ==================== JOIN AUCTION ====================
+    private String handleJoin(String[] data) {
+        if (data.length < 2) return "JOIN_FAILED|Invalid auction ID";
+        String auctionId = data[1];
+
+        Auction auction = AuctionService.getAuctionById(auctionId);
+        if (auction == null) {
+            return "JOIN_FAILED|Auction not found";
+        }
+
+        this.currentAuctionId = auctionId;
+        RoomManager.addClient(auctionId, writer);
+
+        System.out.println("  → User " + (currentUser != null ? currentUser.getUsername() : "Guest")
+                + " joined auction: " + auctionId);
+
+        return "JOIN_SUCCESS|" + auctionId + "|"
+                + auction.getCurrentPrice() + "|"
+                + auction.getMinIncrement() + "|"
+                + auction.getEndTime();
+    }
+
+    // ==================== LEAVE AUCTION ====================
+    private String handleLeave() {
+        if (currentAuctionId != null) {
+            RoomManager.removeClient(currentAuctionId, writer);
+            System.out.println("  → User " + (currentUser != null ? currentUser.getUsername() : "Guest")
+                    + " left auction: " + currentAuctionId);
+            currentAuctionId = null;
+        }
+        return "LEAVE_SUCCESS";
+    }
+
+    // ==================== GET BID HISTORY ====================
+    private String handleGetBidHistory(String[] data) {
+        if (data.length < 2) return "BID_HISTORY_FAILED|Invalid auction ID";
+        String auctionId = data[1];
+
+        List<Bid> history = AuctionDAO.getBidHistory(auctionId);
+        if (history.isEmpty()) {
+            return "BID_HISTORY_EMPTY";
+        }
+
+        StringBuilder sb = new StringBuilder("BID_HISTORY_SUCCESS");
+        for (Bid bid : history) {
+            sb.append("|").append(bid.getUsername())
+                    .append(";").append(bid.getAmount())
+                    .append(";").append(bid.getTime().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
+        }
+        return sb.toString();
     }
 
     private String handleDeleteUser(String[] data) {
@@ -243,42 +305,108 @@ public class ClientHandler implements Runnable {
 
     private String handleBid(String[] data) {
         if (this.currentUser == null) return "ERROR|Unauthorized";
+        if (this.currentAuctionId == null) return "ERROR|You haven't joined any auction";
+
         try {
-            Auction auction = AuctionService.getAuctionById(data[1]);
-            if (auction == null) return "ERROR|Not found";
-            return BidService.placeBid(this.currentUser, auction, new BigDecimal(data[2]));
+            String auctionId = data[1];
+            BigDecimal amount = new BigDecimal(data[2]);
+
+            if (!auctionId.equals(this.currentAuctionId)) {
+                return "ERROR|You are not in this auction room";
+            }
+
+            Auction auction = AuctionService.getAuctionById(auctionId);
+            if (auction == null) return "ERROR|Auction not found";
+
+            String result = BidService.placeBid(this.currentUser, auction, amount);
+
+            if (result.startsWith("BID_SUCCESS")) {
+                String newPrice = result.split("\\|")[1];
+                String broadcastMsg = "UPDATE_PRICE|" + auctionId + "|" + newPrice + "|" + currentUser.getUsername() + "|" +
+                        LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+                RoomManager.broadcastToRoomAll(auctionId, broadcastMsg);
+            }
+
+            return result;
         } catch (Exception e) {
             return "BID_FAILED|" + e.getMessage();
         }
     }
 
     private String handleList() {
+        System.out.print("  → Fetching auction list...");
         try {
             List<Auction> auctions = AuctionService.getAllAuctions();
-            if (auctions == null || auctions.isEmpty()) return "LIST_EMPTY";
+
+            if (auctions == null || auctions.isEmpty()) {
+                System.out.println(" [EMPTY]");
+                return "LIST_EMPTY";
+            }
 
             StringBuilder sb = new StringBuilder("LIST_SUCCESS");
-            for (Auction a : auctions) {
-                Item item = a.getItem();
-                if (item == null) continue;
-                String firstImg = (item.getImages() != null && !item.getImages().isEmpty()) ? item.getImages().get(0) : "NO_IMAGE";
 
-                sb.append("|").append(a.getAuction_id()).append(";")
-                        .append(item.getName()).append(";")
-                        .append(a.getCurrentPrice()).append(";")
-                        .append(a.getMinIncrement()).append(";")
-                        .append(firstImg).append(";")
-                        .append(a.getStartTime()).append(";")
-                        .append(a.getEndTime()).append(";")
-                        .append(item.getCategory().name()).append(";")
-                        .append(item.getDescription().replace(";", ",")).append(";")
-                        .append(a.getStatus(a).name());
+            for (Auction a : auctions) {
+                try {
+                    if (a == null) continue;
+                    Item item = a.getItem();
+                    if (item == null) continue;
+
+                    // Xử lý ảnh - chỉ lấy URL đầu tiên, loại bỏ base64 dài
+                    String firstImg = "NO_IMAGE";
+                    if (item.getImages() != null && !item.getImages().isEmpty()) {
+                        String img = item.getImages().get(0);
+                        // Nếu ảnh quá dài (> 200 ký tự) hoặc chứa base64 thì bỏ qua
+                        if (img != null && img.length() < 200 && !img.contains("base64")) {
+                            firstImg = img.replace(";", ",").replace("|", "-");
+                        }
+                    }
+
+                    // Làm sạch dữ liệu: thay thế các ký tự đặc biệt
+                    String itemName = (item.getName() != null)
+                            ? item.getName().replace(";", ",").replace("|", "-") : "Unnamed";
+
+                    String cleanDesc = (item.getDescription() != null)
+                            ? item.getDescription().replace(";", ",").replace("|", "-").replace("\n", " ") : "";
+
+                    String category = (item.getCategory() != null)
+                            ? item.getCategory().name() : "UNKNOWN";
+
+                    String status = (a.getStatus() != null)
+                            ? a.getStatus().name() : "UNKNOWN";
+
+                    String auctionId = (a.getAuction_id() != null) ? a.getAuction_id() : "NULL";
+                    String currentPrice = (a.getCurrentPrice() != null) ? a.getCurrentPrice().toString() : "0";
+                    String minIncrement = (a.getMinIncrement() != null) ? a.getMinIncrement().toString() : "0";
+                    String startTime = (a.getStartTime() != null) ? a.getStartTime().toString() : "";
+                    String endTime = (a.getEndTime() != null) ? a.getEndTime().toString() : "";
+
+                    sb.append("|").append(auctionId).append(";")
+                            .append(itemName).append(";")
+                            .append(currentPrice).append(";")
+                            .append(minIncrement).append(";")
+                            .append(firstImg).append(";")
+                            .append(startTime).append(";")
+                            .append(endTime).append(";")
+                            .append(category).append(";")
+                            .append(cleanDesc).append(";")
+                            .append(status);
+
+                } catch (Exception ex) {
+                    System.err.println("Auction Parse Error for ID: " + (a != null ? a.getAuction_id() : "null"));
+                    ex.printStackTrace();
+                }
             }
+
+            System.out.println(" [SUCCESS - " + auctions.size() + " items]");
             return sb.toString();
+
         } catch (Exception e) {
-            return "ERROR|" + e.getMessage();
+            System.err.println(" [FAILED]");
+            e.printStackTrace();
+            return "ERROR|Could not load auctions: " + e.getMessage();
         }
     }
+
     private String handleForgotPassword(String[] data) {
         // data[0] = FORGOT_PASSWORD, [1]=fullname, [2]=dob, [3]=username, [4]=email, [5]=newPassword
         if (data.length < 6) return "FORGOT_FAILED|Missing information";
@@ -295,6 +423,9 @@ public class ClientHandler implements Runnable {
     }
 
     private void closeConnection() {
+        if (currentAuctionId != null) {
+            RoomManager.removeClient(currentAuctionId, writer);
+        }
         try {
             if (reader != null) reader.close();
             if (writer != null) writer.close();

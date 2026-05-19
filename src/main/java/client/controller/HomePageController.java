@@ -9,9 +9,12 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import model.Auction;
 import model.Category;
 import model.User;
@@ -34,6 +37,8 @@ public class HomePageController {
     // Filter states
     private Category selectedCategory = null;
     private String selectedStatus = null;
+    private ClientSocket client;
+    private User currentUser;
 
     @FXML private GridPane itemGrid;
     @FXML private TextField txtSearch;
@@ -71,6 +76,9 @@ public class HomePageController {
         }
 
         Platform.runLater(() -> highlight(btnAll));
+    }
+    public void setClient(ClientSocket client) {
+        this.client = client;
     }
 
     public void setUser(User user) {
@@ -197,10 +205,78 @@ public class HomePageController {
                 ItemCardController controller = loader.getController();
                 controller.setData(auction);
 
+                // ========== THÊM 2 DÒNG NÀY ==========
+                controller.setClient(client);
+                controller.setUser(currentUser);
+                // ====================================
+
+                // Xử lý click vào card để mở chi tiết (nếu có)
+                card.setOnMouseClicked(event -> {
+                    if (event.getClickCount() == 1) {
+                        openItemDetail(auction);
+                    }
+                });
+
                 if (col == MAX_COLUMNS) { col = 0; row++; }
                 itemGrid.add(card, col++, row);
             } catch (IOException e) {
-                System.err.println("Error: " + e.getMessage());            }
+                System.err.println("Error: " + e.getMessage());
+            }
+        }
+    }
+
+    // ========== THÊM PHƯƠNG THỨC MỞ CHI TIẾT ==========
+    private void openItemDetail(Auction auction) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/items-view.fxml"));
+            Parent root = loader.load();
+
+            ItemViewController controller = loader.getController();
+            controller.setClient(client);
+            controller.setCurrentUser(currentUser);
+            controller.setAuctionData(auction);
+
+            Stage stage = (Stage) itemGrid.getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.setTitle("Auction Details - " + auction.getItem().getName());
+            stage.show();
+        } catch (Exception e) {
+            e.printStackTrace();
+            NavigationUtils.showError("Cannot open auction details!");
+        }
+    }
+
+    // ==================== MỞ LIVE AUCTION ====================
+    private void openLiveAuction(Auction auction) {
+        log("Opening live auction for: " + auction.getItem().getName());
+
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/liveAuction.fxml"));
+            Parent root = loader.load();
+
+            LiveAuctionController controller = loader.getController();
+            controller.setClient(client);
+            controller.setUser(currentUser);
+            controller.setAuctionData(
+                    auction.getAuction_id(),
+                    auction.getItem().getName(),
+                    auction.getItem().getDescription(),
+                    auction.getCurrentPrice().toString(),
+                    auction.getMinIncrement().toString(),
+                    auction.getFloorPrice() != null ? auction.getFloorPrice().toString() : "0",
+                    auction.getEndTime().toString(),
+                    auction.getItem().getImages() != null && !auction.getItem().getImages().isEmpty()
+                            ? auction.getItem().getImages().get(0) : null
+            );
+
+            Stage stage = (Stage) itemGrid.getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.setTitle("Live Auction - " + auction.getItem().getName());
+            stage.show();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            NavigationUtils.showError("Cannot open live auction: " + e.getMessage());
         }
     }
 

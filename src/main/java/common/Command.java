@@ -6,6 +6,7 @@ public enum Command {
     LOGOUT,
     CREATE,
     JOIN,
+    LEAVE,
     LIST,
     LIST_USERS,
     DELETE_USER,
@@ -15,15 +16,13 @@ public enum Command {
     LIST_ITEMS,
     DELETE_ITEM,
     UPDATE_ITEM,
+    GET_BID_HISTORY,
     LIST_AUCTION_HISTORY,
     LIST_ALL_AUCTIONS,
     STOP_AUCTION,
     RESUME_AUCTION,
     CANCEL_AUCTION;
 
-
-
-    // parse an toàn (tránh crash)
     public static Command from(String value) {
         if (value == null) {
             return null;

@@ -150,6 +150,69 @@ public class AuctionDAO {
         } catch (SQLException e) { System.err.println("Error: " + e.getMessage()); }
     }
 
+    // ==================== LẤY AUCTION THEO ID ====================
+    public static Auction getAuctionById(String auctionId) {
+        String sql = "SELECT a.*, i.name AS item_name, i.description AS item_desc, i.category, " +
+                "u.username AS seller_name, u.fullname AS seller_fullname " +
+                "FROM auctions a " +
+                "LEFT JOIN items i ON a.item_id = i.item_id " +
+                "LEFT JOIN users u ON a.seller_id = u.user_id " +
+                "WHERE a.auction_id = ?";
+
+        try (Connection conn = DatabaseService.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, auctionId);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                Auction auction = new Auction();
+                auction.setAuction_id(rs.getString("auction_id"));
+                auction.setCurrentPrice(rs.getBigDecimal("current_price"));
+                auction.setMinIncrement(rs.getBigDecimal("min_increment"));
+                auction.setEndTime(rs.getTimestamp("end_time").toLocalDateTime());
+                auction.setStatus(AuctionStatus.ACTIVE);
+
+                Item item = new Item();
+                item.setItem_id(rs.getString("item_id"));
+                item.setName(rs.getString("item_name"));
+                item.setDescription(rs.getString("item_desc"));
+                auction.setItem(item);
+
+                return auction;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    // ==================== LẤY LỊCH SỬ ĐẤU GIÁ ====================
+    public static List<Bid> getBidHistory(String auctionId) {
+        List<Bid> history = new ArrayList<>();
+        String sql = "SELECT b.bid_amount, b.bid_time, u.username " +
+                "FROM bids b " +
+                "JOIN users u ON b.bidder_id = u.user_id " +
+                "WHERE b.auction_id = ? " +
+                "ORDER BY b.bid_time ASC";
+
+        try (Connection conn = DatabaseService.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, auctionId);
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                Bid bid = new Bid();
+                bid.setAmount(rs.getBigDecimal("bid_amount"));
+                bid.setTime(rs.getTimestamp("bid_time").toLocalDateTime());
+                bid.setUsername(rs.getString("username"));
+                history.add(bid);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return history;
+    }
+
     public void updateStatus(String auctionId, AuctionStatus status) {
 
         String sql = "UPDATE auctions SET status = ? WHERE auction_id = ?";

@@ -1,20 +1,27 @@
 package client.controller;
 
 import client.network.ClientSocket;
-import client.network.ResponseHandler; // Mới
+import client.network.ResponseHandler;
 import client.util.NavigationUtils;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
+import model.Role;
+import model.User;
+
+import java.math.BigDecimal;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static client.util.NavigationUtils.*;
+import static client.util.NavigationUtils.switchScene;
 
 public class LoginController {
 
@@ -22,6 +29,7 @@ public class LoginController {
     @FXML private PasswordField passField;
 
     private ClientSocket client;
+    private User loggedInUser;
     private static final Logger LOGGER = Logger.getLogger(LoginController.class.getName());
 
     public void setClient(ClientSocket client) {
@@ -32,16 +40,17 @@ public class LoginController {
     public void initialize() {
         LOGGER.info("LoginController initialize() START");
         try {
-            // Nếu chưa có client thì mới tạo mới
             if (client == null) {
                 client = ClientSocket.getInstance();
             }
 
             LOGGER.info("ClientSocket created");
 
+            // ========== QUAN TRỌNG: ĐĂNG KÝ LISTENER ==========
+            client.setMessageListener(this::handleServerMessage);
+
             client.listen();
 
-            // Cần gán Stage cho ResponseHandler ngay khi giao diện sẵn sàng
             Platform.runLater(() -> {
                 if (userField.getScene() != null) {
                     Stage stage = (Stage) userField.getScene().getWindow();
@@ -58,6 +67,46 @@ public class LoginController {
         LOGGER.info("LoginController initialize() END");
     }
 
+
+    private void handleServerMessage(String msg) {
+        Platform.runLater(() -> {
+            System.out.println("[LoginController] Received: " + msg);
+
+            if (msg.startsWith("LOGIN_SUCCESS")) {
+                String[] parts = msg.split("\\|");
+                if (parts.length >= 5) {
+                    loggedInUser = new User();
+                    loggedInUser.setUser_id(parts[1]);
+                    loggedInUser.setFullname(parts[2]);
+                    loggedInUser.setUsername(parts[3]);
+                    loggedInUser.setEmail(parts[4]);
+                    if (parts.length >= 6) {
+                        loggedInUser.setDob(parts[5]);
+                    }
+                    if (parts.length >= 7) {
+                        loggedInUser.setRole(Role.valueOf(parts[6]));
+                    }
+                    if (parts.length >= 8) {
+                        try {
+                            loggedInUser.setBalance(new BigDecimal(parts[7]));
+                        } catch (Exception e) {
+                            loggedInUser.setBalance(BigDecimal.ZERO);
+                        }
+                    }
+                    loggedInUser.setPassword(passField.getText());
+                }
+
+                showInfo("Login successful!");
+                goToHomePage();
+            } else if (msg.startsWith("LOGIN_FAILED")) {
+                showError("Wrong username or password!");
+                passField.clear();
+                passField.requestFocus();
+            } else if (msg.equals("DISCONNECTED")) {
+                showError("Connection lost! Please check server status.");
+            }
+        });
+    }
     @FXML
     private void handleLogin() {
         if (client == null) {
@@ -83,14 +132,24 @@ public class LoginController {
         client.sendLogin(username, password);
     }
 
-    private void showAlert(
-            String title,
-            String content
-    ) {
+    private void showInfo(String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Success");
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
 
-        Alert alert =
-                new Alert(Alert.AlertType.INFORMATION);
+    private void showError(String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Error");
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
 
+    private void showAlert(String title, String content) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(content);
@@ -106,9 +165,9 @@ public class LoginController {
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Cannot open register screen", e);
             showError("Cannot open register screen!");
-
         }
     }
+
     @FXML
     private void goforgotPass(ActionEvent event) {
         try {
@@ -118,8 +177,32 @@ public class LoginController {
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Cannot open forgot pass screen", e);
             showError("Cannot open forgot password screen!");
-
         }
     }
 
+    private void goToHomePage() {
+        try {
+            // Lấy stage từ userField
+            Stage stage = (Stage) userField.getScene().getWindow();
+            if (stage == null) {
+                System.err.println("Stage is null, cannot navigate to HomePage");
+                return;
+            }
+
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/HomePage.fxml"));
+            Parent root = loader.load();
+
+            HomePageController controller = loader.getController();
+            controller.setClient(client);
+            controller.setUser(loggedInUser);
+
+            stage.setScene(new Scene(root));
+            stage.setTitle("Auction System");
+            stage.show();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            showError("Cannot open homepage!");
+        }
+    }
 }

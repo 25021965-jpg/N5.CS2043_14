@@ -23,6 +23,11 @@ public class Auction implements Serializable {
 
     private BigDecimal minIncrement;
 
+    private BigDecimal floorPrice;
+
+    public BigDecimal getFloorPrice() { return floorPrice; }
+    public void setFloorPrice(BigDecimal floorPrice) { this.floorPrice = floorPrice; }
+
     private AuctionStatus status;
 
     private LocalDateTime startTime;

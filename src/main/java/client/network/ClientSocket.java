@@ -6,6 +6,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.function.Consumer;
 
 public class ClientSocket {
 
@@ -14,6 +15,7 @@ public class ClientSocket {
     private BufferedReader in;
     private PrintWriter out;
     private boolean listening = false;
+    private Consumer<String> messageListener = null;
 
     private ClientSocket() throws Exception {
         connect();
@@ -49,11 +51,21 @@ public class ClientSocket {
             try {
                 String msg;
                 while (listening && (msg = in.readLine()) != null) {
+                    System.out.println("FROM SERVER: " + msg);
+
+                    // Gửi đến listener nếu có
+                    if (messageListener != null) {
+                        messageListener.accept(msg);
+                    }
+
                     ResponseHandler.handle(msg);
                 }
             } catch (Exception e) {
                 if (listening) {
                     System.err.println("✕ Connection lost: " + e.getMessage());
+                    if (messageListener != null) {
+                        messageListener.accept("DISCONNECTED");
+                    }
                     ResponseHandler.handle("DISCONNECTED");
                 }
             } finally {
@@ -96,6 +108,17 @@ public class ClientSocket {
     }
     public void sendForgotPassword(String fullName, String dob, String username, String email, String newPassword) {
         send(Command.FORGOT_PASSWORD, fullName, dob, username, email, newPassword);
+    }
+    public void sendJoin(String auctionId) {
+        send(Command.JOIN, auctionId);
+    }
+
+    public void sendLeave() {
+        send(Command.LEAVE);
+    }
+
+    public void sendGetBidHistory(String auctionId) {
+        send(Command.GET_BID_HISTORY, auctionId);
     }
 
     public void sendList() {
@@ -141,5 +164,10 @@ public class ClientSocket {
 
     public void logout() {
         send(Command.LOGOUT);
+    }
+
+    // Thêm phương thức này
+    public void setMessageListener(Consumer<String> listener) {
+        this.messageListener = listener;
     }
 }
