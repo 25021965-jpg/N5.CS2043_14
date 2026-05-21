@@ -1,7 +1,7 @@
 package client.controller;
 
 import client.manager.UserSession;
-import client.network.ClientSocket;  // ← THÊM IMPORT
+import client.network.ClientSocket;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -26,10 +26,10 @@ public class ItemCardController {
     @FXML private Label lblEndTime;
 
     private Auction auction;
-    private ClientSocket client;   // ← THÊM
-    private User currentUser;      // ← THÊM
+    private ClientSocket client;
+    private User currentUser;
 
-    // ==================== SETTERS (ĐỂ TRÁNH LỖI) ====================
+    // ==================== SETTERS ====================
     public void setClient(ClientSocket client) {
         this.client = client;
     }
@@ -84,30 +84,25 @@ public class ItemCardController {
     @FXML
     private void handleCardClick(MouseEvent event) {
         try {
-            String fxmlPath = "/fxml/items-view.fxml";
-
-            java.net.URL fxmlLocation = getClass().getResource(fxmlPath);
-            if (fxmlLocation == null) {
-                System.err.println("Cannot find FXML file at: " + fxmlPath);
-                return;
-            }
-
-            FXMLLoader loader = new FXMLLoader(fxmlLocation);
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/items-view.fxml"));
             Parent root = loader.load();
 
             ItemViewController controller = loader.getController();
-            controller.setCurrentUser(UserSession.getCurrentUser());
-            controller.setClient(client);        // ← THÊM DÒNG NÀY
-            controller.setAuctionData(this.auction);
 
+            // 🔥 QUAN TRỌNG: In ra để kiểm tra
+            System.out.println("🔥 ItemCardController: currentUser = " + (this.currentUser != null ? this.currentUser.getUsername() : "null"));
+            System.out.println("🔥 ItemCardController: client = " + (this.client != null ? "not null" : "null"));
+
+            controller.setCurrentUser(this.currentUser);  // Dùng this.currentUser
+            controller.setClient(this.client);
+            controller.setAuctionData(this.auction);
 
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.setScene(new Scene(root));
-            stage.setTitle("Product's Information: " + auction.getItem().getName());
             stage.show();
 
         } catch (IOException e) {
-            System.err.println("Page loading error: " + e.getMessage());
+            System.err.println("Error: " + e.getMessage());
         }
     }
 }

@@ -4,6 +4,7 @@ import common.Command;
 import model.*;
 import server.dao.AuctionDAO;
 import server.dao.ItemDAO;
+import server.dao.TransactionDAO;
 import server.service.*;
 import server.dao.UserDAO;
 
@@ -79,34 +80,40 @@ public class ClientHandler implements Runnable {
                 case CREATE: return handleCreate(data);
                 case LIST: return handleList();
                 case BID: return handleBid(data);
-                case JOIN:
-                    return handleJoin(data);
-                case LEAVE:
-                    return handleLeave();
-                case GET_BID_HISTORY:
-                    return handleGetBidHistory(data);
+                case JOIN: return handleJoin(data);
+                case LEAVE: return handleLeave();
+                case GET_BID_HISTORY: return handleGetBidHistory(data);
 
                 // --- XỬ LÝ ADMIN ---
                 case LIST_USERS: return handleListUsers();
                 case DELETE_USER: return handleDeleteUser(data);
+
                 //-- XU LI ITEM ---
-                case LIST_ITEMS:  return handleListItems();
+                case LIST_ITEMS: return handleListItems();
                 case DELETE_ITEM: return handleDeleteItem(data);
                 case UPDATE_ITEM: return handleUpdateItem(data);
 
-
                 case LIST_AUCTION_HISTORY: return handleListAuctionHistory();
+
+                // --- BALANCE & TRANSACTIONS ---
+                case DEPOSIT: return handleDeposit(data);
+                case WITHDRAW: return handleWithdraw(data);
+                case GET_TRANSACTIONS: return handleGetTransactions(data);
+                case GET_BALANCE: return handleGetBalance(data);  // 🔥 ĐÚNG VỊ TRÍ
 
                 case LOGOUT:
                     System.out.println("  → User " + (currentUser != null ? currentUser.getUsername() : "Unknown") + " logged out.");
                     this.currentUser = null;
                     return "LOGOUT_SUCCESS";
+
                 case FORGOT_PASSWORD: return handleForgotPassword(data);
+
                 //manage auctions
                 case LIST_ALL_AUCTIONS: return handleListAllAuctions();
-                case STOP_AUCTION:      return handleStopAuction(data);
-                case RESUME_AUCTION:    return handleResumeAuction(data);
-                case CANCEL_AUCTION:    return handleCancelAuction(data);
+                case STOP_AUCTION: return handleStopAuction(data);
+                case RESUME_AUCTION: return handleResumeAuction(data);
+                case CANCEL_AUCTION: return handleCancelAuction(data);
+
                 default: return "ERROR|Command not supported";
             }
         } catch (IllegalArgumentException e) {
@@ -118,10 +125,20 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    // --- ADMIN LOGIC ---
+    // ==================== GET BALANCE ====================
+    private String handleGetBalance(String[] data) {
+        if (currentUser == null) return "ERROR|Not logged in";
+        String userId = data.length >= 2 ? data[1] : currentUser.getUser_id();
 
+        User user = UserDAO.getUserById(userId);
+        if (user != null) {
+            return "BALANCE_UPDATE_SUCCESS|" + user.getBalance();
+        }
+        return "BALANCE_UPDATE_FAILED|User not found";
+    }
+
+    // --- ADMIN LOGIC ---
     private String handleListUsers() {
-        // Chỉ cho phép ADMIN xem danh sách
         if (this.currentUser == null || this.currentUser.getRole() != Role.ADMIN) {
             return "ERROR|Permission denied";
         }
@@ -214,7 +231,6 @@ public class ClientHandler implements Runnable {
     }
 
     //ITEM
-
     private String handleListItems() {
         if (currentUser == null || currentUser.getRole() != Role.ADMIN)
             return "ERROR|Permission denied";
@@ -224,7 +240,6 @@ public class ClientHandler implements Runnable {
 
         StringBuilder sb = new StringBuilder("ITEM_LIST_SUCCESS");
         for (String[] row : items) {
-            // format: item_id;name;category;seller;status
             sb.append("|").append(String.join(";", row));
         }
         return sb.toString();
@@ -242,7 +257,6 @@ public class ClientHandler implements Runnable {
     private String handleUpdateItem(String[] data) {
         if (currentUser == null || currentUser.getRole() != Role.ADMIN)
             return "ERROR|Permission denied";
-        // data: UPDATE_ITEM|item_id|newName|newDescription|newCategory
         if (data.length < 5) return "UPDATE_ITEM_FAILED|Missing data";
 
         boolean ok = ItemDAO.updateItem(data[1], data[2], data[3], data[4]);
@@ -250,7 +264,6 @@ public class ClientHandler implements Runnable {
     }
 
     // --- AUTH & AUCTION LOGIC ---
-
     private String handleLogin(String[] data) {
         if (data.length < 3) return "LOGIN_FAILED";
         User user = AuthService.login(data[1].trim(), data[2].trim());
@@ -288,7 +301,6 @@ public class ClientHandler implements Runnable {
             }
             item.setImages(imageList);
 
-            // Tự động lên SELLER nếu đang là BIDDER
             if (currentUser.getRole() == Role.BIDDER) {
                 new UserDAO().updateRole(currentUser.getUser_id(), "SELLER");
                 currentUser.setRole(Role.SELLER);
@@ -351,17 +363,14 @@ public class ClientHandler implements Runnable {
                     Item item = a.getItem();
                     if (item == null) continue;
 
-                    // Xử lý ảnh - chỉ lấy URL đầu tiên, loại bỏ base64 dài
                     String firstImg = "NO_IMAGE";
                     if (item.getImages() != null && !item.getImages().isEmpty()) {
                         String img = item.getImages().get(0);
-                        // Nếu ảnh quá dài (> 200 ký tự) hoặc chứa base64 thì bỏ qua
                         if (img != null && img.length() < 200 && !img.contains("base64")) {
                             firstImg = img.replace(";", ",").replace("|", "-");
                         }
                     }
 
-                    // Làm sạch dữ liệu: thay thế các ký tự đặc biệt
                     String itemName = (item.getName() != null)
                             ? item.getName().replace(";", ",").replace("|", "-") : "Unnamed";
 
@@ -408,7 +417,6 @@ public class ClientHandler implements Runnable {
     }
 
     private String handleForgotPassword(String[] data) {
-        // data[0] = FORGOT_PASSWORD, [1]=fullname, [2]=dob, [3]=username, [4]=email, [5]=newPassword
         if (data.length < 6) return "FORGOT_FAILED|Missing information";
 
         boolean success = AuthService.resetPassword(
@@ -422,6 +430,106 @@ public class ClientHandler implements Runnable {
         return success ? "FORGOT_SUCCESS" : "FORGOT_FAILED|Information does not match";
     }
 
+    // ==================== BALANCE & TRANSACTIONS ====================
+    private String handleDeposit(String[] data) {
+        if (currentUser == null) return "BALANCE_UPDATE_FAILED|Not logged in";
+        if (data.length < 3) return "BALANCE_UPDATE_FAILED|Missing amount";
+
+        String targetUserId = data[1];
+        if (!targetUserId.equals(currentUser.getUser_id())) {
+            return "BALANCE_UPDATE_FAILED|Cannot deposit to another user";
+        }
+
+        try {
+            BigDecimal amount = new BigDecimal(data[2]);
+            if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+                return "BALANCE_UPDATE_FAILED|Amount must be greater than 0";
+            }
+
+            User user = UserDAO.getUserById(targetUserId);
+            if (user == null) return "BALANCE_UPDATE_FAILED|User not found";
+
+            BigDecimal newBalance = user.getBalance().add(amount);
+            boolean saved = UserDAO.updateBalance(targetUserId, newBalance);
+
+            if (saved) {
+                TransactionDAO.addTransaction(targetUserId, amount, "DEPOSIT");
+                currentUser.setBalance(newBalance);
+                return "BALANCE_UPDATE_SUCCESS|" + newBalance;
+            } else {
+                return "BALANCE_UPDATE_FAILED|Database error";
+            }
+        } catch (NumberFormatException e) {
+            return "BALANCE_UPDATE_FAILED|Invalid amount";
+        }
+    }
+
+    private String handleWithdraw(String[] data) {
+        if (currentUser == null) return "BALANCE_UPDATE_FAILED|Not logged in";
+        if (data.length < 3) return "BALANCE_UPDATE_FAILED|Missing amount";
+
+        String targetUserId = data[1];
+        if (!targetUserId.equals(currentUser.getUser_id())) {
+            return "BALANCE_UPDATE_FAILED|Cannot withdraw from another user";
+        }
+
+        try {
+            BigDecimal amount = new BigDecimal(data[2]);
+            if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+                return "BALANCE_UPDATE_FAILED|Amount must be greater than 0";
+            }
+
+            User user = UserDAO.getUserById(targetUserId);
+            if (user == null) return "BALANCE_UPDATE_FAILED|User not found";
+
+            if (user.getBalance().compareTo(amount) < 0) {
+                return "BALANCE_UPDATE_FAILED|Insufficient balance";
+            }
+
+            BigDecimal newBalance = user.getBalance().subtract(amount);
+            boolean saved = UserDAO.updateBalance(targetUserId, newBalance);
+
+            if (saved) {
+                TransactionDAO.addTransaction(targetUserId, amount, "WITHDRAW");
+                currentUser.setBalance(newBalance);
+                return "BALANCE_UPDATE_SUCCESS|" + newBalance;
+            } else {
+                return "BALANCE_UPDATE_FAILED|Database error";
+            }
+        } catch (NumberFormatException e) {
+            return "BALANCE_UPDATE_FAILED|Invalid amount";
+        }
+    }
+
+    private String handleGetTransactions(String[] data) {
+        if (currentUser == null) return "ERROR|Not logged in";
+
+        String userId;
+        if (data.length >= 2) {
+            userId = data[1];
+            if (!userId.equals(currentUser.getUser_id())) {
+                return "ERROR|Permission denied";
+            }
+        } else {
+            userId = currentUser.getUser_id();
+        }
+
+        List<Transaction> transactions = TransactionDAO.getTransactionsByUserId(userId);
+
+        if (transactions == null || transactions.isEmpty()) {
+            return "TRANSACTIONS_LIST|";
+        }
+
+        StringBuilder sb = new StringBuilder("TRANSACTIONS_LIST|");
+        for (Transaction tx : transactions) {
+            sb.append(tx.getType()).append(";")
+                    .append(tx.getAmount()).append(";")
+                    .append(tx.getFormattedTime()).append("|");
+        }
+
+        return sb.toString();
+    }
+
     private void closeConnection() {
         if (currentAuctionId != null) {
             RoomManager.removeClient(currentAuctionId, writer);
@@ -432,6 +540,7 @@ public class ClientHandler implements Runnable {
             if (socket != null && !socket.isClosed()) socket.close();
         } catch (IOException e) { e.printStackTrace(); }
     }
+
     private String handleListAuctionHistory() {
         if (currentUser == null || currentUser.getRole() != Role.ADMIN)
             return "ERROR|Permission denied";
@@ -441,11 +550,11 @@ public class ClientHandler implements Runnable {
 
         StringBuilder sb = new StringBuilder("AUCTION_HISTORY_SUCCESS");
         for (String[] row : history) {
-            // auction_id;item_name;winner;final_bid;end_time;status
             sb.append("|").append(String.join(";", row));
         }
         return sb.toString();
     }
+
     private String handleListAllAuctions() {
         if (currentUser == null || currentUser.getRole() != Role.ADMIN)
             return "ERROR|Permission denied";

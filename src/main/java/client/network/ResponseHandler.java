@@ -37,11 +37,55 @@ public class ResponseHandler {
         if (rawMessage == null || rawMessage.isEmpty()) return;
 
         // ========== LIVE UPDATE PRICE ==========
-        if (rawMessage.startsWith("UPDATE_PRICE")
-                && liveAuctionListener != null) {
+        if (liveAuctionListener != null) {
+            if (rawMessage.startsWith("UPDATE_PRICE")
+                    || rawMessage.startsWith("JOIN_SUCCESS")
+                    || rawMessage.startsWith("JOIN_FAILED")
+                    || rawMessage.startsWith("BID_FAILED")
+                    || rawMessage.startsWith("AUCTION_ENDED")
+                    || rawMessage.startsWith("YOU_WON")) {
+                liveAuctionListener.accept(rawMessage);
+                return;
+            }
+        }
+                // 🔥 XỬ LÝ BALANCE UPDATE - Chuyển tiếp đến LiveAuctionController
+        if (rawMessage.startsWith("BALANCE_UPDATE_SUCCESS")) {
+            Platform.runLater(() -> {
+                String[] parts = rawMessage.split("\\|");
+                if (parts.length >= 2) {
+                    BigDecimal newBalance = new BigDecimal(parts[1]);
 
-            liveAuctionListener.accept(rawMessage);
+                    // Cập nhật cho AccountBalanceController
+                    if (AccountBalanceController.getInstance() != null) {
+                        AccountBalanceController.getInstance().updateBalanceFromServer(newBalance);
+                    }
 
+                    // 🔥 Cập nhật cho LiveAuctionController
+                    if (LiveAuctionController.getInstance() != null) {
+                        LiveAuctionController.getInstance().updateBalance(newBalance);
+                    }
+
+                    showToast("Balance updated successfully!");
+                }
+            });
+            return;
+        }
+
+        if (rawMessage.startsWith("BALANCE_UPDATE_FAILED")) {
+            Platform.runLater(() -> {
+                String errorMsg = rawMessage.split("\\|").length > 1 ? rawMessage.split("\\|")[1] : "Transaction failed";
+                showError(errorMsg);
+            });
+            return;
+        }
+
+        if (rawMessage.startsWith("TRANSACTIONS_LIST")) {
+            Platform.runLater(() -> {
+                String transactionsData = rawMessage.substring("TRANSACTIONS_LIST|".length());
+                if (AccountBalanceController.getInstance() != null) {
+                    AccountBalanceController.getInstance().updateTransactionList(transactionsData);
+                }
+            });
             return;
         }
 

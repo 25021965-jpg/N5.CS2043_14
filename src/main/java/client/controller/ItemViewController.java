@@ -1,5 +1,6 @@
 package client.controller;
 
+import client.manager.UserSession;
 import client.network.ClientSocket;
 import client.util.NavigationUtils;
 import javafx.event.ActionEvent;
@@ -166,20 +167,41 @@ public class ItemViewController {
             return;
         }
 
-        // Lấy client trực tiếp từ singleton
-        ClientSocket client = ClientSocket.getInstance();
-        if (client == null) {
-            System.err.println("Client is null");
+        // 🔥 LẤY CLIENT TỪ SINGLETON NẾU this.client NULL
+        ClientSocket clientToUse = this.client;
+        if (clientToUse == null) {
+            clientToUse = ClientSocket.getInstance();
+            System.out.println("🔥 ItemViewController: Retrieved client from singleton");
+        }
+
+        if (clientToUse == null) {
+            System.err.println("Client is null!");
+            NavigationUtils.showError("Cannot connect to server!");
             return;
         }
+
+        // 🔥 LẤY USER TỪ SESSION NẾU currentUser NULL
+        User userToUse = this.currentUser;
+        if (userToUse == null) {
+            userToUse = UserSession.getCurrentUser();
+            System.out.println("🔥 ItemViewController: Retrieved user from session: " + (userToUse != null ? userToUse.getUsername() : "null"));
+        }
+
+        if (userToUse == null) {
+            System.err.println("User is null!");
+            NavigationUtils.showError("Please login again!");
+            return;
+        }
+
+        System.out.println("🔥 ItemViewController: User balance = " + userToUse.getBalance());
 
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/liveAuction-view.fxml"));
             Parent root = loader.load();
 
             LiveAuctionController controller = loader.getController();
-            controller.setClient(client);
-            controller.setUser(currentUser);
+            controller.setClient(clientToUse);
+            controller.setUser(userToUse);  // 🔥 Truyền user có balance
             controller.setAuctionData(
                     auction.getAuction_id(),
                     auction.getItem().getName(),
@@ -199,7 +221,7 @@ public class ItemViewController {
 
         } catch (Exception e) {
             e.printStackTrace();
-            System.err.println("Error joining auction: " + e.getMessage());
+            NavigationUtils.showError("Cannot join auction: " + e.getMessage());
         }
     }
 }

@@ -42,6 +42,23 @@ public class UserDAO {
         }
     }
 
+    // 🔥 THÊM METHOD getUserById NÀY
+    public static User getUserById(String userId) {
+        String sql = "SELECT * FROM users WHERE user_id = ?";
+        try (Connection conn = DatabaseService.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return map(rs);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public static boolean register(String fullname, String username, String email, String password, String dob) {
         String sql = "INSERT INTO users(user_id, fullname, username, email, password, dob, balance, verified, role) " +
                 "VALUES (?, ?, ?, ?, ?, ?, 0, true, 'BIDDER')";

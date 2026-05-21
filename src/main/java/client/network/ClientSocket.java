@@ -5,6 +5,7 @@ import model.*;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.math.BigDecimal;
 import java.net.Socket;
 import java.util.function.Consumer;
 
@@ -53,7 +54,6 @@ public class ClientSocket {
                 while (listening && (msg = in.readLine()) != null) {
                     System.out.println("FROM SERVER: " + msg);
 
-                    // Gửi đến listener nếu có
                     if (messageListener != null) {
                         messageListener.accept(msg);
                     }
@@ -77,9 +77,10 @@ public class ClientSocket {
         t.start();
     }
 
-    public void sendRequest(String rawMessage) {
+    // Gửi message bất kỳ dưới dạng raw string
+    public void sendMessage(String rawMessage) {
         try {
-            connect(); // Đảm bảo socket còn
+            connect();
             if (out != null) {
                 out.println(rawMessage);
                 out.flush();
@@ -90,10 +91,16 @@ public class ClientSocket {
         }
     }
 
+    public void sendRequest(String rawMessage) {
+        sendMessage(rawMessage);
+    }
+
     private void send(Command command, String... data) {
         String msg = CommandBuilder.build(command, data);
-        sendRequest(msg);
+        sendMessage(msg);
     }
+
+    // ========== AUTH ==========
 
     public void sendLogin(String username, String password) {
         send(Command.LOGIN, username.trim(), password.trim());
@@ -106,9 +113,13 @@ public class ClientSocket {
     public void sendLogout() {
         send(Command.LOGOUT);
     }
+
     public void sendForgotPassword(String fullName, String dob, String username, String email, String newPassword) {
         send(Command.FORGOT_PASSWORD, fullName, dob, username, email, newPassword);
     }
+
+    // ========== AUCTION ==========
+
     public void sendJoin(String auctionId) {
         send(Command.JOIN, auctionId);
     }
@@ -151,6 +162,30 @@ public class ClientSocket {
         );
     }
 
+    // ========== BALANCE ==========
+
+    public void sendDeposit(String userId, BigDecimal amount) {
+        sendMessage("DEPOSIT|" + userId + "|" + amount);
+    }
+
+    public void sendWithdraw(String userId, BigDecimal amount) {
+        sendMessage("WITHDRAW|" + userId + "|" + amount);
+    }
+
+    public void sendGetTransactions(String userId) {
+        sendMessage("GET_TRANSACTIONS|" + userId);
+    }
+
+    public void sendGetBalance(String userId) {
+        sendMessage("GET_BALANCE|" + userId);
+    }
+
+    // ========== CONNECTION ==========
+
+    public void logout() {
+        send(Command.LOGOUT);
+    }
+
     public void close() {
         try {
             listening = false;
@@ -159,14 +194,10 @@ public class ClientSocket {
             if (socket != null && !socket.isClosed()) socket.close();
             System.out.println("✓ Socket closed safely");
         } catch (Exception e) {
-            System.err.println("Error: " + e.getMessage());        }
+            System.err.println("Error closing socket: " + e.getMessage());
+        }
     }
 
-    public void logout() {
-        send(Command.LOGOUT);
-    }
-
-    // Thêm phương thức này
     public void setMessageListener(Consumer<String> listener) {
         this.messageListener = listener;
     }

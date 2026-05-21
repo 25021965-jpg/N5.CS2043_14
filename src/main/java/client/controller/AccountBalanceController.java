@@ -2,24 +2,17 @@ package client.controller;
 
 import client.manager.UserSession;
 import client.network.ClientSocket;
-
+import model.User;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-
 import javafx.scene.control.*;
-
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.Priority;
 import javafx.stage.Stage;
-
-import model.User;
-import server.dao.UserDAO;
-
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.text.NumberFormat;
@@ -29,614 +22,282 @@ import java.util.Optional;
 public class AccountBalanceController implements UserDataReceiver {
 
     private ClientSocket client;
-
     private User currentUser;
 
-    @FXML
-    private Button infoBtn;
+    @FXML private Button infoBtn, historyBtn, createdAuctionBtn, favoriteBtn, balanceBtn;
+    @FXML private Button logoutBtn, deleteAccountBtn, backHomeBtn;
+    @FXML private Label balanceLabel;
+    @FXML private TextField depositField, withdrawField;
+    @FXML private Button depositBtn, withdrawBtn;
+    @FXML private VBox transactionContainer;
 
-    @FXML
-    private Button historyBtn;
+    private static AccountBalanceController instance;
 
-    @FXML
-    private Button createdAuctionBtn;
+    public AccountBalanceController() {
+        instance = this;
+    }
 
-    @FXML
-    private Button favoriteBtn;
+    public static AccountBalanceController getInstance() {
+        return instance;
+    }
 
-    @FXML
-    private Button balanceBtn;
-
-    @FXML
-    private Button logoutBtn;
-
-    @FXML
-    private Button deleteAccountBtn;
-
-    @FXML
-    private Button backHomeBtn;
-
-    @FXML
-    private Label balanceLabel;
-
-    @FXML
-    private TextField depositField;
-
-    @FXML
-    private TextField withdrawField;
-
-    @FXML
-    private Button depositBtn;
-
-    @FXML
-    private Button withdrawBtn;
-
-    @FXML
-    private VBox transactionContainer;
-
-    public void setClient(
-            ClientSocket client
-    ) {
-
+    public void setClient(ClientSocket client) {
         this.client = client;
+        if (client != null) {
+            client.setMessageListener(this::handleServerMessage);
+        }
     }
 
     @Override
     public void setUser(User user) {
-
         if (user == null) {
             System.out.println("Received NULL user");
             return;
         }
-
         this.currentUser = user;
-
         if (currentUser.getBalance() == null) {
             currentUser.setBalance(BigDecimal.ZERO);
         }
-
         updateBalance();
-        loadTransactions();
+        if (client != null && currentUser != null) {
+            client.sendGetTransactions(currentUser.getUser_id());
+        }
     }
 
     @FXML
     public void initialize() {
         System.out.println("Account Balance Loaded");
-
-        client = ClientSocket.getInstance();
-        currentUser = UserSession.getCurrentUser();
-
+        setupMenuEvents();
+        // KHÔNG gọi setupBalanceEvents ở đây vì FXML đã có onAction
         if (currentUser != null) {
             updateBalance();
-            loadTransactions();
         }
-
-        setupMenuEvents();
-        setupBalanceEvents();
     }
 
-    private void setupBalanceEvents() {
-        depositBtn.setOnAction(
-                e -> handleDeposit()
-        );
+    private void handleServerMessage(String msg) {
+        javafx.application.Platform.runLater(() -> {
+            System.out.println("[BalanceController] Received: " + msg);
 
-        withdrawBtn.setOnAction(
-                e -> handleWithdraw()
-        );
+            if (msg.startsWith("BALANCE_UPDATE_SUCCESS")) {
+                String[] parts = msg.split("\\|");
+                if (parts.length >= 2) {
+                    BigDecimal newBalance = new BigDecimal(parts[1]);
+                    currentUser.setBalance(newBalance);
+                    updateBalance();
+                    showAlert(Alert.AlertType.INFORMATION, "Success", "Transaction successful!");
+                    if (client != null && currentUser != null) {
+                        client.sendGetTransactions(currentUser.getUser_id());
+                    }
+                }
+            } else if (msg.startsWith("BALANCE_UPDATE_FAILED")) {
+                String errorMsg = msg.split("\\|").length > 1 ? msg.split("\\|")[1] : "Transaction failed";
+                showAlert(Alert.AlertType.ERROR, "Error", errorMsg);
+            } else if (msg.startsWith("TRANSACTIONS_LIST")) {
+                String transactionsData = msg.substring("TRANSACTIONS_LIST|".length());
+                updateTransactionList(transactionsData);
+            }
+        });
     }
 
-    private void setupMenuEvents() {
-        infoBtn.setOnAction(
-                e -> openPage(
-                        "/fxml/userProfile-view.fxml",
-                        "Profile"
-                )
-        );
-
-        historyBtn.setOnAction(
-                e -> openPage(
-                        "/fxml/auctionHistory-view.fxml",
-                        "Auction History"
-                )
-        );
-
-        createdAuctionBtn.setOnAction(
-                e -> openPage(
-                        "/fxml/yourAuctions-view.fxml",
-                        "Your Auctions"
-                )
-        );
-
-        favoriteBtn.setOnAction(
-                e -> openPage(
-                        "/fxml/Favourite-view.fxml",
-                        "Favourite"
-                )
-        );
-
-        balanceBtn.setOnAction(
-                e -> openPage(
-                        "/fxml/accountBalance-view.fxml",
-                        "Account Balance"
-                )
-        );
-
-        backHomeBtn.setOnAction(
-                e -> openPage(
-                        "/fxml/HomePage.fxml",
-                        "Home"
-                )
-        );
-
-        logoutBtn.setOnAction(
-                e -> handleLogout()
-        );
-
-        deleteAccountBtn.setOnAction(
-                e -> handleDeleteAccount()
-        );
-    }
-
+    // 🔥 ĐỔI TỪ private THÀNH @FXML public
     @FXML
-    private void handleDeposit() {
+    public void handleDeposit() {
+        if (client == null) {
+            client = ClientSocket.getInstance();
+            if (client == null) {
+                showAlert(Alert.AlertType.ERROR, "Error", "Not connected to server!");
+                return;
+            }
+        }
         if (currentUser == null) {
-            showAlert(
-                    Alert.AlertType.ERROR,
-                    "Error",
-                    "No user logged in."
-            );
+            showAlert(Alert.AlertType.ERROR, "Error", "No user logged in.");
             return;
         }
 
         String input = depositField.getText().trim();
-
         if (input.isEmpty()) {
-            showAlert(
-                    Alert.AlertType.ERROR,
-                    "Deposit Error",
-                    "Please enter an amount."
-            );
+            showAlert(Alert.AlertType.ERROR, "Deposit Error", "Please enter an amount.");
             return;
         }
 
         try {
             BigDecimal amount = new BigDecimal(input);
-
             if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-                showAlert(
-                        Alert.AlertType.ERROR,
-                        "Deposit Error",
-                        "Amount must be greater than 0."
-                );
+                showAlert(Alert.AlertType.ERROR, "Deposit Error", "Amount must be greater than 0.");
                 return;
             }
 
-            // tính số dư mới
-            BigDecimal newBalance =
-                    currentUser.getBalance().add(amount);
-
-            // cập nhật user
-            currentUser.setBalance(newBalance);
-
-            boolean saved =
-                    UserDAO.updateBalance(
-                            currentUser.getUser_id(),
-                            newBalance
-                    );
-
-            if(saved){
-                UserSession.setCurrentUser(currentUser);
-            }
-
-            // lưu lịch sử
-            currentUser.addTransaction(
-                    "Deposit: +" + amount + " USD"
-            );
-
-            updateBalance();
-            loadTransactions();
-
+            client.sendDeposit(currentUser.getUser_id(), amount);
             depositField.clear();
 
-            showAlert(
-                    Alert.AlertType.INFORMATION,
-                    "Deposit Success",
-                    "Deposit successful."
-            );
-
-            System.out.println(
-                    "Deposited: " + amount
-            );
-
         } catch (NumberFormatException e) {
-
-            showAlert(
-                    Alert.AlertType.ERROR,
-                    "Deposit Error",
-                    "Invalid amount."
-            );
+            showAlert(Alert.AlertType.ERROR, "Deposit Error", "Invalid amount.");
         }
     }
 
+    // 🔥 ĐỔI TỪ private THÀNH @FXML public
     @FXML
-    private void handleWithdraw() {
-        if (currentUser == null) {
-            showAlert(
-                    Alert.AlertType.ERROR,
-                    "Error",
-                    "No user logged in."
-            );
+    public void handleWithdraw() {
+        if (client == null) {
+            client = ClientSocket.getInstance();
+            if (client == null) {
+                showAlert(Alert.AlertType.ERROR, "Error", "Not connected to server!");
+                return;
+            }
+        }
+            if (currentUser == null) {
+            showAlert(Alert.AlertType.ERROR, "Error", "No user logged in.");
             return;
         }
 
-        String input =
-                withdrawField.getText().trim();
-
+        String input = withdrawField.getText().trim();
         if (input.isEmpty()) {
-
-            showAlert(
-                    Alert.AlertType.ERROR,
-                    "Withdraw Error",
-                    "Please enter an amount."
-            );
-
+            showAlert(Alert.AlertType.ERROR, "Withdraw Error", "Please enter an amount.");
             return;
         }
 
         try {
-
-            BigDecimal amount =new BigDecimal(input);
-
-            if (amount.compareTo(BigDecimal.ZERO)  <= 0) {
-
-                showAlert(
-                        Alert.AlertType.ERROR,
-                        "Withdraw Error",
-                        "Amount must be greater than 0."
-                );
-
+            BigDecimal amount = new BigDecimal(input);
+            if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+                showAlert(Alert.AlertType.ERROR, "Withdraw Error", "Amount must be greater than 0.");
                 return;
             }
 
-            if (amount.compareTo(currentUser.getBalance()) > 0) {
-
-                showAlert(
-                        Alert.AlertType.ERROR,
-                        "Withdraw Error",
-                        "Insufficient balance."
-                );
-
-                return;
-            }
-
-            BigDecimal newBalance = currentUser.getBalance().subtract(amount);
-
-
-            currentUser.setBalance(newBalance);
-
-            boolean saved =
-                    UserDAO.updateBalance(
-                            currentUser.getUser_id(),
-                            newBalance
-                    );
-
-            if(saved){
-                UserSession.setCurrentUser(currentUser);
-            }
-
-            currentUser.addTransaction(
-                    "Withdraw: -" + amount + " USD"
-            );
-
-            updateBalance();
-            loadTransactions();
-
+            client.sendWithdraw(currentUser.getUser_id(), amount);
             withdrawField.clear();
 
-            showAlert(
-                    Alert.AlertType.INFORMATION,
-                    "Withdraw Success",
-                    "Withdraw successful."
-            );
-
-            System.out.println(
-                    "Withdrawn: "
-                            + amount
-            );
-
         } catch (NumberFormatException e) {
-
-            showAlert(
-                    Alert.AlertType.ERROR,
-                    "Withdraw Error",
-                    "Invalid amount."
-            );
+            showAlert(Alert.AlertType.ERROR, "Withdraw Error", "Invalid amount.");
         }
     }
-    @FXML
+
     private void updateBalance() {
-
-        if (currentUser == null) {
-            return;
-        }
-
+        if (currentUser == null) return;
         if (currentUser.getBalance() == null) {
             currentUser.setBalance(BigDecimal.ZERO);
         }
-
-        NumberFormat format =
-                NumberFormat.getCurrencyInstance(
-                        Locale.US
-                );
-
-        balanceLabel.setText(
-                format.format(
-                        currentUser.getBalance()
-                ) + " USD"
-        );
+        NumberFormat format = NumberFormat.getCurrencyInstance(Locale.US);
+        balanceLabel.setText(format.format(currentUser.getBalance()) + " USD");
     }
 
-    private void loadTransactions() {
-
+    public void updateTransactionList(String data) {
         transactionContainer.getChildren().clear();
 
-        if (currentUser == null ||
-                currentUser.getTransactions() == null ||
-                currentUser.getTransactions().isEmpty()) {
+        if (data == null || data.isEmpty()) {
+            Label emptyLabel = new Label("No transactions yet");
+            emptyLabel.setStyle("-fx-text-fill: #64748B; -fx-padding: 20;");
+            transactionContainer.getChildren().add(emptyLabel);
             return;
         }
 
-        for (String tx : currentUser.getTransactions()) {
+        String[] transactions = data.split("\\|");
+        for (String tx : transactions) {
+            String[] parts = tx.split(";");
+            if (parts.length >= 3) {
+                String type = parts[0];
+                String amount = parts[1];
+                String time = parts[2];
 
-            HBox card = new HBox(20);
-            card.setStyle("""
-            -fx-background-color: white;
-            -fx-background-radius: 12;
-            -fx-border-radius: 12;
-            -fx-border-color: #E2E8F0;
-            -fx-padding: 15;
-        """);
+                HBox card = new HBox(20);
+                card.setStyle("-fx-background-color: white; -fx-background-radius: 12; -fx-border-radius: 12; -fx-border-color: #E2E8F0; -fx-padding: 15;");
 
-            VBox left = new VBox(5);
+                VBox left = new VBox(5);
+                Label title = new Label(type.equals("DEPOSIT") ? "Deposit Successfully" : "Withdraw Successfully");
+                title.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #0F172A;");
 
-            Label title = new Label(
-                    tx.startsWith("Deposit")
-                            ? "Deposit Successfully"
-                            : "Withdraw Successfully"
-            );
+                Label timeLabel = new Label(time);
+                timeLabel.setStyle("-fx-text-fill: #64748B; -fx-font-size: 13px;");
+                left.getChildren().addAll(title, timeLabel);
 
-            title.setStyle("""
-            -fx-font-size: 16px;
-            -fx-font-weight: bold;
-            -fx-text-fill: #0F172A;
-        """);
+                Region spacer = new Region();
+                HBox.setHgrow(spacer, Priority.ALWAYS);
 
-            Label time = new Label(
-                    java.time.LocalDateTime.now()
-                            .format(
-                                    java.time.format.DateTimeFormatter.ofPattern(
-                                            "dd/MM/yyyy - HH:mm"
-                                    )
-                            )
-            );
+                Label amountLabel = new Label(type.equals("DEPOSIT") ? "+" + amount : "-" + amount);
+                amountLabel.setStyle(type.equals("DEPOSIT")
+                        ? "-fx-text-fill: #16A34A; -fx-font-size: 18px; -fx-font-weight: bold;"
+                        : "-fx-text-fill: #EF4444; -fx-font-size: 18px; -fx-font-weight: bold;");
 
-            time.setStyle("""
-            -fx-text-fill: #64748B;
-            -fx-font-size: 13px;
-        """);
-
-            left.getChildren().addAll(title, time);
-
-            Region spacer = new Region();
-            HBox.setHgrow(
-                    spacer,
-                    Priority.ALWAYS
-            );
-
-            Label amount = getLabel(tx);
-
-            card.getChildren().addAll(
-                    left,
-                    spacer,
-                    amount
-            );
-
-            transactionContainer.getChildren().add(card);
+                card.getChildren().addAll(left, spacer, amountLabel);
+                transactionContainer.getChildren().add(card);
+            }
         }
     }
 
-    private static Label getLabel(String tx) {
-        Label amount = new Label(
-                tx.replace("Deposit: ", "")
-                        .replace("Withdraw: ", "")
-        );
-
-        amount.setStyle(tx.startsWith("Deposit")
-                ? """
-            -fx-text-fill: #16A34A;
-            -fx-font-size: 18px;
-            -fx-font-weight: bold;
-        """
-                : """
-            -fx-text-fill: #EF4444;
-            -fx-font-size: 18px;
-            -fx-font-weight: bold;
-        """
-        );
-        return amount;
-    }
-
-    @FXML
     private void handleLogout() {
-
-        Alert alert = new Alert(
-                Alert.AlertType.CONFIRMATION
-        );
-
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Logout");
         alert.setHeaderText(null);
-        alert.setContentText(
-                "Are you sure you want to logout?"
-        );
+        alert.setContentText("Are you sure you want to logout?");
 
-        ButtonType logoutButton =
-                new ButtonType("Logout");
+        ButtonType logoutButton = new ButtonType("Logout");
+        ButtonType cancelButton = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
+        alert.getButtonTypes().setAll(logoutButton, cancelButton);
 
-        ButtonType cancelButton =
-                new ButtonType(
-                        "Cancel",
-                        ButtonBar.ButtonData.CANCEL_CLOSE
-                );
-
-        alert.getButtonTypes().setAll(
-                logoutButton,
-                cancelButton
-        );
-
-        Optional<ButtonType> result =
-                alert.showAndWait();
-
-        if (result.isPresent()
-                && result.get() == logoutButton) {
-
-            ClientSocket socket =
-                    ClientSocket.getInstance();
-
-            if (socket != null) {
-                socket.logout();
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.isPresent() && result.get() == logoutButton) {
+            if (client != null) {
+                client.sendLogout();
             }
-
             UserSession.setCurrentUser(null);
-
-            openPage(
-                    "/fxml/login-view.fxml",
-                    "Login"
-            );
+            openPage("/fxml/login-view.fxml", "Login");
         }
     }
 
-    @FXML
+    private void setupMenuEvents() {
+        infoBtn.setOnAction(e -> openPage("/fxml/userProfile-view.fxml", "Profile"));
+        historyBtn.setOnAction(e -> openPage("/fxml/auctionHistory-view.fxml", "Auction History"));
+        createdAuctionBtn.setOnAction(e -> openPage("/fxml/yourAuctions-view.fxml", "Your Auctions"));
+        favoriteBtn.setOnAction(e -> openPage("/fxml/Favourite-view.fxml", "Favourite"));
+        balanceBtn.setOnAction(e -> openPage("/fxml/accountBalance-view.fxml", "Account Balance"));
+        backHomeBtn.setOnAction(e -> openPage("/fxml/HomePage.fxml", "Home"));
+        logoutBtn.setOnAction(e -> handleLogout());
+        deleteAccountBtn.setOnAction(e -> handleDeleteAccount());
+    }
+
     private void handleDeleteAccount() {
-
-        Alert alert =
-                new Alert(
-                        Alert.AlertType.WARNING
-                );
-
-        alert.setTitle(
-                "Delete Account"
-        );
-
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle("Delete Account");
         alert.setHeaderText(null);
+        alert.setContentText("Are you sure you want to delete your account?");
+        ButtonType deleteButton = new ButtonType("Delete");
+        ButtonType cancelButton = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
+        alert.getButtonTypes().setAll(deleteButton, cancelButton);
 
-        alert.setContentText(
-                "Are you sure you want to delete your account? This action cannot be undone."
-        );
-
-        ButtonType deleteButton =
-                new ButtonType(
-                        "Delete"
-                );
-
-        ButtonType cancelButton =
-                new ButtonType(
-                        "Cancel",
-                        ButtonBar.ButtonData.CANCEL_CLOSE
-                );
-
-        alert.getButtonTypes().setAll(
-                deleteButton,
-                cancelButton
-        );
-
-        Optional<ButtonType> result =
-                alert.showAndWait();
-
-        if (
-                result.isPresent()
-                        &&
-                        result.get() == deleteButton
-        ) {
-
-            openPage(
-                    "/fxml/login-view.fxml",
-                    "Login"
-            );
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.isPresent() && result.get() == deleteButton) {
+            openPage("/fxml/login-view.fxml", "Login");
         }
     }
 
-    private void showAlert(
-            Alert.AlertType type,
-            String title,
-            String content
-    ) {
-
-        Alert alert =
-                new Alert(type);
-
+    private void showAlert(Alert.AlertType type, String title, String content) {
+        Alert alert = new Alert(type);
         alert.setTitle(title);
-
         alert.setHeaderText(null);
-
         alert.setContentText(content);
-
         alert.showAndWait();
     }
 
-    private void openPage(
-            String fxmlPath,
-            String title
-    ) {
-
+    private void openPage(String fxmlPath, String title) {
         try {
-
-            FXMLLoader loader =
-                    new FXMLLoader(
-                            getClass().getResource(
-                                    fxmlPath
-                            )
-                    );
-
-            Parent root =
-                    loader.load();
-
-            passData(
-                    loader.getController()
-            );
-
-            Stage stage =
-                    (Stage)
-                            backHomeBtn
-                                    .getScene()
-                                    .getWindow();
-
-            stage.setScene(
-                    new Scene(root)
-            );
-
-            stage.setTitle(
-                    title
-            );
-
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+            Parent root = loader.load();
+            if (loader.getController() instanceof UserDataReceiver c) {
+                c.setClient(client);
+                c.setUser(currentUser);
+            }
+            Stage stage = (Stage) backHomeBtn.getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.setTitle(title);
             stage.show();
-
         } catch (IOException e) {
             System.err.println("Error: " + e.getMessage());
-            System.out.println("Cannot open: " + fxmlPath);
         }
     }
 
-    private void passData(
-            Object controller
-    ) {
-
-        if (
-                controller instanceof UserDataReceiver c
-        ) {
-
-            c.setClient(client);
-
-            c.setUser(currentUser);
+    public void updateBalanceFromServer(BigDecimal newBalance) {
+        if (currentUser != null) {
+            currentUser.setBalance(newBalance);
+            updateBalance();
         }
     }
 }

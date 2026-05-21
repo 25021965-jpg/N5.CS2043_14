@@ -14,10 +14,10 @@ import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import model.Auction;
 import model.Category;
 import model.User;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,11 +29,9 @@ public class HomePageController {
 
     private final List<Auction> auctionList = new ArrayList<>();
 
-    private final String DEFAULT_STYLE =
-            "-fx-background-color: #d4af37;";
+    private final String DEFAULT_STYLE = "-fx-background-color: #d4af37;";
+    private final String ACTIVE_STYLE  = "-fx-background-color: #ffe082;";
 
-    private final String ACTIVE_STYLE =
-            "-fx-background-color: #ffe082;";
     // Filter states
     private Category selectedCategory = null;
     private String selectedStatus = null;
@@ -77,11 +75,13 @@ public class HomePageController {
 
         Platform.runLater(() -> highlight(btnAll));
     }
+
     public void setClient(ClientSocket client) {
         this.client = client;
     }
 
     public void setUser(User user) {
+        this.currentUser = user;
         if (user != null) log("Logged in as: " + user.getUsername());
     }
 
@@ -111,47 +111,20 @@ public class HomePageController {
         selectedStatus = null;
         applyFilters();
     }
-    @FXML
-    private void showAccessories() {
-        highlight(btnAccessories);
-        filterByCategory(Category.ACCESSORIES);
-    }
-    @FXML
-    private void showCollectibles() {
-        highlight(btnCollectibles);
-        filterByCategory(Category.COLLECTIBLES);
-    }
-    @FXML
-    private void showElectronics() {
-        highlight(btnElectronics);
-        filterByCategory(Category.ELECTRONICS);
-    }
-    @FXML
-    private void showFashion() {
-        highlight(btnFashion);
-        filterByCategory(Category.FASHION);
-    }
-    @FXML
-    private void showHomeAppliances() {
-        highlight(btnHomeAppliances);
-        filterByCategory(Category.HOME_APPLIANCES);
-    }
-    @FXML
-    private void showVehicles() {
-        highlight(btnVehicles);
-        filterByCategory(Category.VEHICLES);
-    }
-    @FXML
-    private void showOther() {
-        highlight(btnOther);
-        filterByCategory(Category.OTHER);
-    }
 
-    @FXML private void showAllStatus() { selectedStatus = null; applyFilters(); }
-    @FXML private void showActive() { selectedStatus = "ACTIVE"; applyFilters(); }
-    @FXML private void showEnded() { selectedStatus = "ENDED"; applyFilters(); }
-    @FXML private void showCancelled() { selectedStatus = "CANCELLED"; applyFilters(); }
-    @FXML private void showUpcoming() { selectedStatus = "UPCOMING"; applyFilters(); }
+    @FXML private void showAccessories()   { highlight(btnAccessories);   filterByCategory(Category.ACCESSORIES);    }
+    @FXML private void showCollectibles()  { highlight(btnCollectibles);  filterByCategory(Category.COLLECTIBLES);   }
+    @FXML private void showElectronics()   { highlight(btnElectronics);   filterByCategory(Category.ELECTRONICS);    }
+    @FXML private void showFashion()       { highlight(btnFashion);       filterByCategory(Category.FASHION);        }
+    @FXML private void showHomeAppliances(){ highlight(btnHomeAppliances);filterByCategory(Category.HOME_APPLIANCES);}
+    @FXML private void showVehicles()      { highlight(btnVehicles);      filterByCategory(Category.VEHICLES);       }
+    @FXML private void showOther()         { highlight(btnOther);         filterByCategory(Category.OTHER);          }
+
+    @FXML private void showAllStatus()   { selectedStatus = null;         applyFilters(); }
+    @FXML private void showActive()      { selectedStatus = "ACTIVE";     applyFilters(); }
+    @FXML private void showEnded()       { selectedStatus = "ENDED";      applyFilters(); }
+    @FXML private void showCancelled()   { selectedStatus = "CANCELLED";  applyFilters(); }
+    @FXML private void showUpcoming()    { selectedStatus = "UPCOMING";   applyFilters(); }
 
     private void filterByCategory(Category category) {
         this.selectedCategory = category;
@@ -176,15 +149,19 @@ public class HomePageController {
 
     private void applyFilters() {
         if (txtSearch == null) return;
-        
+
         String keyword = txtSearch.getText().trim().toLowerCase();
         List<Auction> filtered = auctionList.stream().filter(a -> {
             if (a == null || a.getItem() == null) return false;
             if (a.getItem().getName() == null)    return false;
 
-            boolean matchText = keyword.isEmpty() || a.getItem().getName().toLowerCase().contains(keyword);
-            boolean matchCat = selectedCategory == null || a.getItem().getCategory() == selectedCategory;
-            boolean matchStat = selectedStatus == null || (a.getStatus() != null && a.getStatus().name().equalsIgnoreCase(selectedStatus));
+            boolean matchText = keyword.isEmpty()
+                    || a.getItem().getName().toLowerCase().contains(keyword);
+            boolean matchCat  = selectedCategory == null
+                    || a.getItem().getCategory() == selectedCategory;
+            boolean matchStat = selectedStatus == null
+                    || (a.getStatus() != null && a.getStatus().name().equalsIgnoreCase(selectedStatus));
+
             return matchText && matchCat && matchStat;
         }).toList();
 
@@ -204,13 +181,9 @@ public class HomePageController {
                 Node card = loader.load();
                 ItemCardController controller = loader.getController();
                 controller.setData(auction);
-
-                // ========== THÊM 2 DÒNG NÀY ==========
                 controller.setClient(client);
                 controller.setUser(currentUser);
-                // ====================================
 
-                // Xử lý click vào card để mở chi tiết (nếu có)
                 card.setOnMouseClicked(event -> {
                     if (event.getClickCount() == 1) {
                         openItemDetail(auction);
@@ -220,12 +193,13 @@ public class HomePageController {
                 if (col == MAX_COLUMNS) { col = 0; row++; }
                 itemGrid.add(card, col++, row);
             } catch (IOException e) {
-                System.err.println("Error: " + e.getMessage());
+                System.err.println("Error loading card: " + e.getMessage());
             }
         }
     }
 
-    // ========== THÊM PHƯƠNG THỨC MỞ CHI TIẾT ==========
+    // ================= OPEN SCREENS =================
+
     private void openItemDetail(Auction auction) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/items-view.fxml"));
@@ -246,8 +220,9 @@ public class HomePageController {
         }
     }
 
-    // ==================== MỞ LIVE AUCTION ====================
-    private void openLiveAuction(Auction auction) {
+    // Mở Live Auction - thứ tự: setClient → setUser → setAuctionData
+    // setAuctionData sẽ tự quyết định khôi phục balance ảo hay init mới
+    public void openLiveAuction(Auction auction) {
         log("Opening live auction for: " + auction.getItem().getName());
 
         try {
@@ -256,8 +231,8 @@ public class HomePageController {
 
             LiveAuctionController controller = loader.getController();
             controller.setClient(client);
-            controller.setUser(currentUser);
-            controller.setAuctionData(
+            controller.setUser(currentUser);   // set user trước (không init balance)
+            controller.setAuctionData(         // setAuctionData sẽ init/khôi phục balance
                     auction.getAuction_id(),
                     auction.getItem().getName(),
                     auction.getItem().getDescription(),
@@ -309,30 +284,44 @@ public class HomePageController {
 
     @FXML
     private void openBalance(ActionEvent event) {
-        NavigationUtils.switchScene(getStage(event), "/fxml/accountBalance-view.fxml", "Account Balance");    }
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/accountBalance-view.fxml"));
+            Parent root = loader.load();
+
+            AccountBalanceController controller = loader.getController();
+            controller.setClient(client);
+
+            if (currentUser != null) {
+                controller.setUser(currentUser);
+            } else {
+                System.err.println("currentUser is null when opening balance");
+            }
+
+            Stage stage;
+            if (event.getSource() instanceof MenuItem menuItem) {
+                stage = (Stage) menuItem.getParentPopup().getOwnerWindow();
+            } else {
+                stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            }
+
+            stage.setScene(new Scene(root));
+            stage.setTitle("Account Balance");
+            stage.show();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     @FXML
     private void handleLogout(ActionEvent event) {
-
-        if (NavigationUtils.showConfirm(
-                "Logout",
-                "Are you sure you want to logout?"
-        )) {
-
-            ClientSocket socket =
-                    ClientSocket.getInstance();
-
+        if (NavigationUtils.showConfirm("Logout", "Are you sure you want to logout?")) {
+            ClientSocket socket = ClientSocket.getInstance();
             if (socket != null) {
                 socket.logout();
             }
-
             UserSession.setCurrentUser(null);
-
-            NavigationUtils.switchScene(
-                    getStage(event),
-                    "/fxml/login-view.fxml",
-                    "Login"
-            );
+            NavigationUtils.switchScene(getStage(event), "/fxml/login-view.fxml", "Login");
         }
     }
 

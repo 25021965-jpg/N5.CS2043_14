@@ -13,6 +13,7 @@ public enum Command {
     FORGOT_PASSWORD,
     BID,
     GET_PROFILE,
+    GET_BALANCE,
     LIST_ITEMS,
     DELETE_ITEM,
     UPDATE_ITEM,
@@ -21,7 +22,7 @@ public enum Command {
     LIST_ALL_AUCTIONS,
     STOP_AUCTION,
     RESUME_AUCTION,
-    CANCEL_AUCTION;
+    CANCEL_AUCTION, GET_TRANSACTIONS, WITHDRAW, DEPOSIT;
 
     public static Command from(String value) {
         if (value == null) {

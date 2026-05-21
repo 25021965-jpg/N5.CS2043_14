@@ -25,12 +25,19 @@ import static client.util.NavigationUtils.switchScene;
 
 public class LoginController {
 
-    @FXML private TextField userField;
-    @FXML private PasswordField passField;
+    @FXML
+    private TextField userField;
+    @FXML
+    private PasswordField passField;
 
     private ClientSocket client;
+    private Stage stage;
     private User loggedInUser;
     private static final Logger LOGGER = Logger.getLogger(LoginController.class.getName());
+
+    public void setStage(Stage stage) {
+        this.stage = stage;
+    }
 
     public void setClient(ClientSocket client) {
         this.client = client;
@@ -46,8 +53,8 @@ public class LoginController {
 
             LOGGER.info("ClientSocket created");
 
-            // ========== QUAN TRỌNG: ĐĂNG KÝ LISTENER ==========
-            client.setMessageListener(ResponseHandler::handle);
+            // ========== ĐĂNG KÝ LISTENER XỬ LÝ PHẢN HỒI ==========
+            client.setMessageListener(this::handleServerMessage);
             client.listen();
 
             Platform.runLater(() -> {
@@ -64,6 +71,51 @@ public class LoginController {
             showError("Cannot connect to server: " + e.getMessage());
         }
         LOGGER.info("LoginController initialize() END");
+    }
+
+    // ==================== XỬ LÝ PHẢN HỒI TỪ SERVER ====================
+    private void handleServerMessage(String msg) {
+        Platform.runLater(() -> {
+            System.out.println("[LoginController] Received: " + msg);
+
+            if (msg.startsWith("LOGIN_SUCCESS")) {
+                // Parse user từ response
+                String[] parts = msg.split("\\|");
+                if (parts.length >= 5) {
+                    loggedInUser = new User();
+                    loggedInUser.setUser_id(parts[1]);
+                    loggedInUser.setFullname(parts[2]);
+                    loggedInUser.setUsername(parts[3]);
+                    loggedInUser.setEmail(parts[4]);
+                    if (parts.length >= 6) {
+                        loggedInUser.setDob(parts[5]);
+                    }
+                    if (parts.length >= 7) {
+                        try {
+                            loggedInUser.setRole(Role.valueOf(parts[6]));
+                        } catch (Exception e) {
+                            loggedInUser.setRole(Role.BIDDER);
+                        }
+                    }
+                    if (parts.length >= 8) {
+                        try {
+                            loggedInUser.setBalance(new BigDecimal(parts[7]));
+                        } catch (Exception e) {
+                            loggedInUser.setBalance(BigDecimal.ZERO);
+                        }
+                    }
+                    loggedInUser.setPassword(passField.getText());
+                }
+
+
+                goToHomePage();
+
+            } else if (msg.startsWith("LOGIN_FAILED")) {
+                showError("Wrong username or password!");
+                passField.clear();
+                passField.requestFocus();
+            }
+        });
     }
 
     @FXML
@@ -91,6 +143,14 @@ public class LoginController {
         client.sendLogin(username, password);
     }
 
+    private void showInfo(String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Success");
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
     private void showError(String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Error");
@@ -98,7 +158,6 @@ public class LoginController {
         alert.setContentText(message);
         alert.showAndWait();
     }
-    
 
     @FXML
     private void goToRegister(ActionEvent event) {
@@ -124,15 +183,9 @@ public class LoginController {
         }
     }
 
+    // ==================== CHUYỂN SANG HOMEPAGE ====================
     private void goToHomePage() {
         try {
-            // Lấy stage từ userField
-            Stage stage = (Stage) userField.getScene().getWindow();
-            if (stage == null) {
-                System.err.println("Stage is null, cannot navigate to HomePage");
-                return;
-            }
-
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/HomePage.fxml"));
             Parent root = loader.load();
 
@@ -140,9 +193,21 @@ public class LoginController {
             controller.setClient(client);
             controller.setUser(loggedInUser);
 
-            stage.setScene(new Scene(root));
-            stage.setTitle("Auction System");
-            stage.show();
+            // 🔥 LẤY STAGE NẾU NULL
+            Stage currentStage = this.stage;
+            if (currentStage == null && userField != null && userField.getScene() != null) {
+                stage = (Stage) userField.getScene().getWindow();
+                this.stage = currentStage;
+            }
+
+            if (currentStage == null) {
+                showError("Cannot determine window");
+                return;
+            }
+
+            currentStage.setScene(new Scene(root));
+            currentStage.setTitle("Auction System");
+            currentStage.show();
 
         } catch (Exception e) {
             e.printStackTrace();
