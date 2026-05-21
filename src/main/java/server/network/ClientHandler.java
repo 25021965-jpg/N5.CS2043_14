@@ -155,6 +155,12 @@ public class ClientHandler implements Runnable {
         if (auction == null) {
             return "JOIN_FAILED|Auction not found";
         }
+        // Không cho phép seller join auction của chính mình
+        if (currentUser != null
+                && auction.getSeller() != null
+                && auction.getSeller().getUser_id().equals(currentUser.getUser_id())) {
+            return "JOIN_FAILED|You cannot join your own auction";
+        }
 
         this.currentAuctionId = auctionId;
         RoomManager.addClient(auctionId, writer);
@@ -379,6 +385,8 @@ public class ClientHandler implements Runnable {
                     String minIncrement = (a.getMinIncrement() != null) ? a.getMinIncrement().toString() : "0";
                     String startTime = (a.getStartTime() != null) ? a.getStartTime().toString() : "";
                     String endTime = (a.getEndTime() != null) ? a.getEndTime().toString() : "";
+                    String sellerId = (a.getSeller() != null && a.getSeller().getUser_id() != null)
+                            ? a.getSeller().getUser_id() : "";
 
                     sb.append("|").append(auctionId).append(";")
                             .append(itemName).append(";")
@@ -389,7 +397,8 @@ public class ClientHandler implements Runnable {
                             .append(endTime).append(";")
                             .append(category).append(";")
                             .append(cleanDesc).append(";")
-                            .append(status);
+                            .append(status).append(";")   // thêm ";" vào đây
+                            .append(sellerId);
 
                 } catch (Exception ex) {
                     System.err.println("Auction Parse Error for ID: " + (a != null ? a.getAuction_id() : "null"));

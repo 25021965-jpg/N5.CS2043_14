@@ -724,6 +724,7 @@ public class ResponseHandler {
 
                 if (p.length < 10) continue;
 
+
                 Auction a = new Auction();
 
                 a.setAuction_id(p[0]);
@@ -782,6 +783,9 @@ public class ResponseHandler {
                     a.setStatus(
                             AuctionStatus.ACTIVE
                     );
+                }
+                if (p.length > 10 && !p[10].isEmpty()) {
+                    a.setSeller_Id(p[10]);
                 }
 
                 list.add(a);
