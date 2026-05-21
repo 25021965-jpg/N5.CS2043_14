@@ -52,7 +52,7 @@ public class HomePageController {
     @FXML private Button btnOther;
 
     public HomePageController() {
-        instance = this;
+
     }
 
     public static HomePageController getInstance() {
@@ -61,6 +61,9 @@ public class HomePageController {
 
     @FXML
     public void initialize() {
+        instance = this;
+        this.client = ClientSocket.getInstance();
+        this.currentUser = UserSession.getCurrentUser();
         log("Auction Dashboard Initialized");
 
         Platform.runLater(() -> {
@@ -82,6 +85,7 @@ public class HomePageController {
     }
 
     public void setUser(User user) {
+        this.currentUser = user; // ✅ gán vào field
         if (user != null) log("Logged in as: " + user.getUsername());
     }
 

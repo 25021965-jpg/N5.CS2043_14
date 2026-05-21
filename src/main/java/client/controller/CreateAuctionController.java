@@ -56,6 +56,7 @@ public class CreateAuctionController {
                 return;
             }
 
+
             // --- DATA CLEANING ---
             // Thay thế các ký tự gây vỡ chuỗi
             String cleanName = txtName.getText().replace("|", "-").replace(";", ",");
@@ -73,6 +74,10 @@ public class CreateAuctionController {
 
             if (!endDateTime.isAfter(startDateTime)) {
                 showError("End time must be after start time!");
+                return;
+            }
+            if (startDateTime.isBefore(LocalDateTime.now())) {
+                showError("Start time must be in the future!");
                 return;
             }
 
