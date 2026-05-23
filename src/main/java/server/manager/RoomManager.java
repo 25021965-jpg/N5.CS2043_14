@@ -1,4 +1,4 @@
-package client.manager;
+package server.manager;
 
 import java.io.PrintWriter;
 import java.util.List;

@@ -1,12 +1,10 @@
 package client.manager;
 
-import model.Auction;
-
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 public class FavouriteManager {
 
-    public static List<Auction> favouriteAuctions =
-            new ArrayList<>();
+    // LƯU ITEM ID
+    public static Set<String> favouriteItemIds = new HashSet<>();
 }

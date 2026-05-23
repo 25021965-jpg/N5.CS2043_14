@@ -1,6 +1,5 @@
 package client.controller;
 
-import client.manager.UserSession;
 import client.network.ClientSocket;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -27,15 +26,10 @@ public class ItemCardController {
 
     private Auction auction;
     private ClientSocket client;
-    private User currentUser;
 
     // ==================== SETTERS ====================
     public void setClient(ClientSocket client) {
         this.client = client;
-    }
-
-    public void setUser(User user) {
-        this.currentUser = user;
     }
 
     public void setData(Auction auction) {
@@ -63,7 +57,7 @@ public class ItemCardController {
 
         if (item.getImages() != null && !item.getImages().isEmpty()) {
             try {
-                String firstImagePath = item.getImages().get(0);
+                String firstImagePath = item.getImages().getFirst();
                 Image image = new Image(firstImagePath);
                 if (!image.isError()) {
                     imgProduct.setImage(image);
@@ -89,10 +83,8 @@ public class ItemCardController {
 
             ItemViewController controller = loader.getController();
 
-            System.out.println("🔥 ItemCardController: currentUser = " + (this.currentUser != null ? this.currentUser.getUsername() : "null"));
-            System.out.println("🔥 ItemCardController: client = " + (this.client != null ? "not null" : "null"));
+            System.out.println("ItemCardController: client = " + (this.client != null ? "not null" : "null"));
 
-            controller.setCurrentUser(this.currentUser);  // Dùng this.currentUser
             controller.setAuctionData(this.auction);
 
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();

@@ -177,14 +177,8 @@ public class HomePageController {
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/itemsCard-view.fxml"));
                 Node card = loader.load();
                 ItemCardController controller = loader.getController();
+                controller.setClient(ClientSocket.getInstance());
                 controller.setData(auction);
-                controller.setUser(UserSession.getCurrentUser());
-
-                card.setOnMouseClicked(event -> {
-                    if (event.getClickCount() == 1) {
-                        openItemDetail(auction);
-                    }
-                });
 
                 if (col == MAX_COLUMNS) { col = 0; row++; }
                 itemGrid.add(card, col++, row);
@@ -202,8 +196,6 @@ public class HomePageController {
             Parent root = loader.load();
 
             ItemViewController controller = loader.getController();
-            controller.setCurrentUser(UserSession.getCurrentUser());            controller.setAuctionData(auction);
-
             Stage stage = (Stage) itemGrid.getScene().getWindow();
             stage.setScene(new Scene(root));
             stage.setTitle("Auction Details - " + auction.getItem().getName());

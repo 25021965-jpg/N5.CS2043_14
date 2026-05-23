@@ -15,7 +15,6 @@ import javafx.scene.control.TextArea;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
-import javafx.scene.Node;
 
 import client.manager.FavouriteManager;
 
@@ -29,7 +28,6 @@ public class ItemViewController {
 
     private Auction auction;
     private int currentImageIndex = 0;
-    private User currentUser;
 
     @FXML private Label lblName;
     @FXML private TextArea txtDescription;
@@ -41,56 +39,70 @@ public class ItemViewController {
     @FXML private Button btnJoinAuction;
     @FXML private Button btnFavourite;
 
-    // ==================== SETTERS ====================
-
-    public void setCurrentUser(User user) {
-        this.currentUser = user;
-    }
-
+    // ================= SET DATA =================
     public void setAuctionData(Auction auction) {
         this.auction = auction;
 
-        // Tên item
+        if (auction == null || auction.getItem() == null) return;
+
+        String itemId = auction.getItem().getItem_id();
+
+        boolean isFavourite =
+                FavouriteManager.favouriteItemIds.contains(itemId);
+
+        updateFavouriteUI(isFavourite);
+
         lblName.setText(auction.getItem().getName());
-
-        // Mô tả
         txtDescription.setText(auction.getItem().getDescription());
-
-        // Giá
         lblCurrentPrice.setText("Current Price: $" + auction.getCurrentPrice());
-
-        // Bước giá
         lblStep.setText("Min Increment: $" + auction.getMinIncrement());
-
-        // Thời gian
         lblStart.setText("Start Time: " + auction.getStartTime());
         lblEnd.setText("End Time: " + auction.getEndTime());
 
         currentImageIndex = 0;
         showImage(currentImageIndex);
 
-        // Ẩn nút join nếu là chủ auction
-        if (currentUser != null && auction.getSeller_Id() != null
+        User currentUser = UserSession.getCurrentUser();
+
+        if (currentUser != null
+                && auction.getSeller_Id() != null
                 && auction.getSeller_Id().equals(currentUser.getUser_id())) {
+
             btnJoinAuction.setVisible(false);
             btnJoinAuction.setManaged(false);
-        } else {
-            btnJoinAuction.setVisible(true);
-            btnJoinAuction.setManaged(true);
         }
     }
 
-    // ==================== IMAGE NAVIGATION ====================
+    // ================= FAVORITE UI =================
+    private void updateFavouriteUI(boolean isFavourite) {
+        if (isFavourite) {
+            btnFavourite.setText("Remove From Favourite");
+            btnFavourite.setStyle(
+                    "-fx-background-color: #EF4444; " +
+                            "-fx-text-fill: white; " +
+                            "-fx-font-weight: bold; " +
+                            "-fx-background-radius: 12;"
+            );
+        } else {
+            btnFavourite.setText("Add To Favourite");
+            btnFavourite.setStyle(
+                    "-fx-background-color: #d4af37; " +
+                            "-fx-text-fill: black; " +
+                            "-fx-font-weight: bold; " +
+                            "-fx-background-radius: 12;"
+            );
+        }
+    }
 
+    // ================= IMAGE =================
     private void showImage(int index) {
         List<String> images = auction.getItem().getImages();
-        if (images != null && !images.isEmpty()) {
-            try {
-                Image image = new Image(images.get(index));
-                imgItem.setImage(image);
-            } catch (Exception e) {
-                System.err.println("Cannot load image: " + images.get(index));
-            }
+        if (images == null || images.isEmpty()) return;
+
+        try {
+            imgItem.setImage(new Image(images.get(index)));
+        } catch (Exception e) {
+            System.err.println("Cannot load image: " + images.get(index));
         }
     }
 
@@ -99,10 +111,7 @@ public class ItemViewController {
         List<String> images = auction.getItem().getImages();
         if (images == null || images.isEmpty()) return;
 
-        currentImageIndex--;
-        if (currentImageIndex < 0) {
-            currentImageIndex = images.size() - 1;
-        }
+        currentImageIndex = (currentImageIndex - 1 + images.size()) % images.size();
         showImage(currentImageIndex);
     }
 
@@ -111,89 +120,112 @@ public class ItemViewController {
         List<String> images = auction.getItem().getImages();
         if (images == null || images.isEmpty()) return;
 
-        currentImageIndex++;
-        if (currentImageIndex >= images.size()) {
-            currentImageIndex = 0;
-        }
+        currentImageIndex = (currentImageIndex + 1) % images.size();
         showImage(currentImageIndex);
     }
 
-    // ==================== FAVOURITE ====================
-
+    // ================= FAVORITE ACTION =================
     @FXML
     private void handleAddToFavourite(ActionEvent event) {
-        boolean isFavourite = FavouriteManager.favouriteAuctions.contains(auction);
-        Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
 
+        User currentUser = UserSession.getCurrentUser();
+
+        if (currentUser == null) {
+            NavigationUtils.showError("Please login again!");
+            return;
+        }
+
+        if (auction == null || auction.getItem() == null) {
+            NavigationUtils.showError("Invalid auction data!");
+            return;
+        }
+
+        String itemId = auction.getItem().getItem_id();
+
+        boolean isFavourite =
+                FavouriteManager.favouriteItemIds.contains(itemId);
+
+        Stage stage = (Stage) ((Node) event.getSource())
+                .getScene()
+                .getWindow();
+
+        ClientSocket client = ClientSocket.getInstance();
+
+        if (client == null) {
+            NavigationUtils.showError("Server not connected!");
+            return;
+        }
+
+        // ================= REMOVE =================
         if (isFavourite) {
-            FavouriteManager.favouriteAuctions.remove(auction);
-            btnFavourite.setText("Add To Favourite");
-            btnFavourite.setStyle("-fx-background-color: #d4af37; -fx-text-fill: black; -fx-font-weight: bold; -fx-background-radius: 12; -fx-font-size: 15px; -fx-cursor: hand;");
-            NavigationUtils.showToast(stage, "Removed from favourite!");
-        } else {
-            FavouriteManager.favouriteAuctions.add(auction);
-            btnFavourite.setText("Remove From Favourite");
-            btnFavourite.setStyle("-fx-background-color: #EF4444; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 12; -fx-font-size: 15px; -fx-cursor: hand;");
-            NavigationUtils.showToast(stage, "Added to favourite!");
+
+            client.sendMessage(
+                    "REMOVE_FAVOURITE|" + itemId
+            );
+
+            FavouriteManager.favouriteItemIds.remove(itemId);
+
+            updateFavouriteUI(false);
+
+        }
+        else {
+
+            client.sendMessage(
+                    "ADD_FAVOURITE|" + itemId
+            );
+
+            FavouriteManager.favouriteItemIds.add(itemId);
+
+            updateFavouriteUI(true);
         }
     }
 
-    // ==================== BACK TO HOME ====================
-
+    // ================= BACK =================
     @FXML
     private void handleBack(ActionEvent event) {
         try {
-            Parent root = FXMLLoader.load(getClass().getResource("/fxml/HomePage.fxml"));
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            FXMLLoader loader =
+                    new FXMLLoader(getClass().getResource("/fxml/HomePage.fxml"));
+
+            Parent root = loader.load();
+
+            Stage stage = (Stage) ((Node) event.getSource())
+                    .getScene()
+                    .getWindow();
+
             stage.setScene(new Scene(root));
             stage.show();
+
         } catch (IOException e) {
             System.err.println("Error: " + e.getMessage());
         }
     }
 
-    // ==================== JOIN AUCTION (QUAN TRỌNG) ====================
-
+    // ================= JOIN AUCTION =================
     @FXML
     private void handleJoinAuction(ActionEvent event) {
-        if (auction == null) {
-            System.err.println("Auction data is null");
+
+        if (auction == null) return;
+
+        ClientSocket client = ClientSocket.getInstance();
+        User user = UserSession.getCurrentUser();
+
+        if (client == null || user == null) {
+            NavigationUtils.showError("Cannot join auction!");
             return;
         }
-
-        // 🔥 LẤY CLIENT TỪ SINGLETON NẾU this.client NULL
-        ClientSocket clientToUse = ClientSocket.getInstance();
-            System.out.println("🔥 ItemViewController: Retrieved client from singleton");
-
-
-        if (clientToUse == null) {
-            System.err.println("Client is null!");
-            NavigationUtils.showError("Cannot connect to server!");
-            return;
-        }
-
-        // 🔥 LẤY USER TỪ SESSION NẾU currentUser NULL
-        User userToUse = this.currentUser;
-        if (userToUse == null) {
-            userToUse = UserSession.getCurrentUser();
-            System.out.println("🔥 ItemViewController: Retrieved user from session: " + (userToUse != null ? userToUse.getUsername() : "null"));
-        }
-
-        if (userToUse == null) {
-            System.err.println("User is null!");
-            NavigationUtils.showError("Please login again!");
-            return;
-        }
-
-        System.out.println("🔥 ItemViewController: User balance = " + userToUse.getBalance());
 
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/liveAuction-view.fxml"));
+            FXMLLoader loader =
+                    new FXMLLoader(getClass().getResource("/fxml/liveAuction-view.fxml"));
+
             Parent root = loader.load();
 
             LiveAuctionController controller = loader.getController();
-            controller.setClient(clientToUse);
-            controller.setUser(userToUse);  // 🔥 Truyền user có balance
+
+            controller.setClient(client);
+            controller.setUser(user);
+
             controller.setAuctionData(
                     auction.getAuction_id(),
                     auction.getItem().getName(),
@@ -203,16 +235,18 @@ public class ItemViewController {
                     "0",
                     auction.getEndTime().toString(),
                     auction.getItem().getImages() != null && !auction.getItem().getImages().isEmpty()
-                            ? auction.getItem().getImages().get(0) : null
+                            ? auction.getItem().getImages().get(0)
+                            : null
             );
 
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            Stage stage = (Stage) ((Node) event.getSource())
+                    .getScene()
+                    .getWindow();
+
             stage.setScene(new Scene(root));
-            stage.setTitle("Live Auction - " + auction.getItem().getName());
-            stage.show();
+            stage.setTitle("Live Auction");
 
         } catch (Exception e) {
-            e.printStackTrace();
             NavigationUtils.showError("Cannot join auction: " + e.getMessage());
         }
     }

@@ -2,14 +2,11 @@ package server.network;
 
 import common.Command;
 import model.*;
-import server.dao.AuctionDAO;
-import server.dao.ItemDAO;
-import server.dao.TransactionDAO;
+import server.dao.*;
 import server.service.*;
-import server.dao.UserDAO;
 
 import java.io.BufferedReader;
-import client.manager.RoomManager;
+import server.manager.RoomManager;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.io.IOException;
@@ -19,6 +16,8 @@ import java.math.BigDecimal;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 public class ClientHandler implements Runnable {
 
@@ -71,7 +70,9 @@ public class ClientHandler implements Runnable {
         if (data.length == 0) return "ERROR|Empty command";
 
         try {
-            Command cmd = Command.valueOf(data[0].toUpperCase());
+            Command cmd = Command.valueOf(
+                    data[0].trim().toUpperCase()
+            );
             System.out.println("  → Processing Command: " + cmd);
 
             switch (cmd) {
@@ -95,15 +96,34 @@ public class ClientHandler implements Runnable {
 
                 case LIST_AUCTION_HISTORY: return handleListAuctionHistory();
 
+                //favourite
+                case ADD_FAVOURITE:
+                    return handleAddFavourite(data);
+
+                case REMOVE_FAVOURITE:
+                    return handleRemoveFavourite(data);
+
+                case LIST_FAVOURITES:
+                    return handleListFavourites();
+
                 // --- BALANCE & TRANSACTIONS ---
                 case DEPOSIT: return handleDeposit(data);
                 case WITHDRAW: return handleWithdraw(data);
                 case GET_TRANSACTIONS: return handleGetTransactions(data);
-                case GET_BALANCE: return handleGetBalance(data);  // 🔥 ĐÚNG VỊ TRÍ
+                case GET_BALANCE: return handleGetBalance(data);
 
                 case LOGOUT:
-                    System.out.println("  → User " + (currentUser != null ? currentUser.getUsername() : "Unknown") + " logged out.");
+                    if (currentAuctionId != null) {
+                        RoomManager.removeClient(currentAuctionId, writer);
+                        currentAuctionId = null;
+                    }
+
+                    System.out.println("  → User " +
+                            (currentUser != null ? currentUser.getUsername() : "Unknown")
+                            + " logged out.");
+
                     this.currentUser = null;
+
                     return "LOGOUT_SUCCESS";
 
                 case FORGOT_PASSWORD: return handleForgotPassword(data);
@@ -117,12 +137,141 @@ public class ClientHandler implements Runnable {
                 default: return "ERROR|Command not supported";
             }
         } catch (IllegalArgumentException e) {
-            System.err.println("  ✕ Unknown Command: " + data[0]);
+            System.err.println("✕ Unknown Command: " + data[0]);
             return "ERROR|Invalid Command";
         } catch (Exception e) {
-            System.err.println("  ✕ Server Logic Error: " + e.getMessage());
+            System.err.println("✕ Server Logic Error: " + e.getMessage());
             return "ERROR|Server Error: " + e.getMessage();
         }
+    }
+
+    //favourite
+    private String handleAddFavourite(String[] data) {
+
+        if(currentUser == null)
+            return "ADD_FAVOURITE_FAILED|Not logged in";
+
+        if(data.length < 2)
+            return "ADD_FAVOURITE_FAILED|Missing item id";
+
+        String itemId = data[1];
+
+        boolean ok =
+                FavouriteDAO.addFavourite(
+                        currentUser.getUser_id(),
+                        itemId
+                );
+
+        return ok
+                ? "ADD_FAVOURITE_SUCCESS"
+                : "ADD_FAVOURITE_FAILED";
+    }
+
+    private String handleRemoveFavourite(String[] data) {
+
+        if (currentUser == null)
+            return "REMOVE_FAVOURITE_FAILED|Not logged in";
+
+        if (data.length < 2)
+            return "REMOVE_FAVOURITE_FAILED|Missing item id";
+
+        String itemId = data[1];
+
+        boolean ok = FavouriteDAO.removeFavourite(
+                currentUser.getUser_id(),
+                itemId
+        );
+
+        return ok
+                ? "REMOVE_FAVOURITE_SUCCESS"
+                : "REMOVE_FAVOURITE_FAILED";
+    }
+
+    private String handleListFavourites() {
+
+        if (currentUser == null)
+            return "FAVOURITES_FAILED|Not logged in";
+
+        Set<String> favouriteItemIds =
+                new HashSet<>(FavouriteDAO.getFavouriteItemIds(currentUser.getUser_id()));
+
+        if (favouriteItemIds.isEmpty())
+            return "FAVOURITES_EMPTY";
+
+        List<Auction> auctions = AuctionService.getAllAuctions();
+
+        StringBuilder sb = new StringBuilder();
+
+        int count = 0;
+
+        for (Auction auction : auctions) {
+
+            if (auction == null || auction.getItem() == null)
+                continue;
+
+            Item item = auction.getItem();
+
+            String itemId = item.getItem_id();
+
+            if (!favouriteItemIds.contains(itemId))
+                continue;
+
+            String firstImg = "NO_IMAGE";
+
+            if (item.getImages() != null && !item.getImages().isEmpty()) {
+
+                String img = item.getImages().get(0);
+
+                if (img != null) {
+                    firstImg = img
+                            .replace(";", ",")
+                            .replace("|", "-");
+                }
+            }
+
+            String itemName = item.getName() == null
+                    ? "Unnamed"
+                    : item.getName()
+                      .replace(";", ",")
+                      .replace("|", "-");
+
+            String description = item.getDescription() == null
+                    ? ""
+                    : item.getDescription()
+                      .replace(";", ",")
+                      .replace("|", "-")
+                      .replace("\n", " ");
+
+            String sellerId =
+                    (auction.getSeller() != null
+                            && auction.getSeller().getUser_id() != null)
+                            ? auction.getSeller().getUser_id()
+                            : "";
+
+            if (count == 0) {
+                sb.append("LIST_FAVOURITES_SUCCESS");
+            }
+
+            sb.append("|")
+                    .append(auction.getAuction_id()).append(";")
+                    .append(item.getItem_id()).append(";")
+                    .append(itemName).append(";")
+                    .append(auction.getCurrentPrice()).append(";")
+                    .append(auction.getMinIncrement()).append(";")
+                    .append(firstImg).append(";")
+                    .append(auction.getStartTime()).append(";")
+                    .append(auction.getEndTime()).append(";")
+                    .append(item.getCategory()).append(";")
+                    .append(description).append(";")
+                    .append(auction.getStatus()).append(";")
+                    .append(sellerId);
+
+            count++;
+        }
+
+        return count == 0
+                ? "FAVOURITES_EMPTY"
+                : sb.toString();
     }
 
     // ==================== GET BALANCE ====================
@@ -339,10 +488,22 @@ public class ClientHandler implements Runnable {
             String result = BidService.placeBid(this.currentUser, auction, amount);
 
             if (result.startsWith("BID_SUCCESS")) {
-                String newPrice = result.split("\\|")[1];
-                String broadcastMsg = "UPDATE_PRICE|" + auctionId + "|" + newPrice + "|" + currentUser.getUsername() + "|" +
-                        LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
-                RoomManager.broadcastToRoomAll(auctionId, broadcastMsg);
+                String[] parts = result.split("\\|");
+
+                if (parts.length >= 2) {
+
+                    String newPrice = parts[1];
+
+                    String broadcastMsg =
+                            "UPDATE_PRICE|" + auctionId + "|" +
+                                    newPrice + "|" +
+                                    currentUser.getUsername() + "|" +
+                                    LocalDateTime.now().format(
+                                            DateTimeFormatter.ofPattern("HH:mm:ss")
+                                    );
+
+                    RoomManager.broadcastToRoomAll(auctionId, broadcastMsg);
+                }
             }
 
             return result;
@@ -397,7 +558,9 @@ public class ClientHandler implements Runnable {
                     String sellerId = (a.getSeller() != null && a.getSeller().getUser_id() != null)
                             ? a.getSeller().getUser_id() : "";
 
-                    sb.append("|").append(auctionId).append(";")
+                    sb.append("|")
+                            .append(auctionId).append(";")
+                            .append(item.getItem_id()).append(";")   // thêm
                             .append(itemName).append(";")
                             .append(currentPrice).append(";")
                             .append(minIncrement).append(";")

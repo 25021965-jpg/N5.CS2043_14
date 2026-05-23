@@ -1,5 +1,7 @@
 package common;
 
+import java.util.Locale;
+
 public enum ResponseType {
     LOGIN_SUCCESS,
     LOGIN_FAILED,
@@ -39,14 +41,19 @@ public enum ResponseType {
     RESUME_AUCTION_SUCCESS,
     RESUME_AUCTION_FAILED,
     CANCEL_AUCTION_SUCCESS,
-    CANCEL_AUCTION_FAILED;
+    CANCEL_AUCTION_FAILED,
+    LIST_FAVOURITES_SUCCESS,
+    LIST_FAVOURITES_EMPTY,
+    ADD_FAVOURITE_SUCCESS,
+    ADD_FAVOURITE_FAILED,
+    REMOVE_FAVOURITE_SUCCESS,
+    REMOVE_FAVOURITE_FAILED;
 
     public static ResponseType from(String msg) {
         if (msg == null || msg.isBlank()) return null;
         try {
             // Lấy phần đầu trước dấu |
-            String key = msg.split("\\|")[0].trim().toUpperCase();
-            return ResponseType.valueOf(key);
+            String key = msg.split("\\|")[0].trim().toUpperCase(Locale.ROOT);            return ResponseType.valueOf(key);
         } catch (Exception e) {
             // In log nhẹ để debug
             System.err.println("✕ Unknown Response Type: " + msg);
