@@ -25,7 +25,6 @@ public class ClientApp extends Application {
         Scene scene = new Scene(fxmlLoader.load());
 
         LoginController loginController= fxmlLoader.getController();
-        loginController.setStage(stage);
         loginController.setClient(socket);
 
         stage.setScene(scene);

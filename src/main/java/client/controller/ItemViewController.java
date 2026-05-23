@@ -30,7 +30,6 @@ public class ItemViewController {
     private Auction auction;
     private int currentImageIndex = 0;
     private User currentUser;
-    private ClientSocket client;  // ← THÊM
 
     @FXML private Label lblName;
     @FXML private TextArea txtDescription;
@@ -46,11 +45,6 @@ public class ItemViewController {
 
     public void setCurrentUser(User user) {
         this.currentUser = user;
-    }
-
-    public void setClient(ClientSocket client) {
-        this.client = client;
-        System.out.println("[ItemViewController] Client set: " + (client != null ? "not null" : "null"));
     }
 
     public void setAuctionData(Auction auction) {
@@ -168,11 +162,9 @@ public class ItemViewController {
         }
 
         // 🔥 LẤY CLIENT TỪ SINGLETON NẾU this.client NULL
-        ClientSocket clientToUse = this.client;
-        if (clientToUse == null) {
-            clientToUse = ClientSocket.getInstance();
+        ClientSocket clientToUse = ClientSocket.getInstance();
             System.out.println("🔥 ItemViewController: Retrieved client from singleton");
-        }
+
 
         if (clientToUse == null) {
             System.err.println("Client is null!");

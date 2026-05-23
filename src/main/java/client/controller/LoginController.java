@@ -1,5 +1,6 @@
 package client.controller;
 
+import client.manager.UserSession;
 import client.network.ClientSocket;
 import client.network.ResponseHandler;
 import client.util.NavigationUtils;
@@ -31,13 +32,9 @@ public class LoginController {
     private PasswordField passField;
 
     private ClientSocket client;
-    private Stage stage;
-    private User loggedInUser;
     private static final Logger LOGGER = Logger.getLogger(LoginController.class.getName());
 
-    public void setStage(Stage stage) {
-        this.stage = stage;
-    }
+
 
     public void setClient(ClientSocket client) {
         this.client = client;
@@ -55,7 +52,6 @@ public class LoginController {
 
             // ========== ĐĂNG KÝ LISTENER XỬ LÝ PHẢN HỒI ==========
             client.setMessageListener(this::handleServerMessage);
-            client.listen();
 
             Platform.runLater(() -> {
                 if (userField.getScene() != null) {
@@ -81,34 +77,36 @@ public class LoginController {
             if (msg.startsWith("LOGIN_SUCCESS")) {
                 // Parse user từ response
                 String[] parts = msg.split("\\|");
+                User user = null;
                 if (parts.length >= 5) {
-                    loggedInUser = new User();
-                    loggedInUser.setUser_id(parts[1]);
-                    loggedInUser.setFullname(parts[2]);
-                    loggedInUser.setUsername(parts[3]);
-                    loggedInUser.setEmail(parts[4]);
+                    user = new User();
+                    user.setUser_id(parts[1]);
+                    user.setFullname(parts[2]);
+                    user.setUsername(parts[3]);
+                    user.setEmail(parts[4]);
                     if (parts.length >= 6) {
-                        loggedInUser.setDob(parts[5]);
+                        user.setDob(parts[5]);
                     }
                     if (parts.length >= 7) {
                         try {
-                            loggedInUser.setRole(Role.valueOf(parts[6]));
+                            user.setRole(Role.valueOf(parts[6]));
                         } catch (Exception e) {
-                            loggedInUser.setRole(Role.BIDDER);
+                            user.setRole(Role.BIDDER);
                         }
                     }
                     if (parts.length >= 8) {
                         try {
-                            loggedInUser.setBalance(new BigDecimal(parts[7]));
+                            user.setBalance(new BigDecimal(parts[7]));
                         } catch (Exception e) {
-                            loggedInUser.setBalance(BigDecimal.ZERO);
+                            user.setBalance(BigDecimal.ZERO);
                         }
                     }
-                    loggedInUser.setPassword(passField.getText());
+                    user.setPassword(passField.getText());
                 }
 
-
-                goToHomePage();
+                if (user != null) {
+                    UserSession.setCurrentUser(user);
+                }                goToHomePage();
 
             } else if (msg.startsWith("LOGIN_FAILED")) {
                 showError("Wrong username or password!");
@@ -141,14 +139,6 @@ public class LoginController {
         }
 
         client.sendLogin(username, password);
-    }
-
-    private void showInfo(String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Success");
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
     }
 
     private void showError(String message) {
@@ -190,20 +180,8 @@ public class LoginController {
             Parent root = loader.load();
 
             HomePageController controller = loader.getController();
-            controller.setClient(client);
-            controller.setUser(loggedInUser);
 
-            // 🔥 LẤY STAGE NẾU NULL
-            Stage currentStage = this.stage;
-            if (currentStage == null && userField != null && userField.getScene() != null) {
-                stage = (Stage) userField.getScene().getWindow();
-                this.stage = currentStage;
-            }
-
-            if (currentStage == null) {
-                showError("Cannot determine window");
-                return;
-            }
+            Stage currentStage = (Stage) userField.getScene().getWindow();
 
             currentStage.setScene(new Scene(root));
             currentStage.setTitle("Auction System");

@@ -89,12 +89,10 @@ public class ItemCardController {
 
             ItemViewController controller = loader.getController();
 
-            // 🔥 QUAN TRỌNG: In ra để kiểm tra
             System.out.println("🔥 ItemCardController: currentUser = " + (this.currentUser != null ? this.currentUser.getUsername() : "null"));
             System.out.println("🔥 ItemCardController: client = " + (this.client != null ? "not null" : "null"));
 
             controller.setCurrentUser(this.currentUser);  // Dùng this.currentUser
-            controller.setClient(this.client);
             controller.setAuctionData(this.auction);
 
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();

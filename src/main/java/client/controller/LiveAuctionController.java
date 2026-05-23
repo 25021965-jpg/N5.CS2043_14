@@ -378,7 +378,6 @@ public class LiveAuctionController implements UserDataReceiver {
             Parent root = loader.load();
 
             HomePageController controller = loader.getController();
-            controller.setClient(client);
             controller.setUser(currentUser);
 
             Stage stage = (Stage) backHomeBtn.getScene().getWindow();

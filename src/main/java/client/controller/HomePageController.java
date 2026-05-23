@@ -35,8 +35,6 @@ public class HomePageController {
     // Filter states
     private Category selectedCategory = null;
     private String selectedStatus = null;
-    private ClientSocket client;
-    private User currentUser;
 
     @FXML private GridPane itemGrid;
     @FXML private TextField txtSearch;
@@ -76,13 +74,12 @@ public class HomePageController {
         Platform.runLater(() -> highlight(btnAll));
     }
 
-    public void setClient(ClientSocket client) {
-        this.client = client;
-    }
-
     public void setUser(User user) {
-        this.currentUser = user;
-        if (user != null) log("Logged in as: " + user.getUsername());
+        UserSession.setCurrentUser(user);
+
+        if (user != null) {
+            log("Logged in as: " + user.getUsername());
+        }
     }
 
     // ================= DYNAMIC UPDATES (Called by ResponseHandler) =================
@@ -181,8 +178,7 @@ public class HomePageController {
                 Node card = loader.load();
                 ItemCardController controller = loader.getController();
                 controller.setData(auction);
-                controller.setClient(client);
-                controller.setUser(currentUser);
+                controller.setUser(UserSession.getCurrentUser());
 
                 card.setOnMouseClicked(event -> {
                     if (event.getClickCount() == 1) {
@@ -206,9 +202,7 @@ public class HomePageController {
             Parent root = loader.load();
 
             ItemViewController controller = loader.getController();
-            controller.setClient(client);
-            controller.setCurrentUser(currentUser);
-            controller.setAuctionData(auction);
+            controller.setCurrentUser(UserSession.getCurrentUser());            controller.setAuctionData(auction);
 
             Stage stage = (Stage) itemGrid.getScene().getWindow();
             stage.setScene(new Scene(root));
@@ -230,9 +224,7 @@ public class HomePageController {
             Parent root = loader.load();
 
             LiveAuctionController controller = loader.getController();
-            controller.setClient(client);
-            controller.setUser(currentUser);   // set user trước (không init balance)
-            controller.setAuctionData(         // setAuctionData sẽ init/khôi phục balance
+            controller.setUser(UserSession.getCurrentUser());            controller.setAuctionData(         // setAuctionData sẽ init/khôi phục balance
                     auction.getAuction_id(),
                     auction.getItem().getName(),
                     auction.getItem().getDescription(),
@@ -289,12 +281,12 @@ public class HomePageController {
             Parent root = loader.load();
 
             AccountBalanceController controller = loader.getController();
-            controller.setClient(client);
+            User user = UserSession.getCurrentUser();
 
-            if (currentUser != null) {
-                controller.setUser(currentUser);
+            if (user != null) {
+                controller.setUser(user);
             } else {
-                System.err.println("currentUser is null when opening balance");
+                System.err.println("UserSession current user is null");
             }
 
             Stage stage;
