@@ -190,23 +190,38 @@ public class MyAuctionsController implements UserDataReceiver{
 
         String selectedStatus =
                 statusFilterComboBox.getValue();
+
         String selectedCategory =
                 categoryFilterComboBox.getValue();
 
-        System.out.println(
-                "Filter: "
-                        + selectedStatus
-        );
-        System.out.println(
-                "Category: "
-                        + selectedCategory
-        );
+        List<Auction> filtered =
+                myAuctions.stream()
 
-        /*
-            TODO:
-            - filter auction by status
-            - update UI
-         */
+                        .filter(auction -> {
+
+                            boolean statusMatch =
+                                    selectedStatus == null
+                                            || selectedStatus.equalsIgnoreCase("All")
+                                            || auction.getStatus()
+                                            .name()
+                                            .replace("_", " ")
+                                            .equalsIgnoreCase(selectedStatus);
+
+                            boolean categoryMatch =
+                                    selectedCategory == null
+                                            || selectedCategory.equalsIgnoreCase("All")
+                                            || auction.getItem()
+                                            .getCategory()
+                                            .name()
+                                            .replace("_", " ")
+                                            .equalsIgnoreCase(selectedCategory);
+
+                            return statusMatch && categoryMatch;
+                        })
+
+                        .toList();
+
+        refreshGrid(filtered);
     }
 
     public void updateMyAuctions(

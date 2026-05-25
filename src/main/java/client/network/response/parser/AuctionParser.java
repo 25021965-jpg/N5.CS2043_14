@@ -41,11 +41,23 @@ public class AuctionParser {
                 a.setMinIncrement(new BigDecimal(p[4]));
                 a.setStartTime(LocalDateTime.parse(p[6]));
                 a.setEndTime(LocalDateTime.parse(p[7]));
-                a.setStatus(AuctionStatus.valueOf(p[10].toUpperCase()));
+                String statusRaw = p[10].trim().toUpperCase(Locale.ROOT);
 
+                AuctionStatus status;
+                try {
+                    status = AuctionStatus.valueOf(statusRaw);
+                } catch (Exception e) {
+                    System.out.println("BAD STATUS: " + statusRaw + " TOKEN=" + token);
+                    status = AuctionStatus.PENDING_APPROVAL; // fallback có kiểm soát
+                }
+
+                a.setStatus(status);
                 list.add(a);
 
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                System.out.println("PARSE ERROR: " + token);
+                e.printStackTrace();
+            }
         }
 
         return list;

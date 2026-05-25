@@ -678,7 +678,7 @@ public class ClientHandler implements Runnable {
                             .append(endTime).append(";")
                             .append(category).append(";")
                             .append(cleanDesc).append(";")
-                            .append(status).append(";")   // thêm ";" vào đây
+                            .append(status).append(";")
                             .append(sellerId);
 
                 } catch (Exception ex) {
