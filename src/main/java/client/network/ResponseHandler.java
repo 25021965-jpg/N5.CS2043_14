@@ -1,6 +1,7 @@
 package client.network;
 
 import client.controller.*;
+import client.manager.FavouriteManager;
 import client.manager.UserSession;
 import client.util.NavigationUtils;
 import common.ResponseType;
@@ -140,9 +141,13 @@ public class ResponseHandler {
 
                 // ================= AUCTION LIST =================
                 case LIST_SUCCESS -> {
-                    List<Auction> list = parseAuctionList(data);
-                    if (HomePageController.getInstance() != null) {
-                        HomePageController.getInstance().updateAuctionList(list);
+
+                    if ("LIST_FAVOURITES".equals(ClientSocket.currentRequest)) {
+                        FavouriteController ctrl = FavouriteController.getInstance();
+                        if (ctrl != null) ctrl.renderFavourite(data);
+                    } else {
+                        HomePageController home = HomePageController.getInstance();
+                        if (home != null) home.updateAuctionList(parseAuctionList(data));
                     }
                 }
 
@@ -155,9 +160,22 @@ public class ResponseHandler {
 
                 // ================= FAVORITE (NEW) =================
                 case LIST_FAVOURITES_SUCCESS -> {
-                    FavouriteController ctrl = FavouriteController.getInstance();
+
+                    // IMPORTANT FIX
+                    FavouriteManager.loadFromResponse(data);
+
+                    FavouriteController ctrl =
+                            FavouriteController.getInstance();
+
                     if (ctrl != null) {
                         ctrl.renderFavourite(data);
+                    }
+                }
+
+                case LIST_FAVOURITES_EMPTY -> {
+                    FavouriteController ctrl = FavouriteController.getInstance();
+                    if (ctrl != null) {
+                        ctrl.renderFavourite("FAVOURITES_EMPTY");
                     }
                 }
 
@@ -224,16 +242,24 @@ public class ResponseHandler {
     private static void handleLoginSuccess(User user) {
 
         if (user == null) return;
-
         if (user.getRole() == Role.ADMIN) {
             NavigationUtils.switchScene(mainStage, "/fxml/admin-view.fxml", "Admin");
-        } else {
-            NavigationUtils.switchScene(mainStage, "/fxml/HomePage.fxml", "Home");
-
+        }
+        else {
+            NavigationUtils.switchScene(
+                    mainStage,
+                    "/fxml/HomePage.fxml",
+                    "Home"
+            );
             Platform.runLater(() -> {
-                if (HomePageController.getInstance() != null) {
-                    HomePageController.getInstance().setUser(user);
+
+                HomePageController controller =
+                        HomePageController.getInstance();
+
+                if (controller != null) {
+                    controller.setUser(user);
                 }
+
             });
         }
 
@@ -261,68 +287,50 @@ public class ResponseHandler {
     }
 
     // ================= PARSE AUCTION =================
-    private static List<Auction> parseAuctionList(String data){
+    private static List<Auction> parseAuctionList(String data) {
 
-        List<Auction> list=new ArrayList<>();
+        List<Auction> list = new ArrayList<>();
 
-        for(String token:data.split("\\|")){
+        if (data == null || data.isBlank()) return list;
 
-            try{
+        // chỉ có 1 hoặc nhiều item nhưng phân tách bằng "|"
+        String[] tokens = data.split("\\|");
 
-                String[] p=token.split(";",-1);
+        for (String token : tokens) {
 
-                if(p.length<12) continue;
+            try {
+                String[] p = token.split(";", -1);
 
-                Auction a=new Auction();
+                if (p.length < 12) continue;
+
+                Auction a = new Auction();
                 a.setAuction_id(p[0]);
 
-                Item item=new Item();
-
-                item.setItem_id(p[1]);          // FIX
+                Item item = new Item();
+                item.setItem_id(p[1]);
                 item.setName(p[2]);
                 item.setDescription(p[9]);
 
-                try{
-                    item.setCategory(
-                            Category.valueOf(
-                                    p[8].trim().toUpperCase()
-                            )
-                    );
-                }catch(Exception e){
+                try {
+                    item.setCategory(Category.valueOf(p[8].trim().toUpperCase()));
+                } catch (Exception e) {
                     item.setCategory(Category.OTHER);
                 }
 
-                if(!p[5].isBlank()){
-                    item.setImages(
-                            Collections.singletonList(p[5])
-                    );
+                if (!p[5].isBlank()) {
+                    item.setImages(Collections.singletonList(p[5]));
                 }
 
                 a.setItem(item);
+                a.setCurrentPrice(new BigDecimal(p[3]));
+                a.setMinIncrement(new BigDecimal(p[4]));
+                a.setStartTime(LocalDateTime.parse(p[6]));
+                a.setEndTime(LocalDateTime.parse(p[7]));
+                a.setStatus(AuctionStatus.valueOf(p[10].trim().toUpperCase()));
 
-                a.setCurrentPrice(
-                        new BigDecimal(p[3])
-                );
-
-                a.setMinIncrement(
-                        new BigDecimal(p[4])
-                );
-
-                a.setStartTime(
-                        LocalDateTime.parse(p[6])
-                );
-
-                a.setEndTime(
-                        LocalDateTime.parse(p[7])
-                );
-                a.setStatus(
-                        AuctionStatus.valueOf(
-                                p[10].trim().toUpperCase()
-                        )
-                );
                 list.add(a);
 
-            }catch(Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
