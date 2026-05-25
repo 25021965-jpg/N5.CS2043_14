@@ -20,8 +20,6 @@ import java.util.function.Consumer;
 public class ResponseHandler {
 
     private static Stage mainStage;
-
-    // ========== LIVE AUCTION LISTENER ==========
     private static Consumer<String> liveAuctionListener = null;
 
     public static void setLiveAuctionListener(Consumer<String> listener) {
@@ -33,300 +31,219 @@ public class ResponseHandler {
     }
 
     public static void handle(String rawMessage) {
-
         if (rawMessage == null || rawMessage.isEmpty()) return;
 
-        // ================= LIVE AUCTION =================
-        if (liveAuctionListener != null) {
-            if (rawMessage.startsWith("UPDATE_PRICE")
-                    || rawMessage.startsWith("JOIN_SUCCESS")
-                    || rawMessage.startsWith("JOIN_FAILED")
-                    || rawMessage.startsWith("BID_FAILED")
-                    || rawMessage.startsWith("AUCTION_ENDED")
-                    || rawMessage.startsWith("YOU_WON")) {
-
-                liveAuctionListener.accept(rawMessage);
-                return;
-            }
-        }
-
-        // ================= BALANCE =================
-        if (rawMessage.startsWith("BALANCE_UPDATE_SUCCESS")) {
-            Platform.runLater(() -> {
-                String[] parts = rawMessage.split("\\|");
-                if (parts.length >= 2) {
-                    BigDecimal newBalance = new BigDecimal(parts[1]);
-
-                    if (AccountBalanceController.getInstance() != null) {
-                        AccountBalanceController.getInstance()
-                                .updateBalanceFromServer(newBalance);
-                    }
-
-                    if (LiveAuctionController.getInstance() != null) {
-                        LiveAuctionController.getInstance()
-                                .updateBalance(newBalance);
-                    }
-
-                    NavigationUtils.showToast(mainStage, "Balance updated successfully!");
-                }
-            });
+        // ========== LIVE UPDATE PRICE (Check trước khi split) ==========
+        if (rawMessage.startsWith("UPDATE_PRICE") && liveAuctionListener != null) {
+            liveAuctionListener.accept(rawMessage);
             return;
         }
 
-        if (rawMessage.startsWith("BALANCE_UPDATE_FAILED")) {
-            Platform.runLater(() -> {
-                String msg = rawMessage.split("\\|").length > 1
-                        ? rawMessage.split("\\|")[1]
-                        : "Transaction failed";
-                NavigationUtils.showError(msg);
-            });
-            return;
-        }
-
-        // ================= TRANSACTIONS =================
-        if (rawMessage.startsWith("TRANSACTIONS_LIST")) {
-            Platform.runLater(() -> {
-                String data = rawMessage.substring("TRANSACTIONS_LIST|".length());
-                if (AccountBalanceController.getInstance() != null) {
-                    AccountBalanceController.getInstance()
-                            .updateTransactionList(data);
-                }
-            });
-            return;
-        }
-
-        // ================= SPLIT RESPONSE =================
         String[] parts = rawMessage.split("\\|", 2);
         String header = parts[0];
-        String data = parts.length > 1 ? parts[1] : "";
+        String data = (parts.length > 1) ? parts[1] : "";
 
         ResponseType type;
-
         try {
-            type = ResponseType.from(header);
-            if (type == null) return;
+            type = ResponseType.valueOf(header);
         } catch (Exception e) {
             return;
         }
 
         Platform.runLater(() -> {
-
             switch (type) {
-
-                // ================= LOGIN =================
+                // ================= AUTHENTICATION =================
                 case LOGIN_SUCCESS -> {
                     User loginUser = parseUser(data);
                     UserSession.setCurrentUser(loginUser);
                     handleLoginSuccess(loginUser);
                 }
-
                 case LOGIN_FAILED ->
-                        NavigationUtils.showError(
-                                "Login failed: " + (data.isEmpty() ? "Invalid credentials" : data)
-                        );
+                        NavigationUtils.showError(data.isEmpty() ? "Invalid credentials." : data);
 
-                // ================= REGISTER =================
                 case REGISTER_SUCCESS -> {
-                    NavigationUtils.switchScene(
-                            mainStage,
-                            "/fxml/login-view.fxml",
-                            "Login"
-                    );
+                    NavigationUtils.switchScene(mainStage, "/fxml/login-view.fxml", "Login");
                     NavigationUtils.showToast(mainStage, "Account created successfully!");
                 }
+                case REGISTER_FAILED -> NavigationUtils.showError("Registration failed: " + data);
 
-                case REGISTER_FAILED ->
-                        NavigationUtils.showError("Register failed: " + data);
+                case FORGOT_SUCCESS -> {
+                    NavigationUtils.switchScene(mainStage, "/fxml/login-view.fxml", "Login");
+                    NavigationUtils.showToast(mainStage, "Password reset successfully!");
+                }
+                case FORGOT_FAILED -> NavigationUtils.showError("Failed to reset password: " + data);
 
-                // ================= AUCTION LIST =================
+                // ================= CLIENT AUCTION LOGIC =================
+                case CREATE_SUCCESS -> {
+                    NavigationUtils.showToast(mainStage, "Auction submitted! Waiting for Admin approval.");
+                    NavigationUtils.switchScene(mainStage, "/fxml/HomePage.fxml", "Auction Home");
+                }
+                case CREATE_FAILED -> NavigationUtils.showError("Failed to create auction: " + data);
+
                 case LIST_SUCCESS -> {
                     List<Auction> list = parseAuctionList(data);
                     if (HomePageController.getInstance() != null) {
                         HomePageController.getInstance().updateAuctionList(list);
                     }
                 }
-
                 case LIST_EMPTY -> {
                     if (HomePageController.getInstance() != null) {
-                        HomePageController.getInstance()
-                                .updateAuctionList(new ArrayList<>());
+                        HomePageController.getInstance().updateAuctionList(new ArrayList<>());
                     }
                 }
 
-                // ================= FAVORITE (NEW) =================
-                case LIST_FAVOURITES_SUCCESS -> {
-                    FavouriteController ctrl = FavouriteController.getInstance();
-                    if (ctrl != null) {
-                        ctrl.renderFavourite(data);
-                    }
-                }
-
-                case ADD_FAVOURITE_SUCCESS -> {
-
-                    NavigationUtils.showToast(
-                            mainStage,
-                            "Added to favourites!"
-                    );
-
-                    FavouriteController ctrl =
-                            FavouriteController.getInstance();
-
-                    if (ctrl != null)
-                        ctrl.loadFavourites();
-                }
-
-                case ADD_FAVOURITE_FAILED -> NavigationUtils.showError("Add favourite failed: " + data);
-
-                case REMOVE_FAVOURITE_SUCCESS -> {
-                    FavouriteController ctrl = FavouriteController.getInstance();
-                    if (ctrl != null) {
-                        ctrl.removeItemFromUI(data);
-                    }
-                }
-
-                // ================= BID =================
                 case BID_SUCCESS -> {
-                    NavigationUtils.showToast(mainStage, "Bid placed!");
+                    NavigationUtils.showToast(mainStage, "Your bid has been placed!");
                     ClientSocket.getInstance().sendList();
                 }
+                case BID_FAILED -> NavigationUtils.showError("Unable to place bid: " + data);
 
-                case BID_FAILED ->
-                        NavigationUtils.showError("Bid failed: " + data);
-
-                // ================= ITEM =================
-                case ITEM_LIST_SUCCESS -> {
-                    ObservableList<String[]> items = FXCollections.observableArrayList();
-
-                    for (String token : data.split("\\|")) {
-                        String[] f = token.split(";", -1);
-                        if (f.length >= 5) items.add(f);
+                case BID_HISTORY_SUCCESS -> {
+                    List<Bid> bidHistory = parseBidHistory(data);
+                    if (LiveAuctionController.getInstance() != null) {
+                        LiveAuctionController.getInstance().loadBidHistory(bidHistory);
                     }
+                }
 
+                // ================= ADMIN MANAGEMENT =================
+
+                // --- DUYỆT SẢN PHẨM ---
+                case APPROVE_AUCTION_SUCCESS -> {
+                    NavigationUtils.showToast(mainStage, "Auction approved successfully!");
+                    ClientSocket.getInstance().sendRequest("LIST_PENDING_AUCTIONS");
+                }
+                case APPROVE_AUCTION_FAILED -> NavigationUtils.showError("Approve failed: " + data);
+
+                case PENDING_AUCTIONS_SUCCESS -> {
+                    ObservableList<String[]> items = parseToObservableList(data, 5);
                     if (ManageProductController.getInstance() != null) {
                         ManageProductController.getInstance().updateProducts(items);
                     }
                 }
 
-                case ITEM_LIST_EMPTY -> {
-                    if (ManageProductController.getInstance() != null) {
-                        ManageProductController.getInstance()
-                                .updateProducts(FXCollections.observableArrayList());
+                // --- QUẢN LÝ USER ---
+                case USER_LIST_SUCCESS -> {
+                    ObservableList<User> users = FXCollections.observableArrayList();
+                    for (String token : data.split("\\|")) {
+                        String[] f = token.split(";", -1);
+                        if (f.length >= 4) {
+                            User u = new User();
+                            u.setUser_id(f[0]); u.setUsername(f[1]);
+                            u.setEmail(f[2]); u.setRole(Role.valueOf(f[3]));
+                            users.add(u);
+                        }
                     }
+                    if (AdminController.getInstance() != null) AdminController.getInstance().updateUsers(users);
+                }
+                case DELETE_USER_SUCCESS -> {
+                    NavigationUtils.showToast(mainStage, "User deleted successfully!");
+                    if (AdminController.getInstance() != null) AdminController.getInstance().handleReload();
                 }
 
-                default ->
-                        System.out.println("Unhandled: " + type);
+                // --- QUẢN LÝ ITEM & HISTORY ---
+                case ITEM_LIST_SUCCESS -> {
+                    ObservableList<String[]> items = parseToObservableList(data, 5);
+                    if (ManageProductController.getInstance() != null) ManageProductController.getInstance().updateProducts(items);
+                }
+                case ALL_AUCTIONS_SUCCESS -> {
+                    ObservableList<String[]> listItems = parseToObservableList(data, 5);
+                    if (ManageAuctionController.getInstance() != null) ManageAuctionController.getInstance().updateAuctions(listItems);
+                }
+                case STOP_AUCTION_SUCCESS, RESUME_AUCTION_SUCCESS, CANCEL_AUCTION_SUCCESS -> {
+                    NavigationUtils.showToast(mainStage, "Action performed successfully!");
+                    if (ManageAuctionController.getInstance() != null) ManageAuctionController.getInstance().handleReloadAuctions();
+                }
+
+                // ================= SYSTEM =================
+                case ERROR -> NavigationUtils.showError("System error: " + data);
+                case DISCONNECTED -> NavigationUtils.showError("Connection lost. Please check your internet connection.");
+
+                default -> System.out.println("Unhandled response type: " + type);
             }
         });
     }
 
-    // ================= LOGIN SUCCESS =================
-    private static void handleLoginSuccess(User user) {
-
-        if (user == null) return;
-
-        if (user.getRole() == Role.ADMIN) {
-            NavigationUtils.switchScene(mainStage, "/fxml/admin-view.fxml", "Admin");
-        } else {
-            NavigationUtils.switchScene(mainStage, "/fxml/HomePage.fxml", "Home");
-
-            Platform.runLater(() -> {
-                if (HomePageController.getInstance() != null) {
-                    HomePageController.getInstance().setUser(user);
-                }
-            });
+    // --- HELPER PARSE CHUNG ---
+    private static ObservableList<String[]> parseToObservableList(String data, int minFields) {
+        ObservableList<String[]> items = FXCollections.observableArrayList();
+        if (data == null || data.isEmpty()) return items;
+        for (String token : data.split("\\|")) {
+            String[] fields = token.split(";", -1);
+            if (fields.length >= minFields) items.add(fields);
         }
-
-        NavigationUtils.showToast(mainStage,
-                "Welcome " + user.getFullname());
+        return items;
     }
 
-    // ================= PARSE USER =================
+    private static void handleLoginSuccess(User loginUser) {
+        if (loginUser == null) return;
+        String scene = (loginUser.getRole() == Role.ADMIN) ? "/fxml/admin-view.fxml" : "/fxml/HomePage.fxml";
+        String title = (loginUser.getRole() == Role.ADMIN) ? "Admin Dashboard" : "Auction Dashboard";
+
+        NavigationUtils.switchScene(mainStage, scene, title);
+
+        if (loginUser.getRole() != Role.ADMIN) {
+            Platform.runLater(() -> {
+                if (HomePageController.getInstance() != null) HomePageController.getInstance().setUser(loginUser);
+            });
+        }
+        NavigationUtils.showToast(mainStage, "Welcome back, " + loginUser.getFullname() + "!");
+    }
+
+    private static List<Auction> parseAuctionList(String data) {
+        List<Auction> list = new ArrayList<>();
+        if (data == null || data.isEmpty()) return list;
+        for (String token : data.split("\\|")) {
+            try {
+                String[] p = token.split(";", -1);
+                if (p.length < 10) continue;
+                Auction a = new Auction();
+                a.setAuction_id(p[0]);
+                Item item = new Item();
+                item.setName(p[1]);
+                item.setCategory(Category.valueOf(p[7].toUpperCase()));
+                item.setDescription(p[8]);
+                if (!p[4].equals("NO_IMAGE")) item.setImages(Collections.singletonList(p[4]));
+                a.setItem(item);
+                a.setCurrentPrice(new BigDecimal(p[2]));
+                a.setMinIncrement(new BigDecimal(p[3]));
+                a.setStartTime(LocalDateTime.parse(p[5]));
+                a.setEndTime(LocalDateTime.parse(p[6]));
+                a.setStatus(AuctionStatus.valueOf(p[9].trim().toUpperCase()));
+                if (p.length > 10) a.setSeller_Id(p[10]);
+                list.add(a);
+            } catch (Exception e) { e.printStackTrace(); }
+        }
+        return list;
+    }
+
+    private static List<Bid> parseBidHistory(String data) {
+        List<Bid> history = new ArrayList<>();
+        if (data == null || data.isEmpty()) return history;
+        for (String token : data.split("\\|")) {
+            try {
+                String[] parts = token.split(";");
+                if (parts.length >= 3) {
+                    Bid bid = new Bid();
+                    bid.setUsername(parts[0]);
+                    bid.setAmount(new BigDecimal(parts[1]));
+                    bid.setTimeString(parts[2]);
+                    history.add(bid);
+                }
+            } catch (Exception e) { }
+        }
+        return history;
+    }
+
     private static User parseUser(String data) {
         try {
             String[] p = data.split("\\|", -1);
-            if (p.length < 4) return null;
-
+            if (p.length < 5) return null;
             User u = new User();
-            u.setUser_id(p[0]);
-            u.setFullname(p[1]);
-            u.setUsername(p[2]);
-            u.setEmail(p[3]);
-
+            u.setUser_id(p[0]); u.setFullname(p[1]); u.setUsername(p[2]); u.setEmail(p[3]);
+            u.setDob(p[4].isEmpty() ? null : p[4]);
+            if (p.length > 5) u.setRole(Role.valueOf(p[5]));
+            if (p.length > 6 && !p[6].isEmpty()) u.setBalance(new BigDecimal(p[6]));
             return u;
-
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    // ================= PARSE AUCTION =================
-    private static List<Auction> parseAuctionList(String data){
-
-        List<Auction> list=new ArrayList<>();
-
-        for(String token:data.split("\\|")){
-
-            try{
-
-                String[] p=token.split(";",-1);
-
-                if(p.length<12) continue;
-
-                Auction a=new Auction();
-                a.setAuction_id(p[0]);
-
-                Item item=new Item();
-
-                item.setItem_id(p[1]);          // FIX
-                item.setName(p[2]);
-                item.setDescription(p[9]);
-
-                try{
-                    item.setCategory(
-                            Category.valueOf(
-                                    p[8].trim().toUpperCase()
-                            )
-                    );
-                }catch(Exception e){
-                    item.setCategory(Category.OTHER);
-                }
-
-                if(!p[5].isBlank()){
-                    item.setImages(
-                            Collections.singletonList(p[5])
-                    );
-                }
-
-                a.setItem(item);
-
-                a.setCurrentPrice(
-                        new BigDecimal(p[3])
-                );
-
-                a.setMinIncrement(
-                        new BigDecimal(p[4])
-                );
-
-                a.setStartTime(
-                        LocalDateTime.parse(p[6])
-                );
-
-                a.setEndTime(
-                        LocalDateTime.parse(p[7])
-                );
-                a.setStatus(
-                        AuctionStatus.valueOf(
-                                p[10].trim().toUpperCase()
-                        )
-                );
-                list.add(a);
-
-            }catch(Exception e){
-                e.printStackTrace();
-            }
-        }
-
-        return list;
+        } catch (Exception e) { return null; }
     }
 }

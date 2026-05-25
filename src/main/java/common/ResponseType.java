@@ -47,7 +47,11 @@ public enum ResponseType {
     ADD_FAVOURITE_SUCCESS,
     ADD_FAVOURITE_FAILED,
     REMOVE_FAVOURITE_SUCCESS,
-    REMOVE_FAVOURITE_FAILED;
+    REMOVE_FAVOURITE_FAILED,
+    PENDING_AUCTIONS_SUCCESS,
+    PENDING_AUCTIONS_EMPTY,
+    APPROVE_AUCTION_SUCCESS,
+    APPROVE_AUCTION_FAILED;
 
     public static ResponseType from(String msg) {
         if (msg == null || msg.isBlank()) return null;

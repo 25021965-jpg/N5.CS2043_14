@@ -26,15 +26,11 @@ import static client.util.NavigationUtils.switchScene;
 
 public class LoginController {
 
-    @FXML
-    private TextField userField;
-    @FXML
-    private PasswordField passField;
+    @FXML private TextField userField;
+    @FXML private PasswordField passField;
 
     private ClientSocket client;
     private static final Logger LOGGER = Logger.getLogger(LoginController.class.getName());
-
-
 
     public void setClient(ClientSocket client) {
         this.client = client;
@@ -47,10 +43,8 @@ public class LoginController {
             if (client == null) {
                 client = ClientSocket.getInstance();
             }
-
             LOGGER.info("ClientSocket created");
 
-            // ========== ĐĂNG KÝ LISTENER XỬ LÝ PHẢN HỒI ==========
             client.setMessageListener(this::handleServerMessage);
 
             Platform.runLater(() -> {
@@ -75,7 +69,7 @@ public class LoginController {
             System.out.println("[LoginController] Received: " + msg);
 
             if (msg.startsWith("LOGIN_SUCCESS")) {
-                // Parse user từ response
+                // server gửi: LOGIN_SUCCESS|userId|fullname|username|email|dob|role|balance
                 String[] parts = msg.split("\\|");
                 User user = null;
                 if (parts.length >= 5) {
@@ -84,16 +78,18 @@ public class LoginController {
                     user.setFullname(parts[2]);
                     user.setUsername(parts[3]);
                     user.setEmail(parts[4]);
-                    if (parts.length >= 6) {
-                        user.setDob(parts[5]);
-                    }
+
+                    if (parts.length >= 6) user.setDob(parts[5]);
+
+                    // ← FIX: parts[6] = role
                     if (parts.length >= 7) {
                         try {
-                            user.setRole(Role.valueOf(parts[6]));
+                            user.setRole(Role.valueOf(parts[6].trim().toUpperCase()));
                         } catch (Exception e) {
                             user.setRole(Role.BIDDER);
                         }
                     }
+
                     if (parts.length >= 8) {
                         try {
                             user.setBalance(new BigDecimal(parts[7]));
@@ -106,7 +102,14 @@ public class LoginController {
 
                 if (user != null) {
                     UserSession.setCurrentUser(user);
-                }                goToHomePage();
+                }
+
+                // ← FIX: check role trước khi navigate
+                if (user != null && user.getRole() == Role.ADMIN) {
+                    goToAdminPage();
+                } else {
+                    goToHomePage();
+                }
 
             } else if (msg.startsWith("LOGIN_FAILED")) {
                 showError("Wrong username or password!");
@@ -179,9 +182,8 @@ public class LoginController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/HomePage.fxml"));
             Parent root = loader.load();
 
-            HomePageController controller = loader.getController();
-
             Stage currentStage = (Stage) userField.getScene().getWindow();
+            ResponseHandler.setMainStage(currentStage);
 
             currentStage.setScene(new Scene(root));
             currentStage.setTitle("Auction System");
@@ -190,6 +192,25 @@ public class LoginController {
         } catch (Exception e) {
             e.printStackTrace();
             showError("Cannot open homepage!");
+        }
+    }
+
+    // ==================== CHUYỂN SANG ADMIN PAGE ====================
+    private void goToAdminPage() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/admin-view.fxml"));
+            Parent root = loader.load();
+
+            Stage currentStage = (Stage) userField.getScene().getWindow();
+            ResponseHandler.setMainStage(currentStage);
+
+            currentStage.setScene(new Scene(root));
+            currentStage.setTitle("Admin Dashboard");
+            currentStage.show();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            showError("Cannot open admin page!");
         }
     }
 }

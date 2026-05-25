@@ -25,7 +25,9 @@ public enum Command {
     LIST_ALL_AUCTIONS,
     STOP_AUCTION,
     RESUME_AUCTION,
-    CANCEL_AUCTION, GET_TRANSACTIONS, WITHDRAW, DEPOSIT;
+    CANCEL_AUCTION, GET_TRANSACTIONS, WITHDRAW, DEPOSIT,
+    APPROVE_AUCTION,
+    LIST_PENDING_AUCTIONS;
 
     public static Command from(String value) {
         if (value == null) {

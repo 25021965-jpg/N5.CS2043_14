@@ -17,109 +17,89 @@
 
     <!-- TITLE -->
     <Label layoutX="430.0" layoutY="25.0" text="MANAGE PRODUCTS" textFill="#d4af37">
-
         <font>
             <Font name="Berlin Sans FB Demi Bold" size="42.0" />
         </font>
-
     </Label>
 
     <!-- MAIN CONTAINER -->
     <HBox layoutX="35.0" layoutY="100.0" prefHeight="640.0" prefWidth="1230.0" spacing="25.0">
 
         <!-- LEFT MENU -->
-        <VBox prefHeight="640.0" prefWidth="260.0" spacing="18.0" style="                 -fx-background-color: #181818;                 -fx-background-radius: 25;                 -fx-border-radius: 25;                 -fx-border-color: #2d2d2d;                 -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.45),15,0,0,5);               ">
+        <VBox prefHeight="640.0" prefWidth="260.0" spacing="18.0" style="-fx-background-color: #181818; -fx-background-radius: 25; -fx-border-radius: 25; -fx-border-color: #2d2d2d; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.45),15,0,0,5);">
 
             <padding>
                 <Insets bottom="30" left="20" right="20" top="30" />
             </padding>
 
-            <!-- ADMIN -->
             <VBox alignment="CENTER" spacing="10">
-
                 <Label text="ADMIN" textFill="#d4af37">
-
-                    <font>
-                        <Font size="28" />
-                    </font>
-
+                    <font><Font size="28" /></font>
                 </Label>
-
                 <Separator />
-
             </VBox>
 
-            <!-- MENU -->
+            <Button onAction="#handleManageUsers" prefHeight="50" prefWidth="219.0" style="-fx-background-color: #262626; -fx-text-fill: white; -fx-background-radius: 15; -fx-font-size: 15; -fx-font-weight: bold;" text="Manage Users" />
 
-            <Button onAction="#handleManageUsers" prefHeight="50" prefWidth="219.0" style="                         -fx-background-color: #262626;                         -fx-text-fill: white;                         -fx-background-radius: 15;                         -fx-font-size: 15;                         -fx-font-weight: bold;                     " text="Manage Users" />
+            <Button prefHeight="50" prefWidth="215.0" style="-fx-background-color: #d4af37; -fx-text-fill: black; -fx-background-radius: 15; -fx-font-size: 15; -fx-font-weight: bold;" text="Manage Products" />
 
-            <Button prefHeight="50" prefWidth="215.0" style="                         -fx-background-color: #d4af37;                         -fx-text-fill: black;                         -fx-background-radius: 15;                         -fx-font-size: 15;                         -fx-font-weight: bold;                     " text="Manage Products" />
+            <Button onAction="#handleAuctionHistory" prefHeight="50" prefWidth="213.0" style="-fx-background-color: #262626; -fx-text-fill: white; -fx-background-radius: 15; -fx-font-size: 15; -fx-font-weight: bold;" text="Auction History" />
 
-            <Button onAction="#handleAuctionHistory" prefHeight="50" prefWidth="213.0" style="                         -fx-background-color: #262626;                         -fx-text-fill: white;                         -fx-background-radius: 15;                         -fx-font-size: 15;                         -fx-font-weight: bold;                     " text="Auction History" />
-
-            <Button onAction="#handleManageAuctions" prefHeight="50" prefWidth="212.0" style="                         -fx-background-color: #262626;                         -fx-text-fill: white;                         -fx-background-radius: 15;                         -fx-font-size: 15;                         -fx-font-weight: bold;                     " text="Manage Auctions" />
+            <Button onAction="#handleManageAuctions" prefHeight="50" prefWidth="212.0" style="-fx-background-color: #262626; -fx-text-fill: white; -fx-background-radius: 15; -fx-font-size: 15; -fx-font-weight: bold;" text="Manage Auctions" />
 
             <Region VBox.vgrow="ALWAYS" />
 
-            <!-- LOGOUT -->
-
-            <Button onAction="#handleLogout" prefHeight="50" prefWidth="212.0" style="                         -fx-background-color: #d32f2f;                         -fx-text-fill: white;                         -fx-background-radius: 15;                         -fx-font-size: 15;                         -fx-font-weight: bold;                     " text="Logout" />
+            <Button onAction="#handleLogout" prefHeight="50" prefWidth="212.0" style="-fx-background-color: #d32f2f; -fx-text-fill: white; -fx-background-radius: 15; -fx-font-size: 15; -fx-font-weight: bold;" text="Logout" />
 
         </VBox>
 
         <!-- RIGHT CONTENT -->
-        <VBox prefHeight="640.0" prefWidth="940.0" spacing="20.0" style="                 -fx-background-color: #181818;                 -fx-background-radius: 25;                 -fx-border-radius: 25;                 -fx-border-color: #2d2d2d;                 -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.45),15,0,0,5);               ">
+        <VBox prefHeight="640.0" prefWidth="940.0" spacing="20.0" style="-fx-background-color: #181818; -fx-background-radius: 25; -fx-border-radius: 25; -fx-border-color: #2d2d2d; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.45),15,0,0,5);">
 
             <padding>
                 <Insets bottom="25" left="25" right="25" top="25" />
             </padding>
 
-            <!-- TOP -->
+            <!-- TOP BAR -->
             <HBox alignment="CENTER_LEFT" spacing="15">
 
                 <Label text="PRODUCT MANAGEMENT" textFill="#d4af37">
-
-                    <font>
-                        <Font name="Arial Bold" size="26" />
-                    </font>
-
+                    <font><Font name="Arial Bold" size="26" /></font>
                 </Label>
 
                 <Region HBox.hgrow="ALWAYS" />
 
-                <TextField fx:id="searchProductField" prefHeight="42" prefWidth="250" promptText="Search product..." style="                             -fx-background-color: #262626;                             -fx-text-fill: white;                             -fx-prompt-text-fill: #999;                             -fx-background-radius: 14;                             -fx-border-radius: 14;                             -fx-border-color: #3a3a3a;                            " />
+                <!-- ← THÊM NÚT PENDING Ở ĐÂY, cùng hàng với search -->
+                <Button fx:id="btnViewPending" onAction="#handleViewPending" prefHeight="42" prefWidth="120.0" style="-fx-background-color: #f59e0b; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 14; -fx-font-size: 13;" text="⏳ Pending Approvals" />
 
-                <Button onAction="#handleReloadProducts" prefHeight="42" prefWidth="110" style="                             -fx-background-color: #d4af37;                             -fx-text-fill: black;                             -fx-font-weight: bold;                             -fx-background-radius: 14;                         " text="Reload" />
+                <TextField fx:id="searchProductField" prefHeight="42" prefWidth="250" promptText="Search product..." style="-fx-background-color: #262626; -fx-text-fill: white; -fx-prompt-text-fill: #999; -fx-background-radius: 14; -fx-border-radius: 14; -fx-border-color: #3a3a3a;" />
+
+                <Button onAction="#handleReloadProducts" prefHeight="42" prefWidth="110" style="-fx-background-color: #d4af37; -fx-text-fill: black; -fx-font-weight: bold; -fx-background-radius: 14;" text="Reload" />
 
             </HBox>
 
             <!-- TABLE -->
-            <VBox prefHeight="500" spacing="15" style="                     -fx-background-color: #1f1f1f;                     -fx-background-radius: 20;                     -fx-padding: 20;                   ">
+            <VBox prefHeight="500" spacing="15" style="-fx-background-color: #1f1f1f; -fx-background-radius: 20; -fx-padding: 20;">
 
-                <TableView fx:id="productTable" prefHeight="450" style="                              -fx-background-color: #1f1f1f;                              -fx-control-inner-background: #1f1f1f;                              -fx-table-cell-border-color: transparent;                              -fx-text-background-color: white;                            ">
-
+                <TableView fx:id="productTable" prefHeight="450" style="-fx-background-color: #1f1f1f; -fx-control-inner-background: #1f1f1f; -fx-table-cell-border-color: transparent; -fx-text-background-color: white;">
                     <columns>
-
-                        <TableColumn fx:id="productIdCol" prefWidth="120" text="ITEM ID" />
-
+                        <TableColumn fx:id="productIdCol" prefWidth="120" text="AUCTION ID" />
                         <TableColumn fx:id="productNameCol" prefWidth="250" text="PRODUCT NAME" />
-
-                        <TableColumn fx:id="categoryCol" prefWidth="180" text="CATEGORY" />
-
-                        <TableColumn fx:id="sellerCol" prefWidth="180" text="SELLER" />
-
+                        <TableColumn fx:id="categoryCol" prefWidth="180" text="CATEGORY / SELLER" />
+                        <TableColumn fx:id="sellerCol" prefWidth="180" text="SELLER / PRICE" />
                         <TableColumn fx:id="statusCol" prefWidth="150" text="STATUS" />
-
                     </columns>
-
                 </TableView>
 
                 <!-- BUTTONS -->
                 <HBox alignment="CENTER_RIGHT" spacing="15">
 
-                    <Button onAction="#handleDeleteProduct" prefHeight="45" prefWidth="180" style="                                 -fx-background-color: #ff5252;                                 -fx-text-fill: white;                                 -fx-font-size: 14;                                 -fx-font-weight: bold;                                 -fx-background-radius: 14;                             " text="DELETE PRODUCT" />
+                    <Button onAction="#handleDeleteProduct" prefHeight="45" prefWidth="180" style="-fx-background-color: #ff5252; -fx-text-fill: white; -fx-font-size: 14; -fx-font-weight: bold; -fx-background-radius: 14;" text="DELETE PRODUCT" />
 
-                    <Button onAction="#handleUpdateProduct" prefHeight="45" prefWidth="180" style="                                 -fx-background-color: #d4af37;                                 -fx-text-fill: black;                                 -fx-font-size: 14;                                 -fx-font-weight: bold;                                 -fx-background-radius: 14;                             " text="UPDATE PRODUCT" />
+                    <Button onAction="#handleUpdateProduct" prefHeight="45" prefWidth="180" style="-fx-background-color: #d4af37; -fx-text-fill: black; -fx-font-size: 14; -fx-font-weight: bold; -fx-background-radius: 14;" text="UPDATE PRODUCT" />
+
+                    <!-- ← THÊM NÚT APPROVE Ở ĐÂY, cùng hàng với DELETE/UPDATE -->
+                    <Button fx:id="btnApprove" onAction="#handleApprove" prefHeight="45" prefWidth="180" style="-fx-background-color: #22c55e; -fx-text-fill: white; -fx-font-size: 14; -fx-font-weight: bold; -fx-background-radius: 14;" text="✓ APPROVE" visible="false" />
 
                 </HBox>
 

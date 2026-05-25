@@ -133,6 +133,8 @@ public class ClientHandler implements Runnable {
                 case STOP_AUCTION: return handleStopAuction(data);
                 case RESUME_AUCTION: return handleResumeAuction(data);
                 case CANCEL_AUCTION: return handleCancelAuction(data);
+                case APPROVE_AUCTION:       return handleApproveAuction(data);
+                case LIST_PENDING_AUCTIONS: return handleListPendingAuctions();
 
                 default: return "ERROR|Command not supported";
             }
@@ -525,6 +527,7 @@ public class ClientHandler implements Runnable {
             StringBuilder sb = new StringBuilder("LIST_SUCCESS");
 
             for (Auction a : auctions) {
+                if (!a.isApproved()) continue;
                 try {
                     if (a == null) continue;
                     Item item = a.getItem();
@@ -762,5 +765,35 @@ public class ClientHandler implements Runnable {
         if (data.length < 2) return "CANCEL_AUCTION_FAILED|Missing ID";
         AuctionDAO.cancelAuction(data[1]);
         return "CANCEL_AUCTION_SUCCESS";
+    }
+    private String handleApproveAuction(String[] data) {
+        if (currentUser == null || currentUser.getRole() != Role.ADMIN)
+            return "APPROVE_AUCTION_FAILED|Permission denied";
+        if (data.length < 2)
+            return "APPROVE_AUCTION_FAILED|Missing auction id";
+
+        boolean ok = AuctionDAO.approveAuction(data[1]);
+        return ok ? "APPROVE_AUCTION_SUCCESS" : "APPROVE_AUCTION_FAILED|DB error";
+    }
+
+    private String handleListPendingAuctions() {
+        if (currentUser == null || currentUser.getRole() != Role.ADMIN)
+            return "PENDING_AUCTIONS_EMPTY";
+
+        List<Auction> pending = AuctionDAO.findPending();
+        if (pending == null || pending.isEmpty())
+            return "PENDING_AUCTIONS_EMPTY";
+
+        StringBuilder sb = new StringBuilder("PENDING_AUCTIONS_SUCCESS");
+        for (Auction a : pending) {
+            sb.append("|")
+                    .append(a.getAuction_id()).append(";")
+                    .append(a.getItem() != null ? a.getItem().getName() : "").append(";")
+                    .append(a.getSeller() != null ? a.getSeller().getUsername() : "").append(";")
+                    .append(a.getStartTime()).append(";")
+                    .append(a.getEndTime()).append(";")
+                    .append(a.getCurrentPrice());
+        }
+        return sb.toString();
     }
 }
