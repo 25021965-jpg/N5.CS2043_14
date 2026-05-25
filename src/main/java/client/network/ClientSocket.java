@@ -1,5 +1,6 @@
 package client.network;
 
+import client.manager.UserSession;
 import common.*;
 import model.*;
 import java.io.BufferedReader;
@@ -179,6 +180,16 @@ public class ClientSocket {
 
     public void sendGetBalance(String userId) {
         sendMessage("GET_BALANCE|" + userId);
+    }
+
+    public void sendMyAuctions() {
+        User user = UserSession.getCurrentUser();
+        if (user == null) return;
+        currentRequest = "LIST_MY_AUCTIONS";
+        sendMessage(
+                "LIST_MY_AUCTIONS|"
+                        + user.getUser_id()
+        );
     }
 
     // ========== CONNECTION ==========

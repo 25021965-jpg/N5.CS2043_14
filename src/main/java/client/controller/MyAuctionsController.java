@@ -3,7 +3,6 @@ package client.controller;
 import client.manager.UserSession;
 import client.network.ClientSocket;
 
-import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 
@@ -12,16 +11,19 @@ import javafx.scene.Scene;
 
 import javafx.scene.control.*;
 
-import javafx.scene.layout.HBox;
+import javafx.scene.layout.GridPane;
 
 import javafx.stage.Stage;
 
+import model.Auction;
 import model.User;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
-public class YourAuctionsController implements UserDataReceiver{
+public class MyAuctionsController implements UserDataReceiver{
 
     private ClientSocket client;
 
@@ -58,36 +60,34 @@ public class YourAuctionsController implements UserDataReceiver{
     private ComboBox<String> categoryFilterComboBox;
 
     @FXML
-    private HBox auctionCard;
+    private GridPane itemGrid;
 
-    @FXML
-    private Button cancelAuctionBtn;
+    private static MyAuctionsController instance;
+    public static MyAuctionsController getInstance() {
+        return instance;
+    }
 
-    public void setClient(
-            ClientSocket client
-    ) {
-
+    private final List<Auction> myAuctions = new ArrayList<>();
+    private static final int MAX_COLUMNS = 3;
+    public void setClient(ClientSocket client) {
         this.client = client;
     }
 
-    public void setUser(
-            User user
-    ) {
-
+    public void setUser(User user) {
         this.currentUser = user;
     }
 
     @FXML
     public void initialize() {
-
-        System.out.println(
-                "YourAuctions Loaded"
-        );
+        instance = this;
+        System.out.println("MyAuctions Loaded");
 
         setupStatusFilter();
         setupCategoryFilter();
         setupMenuEvents();
-        setupCardEvents();
+
+        ClientSocket.getInstance()
+                .sendMyAuctions();
     }
 
     private void setupStatusFilter() {
@@ -95,8 +95,10 @@ public class YourAuctionsController implements UserDataReceiver{
         statusFilterComboBox.getItems().addAll(
                 "All",
                 "Active",
-                "Finished",
-                "Canceled"
+                "Ended",
+                "Canceled",
+                "Upcoming",
+                "Pending Approval"
         );
 
         statusFilterComboBox.setValue(
@@ -130,45 +132,6 @@ public class YourAuctionsController implements UserDataReceiver{
         );
     }
 
-    private void setupCardEvents() {
-
-        auctionCard.setOnMouseClicked(e -> {
-
-            System.out.println(
-                    "Opening auction detail..."
-            );
-
-            openPage(
-                    "/fxml/items-view.fxml",
-                    "Auction Detail"
-            );
-        });
-
-        auctionCard.setOnMouseEntered(e -> auctionCard.setStyle(
-                "-fx-background-color: #F8FAFC;" +
-                        "-fx-background-radius: 15;" +
-                        "-fx-border-radius: 15;" +
-                        "-fx-border-color: #D4AF37;" +
-                        "-fx-border-width: 2;" +
-                        "-fx-padding: 15;" +
-                        "-fx-cursor: hand;"
-        ));
-
-        auctionCard.setOnMouseExited(e -> auctionCard.setStyle(
-                "-fx-background-color: white;" +
-                        "-fx-background-radius: 15;" +
-                        "-fx-border-radius: 15;" +
-                        "-fx-border-color: #D4AF37;" +
-                        "-fx-border-width: 2;" +
-                        "-fx-padding: 15;" +
-                        "-fx-cursor: hand;"
-        ));
-
-        cancelAuctionBtn.setOnMouseClicked(
-                Event::consume
-        );
-    }
-
     private void setupMenuEvents() {
 
         infoBtn.setOnAction(
@@ -180,8 +143,8 @@ public class YourAuctionsController implements UserDataReceiver{
 
         createdAuctionBtn.setOnAction(
                 e -> openPage(
-                        "/fxml/yourAuctions-view.fxml",
-                        "Your Auctions"
+                        "/fxml/myAuctions-view.fxml",
+                        "My Auctions"
                 )
         );
 
@@ -222,61 +185,6 @@ public class YourAuctionsController implements UserDataReceiver{
         );
     }
 
-    @FXML
-    private void handleCancelAuction() {
-
-        Alert alert =
-                new Alert(
-                        Alert.AlertType.WARNING
-                );
-
-        alert.setTitle(
-                "Cancel Auction"
-        );
-
-        alert.setHeaderText(null);
-        alert.setContentText(
-                "Are you sure you want to cancel this auction? Users will no longer be able to bid on this item."
-        );
-
-        ButtonType cancelAuctionButton =
-                new ButtonType(
-                        "Cancel Auction"
-                );
-
-        ButtonType closeButton =
-                new ButtonType(
-                        "Close",
-                        ButtonBar.ButtonData.CANCEL_CLOSE
-                );
-
-        alert.getButtonTypes().setAll(
-                cancelAuctionButton,
-                closeButton
-        );
-
-        Optional<ButtonType> result =
-                alert.showAndWait();
-
-        if (
-                result.isPresent()
-                        &&
-                        result.get()
-                                == cancelAuctionButton
-        ) {
-
-            System.out.println(
-                    "Auction cancelled!"
-            );
-
-        /*
-            TODO:
-            - update auction status
-            - send request to server
-            - refresh UI
-         */
-        }
-    }
 
     private void filterAuctions() {
 
@@ -299,6 +207,67 @@ public class YourAuctionsController implements UserDataReceiver{
             - filter auction by status
             - update UI
          */
+    }
+
+    public void updateMyAuctions(
+            List<Auction> auctions
+    ) {
+
+        myAuctions.clear();
+        myAuctions.addAll(auctions);
+
+        refreshGrid(myAuctions);
+    }
+
+    private void refreshGrid(
+            List<Auction> list
+    ) {
+
+        itemGrid.getChildren().clear();
+
+        int col = 0;
+        int row = 0;
+
+        for (Auction auction : list) {
+
+            try {
+
+                FXMLLoader loader =
+                        new FXMLLoader(
+                                getClass().getResource(
+                                        "/fxml/itemsCard-view.fxml"
+                                )
+                        );
+
+                Parent card =
+                        loader.load();
+
+                ItemCardController controller =
+                        loader.getController();
+
+                controller.setClient(
+                        ClientSocket.getInstance()
+                );
+
+                controller.setData(
+                        auction
+                );
+
+                itemGrid.add(
+                        card,
+                        col++,
+                        row
+                );
+
+                if (col == MAX_COLUMNS) {
+                    col = 0;
+                    row++;
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @FXML

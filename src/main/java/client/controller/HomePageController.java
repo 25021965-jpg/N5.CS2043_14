@@ -16,6 +16,7 @@ import javafx.stage.Stage;
 import javafx.scene.Parent;
 import model.Auction;
 import model.Category;
+import model.Role;
 import model.User;
 
 import java.io.IOException;
@@ -310,7 +311,26 @@ public class HomePageController {
 
     @FXML
     private void handleCreateAuction(ActionEvent event) {
-        NavigationUtils.switchScene(getStage(event), "/fxml/createAuction-view.fxml", "Create Auction");
+
+        User currentUser =
+                UserSession.getCurrentUser();
+
+        if (currentUser != null) {
+
+            currentUser.setRole(Role.SELLER);
+
+            System.out.println(
+                    "[ROLE] User "
+                            + currentUser.getUsername()
+                            + " changed role to SELLER"
+            );
+        }
+
+        NavigationUtils.switchScene(
+                getStage(event),
+                "/fxml/createAuction-view.fxml",
+                "Create Auction"
+        );
     }
 
     @FXML
@@ -325,7 +345,7 @@ public class HomePageController {
 
     @FXML
     private void openYourAuctions(ActionEvent event) {
-        NavigationUtils.switchScene(getStage(event), "/fxml/yourAuctions-view.fxml", "My Auctions");
+        NavigationUtils.switchScene(getStage(event), "/fxml/myAuctions-view.fxml", "My Auctions");
     }
 
     @FXML
@@ -334,10 +354,6 @@ public class HomePageController {
         NavigationUtils.switchScene(getStage(event),
                 "/fxml/Favourite-view.fxml",
                 "Favorites");
-
-        Platform.runLater(() -> {
-            ClientSocket.getInstance().sendMessage("LIST_FAVOURITES");
-        });
     }
 
     @FXML

@@ -128,9 +128,6 @@ public class FavouriteController implements UserDataReceiver {
                     String[] data =
                             auctionStr.split(";", -1);
 
-                    System.out.println(
-                            "Length = " + data.length
-                    );
 
                     if (data.length < 12) {
                         System.out.println("SKIPPED");
@@ -223,10 +220,6 @@ public class FavouriteController implements UserDataReceiver {
                             .getChildren()
                             .add(card);
 
-                    System.out.println(
-                            "Added: "
-                                    + item.getName()
-                    );
                 }
 
             } catch (Exception e) {
@@ -279,7 +272,7 @@ public class FavouriteController implements UserDataReceiver {
 
         infoBtn.setOnAction(e -> openPage("/fxml/userProfile-view.fxml", "Profile"));
         historyBtn.setOnAction(e -> openPage("/fxml/auctionHistory-view.fxml", "History"));
-        createdAuctionBtn.setOnAction(e -> openPage("/fxml/yourAuctions-view.fxml", "Your Auctions"));
+        createdAuctionBtn.setOnAction(e -> openPage("/fxml/myAuctions-view.fxml", "My Auctions"));
         favoriteBtn.setOnAction(e -> openPage("/fxml/favourite-view.fxml", "Favourite"));
         balanceBtn.setOnAction(e -> openPage("/fxml/accountBalance-view.fxml", "Balance"));
         backHomeBtn.setOnAction(e -> openPage("/fxml/HomePage.fxml", "Home"));

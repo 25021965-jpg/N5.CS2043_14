@@ -108,7 +108,7 @@
         <!-- YOUR AUCTIONS -->
         <Button
                 fx:id="createdAuctionBtn"
-                text="Your Auctions"
+                text="My Auctions"
 
                 prefHeight="45"
                 prefWidth="210"

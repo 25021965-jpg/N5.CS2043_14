@@ -88,7 +88,7 @@
                     <MenuItem fx:id="historyMenuItem" mnemonicParsing="false" onAction="#openHistory" text="Auction History" />
 
                     <!-- YOUR AUCTIONS -->
-                    <MenuItem fx:id="yourAuctionMenuItem" mnemonicParsing="false" onAction="#openYourAuctions" text="Your Auctions" />
+                    <MenuItem fx:id="yourAuctionMenuItem" mnemonicParsing="false" onAction="#openYourAuctions" text="My Auctions" />
 
                     <!-- FAVOURITE -->
                     <MenuItem fx:id="favouriteMenuItem" mnemonicParsing="false" onAction="#openFavourite" text="Favourite" />

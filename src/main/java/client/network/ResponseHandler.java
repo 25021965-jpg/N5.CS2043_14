@@ -205,6 +205,91 @@ public class ResponseHandler {
                     }
                 }
 
+                //create
+                case CREATE_SUCCESS -> {
+
+                    User currentUser =
+                            UserSession.getCurrentUser();
+
+                    if (currentUser != null) {
+                        currentUser.setRole(Role.BIDDER);
+
+                        System.out.println(
+                                "[ROLE] User "
+                                        + currentUser.getUsername()
+                                        + " changed role to BIDDER after auction created"
+                        );
+                    }
+
+                    NavigationUtils.switchScene(
+                            mainStage,
+                            "/fxml/HomePage.fxml",
+                            "Home"
+                    );
+
+                    Platform.runLater(() -> {
+                        ClientSocket.getInstance().sendList();
+                    });
+
+                    NavigationUtils.showToast(
+                            mainStage,
+                            "Auction created successfully!"
+                    );
+                }
+
+                case CREATE_FAILED -> {
+
+                    User currentUser =
+                            UserSession.getCurrentUser();
+
+                    if (currentUser != null) {
+
+                        currentUser.setRole(Role.BIDDER);
+
+                        System.out.println(
+                                "[ROLE] User "
+                                        + currentUser.getUsername()
+                                        + " reverted role to BIDDER (create failed)"
+                        );
+                    }
+
+                    NavigationUtils.showError(
+                            "Create auction failed: " + data
+                    );
+
+                    NavigationUtils.switchScene(
+                            mainStage,
+                            "/fxml/HomePage.fxml",
+                            "Home"
+                    );
+                }
+
+                //myauctions
+                case LIST_MY_AUCTIONS_SUCCESS -> {
+
+                    List<Auction> auctions =
+                            parseAuctionList(data);
+
+                    MyAuctionsController ctrl =
+                            MyAuctionsController.getInstance();
+
+                    if (ctrl != null) {
+                        ctrl.updateMyAuctions(auctions);
+                    }
+                }
+
+                case LIST_MY_AUCTIONS_EMPTY -> {
+
+                    MyAuctionsController ctrl =
+                            MyAuctionsController.getInstance();
+
+                    if (ctrl != null) {
+                        ctrl.updateMyAuctions(
+                                new ArrayList<>()
+                        );
+                    }
+                }
+
                 // ================= BID =================
                 case BID_SUCCESS -> {
                     NavigationUtils.showToast(mainStage, "Bid placed!");
@@ -241,6 +326,8 @@ public class ResponseHandler {
         });
     }
 
+
+
     // ================= LOGIN SUCCESS =================
     private static void handleLoginSuccess(User user) {
 
@@ -254,16 +341,6 @@ public class ResponseHandler {
                     "/fxml/HomePage.fxml",
                     "Home"
             );
-            Platform.runLater(() -> {
-
-                HomePageController controller =
-                        HomePageController.getInstance();
-
-                if (controller != null) {
-                    controller.setUser(user);
-                }
-
-            });
         }
 
         NavigationUtils.showToast(mainStage,

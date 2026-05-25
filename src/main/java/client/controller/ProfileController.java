@@ -117,8 +117,8 @@ public class ProfileController implements UserDataReceiver {
 
         createdAuctionBtn.setOnAction(
                 e -> openPage(
-                        "/fxml/yourAuctions-view.fxml",
-                        "Your Auctions",
+                        "/fxml/myAuctions-view.fxml",
+                        "My Auctions",
                         null
                 )
         );

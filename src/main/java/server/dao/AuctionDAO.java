@@ -156,6 +156,52 @@ public class AuctionDAO {
         return null;
     }
 
+    public static List<Auction> findBySeller(String sellerId) {
+
+        List<Auction> auctions = new ArrayList<>();
+
+        String sql =
+                "SELECT a.*, " +
+                        "i.name AS item_name, " +
+                        "i.description AS item_desc, " +
+                        "i.category, " +
+                        "u.username AS seller_name, " +
+                        "u.fullname AS seller_fullname " +
+                        "FROM auctions a " +
+                        "LEFT JOIN items i ON a.item_id = i.item_id " +
+                        "LEFT JOIN users u ON a.seller_id = u.user_id " +
+                        "WHERE a.seller_id = ? " +
+                        "ORDER BY a.start_time DESC";
+
+        try (
+                Connection conn =
+                        DatabaseService.getConnection();
+
+                PreparedStatement ps =
+                        conn.prepareStatement(sql)
+        ) {
+
+            ps.setString(1, sellerId);
+
+            ResultSet rs =
+                    ps.executeQuery();
+
+            while (rs.next()) {
+                auctions.add(
+                        mapAuction(rs, conn)
+                );
+            }
+
+        } catch (SQLException e) {
+            System.err.println(
+                    "findBySeller error: "
+                            + e.getMessage()
+            );
+        }
+
+        return auctions;
+    }
+
     // ==================== CANCEL ====================
     public static void cancelAuction(String id) {
         String sql = "UPDATE auctions SET is_cancelled = TRUE WHERE auction_id = ?";

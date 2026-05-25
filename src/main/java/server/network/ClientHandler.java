@@ -96,13 +96,15 @@ public class ClientHandler implements Runnable {
 
                 case LIST_AUCTION_HISTORY: return handleListAuctionHistory();
 
+                //my auctions
+                case LIST_MY_AUCTIONS:
+                    return handleListMyAuctions(data);
+
                 //favourite
                 case ADD_FAVOURITE:
                     return handleAddFavourite(data);
-
                 case REMOVE_FAVOURITE:
                     return handleRemoveFavourite(data);
-
                 case LIST_FAVOURITES:
                     return handleListFavourites();
 
@@ -145,6 +147,54 @@ public class ClientHandler implements Runnable {
             System.err.println("✕ Server Logic Error: " + e.getMessage());
             return "ERROR|Server Error: " + e.getMessage();
         }
+    }
+
+    //my auctions
+    private String handleListMyAuctions(String[] parts) {
+
+        if (currentUser == null) {
+            return "LIST_MY_AUCTIONS_EMPTY";
+        }
+
+        List<Auction> auctions =
+                AuctionDAO.findBySeller(
+                        currentUser.getUser_id()
+                );
+
+        if (auctions.isEmpty()) {
+            return "LIST_MY_AUCTIONS_EMPTY";
+        }
+
+        StringBuilder sb = new StringBuilder(
+                "LIST_MY_AUCTIONS_SUCCESS"
+        );
+
+        for (Auction a : auctions) {
+
+            Item item = a.getItem();
+
+            String image =
+                    (item.getImages() != null
+                            && !item.getImages().isEmpty())
+                            ? item.getImages().get(0)
+                            : "";
+
+            sb.append("|")
+                    .append(a.getAuction_id()).append(";")
+                    .append(item.getItem_id()).append(";")
+                    .append(item.getName()).append(";")
+                    .append(a.getCurrentPrice()).append(";")
+                    .append(a.getMinIncrement()).append(";")
+                    .append(image).append(";")
+                    .append(a.getStartTime()).append(";")
+                    .append(a.getEndTime()).append(";")
+                    .append(item.getCategory()).append(";")
+                    .append(item.getDescription()).append(";")
+                    .append(a.getStatus()).append(";")
+                    .append(currentUser.getUser_id());
+        }
+
+        return sb.toString();
     }
 
     //favourite

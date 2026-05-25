@@ -246,7 +246,7 @@ public class AccountBalanceController implements UserDataReceiver {
     private void setupMenuEvents() {
         infoBtn.setOnAction(e -> openPage("/fxml/userProfile-view.fxml", "Profile"));
         historyBtn.setOnAction(e -> openPage("/fxml/auctionHistory-view.fxml", "Auction History"));
-        createdAuctionBtn.setOnAction(e -> openPage("/fxml/yourAuctions-view.fxml", "Your Auctions"));
+        createdAuctionBtn.setOnAction(e -> openPage("/fxml/myAuctions-view.fxml", "My Auctions"));
         favoriteBtn.setOnAction(e -> openPage("/fxml/Favourite-view.fxml", "Favourite"));
         balanceBtn.setOnAction(e -> openPage("/fxml/accountBalance-view.fxml", "Account Balance"));
         backHomeBtn.setOnAction(e -> openPage("/fxml/HomePage.fxml", "Home"));

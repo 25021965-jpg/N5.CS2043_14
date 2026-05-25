@@ -41,7 +41,7 @@
         <Button fx:id="historyBtn" prefHeight="45" prefWidth="210" style="                     -fx-background-color: #334155;                     -fx-text-fill: white;                     -fx-font-size: 15px;                     -fx-font-family: 'Berlin Sans FB Demi Bold';                     -fx-background-radius: 8;                 " text="Auction History" />
 
         <!-- YOUR AUCTIONS -->
-        <Button fx:id="createdAuctionBtn" prefHeight="45" prefWidth="210" style="                     -fx-background-color: #334155;                     -fx-text-fill: white;                     -fx-font-size: 15px;                     -fx-font-family: 'Berlin Sans FB Demi Bold';                     -fx-background-radius: 8;                 " text="Your Auctions" />
+        <Button fx:id="createdAuctionBtn" prefHeight="45" prefWidth="210" style="                     -fx-background-color: #334155;                     -fx-text-fill: white;                     -fx-font-size: 15px;                     -fx-font-family: 'Berlin Sans FB Demi Bold';                     -fx-background-radius: 8;                 " text="My Auctions" />
 
         <!-- FAVOURITE -->
         <Button fx:id="favoriteBtn" prefHeight="45" prefWidth="210" style="                     -fx-background-color: #334155;                     -fx-text-fill: white;                     -fx-font-size: 15px;                     -fx-font-family: 'Berlin Sans FB Demi Bold';                     -fx-background-radius: 8;                 " text="Favourite" />

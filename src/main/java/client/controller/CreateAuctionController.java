@@ -1,5 +1,6 @@
 package client.controller;
 
+import client.manager.UserSession;
 import client.network.ClientSocket;
 import client.network.ResponseHandler;
 import static client.util.NavigationUtils.*;
@@ -120,6 +121,19 @@ public class CreateAuctionController {
             if (socket != null) {
                 System.out.println("→ Sending CREATE command for item: " + cleanName);
                 socket.sendCreate(newAuction);
+                User currentUser =
+                        UserSession.getCurrentUser();
+
+                if (currentUser != null) {
+                    currentUser.setRole(Role.BIDDER);
+
+                    System.out.println(
+                            "[ROLE] User "
+                                    + currentUser.getUsername()
+                                    + " changed role to BIDDER after creating auction"
+                    );
+                }
+
             } else {
                 showError("Connection Error: Not connected to server!");
             }
@@ -133,8 +147,27 @@ public class CreateAuctionController {
 
     @FXML
     private void handleCancel(ActionEvent event) {
-        Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-        switchScene(stage, "/fxml/HomePage.fxml", "Auction Home");
+
+        User currentUser =
+                UserSession.getCurrentUser();
+
+        if (currentUser != null) {
+            currentUser.setRole(Role.BIDDER);
+        }
+        System.out.println(
+                "[ROLE] User "
+                        + currentUser.getUsername()
+                        + " reverted role to BIDDER (cancel create auction)"
+        );
+
+        Stage stage =
+                (Stage) ((Node) event.getSource())
+                        .getScene()
+                        .getWindow();
+
+        switchScene(stage,
+                "/fxml/HomePage.fxml",
+                "Auction Home");
     }
 
     // --- HÀM XỬ LÝ ẢNH ---
