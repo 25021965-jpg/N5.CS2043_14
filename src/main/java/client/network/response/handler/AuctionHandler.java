@@ -36,6 +36,9 @@ public class AuctionHandler {
         NavigationUtils.showToast(stage, "Auction submitted!");
         NavigationUtils.switchScene(stage, "/fxml/HomePage.fxml", "Home");
     }
+    public static void createFailed(String data, Stage stage) {
+        NavigationUtils.showError("Failed to create auction: " + data);
+    }
 
     // ================= MY AUCTIONS =================
     public static void myAuctions(String data) {
@@ -66,6 +69,13 @@ public class AuctionHandler {
         LiveAuctionController ctrl = LiveAuctionController.getInstance();
         if (ctrl != null) {
             ctrl.loadBidHistory(bids);
+        }
+    }
+
+    public static void updatePrice(String raw) {
+
+        if (LiveAuctionController.getInstance() != null) {
+            LiveAuctionController.getInstance().handleLiveUpdate(raw);
         }
     }
 

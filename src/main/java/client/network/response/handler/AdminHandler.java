@@ -3,6 +3,7 @@ package client.network.response.handler;
 import client.controller.AdminController;
 import client.controller.ManageAuctionController;
 import client.controller.AuctionHistoryAdminController;
+import client.controller.ManageProductController;
 import client.network.response.parser.ItemParser;
 import client.util.NavigationUtils;
 import javafx.collections.FXCollections;
@@ -65,6 +66,43 @@ public class AdminHandler {
 
         ManageAuctionController ctrl = ManageAuctionController.getInstance();
         if (ctrl != null) ctrl.handleReloadAuctions();
+    }
+
+    public static void approveSuccess(Stage stage) {
+
+        NavigationUtils.showToast(stage, "Auction approved successfully!");
+
+        if (ManageProductController.getInstance() != null) {
+            ManageProductController.getInstance().handleReloadProducts();
+        }
+    }
+
+    public static void approveFailed(String data, Stage stage) {
+        NavigationUtils.showError("Approve failed: " + data);
+    }
+
+    public static void pendingAuctions(String data) {
+        ObservableList<String[]> items =
+                FXCollections.observableArrayList();
+        if (data == null || data.isEmpty()) return;
+        for (String token : data.split("\\|")) {
+            String[] fields = token.split(";", -1);
+            if (fields.length >= 5) {
+                items.add(fields);
+            }
+        }
+
+        if (ManageProductController.getInstance() != null) {
+            ManageProductController.getInstance().updateProducts(items);
+        }
+    }
+
+    public static void pendingAuctionsEmpty() {
+        if (ManageProductController.getInstance() != null) {
+            ManageProductController
+                    .getInstance()
+                    .updateProducts(FXCollections.observableArrayList());
+        }
     }
 
     public static void stopFailed(String data, Stage stage) {

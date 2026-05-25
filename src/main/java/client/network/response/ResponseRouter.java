@@ -9,7 +9,11 @@ import javafx.stage.Stage;
 public class ResponseRouter {
 
     public static void route(String raw, Stage stage) {
-
+        // ===== LIVE UPDATE =====
+        if (raw.startsWith("UPDATE_PRICE")) {
+            AuctionHandler.updatePrice(raw);
+            return;
+        }
         String[] parts = raw.split("\\|", 2);
         String header = parts[0];
         String data = parts.length > 1 ? parts[1] : "";
@@ -42,6 +46,7 @@ public class ResponseRouter {
             case LIST_EMPTY -> AuctionHandler.listEmpty();
 
             case CREATE_SUCCESS -> AuctionHandler.createSuccess(stage);
+            case CREATE_FAILED -> AuctionHandler.createFailed(data, stage);
 
             case BID_SUCCESS -> AuctionHandler.bidSuccess(stage);
             case BID_FAILED -> AuctionHandler.bidFailed(data, stage);
@@ -82,6 +87,17 @@ public class ResponseRouter {
             case ALL_AUCTIONS_SUCCESS -> AdminHandler.auctions(data);
             case ALL_AUCTIONS_EMPTY -> AdminHandler.auctionsEmpty();
 
+            case APPROVE_AUCTION_SUCCESS ->
+                    AdminHandler.approveSuccess(stage);
+
+            case APPROVE_AUCTION_FAILED ->
+                    AdminHandler.approveFailed(data, stage);
+
+            case PENDING_AUCTIONS_SUCCESS ->
+                    AdminHandler.pendingAuctions(data);
+            case PENDING_AUCTIONS_EMPTY ->
+                    AdminHandler.pendingAuctionsEmpty();
+
             case STOP_AUCTION_SUCCESS,
                  RESUME_AUCTION_SUCCESS,
                  CANCEL_AUCTION_SUCCESS -> AdminHandler.auctionActionSuccess(stage);
@@ -89,6 +105,7 @@ public class ResponseRouter {
             case STOP_AUCTION_FAILED -> AdminHandler.stopFailed(data, stage);
             case RESUME_AUCTION_FAILED -> AdminHandler.resumeFailed(data, stage);
             case CANCEL_AUCTION_FAILED -> AdminHandler.cancelFailed(data, stage);
+
 
             // ===== SYSTEM =====
             case ERROR -> NavigationUtils.showError("System Error: " + data);

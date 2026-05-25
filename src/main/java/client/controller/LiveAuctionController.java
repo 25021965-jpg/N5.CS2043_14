@@ -157,6 +157,11 @@ public class LiveAuctionController implements UserDataReceiver {
         }
     }
 
+    public void handleLiveUpdate(String raw) {
+        System.out.println(raw);
+
+    }
+
     public void setAuctionData(String auctionId, String productName, String productDesc,
                                String currentPrice, String stepPrice, String floorPrice,
                                String endTime, String imageUrl) {
@@ -466,7 +471,7 @@ public class LiveAuctionController implements UserDataReceiver {
                         globalBidCounter = bidCounter;
                         globalCurrentPrice = currentPrice;
 
-                        System.out.println("🔥 Saved to static - Total bids: " + globalBidHistory.size());
+                        System.out.println("Saved to static - Total bids: " + globalBidHistory.size());
                     }
                 }
                 return;
@@ -474,8 +479,8 @@ public class LiveAuctionController implements UserDataReceiver {
 
             // ==================== JOIN THÀNH CÔNG ====================
             if (msg.startsWith("JOIN_SUCCESS")) {
-                System.out.println("✅ Successfully joined auction: " + auctionId);
-                showToast("✅ Joined auction successfully!");
+                System.out.println("Successfully joined auction: " + auctionId);
+                showToast("Joined auction successfully!");
 
                 String[] parts = msg.split("\\|");
                 if (parts.length >= 4) {
@@ -504,7 +509,7 @@ public class LiveAuctionController implements UserDataReceiver {
                         }
 
                         bidHistoryTable.refresh();
-                        System.out.println("🔥 Restored " + bidHistoryList.size() + " bids from static");
+                        System.out.println("Restored " + bidHistoryList.size() + " bids from static");
                     } else {
                         // Nếu chưa có lịch sử, thêm điểm giá khởi điểm
                         Bid initialBid = new Bid();
@@ -523,7 +528,7 @@ public class LiveAuctionController implements UserDataReceiver {
                     if (globalWinnerName != null) {
                         currentWinnerLabel.setText(globalWinnerName);
                         winnerTimeLabel.setText(globalWinnerTime);
-                        System.out.println("🔥 Restored winner: " + globalWinnerName + " at " + globalWinnerTime);
+                        System.out.println("Restored winner: " + globalWinnerName + " at " + globalWinnerTime);
                     }
                 }
 
@@ -593,13 +598,13 @@ public class LiveAuctionController implements UserDataReceiver {
                     globalBidHistory = new ArrayList<>(bidHistoryList);
                     globalBidCounter = bidCounter;
 
-                    System.out.println("🔥 Total bids after server sync: " + bidHistoryList.size());
+                    System.out.println("Total bids after server sync: " + bidHistoryList.size());
                 }
                 return;
             }
 
             if (msg.startsWith("BID_HISTORY_EMPTY")) {
-                System.out.println("🔥 Server returned empty bid history (keeping existing)");
+                System.out.println("Server returned empty bid history (keeping existing)");
                 return;
             }
 
@@ -654,11 +659,11 @@ public class LiveAuctionController implements UserDataReceiver {
     public void loadBidHistory(List<Bid> history) {
         Platform.runLater(() -> {
             if (history == null || history.isEmpty()) {
-                System.out.println("🔥 No new bid history to load");
+                System.out.println("No new bid history to load");
                 return;
             }
 
-            System.out.println("🔥 Loading " + history.size() + " bids from server");
+            System.out.println("Loading " + history.size() + " bids from server");
 
             for (Bid bid : history) {
                 if (bid.getAmountString() == null || bid.getAmountString().isEmpty()) {
@@ -702,7 +707,7 @@ public class LiveAuctionController implements UserDataReceiver {
             globalBidHistory = new ArrayList<>(bidHistoryList);
             globalBidCounter = bidCounter;
 
-            System.out.println("🔥 Total bids: " + bidHistoryList.size());
+            System.out.println("Total bids: " + bidHistoryList.size());
         });
     }
 
