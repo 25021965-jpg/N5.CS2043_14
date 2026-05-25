@@ -1,7 +1,7 @@
 package client.controller;
 
 import client.network.ClientSocket;
-import client.network.ResponseHandler;
+import client.network.response.ResponseHandler;
 import static client.util.NavigationUtils.*; // Sử dụng các hàm showInfo, showError
 
 import client.util.NavigationUtils;

@@ -1,6 +1,7 @@
 package client.network;
 
 import client.manager.UserSession;
+import client.network.response.ResponseHandler;
 import common.*;
 import model.*;
 import java.io.BufferedReader;

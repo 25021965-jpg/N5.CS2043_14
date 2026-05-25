@@ -1,5 +1,6 @@
 package client.network;
 
+import client.network.response.ResponseHandler;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;

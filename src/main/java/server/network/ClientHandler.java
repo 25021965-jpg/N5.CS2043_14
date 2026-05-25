@@ -19,6 +19,8 @@ import java.util.List;
 import java.util.HashSet;
 import java.util.Set;
 
+import static java.lang.System.out;
+
 public class ClientHandler implements Runnable {
 
     private Socket socket;
@@ -38,11 +40,11 @@ public class ClientHandler implements Runnable {
             reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             writer = new PrintWriter(socket.getOutputStream(), true);
 
-            System.out.println("[NEW CONNECTION] Client connected from: " + clientInfo);
+            out.println("[NEW CONNECTION] Client connected from: " + clientInfo);
 
             String clientMessage;
             while ((clientMessage = reader.readLine()) != null) {
-                System.out.println("[RECEIVE FROM " + (currentUser != null ? currentUser.getUsername() : clientInfo) + "]: " + clientMessage);
+                out.println("[RECEIVE FROM " + (currentUser != null ? currentUser.getUsername() : clientInfo) + "]: " + clientMessage);
 
                 String response = handleRequest(clientMessage);
 
@@ -50,7 +52,7 @@ public class ClientHandler implements Runnable {
                     response = "ERROR|Null response";
                 }
 
-                System.out.println(
+                out.println(
                         "[RESPONSE TO CLIENT]: "
                                 + (response.length() > 100
                                 ? response.substring(0, 100) + "..."
@@ -59,7 +61,7 @@ public class ClientHandler implements Runnable {
                 writer.println(response);
             }
         } catch (IOException e) {
-            System.out.println("[DISCONNECTED] Client " + clientInfo + " left the building.");
+            out.println("[DISCONNECTED] Client " + clientInfo + " left the building.");
         } finally {
             closeConnection();
         }
@@ -73,7 +75,7 @@ public class ClientHandler implements Runnable {
             Command cmd = Command.valueOf(
                     data[0].trim().toUpperCase()
             );
-            System.out.println("  → Processing Command: " + cmd);
+            out.println("  → Processing Command: " + cmd);
 
             switch (cmd) {
                 case LOGIN: return handleLogin(data);
@@ -88,6 +90,8 @@ public class ClientHandler implements Runnable {
                 // --- XỬ LÝ ADMIN ---
                 case LIST_USERS: return handleListUsers();
                 case DELETE_USER: return handleDeleteUser(data);
+                case UPDATE_USER_ROLE:
+                    return handleUpdateUserRole(data);
 
                 //-- XU LI ITEM ---
                 case LIST_ITEMS: return handleListItems();
@@ -120,7 +124,7 @@ public class ClientHandler implements Runnable {
                         currentAuctionId = null;
                     }
 
-                    System.out.println("  → User " +
+                    out.println("  → User " +
                             (currentUser != null ? currentUser.getUsername() : "Unknown")
                             + " logged out.");
 
@@ -344,7 +348,7 @@ public class ClientHandler implements Runnable {
             return "ERROR|Permission denied";
         }
 
-        System.out.print("  → Admin fetching user list...");
+        out.print("  → Admin fetching user list...");
         try {
             List<User> users = UserDAO.findAll();
             if (users == null || users.isEmpty()) return "USER_LIST_EMPTY";
@@ -357,7 +361,7 @@ public class ClientHandler implements Runnable {
                         .append(u.getEmail()).append(";")
                         .append(u.getRole().name());
             }
-            System.out.println(" [SUCCESS]");
+            out.println(" [SUCCESS]");
             return sb.toString();
         } catch (Exception e) {
             return "ERROR|DB Error: " + e.getMessage();
@@ -383,7 +387,7 @@ public class ClientHandler implements Runnable {
         this.currentAuctionId = auctionId;
         RoomManager.addClient(auctionId, writer);
 
-        System.out.println("  → User " + (currentUser != null ? currentUser.getUsername() : "Guest")
+        out.println("  → User " + (currentUser != null ? currentUser.getUsername() : "Guest")
                 + " joined auction: " + auctionId);
 
         return "JOIN_SUCCESS|" + auctionId + "|"
@@ -396,7 +400,7 @@ public class ClientHandler implements Runnable {
     private String handleLeave() {
         if (currentAuctionId != null) {
             RoomManager.removeClient(currentAuctionId, writer);
-            System.out.println("  → User " + (currentUser != null ? currentUser.getUsername() : "Guest")
+            out.println("  → User " + (currentUser != null ? currentUser.getUsername() : "Guest")
                     + " left auction: " + currentAuctionId);
             currentAuctionId = null;
         }
@@ -565,12 +569,12 @@ public class ClientHandler implements Runnable {
     }
 
     private String handleList() {
-        System.out.print("  → Fetching auction list...");
+        out.print("  → Fetching auction list...");
         try {
             List<Auction> auctions = AuctionService.getAllAuctions();
 
             if (auctions == null || auctions.isEmpty()) {
-                System.out.println(" [EMPTY]");
+                out.println(" [EMPTY]");
                 return "LIST_EMPTY";
             }
 
@@ -631,7 +635,7 @@ public class ClientHandler implements Runnable {
                 }
             }
 
-            System.out.println(" [SUCCESS - " + auctions.size() + " items]");
+            out.println(" [SUCCESS - " + auctions.size() + " items]");
             return sb.toString();
 
         } catch (Exception e) {
@@ -845,5 +849,26 @@ public class ClientHandler implements Runnable {
                     .append(a.getCurrentPrice());
         }
         return sb.toString();
+    }
+    private String handleUpdateUserRole(String[] parts) {
+
+        if(parts.length < 3){
+            return "UPDATE_USER_ROLE_FAILED";
+        }
+
+        String userId = parts[1];
+        String role = parts[2];
+
+        boolean success =
+                UserDAO.updateUserRole(
+                        userId,
+                        role
+                );
+
+        if(success){
+            return "UPDATE_USER_ROLE_SUCCESS";
+        }else{
+            return "UPDATE_USER_ROLE_FAILED";
+        }
     }
 }

@@ -238,4 +238,31 @@ public class UserDAO {
             return false;
         }
     }
+    public static boolean updateUserRole(
+            String userId,
+            String role
+    ) {
+
+        String sql =
+                "UPDATE users SET role = ? WHERE user_id = ?";
+
+        try (
+                Connection conn =
+                        DatabaseService.getConnection();
+
+                PreparedStatement ps =
+                        conn.prepareStatement(sql)
+        ) {
+
+            ps.setString(1, role);
+            ps.setString(2, userId);
+
+            return ps.executeUpdate() > 0;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
 }

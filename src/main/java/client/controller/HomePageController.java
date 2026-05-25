@@ -2,7 +2,7 @@ package client.controller;
 
 import client.manager.UserSession;
 import client.network.ClientSocket;
-import client.network.ResponseHandler;
+import client.network.response.ResponseHandler;
 import client.util.NavigationUtils;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;

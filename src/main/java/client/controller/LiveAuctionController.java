@@ -1,7 +1,7 @@
 package client.controller;
 
 import client.network.ClientSocket;
-import client.network.ResponseHandler;
+import client.network.response.ResponseHandler;
 import client.manager.UserSession;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;

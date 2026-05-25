@@ -18,6 +18,7 @@ public enum Command {
     LIST_FAVOURITES,
     LIST_MY_AUCTIONS,
     GET_BALANCE,
+    UPDATE_USER_ROLE,
     LIST_ITEMS,
     DELETE_ITEM,
     UPDATE_ITEM,
