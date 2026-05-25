@@ -33,7 +33,7 @@ public class AuctionService {
         auction.setStartingPrice(startPrice);
         auction.setCurrentPrice(startPrice);
         auction.setMinIncrement(minIncrement);
-        auction.setStatus(AuctionStatus.ACTIVE);
+        auction.setStatus(AuctionStatus.PENDING_APPROVAL);
         auction.setCancelled(false);
 
         // 3. Parse thời gian
@@ -65,6 +65,14 @@ public class AuctionService {
             }
         }
         return null;
+    }
+
+    public static List<Auction> getPendingAuctions() {
+        return AuctionDAO.findPending();
+    }
+
+    public static boolean approveAuction(String auctionId) {
+        return AuctionDAO.approveAuction(auctionId);
     }
 
     public static void cancelAuction(String id) {

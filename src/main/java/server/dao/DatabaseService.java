@@ -80,6 +80,7 @@ public class DatabaseService {
                     start_time DATETIME NOT NULL,
                     end_time DATETIME NOT NULL,
                     is_cancelled BOOLEAN DEFAULT FALSE,
+                    is_approved BOOLEAN DEFAULT FALSE,
                     FOREIGN KEY(item_id) REFERENCES items(item_id) ON DELETE CASCADE,
                     FOREIGN KEY(seller_id) REFERENCES users(user_id) ON DELETE CASCADE
                 )""");

@@ -156,26 +156,13 @@ public class ItemViewController {
             return;
         }
 
-        // ================= REMOVE =================
         if (isFavourite) {
-
-            client.sendMessage(
-                    "REMOVE_FAVOURITE|" + itemId
-            );
-
+            client.sendMessage("REMOVE_FAVOURITE|" + itemId);
             FavouriteManager.favouriteItemIds.remove(itemId);
-
             updateFavouriteUI(false);
-
-        }
-        else {
-
-            client.sendMessage(
-                    "ADD_FAVOURITE|" + itemId
-            );
-
+        } else {
+            client.sendMessage("ADD_FAVOURITE|" + itemId);
             FavouriteManager.favouriteItemIds.add(itemId);
-
             updateFavouriteUI(true);
         }
     }
