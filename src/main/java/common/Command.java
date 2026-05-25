@@ -1,43 +1,67 @@
 package common;
 
 public enum Command {
+
+    // ================= AUTH =================
     LOGIN,
     REGISTER,
     LOGOUT,
+    FORGOT_PASSWORD,
+
+    // ================= USER AUCTION =================
+    LIST,
     CREATE,
     JOIN,
     LEAVE,
-    LIST,
-    LIST_USERS,
-    DELETE_USER,
-    FORGOT_PASSWORD,
     BID,
+    GET_BID_HISTORY,
+
+    // ================= USER PROFILE =================
     GET_PROFILE,
+    GET_BALANCE,
+    GET_TRANSACTIONS,
+    DEPOSIT,
+    WITHDRAW,
+
+    // ================= USER FAVOURITE =================
     ADD_FAVOURITE,
     REMOVE_FAVOURITE,
     LIST_FAVOURITES,
+
+    // ================= USER AUCTION MANAGEMENT =================
     LIST_MY_AUCTIONS,
-    GET_BALANCE,
+    LIST_JOINED_AUCTIONS,
+
+    // ================= ADMIN USER =================
+    LIST_USERS,
+    DELETE_USER,
     UPDATE_USER_ROLE,
+
+    // ================= ADMIN ITEM =================
     LIST_ITEMS,
     DELETE_ITEM,
     UPDATE_ITEM,
-    GET_BID_HISTORY,
+
+    // ================= ADMIN AUCTION =================
     LIST_AUCTION_HISTORY,
     LIST_ALL_AUCTIONS,
     STOP_AUCTION,
     RESUME_AUCTION,
-    CANCEL_AUCTION, GET_TRANSACTIONS, WITHDRAW, DEPOSIT,
+    CANCEL_AUCTION,
     APPROVE_AUCTION,
     LIST_PENDING_AUCTIONS;
 
     public static Command from(String value) {
-        if (value == null) {
+        if (value == null || value.isBlank()) {
             return null;
         }
+
         try {
-            return Command.valueOf(value.toUpperCase());
+            return Command.valueOf(value.trim().toUpperCase());
+
         } catch (Exception e) {
+            System.err.println("✕ Unknown Command: " + value);
+
             return null;
         }
     }

@@ -20,8 +20,6 @@ public class AuctionService {
     ) {
         // 1. Tự động nâng cấp quyền nếu là BIDDER
         if (seller.getRole() == Role.BIDDER) {
-            seller.setRole(Role.SELLER);
-            new UserDAO().updateRole(seller.getUser_id(), "SELLER");
             System.out.println("→ User " + seller.getUsername() + " upgraded to SELLER");
         }
 

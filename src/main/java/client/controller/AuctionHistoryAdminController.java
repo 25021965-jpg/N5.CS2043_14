@@ -87,6 +87,24 @@ public class AuctionHistoryAdminController {
         Platform.runLater(() -> historyList.setAll(data));
     }
 
+    public void loadHistory(String data) {
+        ObservableList<String[]> list =
+                FXCollections.observableArrayList();
+
+        if (data != null && !data.isEmpty()) {
+            for (String token : data.split("\\|")) {
+                String[] fields =
+                        token.split(";", -1);
+
+                if (fields.length >= 5) {
+                    list.add(fields);
+                }
+            }
+        }
+
+        updateHistory(list);
+    }
+
     private void filterHistory(String keyword) {
         if (keyword == null || keyword.isEmpty()) {
             auctionHistoryTable.setItems(historyList);

@@ -54,7 +54,9 @@ public class HomePageController {
     public static HomePageController getInstance() {
         return instance;
     }
-
+    public List<Auction> getAuctionList() {
+        return auctionList;
+    }
     @FXML
     public void initialize() {
         instance = this;
@@ -72,12 +74,19 @@ public class HomePageController {
             highlight(btnAll);
             initialized = true;
 
-            // FIX: reload data khi mở lại homepage
-            User currentUser = UserSession.getCurrentUser();
+            User currentUser =
+                    UserSession.getCurrentUser();
 
             if (currentUser != null) {
+
                 log("Reloading auction list...");
                 ClientSocket.getInstance().sendList();
+
+                // THÊM
+                ClientSocket.getInstance()
+                        .sendGetFavourite(
+                                currentUser.getUser_id()
+                        );
             }
         });
     }
@@ -311,20 +320,6 @@ public class HomePageController {
 
     @FXML
     private void handleCreateAuction(ActionEvent event) {
-
-        User currentUser =
-                UserSession.getCurrentUser();
-
-        if (currentUser != null) {
-
-            currentUser.setRole(Role.SELLER);
-
-            System.out.println(
-                    "[ROLE] User "
-                            + currentUser.getUsername()
-                            + " changed role to SELLER"
-            );
-        }
 
         NavigationUtils.switchScene(
                 getStage(event),

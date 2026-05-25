@@ -38,9 +38,25 @@ public class CreateAuctionController {
 
     @FXML
     public void initialize() {
+
+        User currentUser =
+                UserSession.getCurrentUser();
+
+        if(currentUser != null){
+            currentUser.setRole(Role.SELLER);
+
+            System.out.println(
+                    "[ROLE] "
+                            + currentUser.getUsername()
+                            + " -> SELLER"
+            );
+        }
+
         Platform.runLater(() -> {
             if (txtName != null && txtName.getScene() != null) {
-                Stage stage = (Stage) txtName.getScene().getWindow();
+                Stage stage =
+                        (Stage) txtName.getScene().getWindow();
+
                 ResponseHandler.setMainStage(stage);
             }
         });
@@ -131,6 +147,16 @@ public class CreateAuctionController {
                             "[ROLE] User "
                                     + currentUser.getUsername()
                                     + " changed role to BIDDER after creating auction"
+                    );
+                    Stage stage =
+                            (Stage)((Node)event.getSource())
+                                    .getScene()
+                                    .getWindow();
+
+                    switchScene(
+                            stage,
+                            "/fxml/HomePage.fxml",
+                            "Home Page"
                     );
                 }
 

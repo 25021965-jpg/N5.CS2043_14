@@ -3,6 +3,7 @@ package client.controller;
 import client.manager.UserSession;
 import client.network.ClientSocket;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 
@@ -11,10 +12,12 @@ import javafx.scene.Scene;
 
 import javafx.scene.control.*;
 
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 
+import model.Auction;
+import model.Item;
 import model.User;
 
 import java.io.IOException;
@@ -54,30 +57,29 @@ public class AuctionHistoryController implements UserDataReceiver {
     private HBox auctionCard;
 
     @FXML
+    private FlowPane historyContainer;
+
+    @FXML
     private ComboBox<String> statusFilterComboBox;
     @FXML
     private ComboBox<String> categoryFilterComboBox;
 
-    @FXML
-    private VBox historyContainer;
-
-    public void setClient(
-            ClientSocket client
-    ) {
-
+    public void setClient(ClientSocket client) {
         this.client = client;
     }
 
-    public void setUser(
-            User user
-    ) {
-
+    public void setUser(User user) {
         this.currentUser = user;
+    }
+
+    private static AuctionHistoryController instance;
+    public static AuctionHistoryController getInstance() {
+        return instance;
     }
 
     @FXML
     public void initialize() {
-
+        instance = this;
         System.out.println(
                 "AuctionHistory Loaded"
         );
@@ -85,51 +87,18 @@ public class AuctionHistoryController implements UserDataReceiver {
         setupStatusFilter();
         setupCategoryFilter();
         setupMenuEvents();
-        setupCardEvents();
-    }
-
-    private void setupCardEvents() {
-
-        auctionCard.setOnMouseClicked(e -> {
-
-            System.out.println("Opening auction details...");
-
-            openPage(
-                    "/fxml/items-view.fxml",
-                    "Auction Detail"
-            );
-        });
-
-        auctionCard.setOnMouseEntered(e -> {
-
-            auctionCard.setStyle(
-                    "-fx-background-color: #F8FAFC;" +
-                            "-fx-background-radius: 15;" +
-                            "-fx-border-radius: 15;" +
-                            "-fx-border-color: #D4AF37;" +
-                            "-fx-border-width: 2;" +
-                            "-fx-padding: 15;" +
-                            "-fx-cursor: hand;"
-            );
-        });
-
-        auctionCard.setOnMouseExited(e -> {
-
-            auctionCard.setStyle(
-                    "-fx-background-color: white;" +
-                            "-fx-background-radius: 15;" +
-                            "-fx-border-radius: 15;" +
-                            "-fx-border-color: #D4AF37;" +
-                            "-fx-border-width: 2;" +
-                            "-fx-padding: 15;" +
-                            "-fx-cursor: hand;"
-            );
+        Platform.runLater(() -> {
+            loadHistory();
         });
     }
 
+    public void loadHistory() {
+        ClientSocket socket = ClientSocket.getInstance();
+        if (socket == null) return;
+        socket.sendMessage("LIST_JOINED_AUCTIONS");
+    }
 
     private void setupStatusFilter() {
-
         statusFilterComboBox.getItems().addAll(
                 "All",
                 "Winning",
@@ -148,7 +117,6 @@ public class AuctionHistoryController implements UserDataReceiver {
     }
 
     private void setupCategoryFilter() {
-
         categoryFilterComboBox.getItems().addAll(
                 "All",
                 "Accessories",
@@ -167,6 +135,131 @@ public class AuctionHistoryController implements UserDataReceiver {
         categoryFilterComboBox.setOnAction(
                 e -> handleFilter()
         );
+    }
+
+    public void renderHistory(String response) {
+
+        Platform.runLater(() -> {
+
+            historyContainer.getChildren().clear();
+
+            if (response == null
+                    || response.equals("LIST_JOINED_AUCTIONS_EMPTY")) {
+
+                historyContainer.getChildren().add(
+                        new Label("No joined auctions")
+                );
+
+                return;
+            }
+
+            try {
+
+                String rawData =
+                        response.substring(
+                                "LIST_JOINED_AUCTIONS_SUCCESS|".length()
+                        );
+
+                String[] auctions = rawData.split("\\|");
+
+                for (String auctionStr : auctions) {
+
+                    String[] data =
+                            auctionStr.split(";", -1);
+
+                    if (data.length < 12) continue;
+
+                    Auction auction = new Auction();
+
+                    auction.setAuction_id(data[0]);
+
+                    Item item = new Item();
+
+                    item.setItem_id(data[1]);
+                    item.setName(data[2]);
+                    item.setDescription(data[9]);
+
+                    try {
+                        item.setCategory(
+                                model.Category.valueOf(data[8])
+                        );
+                    } catch (Exception e) {
+                        item.setCategory(model.Category.OTHER);
+                    }
+
+                    String imagePath = data[5];
+
+                    if (imagePath != null
+                            && !imagePath.isBlank()
+                            && !imagePath.equals("NO_IMAGE")) {
+
+                        if (!imagePath.startsWith("file:")) {
+                            imagePath =
+                                    "file:" +
+                                            imagePath.replace("\\", "/");
+                        }
+
+                        item.setImages(
+                                java.util.Collections.singletonList(imagePath)
+                        );
+                    }
+
+                    auction.setItem(item);
+
+                    auction.setCurrentPrice(
+                            new java.math.BigDecimal(data[3])
+                    );
+
+                    auction.setMinIncrement(
+                            new java.math.BigDecimal(data[4])
+                    );
+
+                    auction.setStartTime(
+                            java.time.LocalDateTime.parse(data[6])
+                    );
+
+                    auction.setEndTime(
+                            java.time.LocalDateTime.parse(data[7])
+                    );
+
+                    auction.setStatus(
+                            model.AuctionStatus.valueOf(data[10])
+                    );
+
+                    User seller = new User();
+                    seller.setUser_id(data[11]);
+
+                    auction.setSeller(seller);
+
+                    FXMLLoader loader =
+                            new FXMLLoader(
+                                    getClass().getResource(
+                                            "/fxml/itemsCard-view.fxml"
+                                    )
+                            );
+
+                    Parent card = loader.load();
+
+                    ItemCardController controller =
+                            loader.getController();
+
+                    controller.setClient(
+                            ClientSocket.getInstance()
+                    );
+
+                    controller.setRoot(card);
+
+                    controller.setData(auction);
+
+                    historyContainer
+                            .getChildren()
+                            .add(card);
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     private void setupMenuEvents() {

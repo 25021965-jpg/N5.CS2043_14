@@ -86,6 +86,9 @@ public class ClientHandler implements Runnable {
                 case JOIN: return handleJoin(data);
                 case LEAVE: return handleLeave();
                 case GET_BID_HISTORY: return handleGetBidHistory(data);
+                // history
+                case LIST_JOINED_AUCTIONS:
+                    return handleListJoinedAuctions();
 
                 // --- XỬ LÝ ADMIN ---
                 case LIST_USERS: return handleListUsers();
@@ -151,6 +154,55 @@ public class ClientHandler implements Runnable {
             System.err.println("✕ Server Logic Error: " + e.getMessage());
             return "ERROR|Server Error: " + e.getMessage();
         }
+    }
+
+    // ==================== JOINED AUCTIONS ====================
+    private String handleListJoinedAuctions() {
+
+        if (currentUser == null) {
+            return "LIST_JOINED_AUCTIONS_EMPTY";
+        }
+
+        List<Auction> auctions =
+                AuctionDAO.findJoinedAuctions(
+                        currentUser.getUser_id()
+                );
+
+        if (auctions == null || auctions.isEmpty()) {
+            return "LIST_JOINED_AUCTIONS_EMPTY";
+        }
+
+        StringBuilder sb =
+                new StringBuilder("LIST_JOINED_AUCTIONS_SUCCESS");
+
+        for (Auction a : auctions) {
+
+            Item item = a.getItem();
+
+            String image =
+                    (item.getImages() != null
+                            && !item.getImages().isEmpty())
+                            ? item.getImages().get(0)
+                            : "";
+
+            sb.append("|")
+                    .append(a.getAuction_id()).append(";")
+                    .append(item.getItem_id()).append(";")
+                    .append(item.getName()).append(";")
+                    .append(a.getCurrentPrice()).append(";")
+                    .append(a.getMinIncrement()).append(";")
+                    .append(image).append(";")
+                    .append(a.getStartTime()).append(";")
+                    .append(a.getEndTime()).append(";")
+                    .append(item.getCategory()).append(";")
+                    .append(item.getDescription()).append(";")
+                    .append(a.getStatus()).append(";")
+                    .append(a.getSeller() != null
+                            ? a.getSeller().getUser_id()
+                            : "");
+        }
+
+        return sb.toString();
     }
 
     //my auctions

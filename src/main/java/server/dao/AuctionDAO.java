@@ -214,6 +214,49 @@ public class AuctionDAO {
         }
     }
 
+    public static List<Auction> findJoinedAuctions(String userId) {
+
+        List<Auction> auctions = new ArrayList<>();
+
+        String sql = """
+        SELECT DISTINCT auction_id
+        FROM bids
+        WHERE bidder_id = ?
+        """;
+
+        try (
+                Connection conn = DatabaseService.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)
+        ) {
+
+            ps.setString(1, userId);
+
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+
+                String auctionId =
+                        rs.getString("auction_id");
+
+                Auction auction =
+                        getAuctionById(auctionId);
+
+                if (auction != null) {
+                    auctions.add(auction);
+                }
+            }
+
+        } catch (SQLException e) {
+
+            System.err.println(
+                    "AuctionDAO.findJoinedAuctions error: "
+                            + e.getMessage()
+            );
+        }
+
+        return auctions;
+    }
+
     // ==================== STOP ====================
     public static boolean stopAuction(String id) {
         String sql = "UPDATE auctions SET end_time = NOW() WHERE auction_id = ?";
