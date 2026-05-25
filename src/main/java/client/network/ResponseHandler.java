@@ -119,6 +119,8 @@ public class ResponseHandler {
                     User loginUser = parseUser(data);
                     UserSession.setCurrentUser(loginUser);
                     handleLoginSuccess(loginUser);
+                    ClientSocket.getInstance()
+                            .sendMessage("LIST_FAVOURITES");
                 }
 
                 case LOGIN_FAILED ->
@@ -160,8 +162,9 @@ public class ResponseHandler {
 
                 // ================= FAVORITE (NEW) =================
                 case LIST_FAVOURITES_SUCCESS -> {
+                    System.out.println("Loading favourite cache...");
 
-                    // IMPORTANT FIX
+                    FavouriteManager.clear();
                     FavouriteManager.loadFromResponse(data);
 
                     FavouriteController ctrl =

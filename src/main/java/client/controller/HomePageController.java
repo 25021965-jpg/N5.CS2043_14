@@ -19,18 +19,17 @@ import model.Category;
 import model.User;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class HomePageController {
 
     private static HomePageController instance;
     private static final int MAX_COLUMNS = 3;
+    private static boolean loadedOnce = false;
+    private boolean initialized = false;
 
     private final List<Auction> auctionList = new ArrayList<>();
-
-    private final String DEFAULT_STYLE = "-fx-background-color: #d4af37;";
-    private final String ACTIVE_STYLE  = "-fx-background-color: #ffe082;";
+    private final Map<String, ItemCardController> cardCache = new HashMap<>();
 
     // Filter states
     private Category selectedCategory = null;
@@ -57,21 +56,29 @@ public class HomePageController {
 
     @FXML
     public void initialize() {
+        instance = this;
         log("Auction Dashboard Initialized");
 
         Platform.runLater(() -> {
+
             if (itemGrid != null && itemGrid.getScene() != null) {
-                Stage stage = (Stage) itemGrid.getScene().getWindow();
+                Stage stage =
+                        (Stage) itemGrid.getScene().getWindow();
+
                 ResponseHandler.setMainStage(stage);
             }
+
+            highlight(btnAll);
+            initialized = true;
+
+            // FIX: reload data khi mở lại homepage
+            User currentUser = UserSession.getCurrentUser();
+
+            if (currentUser != null) {
+                log("Reloading auction list...");
+                ClientSocket.getInstance().sendList();
+            }
         });
-
-        ClientSocket socket = ClientSocket.getInstance();
-        if (socket != null) {
-            socket.sendList();
-        }
-
-        Platform.runLater(() -> highlight(btnAll));
     }
 
     public void setUser(User user) {
@@ -79,6 +86,9 @@ public class HomePageController {
 
         if (user != null) {
             log("Logged in as: " + user.getUsername());
+            Platform.runLater(() -> {
+                ClientSocket.getInstance().sendList();
+            });
         }
     }
 
@@ -89,8 +99,32 @@ public class HomePageController {
             Platform.runLater(() -> updateAuctionList(auctions));
             return;
         }
-        this.auctionList.clear();
-        this.auctionList.addAll(auctions);
+
+        // check nếu dữ liệu không đổi thì bỏ qua
+        boolean same = auctionList.size() == auctions.size();
+
+        if (same) {
+            for (int i = 0; i < auctions.size(); i++) {
+                Auction oldA = auctionList.get(i);
+                Auction newA = auctions.get(i);
+
+                if (!Objects.equals(oldA.getAuction_id(), newA.getAuction_id())
+                        || !oldA.getCurrentPrice().equals(newA.getCurrentPrice())
+                        || oldA.getStatus() != newA.getStatus()) {
+
+                    same = false;
+                    break;
+                }
+            }
+        }
+
+        if (same) {
+            return;
+        }
+
+        auctionList.clear();
+        auctionList.addAll(auctions);
+
         applyFilters();
     }
 
@@ -129,6 +163,7 @@ public class HomePageController {
     }
 
     private void resetCategoryStyles() {
+        String DEFAULT_STYLE = "-fx-background-color: #d4af37;";
         btnAll.setStyle(DEFAULT_STYLE);
         btnAccessories.setStyle(DEFAULT_STYLE);
         btnCollectibles.setStyle(DEFAULT_STYLE);
@@ -141,6 +176,7 @@ public class HomePageController {
 
     private void highlight(Button btn) {
         resetCategoryStyles();
+        String ACTIVE_STYLE = "-fx-background-color: #ffe082;";
         btn.setStyle(ACTIVE_STYLE);
     }
 
@@ -169,23 +205,54 @@ public class HomePageController {
 
     private void refreshGrid(List<Auction> list) {
         itemGrid.getChildren().clear();
+        Set<String> newIds = new HashSet<>();
+
         int col = 0;
         int row = 0;
 
         for (Auction auction : list) {
-            try {
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/itemsCard-view.fxml"));
-                Node card = loader.load();
-                ItemCardController controller = loader.getController();
-                controller.setClient(ClientSocket.getInstance());
-                controller.setData(auction);
 
-                if (col == MAX_COLUMNS) { col = 0; row++; }
-                itemGrid.add(card, col++, row);
-            } catch (IOException e) {
-                System.err.println("Error loading card: " + e.getMessage());
+            newIds.add(auction.getAuction_id());
+
+            ItemCardController controller = cardCache.get(auction.getAuction_id());
+            Node card;
+
+            if (controller == null) {
+
+                try {
+                    FXMLLoader loader = new FXMLLoader(
+                            getClass().getResource("/fxml/itemsCard-view.fxml"));
+
+                    Parent root = loader.load();
+                    controller = loader.getController();
+
+                    controller.setRoot(root);
+                    controller.setClient(ClientSocket.getInstance());
+                    controller.setData(auction);
+
+                    cardCache.put(auction.getAuction_id(), controller);
+
+                    card = root;
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    continue;
+                }
+
+            } else {
+                controller.setData(auction); // UPDATE ONLY
+                card = controller.getRoot();
+            }
+
+            itemGrid.add(card, col++, row);
+
+            if (col == MAX_COLUMNS) {
+                col = 0;
+                row++;
             }
         }
+        //remove cards không còn tồn tại
+        cardCache.keySet().removeIf(id -> !newIds.contains(id));
     }
 
     // ================= OPEN SCREENS =================
@@ -263,7 +330,14 @@ public class HomePageController {
 
     @FXML
     private void openFavourite(ActionEvent event) {
-        NavigationUtils.switchScene(getStage(event), "/fxml/Favourite-view.fxml", "Favorites");
+
+        NavigationUtils.switchScene(getStage(event),
+                "/fxml/Favourite-view.fxml",
+                "Favorites");
+
+        Platform.runLater(() -> {
+            ClientSocket.getInstance().sendMessage("LIST_FAVOURITES");
+        });
     }
 
     @FXML
@@ -300,10 +374,6 @@ public class HomePageController {
     @FXML
     private void handleLogout(ActionEvent event) {
         if (NavigationUtils.showConfirm("Logout", "Are you sure you want to logout?")) {
-            ClientSocket socket = ClientSocket.getInstance();
-            if (socket != null) {
-                socket.logout();
-            }
             UserSession.setCurrentUser(null);
             NavigationUtils.switchScene(getStage(event), "/fxml/login-view.fxml", "Login");
         }
@@ -327,5 +397,8 @@ public class HomePageController {
 
     private void log(String msg) {
         System.out.println("[HomePage] " + msg);
+    }
+    public boolean isInitialized() {
+        return initialized;
     }
 }

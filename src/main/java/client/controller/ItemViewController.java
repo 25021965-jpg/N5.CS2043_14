@@ -48,7 +48,7 @@ public class ItemViewController {
         String itemId = auction.getItem().getItem_id();
 
         boolean isFavourite =
-                FavouriteManager.favouriteItemIds.contains(itemId);
+                FavouriteManager.isFavourite(itemId);
 
         updateFavouriteUI(isFavourite);
 
@@ -143,7 +143,7 @@ public class ItemViewController {
         String itemId = auction.getItem().getItem_id();
 
         boolean isFavourite =
-                FavouriteManager.favouriteItemIds.contains(itemId);
+                FavouriteManager.isFavourite(itemId);
 
         Stage stage = (Stage) ((Node) event.getSource())
                 .getScene()
@@ -156,13 +156,24 @@ public class ItemViewController {
             return;
         }
 
+        // ================= REMOVE =================
         if (isFavourite) {
-            client.sendMessage("REMOVE_FAVOURITE|" + itemId);
-            FavouriteManager.favouriteItemIds.remove(itemId);
+
+            client.sendMessage(
+                    "REMOVE_FAVOURITE|" + itemId
+            );
+
+            FavouriteManager.removeFavourite(itemId);
             updateFavouriteUI(false);
-        } else {
-            client.sendMessage("ADD_FAVOURITE|" + itemId);
-            FavouriteManager.favouriteItemIds.add(itemId);
+
+        }
+        else {
+
+            client.sendMessage(
+                    "ADD_FAVOURITE|" + itemId
+            );
+
+            FavouriteManager.addFavourite(itemId);
             updateFavouriteUI(true);
         }
     }

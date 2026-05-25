@@ -11,6 +11,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
+<?import javafx.scene.layout.FlowPane?>
 <AnchorPane
         prefHeight="720.0"
         prefWidth="1080.0"
@@ -292,13 +293,13 @@
                 -fx-background: transparent;
             ">
 
-        <VBox
-                prefWidth="730"
-                spacing="20"
+        <FlowPane fx:id="favouriteListContainer"
+                  orientation="HORIZONTAL"
+                  hgap="20"
+                  vgap="20"
+                  prefWrapLength="1100">
 
-                style="-fx-padding: 10;">
-
-        </VBox>
+        </FlowPane>
 
     </ScrollPane>
 

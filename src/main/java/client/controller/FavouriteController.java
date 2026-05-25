@@ -1,5 +1,6 @@
 package client.controller;
 
+import client.manager.FavouriteManager;
 import client.manager.UserSession;
 import client.network.ClientSocket;
 
@@ -11,12 +12,13 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 
 import javafx.scene.control.*;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Region;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.VBox;
 
 import javafx.stage.Stage;
 
+import model.Auction;
+import model.Item;
 import model.User;
 
 import java.io.IOException;
@@ -27,10 +29,6 @@ public class FavouriteController implements UserDataReceiver {
     // ================= SINGLETON =================
     private static FavouriteController instance;
 
-    public FavouriteController() {
-        instance = this;
-    }
-
     public static FavouriteController getInstance() {
         return instance;
     }
@@ -40,7 +38,7 @@ public class FavouriteController implements UserDataReceiver {
     private User currentUser;
 
     // ================= UI =================
-    @FXML private VBox favouriteListContainer;
+    @FXML private FlowPane favouriteListContainer;
 
     @FXML private Button infoBtn;
     @FXML private Button historyBtn;
@@ -58,13 +56,18 @@ public class FavouriteController implements UserDataReceiver {
     @FXML
     public void initialize() {
 
+        instance = this;
+
         System.out.println("Favourite Page Loaded");
 
         setupStatusFilter();
         setupCategoryFilter();
         setupMenuEvents();
 
-        loadFavourites();
+        Platform.runLater(() -> {
+            System.out.println("Loading favourites...");
+            loadFavourites();
+        });
     }
 
     // ================= SET DATA =================
@@ -94,41 +97,140 @@ public class FavouriteController implements UserDataReceiver {
 
         Platform.runLater(() -> {
 
-            if (favouriteListContainer == null) return;
-
             favouriteListContainer.getChildren().clear();
 
-            if (response == null || response.equals("FAVOURITES_EMPTY")) {
-                System.out.println("No favourites");
+            if (response == null
+                    || response.equals("LIST_FAVOURITES_EMPTY")) {
+
+                favouriteListContainer.getChildren().add(
+                        new Label("No favourite items")
+                );
                 return;
             }
 
-            String[] parts = response.split("\\|");
-            if (parts.length < 2) return;
+            try {
 
-            for (int i = 1; i < parts.length; i++) {
+                // bỏ header
+                String rawData =
+                        response.substring(
+                                "LIST_FAVOURITES_SUCCESS|".length()
+                        );
 
-                String[] data = parts[i].split(";");
-                if (data.length < 7) continue;
+                String[] auctions = rawData.split("\\|");
 
-                String auctionId = data[0];
-                String name = data[2];
-                String price = data[3];
-                String image = data[5];
+                System.out.println("Favourite count: "
+                        + auctions.length);
 
-                String endTime = data.length > 7 ? data[7] : "";
-                String category = data.length > 8 ? data[8] : "";
+                for (String auctionStr : auctions) {
 
-                HBox card = createFavouriteCard(
-                        auctionId,
-                        name,
-                        price,
-                        category,
-                        endTime,
-                        image
-                );
+                    System.out.println("RAW: " + auctionStr);
 
-                favouriteListContainer.getChildren().add(card);
+                    String[] data =
+                            auctionStr.split(";", -1);
+
+                    System.out.println(
+                            "Length = " + data.length
+                    );
+
+                    if (data.length < 12) {
+                        System.out.println("SKIPPED");
+                        continue;
+                    }
+
+                    Auction auction = new Auction();
+                    auction.setAuction_id(data[0]);
+
+                    Item item = new Item();
+                    item.setItem_id(data[1]);
+                    item.setName(data[2]);
+                    item.setDescription(data[9]);
+
+                    try {
+                        item.setCategory(
+                                model.Category.valueOf(data[8])
+                        );
+                    } catch (Exception e) {
+                        item.setCategory(
+                                model.Category.OTHER
+                        );
+                    }
+
+                    // image
+                    String imagePath = data[5];
+
+                    if (imagePath != null
+                            && !imagePath.isBlank()
+                            && !imagePath.equals("NO_IMAGE")) {
+
+                        if (!imagePath.startsWith("file:")) {
+                            imagePath =
+                                    "file:" +
+                                            imagePath.replace("\\", "/");
+                        }
+
+                        item.setImages(
+                                java.util.Collections.singletonList(imagePath)
+                        );
+                    }
+
+                    auction.setItem(item);
+
+                    auction.setCurrentPrice(
+                            new java.math.BigDecimal(data[3])
+                    );
+
+                    auction.setMinIncrement(
+                            new java.math.BigDecimal(data[4])
+                    );
+
+                    auction.setStartTime(
+                            java.time.LocalDateTime.parse(data[6])
+                    );
+
+                    auction.setEndTime(
+                            java.time.LocalDateTime.parse(data[7])
+                    );
+
+                    auction.setStatus(
+                            model.AuctionStatus.valueOf(data[10])
+                    );
+
+                    User seller = new User();
+                    seller.setUser_id(data[11]);
+                    auction.setSeller(seller);
+
+                    FXMLLoader loader =
+                            new FXMLLoader(
+                                    getClass().getResource(
+                                            "/fxml/itemsCard-view.fxml"
+                                    )
+                            );
+
+                    Parent card = loader.load();
+
+                    ItemCardController controller =
+                            loader.getController();
+
+                    controller.setClient(
+                            ClientSocket.getInstance()
+                    );
+
+                    controller.setRoot(card);
+
+                    controller.setData(auction);
+
+                    favouriteListContainer
+                            .getChildren()
+                            .add(card);
+
+                    System.out.println(
+                            "Added: "
+                                    + item.getName()
+                    );
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         });
     }
@@ -147,78 +249,10 @@ public class FavouriteController implements UserDataReceiver {
         });
     }
 
-
     public void reloadFavourites() {
         loadFavourites();
     }
 
-    // ================= CARD =================
-    private HBox createFavouriteCard(
-            String auctionId,
-            String name,
-            String price,
-            String category,
-            String endTime,
-            String imageUrl
-    ) {
-
-        HBox card = new HBox();
-        card.setSpacing(20);
-        card.setPrefHeight(150);
-        card.setPrefWidth(730);
-
-        card.setUserData(auctionId); // IMPORTANT for remove
-
-        card.setStyle(
-                "-fx-background-color: white;" +
-                        "-fx-background-radius: 15;" +
-                        "-fx-border-radius: 15;" +
-                        "-fx-border-color: #D4AF37;" +
-                        "-fx-border-width: 2;" +
-                        "-fx-padding: 15;"
-        );
-
-        Region img = new Region();
-        img.setPrefSize(130, 120);
-        img.setStyle("-fx-background-color: #E2E8F0; -fx-background-radius: 10;");
-
-        VBox info = new VBox();
-        info.setSpacing(10);
-
-        Label title = new Label(name);
-        title.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #0F172A;");
-
-        Label priceLbl = new Label("Current Price: " + price);
-        priceLbl.setStyle("-fx-font-size: 15px; -fx-text-fill: #334155;");
-
-        Label catLbl = new Label("Category: " + category);
-        catLbl.setStyle("-fx-font-size: 15px; -fx-text-fill: #7C3AED; -fx-font-weight: bold;");
-
-        Label endLbl = new Label("End Date: " + endTime);
-        endLbl.setStyle("-fx-font-size: 15px; -fx-text-fill: #64748B;");
-
-        Button removeBtn = new Button("Remove Favourite");
-
-        removeBtn.setStyle(
-                "-fx-background-color: #EF4444;" +
-                        "-fx-text-fill: white;" +
-                        "-fx-font-weight: bold;" +
-                        "-fx-background-radius: 8;"
-        );
-
-        removeBtn.setOnAction(e -> {
-
-            ClientSocket.getInstance()
-                    .sendMessage("REMOVE_FAVOURITE|" + auctionId);
-
-            // KHÔNG reload ở đây nữa → ResponseHandler xử lý
-        });
-
-        info.getChildren().addAll(title, priceLbl, catLbl, endLbl, removeBtn);
-        card.getChildren().addAll(img, info);
-
-        return card;
-    }
 
     // ================= FILTER =================
     private void setupStatusFilter() {

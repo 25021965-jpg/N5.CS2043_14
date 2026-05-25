@@ -17,6 +17,7 @@ public class ClientSocket {
     private PrintWriter out;
     private boolean listening = false;
     private Consumer<String> messageListener = null;
+    public static String currentRequest = "";
 
     private ClientSocket() throws Exception {
         connect();
@@ -133,9 +134,9 @@ public class ClientSocket {
     }
 
     public void sendList() {
+        currentRequest = "LIST";
         send(Command.LIST);
     }
-
     public void sendBid(String auctionId, String amount) {
         send(Command.BID, auctionId, amount);
     }

@@ -198,7 +198,7 @@ public class ClientHandler implements Runnable {
                 new HashSet<>(FavouriteDAO.getFavouriteItemIds(currentUser.getUser_id()));
 
         if (favouriteItemIds.isEmpty())
-            return "FAVOURITES_EMPTY";
+            return "LIST_FAVOURITES_EMPTY";
 
         List<Auction> auctions = AuctionService.getAllAuctions();
 
@@ -272,7 +272,7 @@ public class ClientHandler implements Runnable {
         }
 
         return count == 0
-                ? "FAVOURITES_EMPTY"
+                ? "LIST_FAVOURITES_EMPTY"
                 : sb.toString();
     }
 

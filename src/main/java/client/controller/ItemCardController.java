@@ -13,7 +13,11 @@ import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 import model.*;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ItemCardController {
 
@@ -23,6 +27,9 @@ public class ItemCardController {
     @FXML private Label lblCurrentPrice;
     @FXML private Label lblStep;
     @FXML private Label lblEndTime;
+
+    private Parent root;
+    private static final Map<String, Image> IMAGE_CACHE = new HashMap<>();
 
     private Auction auction;
     private ClientSocket client;
@@ -34,6 +41,7 @@ public class ItemCardController {
 
     public void setData(Auction auction) {
         this.auction = auction;
+        if (auction == null || auction.getItem() == null) return;
         Item item = auction.getItem();
 
         lblName.setText("NAME: " + item.getName());
@@ -56,17 +64,36 @@ public class ItemCardController {
         lblStep.setText("Step: " + auction.getMinIncrement());
 
         if (item.getImages() != null && !item.getImages().isEmpty()) {
+
             try {
-                String firstImagePath = item.getImages().getFirst();
-                Image image = new Image(firstImagePath);
-                if (!image.isError()) {
-                    imgProduct.setImage(image);
-                } else {
-                    System.out.println("Image loading error: " + firstImagePath);
+
+                String imagePath = item.getImages().getFirst();
+
+                Image image = IMAGE_CACHE.get(imagePath);
+
+                if (image == null) {
+
+                    File file = new File(imagePath);
+
+                    if (file.exists()) {
+                        image = new Image(file.toURI().toString(), 300, 200, true, true);
+                    } else {
+                        image = getFallbackImage();
+                    }
+
+                    IMAGE_CACHE.put(imagePath, image);
                 }
+
+                imgProduct.setImage(image);
+
             } catch (Exception e) {
-                System.err.println("Error: " + e.getMessage());
+
+                System.out.println("Image error: " + e.getMessage());
+                imgProduct.setImage(getFallbackImage());
             }
+
+        } else {
+            imgProduct.setImage(getFallbackImage());
         }
 
         if (auction.getEndTime() != null) {
@@ -74,6 +101,23 @@ public class ItemCardController {
             lblEndTime.setText("End at: " + auction.getEndTime().format(formatter));
         }
     }
+
+    private Image getFallbackImage() {
+        URL url = getClass().getResource("/image/no-image.png");
+        if (url != null) {
+            return new Image(url.toExternalForm());
+        }
+        System.out.println("Missing resource: /image/no-image.png");
+        return null;
+    }
+
+    public void setRoot(Parent root) {
+        this.root = root;
+    }
+    public Parent getRoot() {
+        return root;
+    }
+
 
     @FXML
     private void handleCardClick(MouseEvent event) {
