@@ -31,8 +31,8 @@ public class AuctionService {
         auction.setStartingPrice(startPrice);
         auction.setCurrentPrice(startPrice);
         auction.setMinIncrement(minIncrement);
-        auction.setStatus(AuctionStatus.PENDING_APPROVAL);
         auction.setCancelled(false);
+        auction.setApproved(false);
 
         // 3. Parse thời gian
         try {

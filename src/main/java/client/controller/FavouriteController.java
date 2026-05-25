@@ -13,7 +13,6 @@ import javafx.scene.Scene;
 
 import javafx.scene.control.*;
 import javafx.scene.layout.FlowPane;
-import javafx.scene.layout.VBox;
 
 import javafx.stage.Stage;
 
@@ -38,6 +37,8 @@ public class FavouriteController implements UserDataReceiver {
     // ================= DATA =================
     private ClientSocket client;
     private User currentUser;
+    private final List<Auction> originalAuctions =
+            new ArrayList<>();
 
     // ================= UI =================
     @FXML private FlowPane favouriteListContainer;
@@ -100,6 +101,7 @@ public class FavouriteController implements UserDataReceiver {
         Platform.runLater(() -> {
 
             favouriteListContainer.getChildren().clear();
+            originalAuctions.clear();
 
             if (response == null
                     || response.equals("LIST_FAVOURITES_EMPTY")) {
@@ -191,12 +193,17 @@ public class FavouriteController implements UserDataReceiver {
                     );
 
                     auction.setStatus(
-                            model.AuctionStatus.valueOf(data[10])
+                            model.AuctionStatus.valueOf(
+                                    data[10]
+                                            .trim()
+                                            .toUpperCase()
+                            )
                     );
 
                     User seller = new User();
                     seller.setUser_id(data[11]);
                     auction.setSeller(seller);
+                    originalAuctions.add(auction);
 
                     FXMLLoader loader =
                             new FXMLLoader(
@@ -251,22 +258,133 @@ public class FavouriteController implements UserDataReceiver {
 
     // ================= FILTER =================
     private void setupStatusFilter() {
-        statusFilterComboBox.getItems().addAll("All", "Active", "Finished", "Cancelled");
+
+        statusFilterComboBox.getItems().addAll(
+                "All",
+                "ACTIVE",
+                "UPCOMING",
+                "ENDED",
+                "CANCELLED"
+        );
+
         statusFilterComboBox.setValue("All");
-        statusFilterComboBox.setOnAction(e -> filterFavourite());
+
+        statusFilterComboBox.setOnAction(
+                e -> filterFavourite()
+        );
     }
 
     private void setupCategoryFilter() {
+
         categoryFilterComboBox.getItems().addAll(
-                "All", "Accessories", "Collectibles", "Electronics",
-                "Fashion", "Home Appliances", "Vehicles", "Other"
+                "All",
+                "ACCESSORIES",
+                "COLLECTIBLES",
+                "ELECTRONICS",
+                "FASHION",
+                "HOME_APPLIANCES",
+                "VEHICLES",
+                "OTHER"
         );
+
         categoryFilterComboBox.setValue("All");
-        categoryFilterComboBox.setOnAction(e -> filterFavourite());
+
+        categoryFilterComboBox.setOnAction(
+                e -> filterFavourite()
+        );
     }
 
     private void filterFavourite() {
-        System.out.println("Filter TODO: send request to server");
+
+        if (favouriteListContainer == null)
+            return;
+
+        favouriteListContainer.getChildren().clear();
+
+        String selectedStatus =
+                statusFilterComboBox.getValue();
+
+        String selectedCategory =
+                categoryFilterComboBox.getValue();
+
+        for (Auction auction : originalAuctions) {
+
+            boolean statusMatch = true;
+            boolean categoryMatch = true;
+
+            // ================= STATUS =================
+            if (selectedStatus != null
+                    && !selectedStatus.equalsIgnoreCase("All")) {
+
+                String auctionStatus =
+                        auction.getStatus()
+                                .name()
+                                .trim()
+                                .toUpperCase();
+
+                statusMatch =
+                        auctionStatus.equals(
+                                selectedStatus.trim().toUpperCase()
+                        );
+            }
+
+            // ================= CATEGORY =================
+            if (selectedCategory != null
+                    && !selectedCategory.equalsIgnoreCase("All")) {
+
+                String category =
+                        auction.getItem()
+                                .getCategory()
+                                .name();
+
+                categoryMatch =
+                        category.equalsIgnoreCase(selectedCategory);
+            }
+
+            // ================= RENDER =================
+            if (statusMatch && categoryMatch) {
+
+                try {
+
+                    FXMLLoader loader =
+                            new FXMLLoader(
+                                    getClass().getResource(
+                                            "/fxml/itemsCard-view.fxml"
+                                    )
+                            );
+
+                    Parent card = loader.load();
+
+                    ItemCardController controller =
+                            loader.getController();
+
+                    controller.setClient(
+                            ClientSocket.getInstance()
+                    );
+
+                    controller.setRoot(card);
+
+                    controller.setData(auction);
+
+                    favouriteListContainer
+                            .getChildren()
+                            .add(card);
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        // ================= EMPTY =================
+        if (favouriteListContainer
+                .getChildren()
+                .isEmpty()) {
+
+            favouriteListContainer.getChildren().add(
+                    new Label("No matching favourite auctions")
+            );
+        }
     }
 
     // ================= MENU =================

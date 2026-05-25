@@ -1,6 +1,7 @@
 package client.controller;
 
 import client.network.ClientSocket;
+import client.util.TextUtils;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -10,113 +11,192 @@ import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
-import model.*;
+import model.Auction;
+import model.Item;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.text.NumberFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
+
 
 public class ItemCardController {
 
+    // ==================== FXML ====================
+
     @FXML private ImageView imgProduct;
+
     @FXML private Label lblName;
     @FXML private Label lblCategory;
+    @FXML private Label lblStatus;
+
     @FXML private Label lblCurrentPrice;
     @FXML private Label lblStep;
     @FXML private Label lblEndTime;
 
-    private Parent root;
-    private static final Map<String, Image> IMAGE_CACHE = new HashMap<>();
+    @FXML
+    public void initialize() {
+        Rectangle clip = new Rectangle();
+        clip.setArcWidth(20);
+        clip.setArcHeight(20);
+
+        clip.widthProperty().bind(imgProduct.fitWidthProperty());
+        clip.heightProperty().bind(imgProduct.fitHeightProperty());
+
+        imgProduct.setClip(clip);
+
+        imgProduct.setPreserveRatio(false);
+        imgProduct.setSmooth(true);
+    }
+
+    // ==================== VARIABLES ====================
+
+    private static final Map<String, Image> IMAGE_CACHE =
+            new HashMap<>();
 
     private Auction auction;
+    private Parent root;
     private ClientSocket client;
 
+
     // ==================== SETTERS ====================
+
     public void setClient(ClientSocket client) {
         this.client = client;
     }
 
+    public void setRoot(Parent root) {
+        this.root = root;
+    }
+
+    public Parent getRoot() {
+        return root;
+    }
+
+
+    // ==================== LOAD DATA ====================
+
     public void setData(Auction auction) {
+
         this.auction = auction;
-        if (auction == null || auction.getItem() == null) return;
+
+        if (auction == null || auction.getItem() == null)
+            return;
+
         Item item = auction.getItem();
 
-        lblName.setText("NAME: " + item.getName());
+        NumberFormat moneyFormatter =
+                NumberFormat.getCurrencyInstance(Locale.US);
 
+
+        // ---------- NAME ----------
+        lblName.setText(item.getName());
+
+
+        // ---------- CATEGORY ----------
         if (item.getCategory() != null) {
-            String raw = item.getCategory().name().replace("_", " ").toLowerCase();
-            String[] words = raw.split(" ");
-            StringBuilder sb = new StringBuilder();
-            for (String word : words) {
-                sb.append(Character.toUpperCase(word.charAt(0)))
-                        .append(word.substring(1))
-                        .append(" ");
-            }
-            lblCategory.setText("Category: " + sb.toString().trim());
+            lblCategory.setText(
+                    TextUtils.formatCategory(item.getCategory().name())
+            );
         } else {
             lblCategory.setText("Category: —");
         }
 
-        lblCurrentPrice.setText("Current Price: " + auction.getCurrentPrice());
-        lblStep.setText("Step: " + auction.getMinIncrement());
 
-        if (item.getImages() != null && !item.getImages().isEmpty()) {
+        // ---------- STATUS ----------
+        if (auction.getStatus() != null) {
+            lblStatus.setText(
+                    TextUtils.withLabel("Status", TextUtils.toTitleCase(auction.getStatus().name()))
+            );
 
-            try {
-                String imagePath = item.getImages().getFirst();
-                Image image = IMAGE_CACHE.get(imagePath);
-
-                if (image == null) {
-                    // KIỂM TRA NẾU LÀ LINK Cloudinary
-                    if (imagePath.startsWith("http")) {
-                        image = new Image(imagePath, 300, 200, true, true);
-                    } else {
-                        // NẾU LÀ FILE CỤC BỘ THÌ MỚI DÙNG FILE
-                        File file = new File(imagePath);
-                        if (file.exists()) {
-                            image = new Image(file.toURI().toString(), 300, 200, true, true);
-                        } else {
-                            image = getFallbackImage();
-                        }
-                    }
-                    IMAGE_CACHE.put(imagePath, image);
-                }
-                imgProduct.setImage(image);
-
-            } catch (Exception e) {
-                System.out.println("Image error: " + e.getMessage());
-                imgProduct.setImage(getFallbackImage());
+            switch (auction.getStatus()) {
+                case ACTIVE ->
+                        lblStatus.setStyle("-fx-text-fill:#7CFC00;");
+                case ENDED ->
+                        lblStatus.setStyle("-fx-text-fill:#ff4d4d;");
+                case PENDING_APPROVAL ->
+                        lblStatus.setStyle("-fx-text-fill:#facc15;");
+                default ->
+                        lblStatus.setStyle("-fx-text-fill:white;");
             }
-
         } else {
-            imgProduct.setImage(getFallbackImage());
+            lblStatus.setText("Status: —");
         }
 
+
+        // ---------- PRICE ----------
+        lblCurrentPrice.setText(
+                TextUtils.withLabel("Current Price", moneyFormatter.format(auction.getCurrentPrice()))
+        );
+
+        lblStep.setText(
+                TextUtils.withLabel("Step", moneyFormatter.format(auction.getMinIncrement()))
+        );
+
+
+        // ---------- END TIME ----------
         if (auction.getEndTime() != null) {
-            java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
             lblEndTime.setText("End at: " + auction.getEndTime().format(formatter));
         }
+
+
+        // ---------- IMAGE ----------
+        loadImage(item);
     }
+
+
+    // ==================== IMAGE ====================
+
+    private void loadImage(Item item) {
+
+        if (item.getImages() == null || item.getImages().isEmpty()) {
+            imgProduct.setImage(getFallbackImage());
+            return;
+        }
+
+        try {
+            String imagePath = item.getImages().getFirst();
+            Image image = IMAGE_CACHE.get(imagePath);
+
+            if (image == null) {
+                if (imagePath.startsWith("http")) {
+                    image = new Image(imagePath, 235, 165, false, true);
+                } else {
+                    File file = new File(imagePath);
+                    image = file.exists()
+                            ? new Image(file.toURI().toString(), 235, 165, false, true)
+                            : getFallbackImage();
+                }
+                IMAGE_CACHE.put(imagePath, image);
+            }
+
+            imgProduct.setImage(image);
+
+        } catch (Exception e) {
+            System.out.println("Image error: " + e.getMessage());
+            imgProduct.setImage(getFallbackImage());
+        }
+    }
+
 
     private Image getFallbackImage() {
         URL url = getClass().getResource("/image/no-image.png");
         if (url != null) {
             return new Image(url.toExternalForm());
         }
-        System.out.println("Missing resource: /image/no-image.png");
+        System.out.println("Missing fallback image");
         return null;
     }
 
-    public void setRoot(Parent root) {
-        this.root = root;
-    }
-    public Parent getRoot() {
-        return root;
-    }
 
+    // ==================== OPEN DETAIL ====================
 
     @FXML
     private void handleCardClick(MouseEvent event) {
@@ -125,17 +205,14 @@ public class ItemCardController {
             Parent root = loader.load();
 
             ItemViewController controller = loader.getController();
-
-            System.out.println("ItemCardController: client = " + (this.client != null ? "not null" : "null"));
-
-            controller.setAuctionData(this.auction);
+            controller.setAuctionData(auction);
 
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.setScene(new Scene(root));
             stage.show();
 
         } catch (IOException e) {
-            System.err.println("Error: " + e.getMessage());
+            System.out.println("Error: " + e.getMessage());
         }
     }
 }
