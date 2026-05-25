@@ -11,6 +11,7 @@
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
@@ -45,6 +46,8 @@
                 <!-- Product Info Card -->
                 <VBox spacing="12.0" style="-fx-background-color: #1E1E1E; -fx-background-radius: 16; -fx-padding: 16;">
                     <Label style="-fx-text-fill: #D4AF37; -fx-font-size: 14; -fx-font-weight: bold;" text="📦 PRODUCT DETAILS" />
+
+                    <ImageView fx:id="productImageView" fitHeight="200.0" fitWidth="448.0" preserveRatio="true" smooth="true" />
 
                     <Label fx:id="productNameLabel" style="-fx-text-fill: #FFFFFF; -fx-font-size: 20; -fx-font-weight: bold;" text="Product Name" wrapText="true" />
 

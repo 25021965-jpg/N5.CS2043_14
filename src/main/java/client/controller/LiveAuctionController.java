@@ -202,7 +202,7 @@ public class LiveAuctionController implements UserDataReceiver {
         // Load image
         if (imageUrl != null && !imageUrl.isEmpty() && !imageUrl.equals("NO_IMAGE")) {
             try {
-                Image image = new Image(imageUrl);
+                Image image = new Image(imageUrl, true);  // true = background thread
                 productImageView.setImage(image);
             } catch (Exception e) {
                 System.err.println("Cannot load image: " + imageUrl);
