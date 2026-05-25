@@ -179,11 +179,9 @@ public class ClientHandler implements Runnable {
 
             Item item = a.getItem();
 
-            String image =
-                    (item.getImages() != null
-                            && !item.getImages().isEmpty())
-                            ? item.getImages().get(0)
-                            : "";
+            String image = (item.getImages() != null && !item.getImages().isEmpty())
+                    ? String.join(",", item.getImages())
+                    : "";
 
             sb.append("|")
                     .append(a.getAuction_id()).append(";")
@@ -229,11 +227,9 @@ public class ClientHandler implements Runnable {
 
             Item item = a.getItem();
 
-            String image =
-                    (item.getImages() != null
-                            && !item.getImages().isEmpty())
-                            ? item.getImages().get(0)
-                            : "";
+            String image = (item.getImages() != null && !item.getImages().isEmpty())
+                    ? String.join(",", item.getImages())
+                    : "";
 
             sb.append("|")
                     .append(a.getAuction_id()).append(";")
@@ -324,17 +320,9 @@ public class ClientHandler implements Runnable {
             if (!favouriteItemIds.contains(itemId))
                 continue;
 
-            String firstImg = "NO_IMAGE";
-
+            String allImgs = "NO_IMAGE";
             if (item.getImages() != null && !item.getImages().isEmpty()) {
-
-                String img = item.getImages().get(0);
-
-                if (img != null) {
-                    firstImg = img
-                            .replace(";", ",")
-                            .replace("|", "-");
-                }
+                allImgs = String.join(",", item.getImages());
             }
 
             String itemName = item.getName() == null
@@ -366,7 +354,7 @@ public class ClientHandler implements Runnable {
                     .append(itemName).append(";")
                     .append(auction.getCurrentPrice()).append(";")
                     .append(auction.getMinIncrement()).append(";")
-                    .append(firstImg).append(";")
+                    .append(allImgs).append(";")
                     .append(auction.getStartTime()).append(";")
                     .append(auction.getEndTime()).append(";")
                     .append(item.getCategory()).append(";")
@@ -639,12 +627,9 @@ public class ClientHandler implements Runnable {
                     Item item = a.getItem();
                     if (item == null) continue;
 
-                    String firstImg = "NO_IMAGE";
+                    String allImgs = "NO_IMAGE";
                     if (item.getImages() != null && !item.getImages().isEmpty()) {
-                        String img = item.getImages().get(0);
-                        if (img != null && img.length() < 200 && !img.contains("base64")) {
-                            firstImg = img.replace(";", ",").replace("|", "-");
-                        }
+                        allImgs = String.join(",", item.getImages());
                     }
 
                     String itemName = (item.getName() != null)
@@ -669,16 +654,16 @@ public class ClientHandler implements Runnable {
 
                     sb.append("|")
                             .append(auctionId).append(";")
-                            .append(item.getItem_id()).append(";")   // thêm
+                            .append(item.getItem_id()).append(";")
                             .append(itemName).append(";")
                             .append(currentPrice).append(";")
                             .append(minIncrement).append(";")
-                            .append(firstImg).append(";")
+                            .append(allImgs).append(";")
                             .append(startTime).append(";")
                             .append(endTime).append(";")
                             .append(category).append(";")
                             .append(cleanDesc).append(";")
-                            .append(status).append(";")   // thêm ";" vào đây
+                            .append(status).append(";")
                             .append(sellerId);
 
                 } catch (Exception ex) {
@@ -895,13 +880,13 @@ public class ClientHandler implements Runnable {
             sb.append("|")
                     .append(a.getAuction_id()).append(";")
                     .append(a.getItem() != null ? a.getItem().getName() : "").append(";")
-                    .append(a.getSeller() != null ? a.getSeller().getUsername() : "").append(";")
-                    .append(a.getStartTime()).append(";")
-                    .append(a.getEndTime()).append(";")
-                    .append(a.getCurrentPrice());
+                    .append(a.getItem().getCategory()).append(";")
+                    .append(a.getSeller().getUsername()).append(";")
+                    .append("PENDING_APPROVAL");
         }
         return sb.toString();
     }
+
     private String handleUpdateUserRole(String[] parts) {
 
         if(parts.length < 3){

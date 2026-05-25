@@ -73,14 +73,27 @@ public class CreateAuctionController {
                 return;
             }
 
+            // --- UPLOAD ẢNH LÊN CLOUDINARY ---
+            List<String> cloudinaryUrls = new ArrayList<>();
+            if (imageFiles.isEmpty()) {
+                showError("Please upload at least one image!");
+                return;
+            }
 
-            // --- DATA CLEANING ---
-            // Thay thế các ký tự gây vỡ chuỗi
+            for (File file : imageFiles) {
+                String url = client.util.CloudinaryUploader.upload(file);
+                if (url != null) {
+                    cloudinaryUrls.add(url);
+                } else {
+                    showError("Failed to upload image: " + file.getName());
+                    return;
+                }
+            }
+
+            // --- 2. DATA CLEANING & TIME ---
             String cleanName = txtName.getText().replace("|", "-").replace(";", ",");
             String cleanDesc = txtDescription.getText().replace("|", "-").replace(";", ",").replace("\n", " ");
 
-            // --- TIME PROCESSING ---
-            // Dùng mặc định là 00:00 nếu người dùng quên nhập giờ/phút
             int startH = txtStartHour.getText().isEmpty() ? 0 : Integer.parseInt(txtStartHour.getText());
             int startM = txtStartMin.getText().isEmpty() ? 0 : Integer.parseInt(txtStartMin.getText());
             LocalDateTime startDateTime = dpStartDate.getValue().atTime(startH, startM);
@@ -89,33 +102,19 @@ public class CreateAuctionController {
             int endM = txtEndMin.getText().isEmpty() ? 0 : Integer.parseInt(txtEndMin.getText());
             LocalDateTime endDateTime = dpEndDate.getValue().atTime(endH, endM);
 
-            if (!endDateTime.isAfter(startDateTime)) {
-                showError("End time must be after start time!");
-                return;
-            }
-            if (startDateTime.isBefore(LocalDateTime.now())) {
-                showError("Start time must be in the future!");
-                return;
-            }
-
-            // --- MAP ---
+            // --- 3. MAP ITEM & AUCTION ---
             Item item = new Item();
-            // Để Server tự sinh ID hoặc dùng UUID ngắn gọn
             item.setItem_id("ITM" + UUID.randomUUID().toString().substring(0, 8));
             item.setName(cleanName);
             item.setDescription(cleanDesc);
 
-            // Đảm bảo Category khớp với Enum (toUpperCase)
             try {
                 item.setCategory(Category.valueOf(cbCategory.getValue().toUpperCase()));
             } catch (Exception e) {
                 item.setCategory(Category.OTHER);
             }
 
-            List<String> imagePaths = new ArrayList<>();
-            // Nếu không có ảnh, ta gửi chuỗi NO_IMAGE (đã xử lý ở ClientSocket)
-            for (File file : imageFiles) imagePaths.add(file.toURI().toString());
-            item.setImages(imagePaths);
+            item.setImages(cloudinaryUrls);
 
             Auction newAuction = new Auction();
             newAuction.setAuction_id("AUC" + UUID.randomUUID().toString().substring(0, 8));
@@ -125,41 +124,18 @@ public class CreateAuctionController {
             newAuction.setStartTime(startDateTime);
             newAuction.setEndTime(endDateTime);
 
-            //check nếu tgian start xa hơn tgian hện tại thì đổi status thành upcoming
-            AuctionStatus status =
-                    startDateTime.isAfter(LocalDateTime.now())
-                            ? AuctionStatus.UPCOMING
-                            : AuctionStatus.ACTIVE;
-            newAuction.setStatus(status);
-
-            // --- SEND ---
+            // --- 4. SEND TO SERVER ---
             ClientSocket socket = ClientSocket.getInstance();
             if (socket != null) {
-                System.out.println("→ Sending CREATE command for item: " + cleanName);
                 socket.sendCreate(newAuction);
-                User currentUser =
-                        UserSession.getCurrentUser();
 
+                // Chuyển scene sau khi tạo thành công
+                User currentUser = UserSession.getCurrentUser();
                 if (currentUser != null) {
                     currentUser.setRole(Role.BIDDER);
-
-                    System.out.println(
-                            "[ROLE] User "
-                                    + currentUser.getUsername()
-                                    + " changed role to BIDDER after creating auction"
-                    );
-                    Stage stage =
-                            (Stage)((Node)event.getSource())
-                                    .getScene()
-                                    .getWindow();
-
-                    switchScene(
-                            stage,
-                            "/fxml/HomePage.fxml",
-                            "Home Page"
-                    );
+                    Stage stage = (Stage)((Node)event.getSource()).getScene().getWindow();
+                    switchScene(stage, "/fxml/HomePage.fxml", "Home Page");
                 }
-
             } else {
                 showError("Connection Error: Not connected to server!");
             }
@@ -168,7 +144,7 @@ public class CreateAuctionController {
             showError("Invalid input: Price and time must be numeric values!");
         } catch (Exception e) {
             showError("System Error: " + e.getMessage());
-            System.err.println("Error: " + e.getMessage());        }
+        }
     }
 
     @FXML

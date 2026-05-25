@@ -83,10 +83,10 @@
 
                 <TableView fx:id="productTable" prefHeight="450" style="-fx-background-color: #1f1f1f; -fx-control-inner-background: #1f1f1f; -fx-table-cell-border-color: transparent; -fx-text-background-color: white;">
                     <columns>
-                        <TableColumn fx:id="productIdCol" prefWidth="120" text="AUCTION ID" />
+                        <TableColumn fx:id="productIdCol" prefWidth="120" text="ID" />
                         <TableColumn fx:id="productNameCol" prefWidth="250" text="PRODUCT NAME" />
-                        <TableColumn fx:id="categoryCol" prefWidth="180" text="CATEGORY / SELLER" />
-                        <TableColumn fx:id="sellerCol" prefWidth="180" text="SELLER / PRICE" />
+                        <TableColumn fx:id="categoryCol" prefWidth="180" text="CATEGORY" />
+                        <TableColumn fx:id="sellerCol" prefWidth="180" text="SELLER" />
                         <TableColumn fx:id="statusCol" prefWidth="150" text="STATUS" />
                     </columns>
                 </TableView>

@@ -32,8 +32,8 @@ public class AuctionParser {
                     item.setCategory(Category.OTHER);
                 }
 
-                if (!p[5].isBlank()) {
-                    item.setImages(List.of(p[5]));
+                if (!p[5].isBlank() && !p[5].equals("NO_IMAGE")) {
+                    item.setImages(Arrays.asList(p[5].split(",")));
                 }
 
                 a.setItem(item);

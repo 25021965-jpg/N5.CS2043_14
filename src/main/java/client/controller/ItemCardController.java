@@ -66,28 +66,27 @@ public class ItemCardController {
         if (item.getImages() != null && !item.getImages().isEmpty()) {
 
             try {
-
                 String imagePath = item.getImages().getFirst();
-
                 Image image = IMAGE_CACHE.get(imagePath);
 
                 if (image == null) {
-
-                    File file = new File(imagePath);
-
-                    if (file.exists()) {
-                        image = new Image(file.toURI().toString(), 300, 200, true, true);
+                    // KIỂM TRA NẾU LÀ LINK Cloudinary
+                    if (imagePath.startsWith("http")) {
+                        image = new Image(imagePath, 300, 200, true, true);
                     } else {
-                        image = getFallbackImage();
+                        // NẾU LÀ FILE CỤC BỘ THÌ MỚI DÙNG FILE
+                        File file = new File(imagePath);
+                        if (file.exists()) {
+                            image = new Image(file.toURI().toString(), 300, 200, true, true);
+                        } else {
+                            image = getFallbackImage();
+                        }
                     }
-
                     IMAGE_CACHE.put(imagePath, image);
                 }
-
                 imgProduct.setImage(image);
 
             } catch (Exception e) {
-
                 System.out.println("Image error: " + e.getMessage());
                 imgProduct.setImage(getFallbackImage());
             }

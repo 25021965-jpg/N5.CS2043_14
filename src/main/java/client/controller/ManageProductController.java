@@ -33,21 +33,15 @@ public class ManageProductController {
 
     @FXML
     public void initialize() {
-        productIdCol.setCellValueFactory(d ->
-                new javafx.beans.property.SimpleStringProperty(d.getValue()[0]));
-        productNameCol.setCellValueFactory(d ->
-                new javafx.beans.property.SimpleStringProperty(d.getValue()[1]));
-        categoryCol.setCellValueFactory(d ->
-                new javafx.beans.property.SimpleStringProperty(d.getValue()[2]));
-        sellerCol.setCellValueFactory(d ->
-                new javafx.beans.property.SimpleStringProperty(d.getValue()[3]));
-        statusCol.setCellValueFactory(d ->
-                new javafx.beans.property.SimpleStringProperty(d.getValue()[4]));
+        productIdCol.setCellValueFactory(d -> new javafx.beans.property.SimpleStringProperty(d.getValue()[0]));
+        productNameCol.setCellValueFactory(d -> new javafx.beans.property.SimpleStringProperty(d.getValue()[1]));
+        categoryCol.setCellValueFactory(d -> new javafx.beans.property.SimpleStringProperty(d.getValue()[2]));
+        sellerCol.setCellValueFactory(d -> new javafx.beans.property.SimpleStringProperty(d.getValue()[3]));
+        statusCol.setCellValueFactory(d -> new javafx.beans.property.SimpleStringProperty(d.getValue()[4]));
 
         productTable.setItems(productList);
         searchProductField.textProperty().addListener((obs, old, val) -> filterProducts(val));
 
-        // Mặc định load danh sách all products
         handleReloadProducts();
     }
 
@@ -92,7 +86,7 @@ public class ManageProductController {
         String[] selected = productTable.getSelectionModel().getSelectedItem();
         if (selected == null) return;
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION,
-                "Xóa sản phẩm: " + selected[1] + "?", ButtonType.YES, ButtonType.NO);
+                "Delete item: " + selected[1] + "?", ButtonType.YES, ButtonType.NO);
         alert.showAndWait().ifPresent(res -> {
             if (res == ButtonType.YES)
                 ClientSocket.getInstance().sendRequest("DELETE_ITEM|" + selected[0]);
@@ -136,21 +130,20 @@ public class ManageProductController {
     }
 
     // Gọi khi nhận PENDING_AUCTIONS_SUCCESS
-    // Format: [0]auctionId, [1]name, [2]seller, [3]startTime, [4]endTime, [5]price
     public void showPendingList(ObservableList<String[]> items) {
         Platform.runLater(() -> {
-            // Reformat thành String[5] để khớp với 5 cột bảng
             ObservableList<String[]> display = FXCollections.observableArrayList();
             for (String[] f : items) {
                 display.add(new String[]{
-                        f[0],                          // auctionId
-                        f[1],                          // name
-                        f[2],                          // seller
-                        f[5],                          // price
-                        "PENDING_APPROVAL"             // status
+                        f[0], // ID
+                        f[1], // Product Name
+                        f[2], // Category
+                        f[3], // Seller
+                        f[4]  // Status
                 });
             }
             productList.setAll(display);
+            productTable.refresh();
         });
     }
 

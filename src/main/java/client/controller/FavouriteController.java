@@ -22,6 +22,8 @@ import model.Item;
 import model.User;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public class FavouriteController implements UserDataReceiver {
@@ -155,20 +157,20 @@ public class FavouriteController implements UserDataReceiver {
                     // image
                     String imagePath = data[5];
 
-                    if (imagePath != null
-                            && !imagePath.isBlank()
-                            && !imagePath.equals("NO_IMAGE")) {
+                    List<String> imageList = new ArrayList<>();
 
-                        if (!imagePath.startsWith("file:")) {
-                            imagePath =
-                                    "file:" +
-                                            imagePath.replace("\\", "/");
+                    if (imagePath != null && !imagePath.isBlank() && !imagePath.equals("NO_IMAGE")) {
+
+                        String[] urls = imagePath.split(",");
+                        for (String url : urls) {
+                            String trimmedUrl = url.trim();
+                            if (!trimmedUrl.isEmpty()) {
+                                imageList.add(trimmedUrl);
+                            }
                         }
-
-                        item.setImages(
-                                java.util.Collections.singletonList(imagePath)
-                        );
                     }
+
+                    item.setImages(imageList);
 
                     auction.setItem(item);
 

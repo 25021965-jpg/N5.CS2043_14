@@ -97,12 +97,34 @@ public class ItemViewController {
     // ================= IMAGE =================
     private void showImage(int index) {
         List<String> images = auction.getItem().getImages();
-        if (images == null || images.isEmpty()) return;
+
+        if (images == null || images.isEmpty()) {
+            imgItem.setImage(getFallbackImage());
+            return;
+        }
+
+        if (index < 0) index = images.size() - 1;
+        if (index >= images.size()) index = 0;
+
+        this.currentImageIndex = index;
+        String path = images.get(index);
 
         try {
-            imgItem.setImage(new Image(images.get(index)));
+            Image img = new Image(path, true);
+            imgItem.setImage(img);
+
+            System.out.println("Displaying image: " + (index + 1) + "/" + images.size());
         } catch (Exception e) {
-            System.err.println("Cannot load image: " + images.get(index));
+            System.err.println("Load failed: " + path);
+            imgItem.setImage(getFallbackImage());
+        }
+    }
+
+    private Image getFallbackImage() {
+        try {
+            return new Image(getClass().getResourceAsStream("/image/no-image.png"));
+        } catch (Exception e) {
+            return null;
         }
     }
 
