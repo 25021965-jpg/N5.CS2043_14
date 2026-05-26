@@ -457,7 +457,7 @@ public class AuctionDAO {
     
                 WHERE b.auction_id = ?
     
-                ORDER BY b.bid_time ASC
+                ORDER BY b.bid_amount ASC
                 """;
 
         try (

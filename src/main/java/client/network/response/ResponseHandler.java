@@ -37,7 +37,10 @@ public class ResponseHandler {
                 || msg.startsWith("JOIN_SUCCESS")
                 || msg.startsWith("JOIN_FAILED")
                 || msg.startsWith("BID_FAILED")
+                || msg.startsWith("BID_HISTORY_SUCCESS")
+                || msg.startsWith("BID_HISTORY_EMPTY")
                 || msg.startsWith("AUCTION_ENDED")
-                || msg.startsWith("YOU_WON");
+                || msg.startsWith("YOU_WON")
+                || msg.startsWith("ERROR");
     }
 }

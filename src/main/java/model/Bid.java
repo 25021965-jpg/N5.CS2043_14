@@ -12,6 +12,7 @@ public class Bid {
     private String username;
     private String status;
     private String amountString;
+    private String timeString;
 
     public Bid(User bidder, BigDecimal amount) {
         this.bidder = bidder;
@@ -47,15 +48,14 @@ public class Bid {
 
     // ==================== FOR TABLEVIEW ====================
     public String getTimeString() {
+        if (timeString != null && !timeString.isEmpty()) {
+            return timeString;
+        }
         return time != null ? time.format(DateTimeFormatter.ofPattern("HH:mm:ss")) : "";
     }
 
     public void setTimeString(String timeStr) {
-        try {
-            this.time = LocalDateTime.parse(timeStr, DateTimeFormatter.ofPattern("HH:mm:ss"));
-        } catch (Exception e) {
-            this.time = LocalDateTime.now();
-        }
+        this.timeString = timeStr;
     }
 
     private String formatAmount(BigDecimal amount) {

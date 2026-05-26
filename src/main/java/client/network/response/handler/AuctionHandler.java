@@ -180,7 +180,7 @@ public class AuctionHandler {
                 LiveAuctionController.getInstance();
 
         if (ctrl != null) {
-            ctrl.handleLiveUpdate(raw);
+            ctrl.handleServerMessage(raw);
         }
     }
 
@@ -189,13 +189,12 @@ public class AuctionHandler {
     public static void joinSuccess(
             String data,
             Stage stage
-    ) {
+    ) {LiveAuctionController ctrl = LiveAuctionController.getInstance();
+        if (ctrl != null) {
+            ctrl.handleServerMessage("JOIN_SUCCESS|" + data);
+        }
 
-        NavigationUtils.switchScene(
-                stage,
-                "/fxml/auctionRoom-view.fxml",
-                "Auction Room"
-        );
+
     }
 
     public static void joinFailed(

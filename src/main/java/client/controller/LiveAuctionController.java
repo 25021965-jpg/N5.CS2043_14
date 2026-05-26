@@ -157,11 +157,6 @@ public class LiveAuctionController implements UserDataReceiver {
         }
     }
 
-    public void handleLiveUpdate(String raw) {
-        System.out.println(raw);
-
-    }
-
     public void setAuctionData(String auctionId, String productName, String productDesc,
                                String currentPrice, String stepPrice, String floorPrice,
                                String endTime, String imageUrl) {
@@ -202,7 +197,7 @@ public class LiveAuctionController implements UserDataReceiver {
         // Load image
         if (imageUrl != null && !imageUrl.isEmpty() && !imageUrl.equals("NO_IMAGE")) {
             try {
-                Image image = new Image(imageUrl, true);  // true = background thread
+                Image image = new Image(imageUrl);
                 productImageView.setImage(image);
             } catch (Exception e) {
                 System.err.println("Cannot load image: " + imageUrl);
@@ -338,12 +333,12 @@ public class LiveAuctionController implements UserDataReceiver {
         // Hoàn tiền pending khi leave
         if (virtualBalance != null && myPendingBid != null
                 && myPendingBid.compareTo(BigDecimal.ZERO) > 0) {
-            virtualBalance = virtualBalance.add(myPendingBid);
+            BigDecimal refund = myPendingBid;
+            virtualBalance = virtualBalance.add(refund);
             myPendingBid = BigDecimal.ZERO;
             updateBalanceDisplay();
-            showToast("💰 Refunded " + formatPrice(myPendingBid) + " because you left.");
+            showToast("💰 Refunded " + formatPrice(refund) + " because you left.");
         }
-
         // Lưu balance thật (sau khi đã hoàn tiền) vào session
         if (currentUser != null && virtualBalance != null) {
             currentUser.setBalance(virtualBalance);
@@ -397,7 +392,7 @@ public class LiveAuctionController implements UserDataReceiver {
 
     // ==================== SERVER MESSAGES ====================
 
-    private void handleServerMessage(String msg) {
+    public void handleServerMessage(String msg) {
         Platform.runLater(() -> {
             System.out.println("[LiveAuction] Received: " + msg);
 
@@ -471,7 +466,7 @@ public class LiveAuctionController implements UserDataReceiver {
                         globalBidCounter = bidCounter;
                         globalCurrentPrice = currentPrice;
 
-                        System.out.println("Saved to static - Total bids: " + globalBidHistory.size());
+                        System.out.println("🔥 Saved to static - Total bids: " + globalBidHistory.size());
                     }
                 }
                 return;
@@ -479,8 +474,8 @@ public class LiveAuctionController implements UserDataReceiver {
 
             // ==================== JOIN THÀNH CÔNG ====================
             if (msg.startsWith("JOIN_SUCCESS")) {
-                System.out.println("Successfully joined auction: " + auctionId);
-                showToast("Joined auction successfully!");
+                System.out.println("✅ Successfully joined auction: " + auctionId);
+                showToast("✅ Joined auction successfully!");
 
                 String[] parts = msg.split("\\|");
                 if (parts.length >= 4) {
@@ -509,26 +504,16 @@ public class LiveAuctionController implements UserDataReceiver {
                         }
 
                         bidHistoryTable.refresh();
-                        System.out.println("Restored " + bidHistoryList.size() + " bids from static");
+                        System.out.println("🔥 Restored " + bidHistoryList.size() + " bids from static");
                     } else {
-                        // Nếu chưa có lịch sử, thêm điểm giá khởi điểm
-                        Bid initialBid = new Bid();
-                        initialBid.setTimeString(LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
-                        initialBid.setUsername("");
-                        initialBid.setAmount(currentPrice);
-                        initialBid.setAmountString(formatPrice(currentPrice));
-                        initialBid.setStatus("LEADING");
-                        bidHistoryList.add(initialBid);
-                        globalBidHistory = new ArrayList<>(bidHistoryList);
-                        addChartData(bidCounter++, currentPrice);
-                        bidHistoryTable.refresh();
+                        System.out.println("No cached history, waiting for server...");
                     }
 
                     // Khôi phục tên winner
                     if (globalWinnerName != null) {
                         currentWinnerLabel.setText(globalWinnerName);
                         winnerTimeLabel.setText(globalWinnerTime);
-                        System.out.println("Restored winner: " + globalWinnerName + " at " + globalWinnerTime);
+                        System.out.println("🔥 Restored winner: " + globalWinnerName + " at " + globalWinnerTime);
                     }
                 }
 
@@ -545,27 +530,17 @@ public class LiveAuctionController implements UserDataReceiver {
                 List<Bid> history = parseBidHistory(data);
 
                 if (history != null && !history.isEmpty()) {
-                    for (Bid bid : history) {
-                        boolean exists = false;
-                        for (Bid existing : bidHistoryList) {
-                            if (existing.getTimeString().equals(bid.getTimeString())
-                                    && existing.getUsername().equals(bid.getUsername())
-                                    && existing.getAmount().compareTo(bid.getAmount()) == 0) {
-                                exists = true;
-                                break;
-                            }
-                        }
+                    bidHistoryList.clear();
 
-                        if (!exists) {
-                            if (bid.getAmountString() == null || bid.getAmountString().isEmpty()) {
-                                bid.setAmountString(String.format("%,.0f", bid.getAmount()) + " USD");
-                            }
-                            bidHistoryList.add(bid);
+                    for (Bid bid : history) {
+                        if (bid.getAmountString() == null || bid.getAmountString().isEmpty()) {
+                            bid.setAmountString(String.format("%,.0f", bid.getAmount()) + " USD");
                         }
+                        bidHistoryList.add(bid);
                     }
 
                     // Sắp xếp mới nhất lên đầu
-                    bidHistoryList.sort((a, b) -> b.getTimeString().compareTo(a.getTimeString()));
+                    bidHistoryList.sort((a, b) -> b.getAmount().compareTo(a.getAmount()));
 
                     // Vẽ lại chart theo thứ tự thời gian
                     chartSeries.getData().clear();
@@ -598,13 +573,13 @@ public class LiveAuctionController implements UserDataReceiver {
                     globalBidHistory = new ArrayList<>(bidHistoryList);
                     globalBidCounter = bidCounter;
 
-                    System.out.println("Total bids after server sync: " + bidHistoryList.size());
+                    System.out.println("🔥 Total bids after server sync: " + bidHistoryList.size());
                 }
                 return;
             }
 
             if (msg.startsWith("BID_HISTORY_EMPTY")) {
-                System.out.println("Server returned empty bid history (keeping existing)");
+                System.out.println("🔥 Server returned empty bid history (keeping existing)");
                 return;
             }
 
@@ -659,33 +634,23 @@ public class LiveAuctionController implements UserDataReceiver {
     public void loadBidHistory(List<Bid> history) {
         Platform.runLater(() -> {
             if (history == null || history.isEmpty()) {
-                System.out.println("No new bid history to load");
+                System.out.println("🔥 No new bid history to load");
                 return;
             }
 
-            System.out.println("Loading " + history.size() + " bids from server");
+            System.out.println("🔥 Loading " + history.size() + " bids from server");
+
+            bidHistoryList.clear();
 
             for (Bid bid : history) {
                 if (bid.getAmountString() == null || bid.getAmountString().isEmpty()) {
                     bid.setAmountString(String.format("%,.0f", bid.getAmount()) + " USD");
                 }
-
-                boolean exists = false;
-                for (Bid existing : bidHistoryList) {
-                    if (existing.getTimeString().equals(bid.getTimeString())
-                            && existing.getUsername().equals(bid.getUsername())
-                            && existing.getAmount().compareTo(bid.getAmount()) == 0) {
-                        exists = true;
-                        break;
-                    }
-                }
-                if (!exists) {
-                    bidHistoryList.add(bid);
-                }
+                bidHistoryList.add(bid);
             }
 
             // Sắp xếp mới nhất lên đầu
-            bidHistoryList.sort((a, b) -> b.getTimeString().compareTo(a.getTimeString()));
+            bidHistoryList.sort((a, b) -> b.getAmount().compareTo(a.getAmount()));
 
             // Vẽ lại chart
             chartSeries.getData().clear();
@@ -707,7 +672,7 @@ public class LiveAuctionController implements UserDataReceiver {
             globalBidHistory = new ArrayList<>(bidHistoryList);
             globalBidCounter = bidCounter;
 
-            System.out.println("Total bids: " + bidHistoryList.size());
+            System.out.println("🔥 Total bids: " + bidHistoryList.size());
         });
     }
 

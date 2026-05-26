@@ -49,11 +49,11 @@ public class BidDAO {
     public static List<Bid> getBidsByAuctionId(String auctionId) {
         List<Bid> bids = new ArrayList<>();
 
-        String sql = "SELECT b.bid_amount, b.bid_time, u.user_id, u.username, u.fullname " +
+        String sql = "SELECT b.bid_id, b.bid_amount, b.bid_time, u.user_id, u.username, u.fullname " +
                 "FROM bids b " +
                 "JOIN users u ON b.bidder_id = u.user_id " +
                 "WHERE b.auction_id = ? " +
-                "ORDER BY b.bid_amount DESC";
+                "ORDER BY b.bid_time ASC, b.bid_amount ASC";
 
         try (Connection conn = DatabaseService.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
