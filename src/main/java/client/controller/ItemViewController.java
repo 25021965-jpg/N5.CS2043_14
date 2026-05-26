@@ -15,7 +15,7 @@ import javafx.scene.control.TextArea;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
-
+import javafx.scene.shape.Rectangle;
 import client.manager.FavouriteManager;
 
 import model.User;
@@ -102,6 +102,10 @@ public class ItemViewController {
             imgItem.setImage(getFallbackImage());
             return;
         }
+        Rectangle clip = new Rectangle(380, 340); // fitWidth x fitHeight của imgItem
+        clip.setArcWidth(36);   // = border-radius 18 * 2
+        clip.setArcHeight(36);
+        imgItem.setClip(clip);
 
         if (index < 0) index = images.size() - 1;
         if (index >= images.size()) index = 0;

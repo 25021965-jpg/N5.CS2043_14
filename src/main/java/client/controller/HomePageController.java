@@ -68,6 +68,7 @@ public class HomePageController {
             }
 
             highlight(btnAll);
+            txtSearch.textProperty().addListener((obs, oldVal, newVal) -> applyFilters());
 
             User user = UserSession.getCurrentUser();
             if (user != null) {
