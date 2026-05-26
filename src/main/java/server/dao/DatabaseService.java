@@ -114,6 +114,7 @@ public class DatabaseService {
                     user_id CHAR(36) NOT NULL,
                     amount DECIMAL(15,2) NOT NULL,
                     type ENUM('DEPOSIT', 'WITHDRAW', 'TRANSFER_IN', 'TRANSFER_OUT') NOT NULL,
+                    related_user_id CHAR(36),
                     description VARCHAR(255),
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY(user_id) REFERENCES users(user_id) ON DELETE CASCADE,

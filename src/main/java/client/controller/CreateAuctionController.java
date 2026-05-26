@@ -60,6 +60,16 @@ public class CreateAuctionController {
                 ResponseHandler.setMainStage(stage);
             }
         });
+        //đổi role nếu force close page (ấn X)
+        Platform.runLater(() -> {
+            Stage stage =
+                    (Stage) txtName.getScene().getWindow();
+
+            stage.addEventHandler(
+                    javafx.stage.WindowEvent.WINDOW_CLOSE_REQUEST,
+                    e -> resetRoleToBidder()
+            );
+        });
     }
 
     @FXML
@@ -129,13 +139,13 @@ public class CreateAuctionController {
             if (socket != null) {
                 socket.sendCreate(newAuction);
 
-                // Chuyển scene sau khi tạo thành công
-                User currentUser = UserSession.getCurrentUser();
-                if (currentUser != null) {
-                    currentUser.setRole(Role.BIDDER);
-                    Stage stage = (Stage)((Node)event.getSource()).getScene().getWindow();
-                    switchScene(stage, "/fxml/HomePage.fxml", "Home Page");
-                }
+                resetRoleToBidder();
+
+                switchScene(
+                        (Stage)((Node)event.getSource()).getScene().getWindow(),
+                        "/fxml/HomePage.fxml",
+                        "Home Page"
+                );
             } else {
                 showError("Connection Error: Not connected to server!");
             }
@@ -147,20 +157,22 @@ public class CreateAuctionController {
         }
     }
 
+
     @FXML
     private void handleCancel(ActionEvent event) {
+
+        resetRoleToBidder();
 
         User currentUser =
                 UserSession.getCurrentUser();
 
-        if (currentUser != null) {
-            currentUser.setRole(Role.BIDDER);
+        if(currentUser != null){
+            System.out.println(
+                    "[ROLE] User "
+                            + currentUser.getUsername()
+                            + " reverted role to BIDDER"
+            );
         }
-        System.out.println(
-                "[ROLE] User "
-                        + currentUser.getUsername()
-                        + " reverted role to BIDDER (cancel create auction)"
-        );
 
         Stage stage =
                 (Stage) ((Node) event.getSource())
@@ -170,6 +182,20 @@ public class CreateAuctionController {
         switchScene(stage,
                 "/fxml/HomePage.fxml",
                 "Auction Home");
+    }
+
+    private void resetRoleToBidder() {
+        User currentUser = UserSession.getCurrentUser();
+
+        if (currentUser != null) {
+            currentUser.setRole(Role.BIDDER);
+
+            System.out.println(
+                    "[ROLE] "
+                            + currentUser.getUsername()
+                            + " -> BIDDER"
+            );
+        }
     }
 
     // --- HÀM XỬ LÝ ẢNH ---
