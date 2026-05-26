@@ -18,6 +18,7 @@ import model.Auction;
 import java.io.IOException;
 import java.net.URL;
 import java.text.NumberFormat;
+import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
@@ -85,10 +86,15 @@ public class AuctionRoomController implements Initializable {
 
     }
     private void showImage(int index) {
-        java.util.List<String> images = auction.getItem().getImages();
+        List<String> images = auction.getItem().getImages();
         if (images != null && !images.isEmpty()) {
-            Image image = new Image(images.get(index));
-            imgItem.setImage(image);
+            try {
+                Image image = new Image(images.get(index), true);
+                imgItem.setImage(image);
+            } catch (Exception e) {
+                URL url = getClass().getResource("/image/no-image.png");
+                if (url != null) imgItem.setImage(new Image(url.toExternalForm()));
+            }
         }
     }
 
