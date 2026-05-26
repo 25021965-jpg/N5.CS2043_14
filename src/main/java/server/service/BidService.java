@@ -49,4 +49,42 @@ public class BidService {
             }
         }
     }
+    public static void settleAuction(Auction auction) {
+        // Lấy bid cao nhất
+        java.math.BigDecimal winAmount = BidDAO.getHighestBidAmount(auction.getAuction_id());
+        if (winAmount == null || winAmount.compareTo(java.math.BigDecimal.ZERO) == 0) return;
+
+        // Lấy winner (người có bid cao nhất)
+        java.util.List<Bid> bids = BidDAO.getBidsByAuctionId(auction.getAuction_id());
+        if (bids == null || bids.isEmpty()) return;
+
+        Bid winBid = bids.get(0); // đã sort DESC theo amount
+        User winner = winBid.getBidder();
+        if (winner == null) return;
+
+        // Lấy seller
+        User seller = auction.getSeller();
+        if (seller == null) return;
+
+        // Lấy balance thật từ DB
+        User winnerFromDB = UserDAO.getUserById(winner.getUser_id());
+        User sellerFromDB = UserDAO.getUserById(seller.getUser_id());
+        if (winnerFromDB == null || sellerFromDB == null) return;
+
+        // Trừ tiền winner
+        java.math.BigDecimal winnerNewBalance = winnerFromDB.getBalance().subtract(winAmount);
+        if (winnerNewBalance.compareTo(java.math.BigDecimal.ZERO) < 0) {
+            System.out.println("❌ Winner has insufficient balance!");
+            return;
+        }
+        UserDAO.updateBalance(winner.getUser_id(), winnerNewBalance);
+        server.dao.TransactionDAO.addTransaction(winner.getUser_id(), winAmount, "WITHDRAW");
+
+        // Cộng tiền seller
+        java.math.BigDecimal sellerNewBalance = sellerFromDB.getBalance().add(winAmount);
+        UserDAO.updateBalance(seller.getUser_id(), sellerNewBalance);
+        server.dao.TransactionDAO.addTransaction(seller.getUser_id(), winAmount, "DEPOSIT");
+
+        System.out.println("✅ Settled: " + winner.getUser_id() + " paid " + winAmount + " to " + seller.getUser_id());
+    }
 }

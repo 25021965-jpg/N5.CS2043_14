@@ -54,7 +54,7 @@ public class AuctionDAO {
         return auction;
     }
 
-    private static AuctionStatus calculateStatus(
+    public static AuctionStatus calculateStatus(
             boolean cancelled,
             boolean approved,
             LocalDateTime start,

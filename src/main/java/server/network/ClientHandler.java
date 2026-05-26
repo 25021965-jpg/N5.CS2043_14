@@ -430,6 +430,39 @@ public class ClientHandler implements Runnable {
         out.println("  → User " + (currentUser != null ? currentUser.getUsername() : "Guest")
                 + " joined auction: " + auctionId);
 
+        // 🔥 Schedule settle + broadcast AUCTION_ENDED khi hết giờ
+        if (auction.getEndTime() != null) {
+            long delay = java.time.Duration.between(
+                    LocalDateTime.now(), auction.getEndTime()
+            ).toMillis();
+
+            if (delay > 0) {
+                final String finalAuctionId = auctionId;
+                new java.util.Timer(true).schedule(new java.util.TimerTask() {
+                    @Override
+                    public void run() {
+                        Auction ended = AuctionService.getAuctionById(finalAuctionId);
+                        if (ended != null) {
+                            BidService.settleAuction(ended);
+                            // Broadcast kết thúc cho tất cả client trong room
+                            RoomManager.broadcastToRoomAll(finalAuctionId, "AUCTION_ENDED");
+                            // Gửi YOU_WON cho winner
+                            java.util.List<model.Bid> bids = server.dao.BidDAO.getBidsByAuctionId(finalAuctionId);
+                            if (bids != null && !bids.isEmpty()) {
+                                model.Bid topBid = bids.get(0);
+                                if (topBid.getBidder() != null) {
+                                    RoomManager.broadcastToRoomAll(
+                                            finalAuctionId,
+                                            "YOU_WON|" + topBid.getAmount()
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }, delay);
+            }
+        }
+
         return "JOIN_SUCCESS|" + auctionId + "|"
                 + auction.getCurrentPrice() + "|"
                 + auction.getMinIncrement() + "|"
@@ -595,8 +628,8 @@ public class ClientHandler implements Runnable {
                                     newPrice + "|" +
                                     currentUser.getUsername() + "|" +
                                     LocalDateTime.now().format(
-                                            DateTimeFormatter.ofPattern("HH:mm:ss")
-                                    );
+                                            DateTimeFormatter.ofPattern("HH:mm:ss")) + "|" + currentUser.getUser_id();
+
 
                     RoomManager.broadcastToRoomAll(auctionId, broadcastMsg);
                 }

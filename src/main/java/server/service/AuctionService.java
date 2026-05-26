@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.UUID;
 import java.time.LocalDateTime;
 
+import static server.dao.AuctionDAO.calculateStatus;
+
 public class AuctionService {
 
     public static Auction createAuction(
@@ -59,11 +61,23 @@ public class AuctionService {
 
         for (Auction a : all) {
             if (a.getAuction_id().equals(id)) {
+                a.setStatus(calculateStatus(a));
                 return a;
             }
         }
         return null;
     }
+
+    private static AuctionStatus calculateStatus(Auction a) {
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        if (a.isCancelled()) return AuctionStatus.CANCELLED;
+        if (!a.isApproved()) return AuctionStatus.PENDING_APPROVAL;
+        if (a.getStartTime() != null && now.isBefore(a.getStartTime())) return AuctionStatus.UPCOMING;
+        if (a.getEndTime() != null && now.isAfter(a.getEndTime())) return AuctionStatus.ENDED;
+        return AuctionStatus.ACTIVE;
+    }
+
+
 
     public static List<Auction> getPendingAuctions() {
         return AuctionDAO.findPending();

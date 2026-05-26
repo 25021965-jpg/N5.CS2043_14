@@ -438,7 +438,6 @@ public class LiveAuctionController implements UserDataReceiver {
                     if (currentUser != null && bidder.equals(currentUser.getUsername())) {
                         if (pendingBidAmount != null && pendingBidAmount.compareTo(BigDecimal.ZERO) > 0) {
                             deductVirtualBalance(pendingBidAmount);
-                            showToast("✅ Bid placed! " + formatPrice(pendingBidAmount) + " reserved.");
                             pendingBidAmount = null;
                         }
                     }
@@ -475,7 +474,6 @@ public class LiveAuctionController implements UserDataReceiver {
             // ==================== JOIN THÀNH CÔNG ====================
             if (msg.startsWith("JOIN_SUCCESS")) {
                 System.out.println("✅ Successfully joined auction: " + auctionId);
-                showToast("✅ Joined auction successfully!");
 
                 String[] parts = msg.split("\\|");
                 if (parts.length >= 4) {
@@ -705,7 +703,6 @@ public class LiveAuctionController implements UserDataReceiver {
         if (client != null && auctionId != null) {
             client.sendGetBidHistory(auctionId);
         }
-        showToast("Refreshing bid history...");
     }
 
     // ==================== CHART ====================
