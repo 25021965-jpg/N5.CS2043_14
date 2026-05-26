@@ -113,9 +113,11 @@ public class DatabaseService {
                     transaction_id CHAR(36) PRIMARY KEY,
                     user_id CHAR(36) NOT NULL,
                     amount DECIMAL(15,2) NOT NULL,
-                    type ENUM('DEPOSIT', 'WITHDRAW') NOT NULL,
+                    type ENUM('DEPOSIT', 'WITHDRAW', 'TRANSFER_IN', 'TRANSFER_OUT') NOT NULL,
+                    description VARCHAR(255),
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                    FOREIGN KEY(user_id) REFERENCES users(user_id) ON DELETE CASCADE
+                    FOREIGN KEY(user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+                    FOREIGN KEY(related_user_id) REFERENCES users(user_id) ON DELETE SET NULL
                 )""");
 
             // 9. Thêm tài khoản Admin
@@ -133,6 +135,7 @@ public class DatabaseService {
             }
 
             System.out.println("✓ TiDB Cloud: Database and tables initialized successfully");
+
         } catch (SQLException e) {
             System.err.println("✕ TiDB Initialization Error: " + e.getMessage());
             System.err.println("Error: " + e.getMessage());        }

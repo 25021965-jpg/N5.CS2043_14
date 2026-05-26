@@ -31,7 +31,7 @@
 
             <!-- Logo + Title -->
             <HBox alignment="CENTER_LEFT" spacing="10.0">
-                <Label style="-fx-text-fill: #D4AF37; -fx-font-size: 20; -fx-font-weight: bold;" text="🔥" />
+                <Label style="-fx-text-fill: #D4AF37; -fx-font-size: 20; -fx-font-weight: bold;" text="" />
                 <Label style="-fx-text-fill: #FFFFFF; -fx-font-size: 18; -fx-font-weight: bold; -fx-letter-spacing: 2;" text="LIVE AUCTION" />
                 <!-- Live badge -->
                 <Label style="-fx-background-color: #EF4444; -fx-text-fill: white; -fx-font-size: 10; -fx-font-weight: bold; -fx-background-radius: 4; -fx-padding: 2 7 2 7;" text="● LIVE" />
@@ -255,7 +255,7 @@
                     <!-- Place Bid Button -->
                     <Button fx:id="placeBidBtn"
                             style="-fx-background-color: #D4AF37; -fx-text-fill: #0D0D0D; -fx-font-size: 14; -fx-font-weight: bold; -fx-background-radius: 8; -fx-cursor: hand; -fx-padding: 12 0;"
-                            text="🔥 PLACE BID" maxWidth="Infinity" />
+                            text=" PLACE BID" maxWidth="Infinity" />
                 </VBox>
 
                 <Region VBox.vgrow="ALWAYS" />

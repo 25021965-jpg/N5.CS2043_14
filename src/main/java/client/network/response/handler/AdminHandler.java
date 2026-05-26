@@ -1,9 +1,9 @@
 package client.network.response.handler;
 
-import client.controller.AdminController;
-import client.controller.AuctionHistoryAdminController;
-import client.controller.ManageAuctionController;
-import client.controller.ManageProductController;
+import client.controller.admin.AdminController;
+import client.controller.admin.AuctionHistoryAdminController;
+import client.controller.admin.ManageAuctionController;
+import client.controller.admin.ManageProductController;
 import client.network.response.parser.ItemParser;
 import client.util.NavigationUtils;
 import javafx.collections.FXCollections;

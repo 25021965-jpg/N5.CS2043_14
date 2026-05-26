@@ -13,7 +13,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="800.0" prefWidth="1300.0" style="-fx-background-color: linear-gradient(to bottom right,#0f0f0f,#1b1b1b);" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controller.ManageProductController">
+<AnchorPane prefHeight="800.0" prefWidth="1300.0" style="-fx-background-color: linear-gradient(to bottom right,#0f0f0f,#1b1b1b);" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controller.admin.ManageProductController">
 
     <!-- TITLE -->
     <Label layoutX="430.0" layoutY="25.0" text="MANAGE PRODUCTS" textFill="#d4af37">

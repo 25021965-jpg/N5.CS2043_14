@@ -12,6 +12,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
+<?import javafx.scene.control.ComboBox?>
 <AnchorPane prefHeight="720.0" prefWidth="1080.0" style="             -fx-background-color: #F8FAFC;             -fx-border-color: #D4AF37;             -fx-border-width: 6;         " xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controller.AccountBalanceController">
 
     <!-- ================= LEFT MENU ================= -->
@@ -121,8 +122,22 @@
 
     <!-- ================= TRANSACTION HISTORY ================= -->
 
-    <Label layoutX="290.0" layoutY="500.0" style="                 -fx-font-size: 26px;                 -fx-font-family: 'Berlin Sans FB Demi Bold';                 -fx-font-weight: bold;                 -fx-text-fill: #0F172A;             " text="Transaction History" />
+    <HBox layoutX="290.0" layoutY="500.0" prefWidth="760.0"
+          alignment="CENTER_LEFT">
 
+        <Label text="Transaction History"
+               style="-fx-font-size:26px;
+                  -fx-font-family:'Berlin Sans FB Demi Bold';
+                  -fx-font-weight:bold;
+                  -fx-text-fill:#0F172A;" />
+
+        <Region HBox.hgrow="ALWAYS"/>
+
+        <ComboBox fx:id="filterBox"
+                  prefWidth="180"
+                  promptText="Filter"
+                  style="-fx-background-radius:8;" />
+    </HBox>
     <ScrollPane fitToWidth="true" layoutX="290.0" layoutY="545.0" prefHeight="145.0" prefWidth="760.0">
 
         <VBox fx:id="transactionContainer" spacing="15" style="-fx-padding: 5;">
