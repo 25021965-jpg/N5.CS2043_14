@@ -28,8 +28,8 @@ public class AccountBalanceController implements UserDataReceiver {
     @FXML private Button logoutBtn, deleteAccountBtn, backHomeBtn;
     @FXML private Label balanceLabel;
     @FXML private TextField depositField, withdrawField;
-    @FXML private Button depositBtn, withdrawBtn;
     @FXML private VBox transactionContainer;
+    @FXML private ComboBox<String> filterBox;
 
     private static AccountBalanceController instance;
 
@@ -68,10 +68,24 @@ public class AccountBalanceController implements UserDataReceiver {
     public void initialize() {
         System.out.println("Account Balance Loaded");
         setupMenuEvents();
-        // KHÔNG gọi setupBalanceEvents ở đây vì FXML đã có onAction
         if (currentUser != null) {
             updateBalance();
         }
+        filterBox.getItems().addAll(
+                "All",
+                "Deposit",
+                "Withdraw",
+                "Paid",
+                "Received"
+        );
+
+        filterBox.setValue("All");
+
+        filterBox.setOnAction(e -> {
+            if (client != null && currentUser != null) {
+                client.sendGetTransactions(currentUser.getUser_id());
+            }
+        });
     }
 
     private void handleServerMessage(String msg) {
@@ -99,7 +113,6 @@ public class AccountBalanceController implements UserDataReceiver {
         });
     }
 
-    // 🔥 ĐỔI TỪ private THÀNH @FXML public
     @FXML
     public void handleDeposit() {
         if (client == null) {
@@ -135,7 +148,7 @@ public class AccountBalanceController implements UserDataReceiver {
         }
     }
 
-    // 🔥 ĐỔI TỪ private THÀNH @FXML public
+    //  ĐỔI TỪ private THÀNH @FXML public
     @FXML
     public void handleWithdraw() {
         if (client == null) {
@@ -185,42 +198,97 @@ public class AccountBalanceController implements UserDataReceiver {
 
         if (data == null || data.isEmpty()) {
             Label emptyLabel = new Label("No transactions yet");
-            emptyLabel.setStyle("-fx-text-fill: #64748B; -fx-padding: 20;");
+            emptyLabel.setStyle("-fx-text-fill:#64748B; -fx-padding:20;");
             transactionContainer.getChildren().add(emptyLabel);
             return;
         }
 
         String[] transactions = data.split("\\|");
+
         for (String tx : transactions) {
             String[] parts = tx.split(";");
-            if (parts.length >= 3) {
+
+            if (parts.length >= 4) {
+
                 String type = parts[0];
+                String selected = filterBox.getValue();
+                if (selected != null && !"All".equals(selected)) {
+                    if ("Deposit".equals(selected) && !type.equals("DEPOSIT")) continue;
+                    if ("Withdraw".equals(selected) && !type.equals("WITHDRAW")) continue;
+                    if ("Paid".equals(selected) && !type.equals("TRANSFER_OUT")) continue;
+                    if ("Received".equals(selected) && !type.equals("TRANSFER_IN")) continue;
+                }
+
                 String amount = parts[1];
                 String time = parts[2];
+                String desc = parts[3];
 
                 HBox card = new HBox(20);
-                card.setStyle("-fx-background-color: white; -fx-background-radius: 12; -fx-border-radius: 12; -fx-border-color: #E2E8F0; -fx-padding: 15;");
+                card.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+
+                card.setStyle("""
+                -fx-background-color:white;
+                -fx-background-radius:12;
+                -fx-border-radius:12;
+                -fx-border-color:#E2E8F0;
+                -fx-padding:15;
+            """);
 
                 VBox left = new VBox(5);
-                Label title = new Label(type.equals("DEPOSIT") ? "Deposit Successfully" : "Withdraw Successfully");
-                title.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #0F172A;");
+
+                Label title = getLabel(type, desc);
 
                 Label timeLabel = new Label(time);
-                timeLabel.setStyle("-fx-text-fill: #64748B; -fx-font-size: 13px;");
-                left.getChildren().addAll(title, timeLabel);
+                timeLabel.setStyle("""
+                -fx-text-fill:#64748B;
+                -fx-font-size:13px;
+            """);
 
+                left.getChildren().addAll(title, timeLabel);
                 Region spacer = new Region();
                 HBox.setHgrow(spacer, Priority.ALWAYS);
 
-                Label amountLabel = new Label(type.equals("DEPOSIT") ? "+" + amount : "-" + amount);
-                amountLabel.setStyle(type.equals("DEPOSIT")
-                        ? "-fx-text-fill: #16A34A; -fx-font-size: 18px; -fx-font-weight: bold;"
-                        : "-fx-text-fill: #EF4444; -fx-font-size: 18px; -fx-font-weight: bold;");
+                Label amountLabel = getAmountLabel(type, amount);
 
                 card.getChildren().addAll(left, spacer, amountLabel);
                 transactionContainer.getChildren().add(card);
             }
         }
+    }
+
+    private static Label getAmountLabel(String type, String amount) {
+        boolean positive =
+                type.equals("DEPOSIT")
+                        || type.equals("TRANSFER_IN");
+
+        Label amountLabel = new Label(
+                (positive ? "+ " : "- ") + amount + " USD"
+        );
+
+        amountLabel.setStyle(
+                positive
+                        ? "-fx-text-fill:#16A34A; -fx-font-size:18px; -fx-font-weight:bold;"
+                        : "-fx-text-fill:#EF4444; -fx-font-size:18px; -fx-font-weight:bold;"
+        );
+        return amountLabel;
+    }
+
+    private static Label getLabel(String type, String desc) {
+        String titleText = switch (type) {
+            case "DEPOSIT" -> "Deposit Successfully";
+            case "WITHDRAW" -> "Withdraw Successfully";
+            case "TRANSFER_OUT" -> "Paid to " + desc;
+            case "TRANSFER_IN" -> "Received from " + desc;
+            default -> type;
+        };
+
+        Label title = new Label(titleText);
+        title.setStyle("""
+        -fx-font-size:16px;
+        -fx-font-weight:bold;
+        -fx-text-fill:#0F172A;
+    """);
+        return title;
     }
 
     private void handleLogout() {

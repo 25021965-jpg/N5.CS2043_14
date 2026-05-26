@@ -42,7 +42,7 @@ public class UserDAO {
         }
     }
 
-    // 🔥 THÊM METHOD getUserById NÀY
+    //  THÊM METHOD getUserById NÀY
     public static User getUserById(String userId) {
         String sql = "SELECT * FROM users WHERE user_id = ?";
         try (Connection conn = DatabaseService.getConnection();

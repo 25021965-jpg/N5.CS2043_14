@@ -5,40 +5,54 @@ import java.sql.Timestamp;
 import java.time.format.DateTimeFormatter;
 
 public class Transaction {
-    private String transactionId;
-    private String userId;
+
+    private String transactionId, userId, relatedUserId, relatedUsername, type, description;
     private BigDecimal amount;
-    private String type;  // DEPOSIT or WITHDRAW
     private Timestamp createdAt;
 
     public Transaction() {}
 
-    // Getters
     public String getTransactionId() { return transactionId; }
     public String getUserId() { return userId; }
-    public BigDecimal getAmount() { return amount; }
+    public String getRelatedUserId() { return relatedUserId; }
+    public String getRelatedUsername() { return relatedUsername; }
     public String getType() { return type; }
+    public String getDescription() { return description; }
+    public BigDecimal getAmount() { return amount; }
     public Timestamp getCreatedAt() { return createdAt; }
 
-    // Setters
-    public void setTransactionId(String transactionId) { this.transactionId = transactionId; }
-    public void setUserId(String userId) { this.userId = userId; }
-    public void setAmount(BigDecimal amount) { this.amount = amount; }
-    public void setType(String type) { this.type = type; }
-    public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
+    public void setTransactionId(String v) { transactionId = v; }
+    public void setUserId(String v) { userId = v; }
+    public void setRelatedUserId(String v) { relatedUserId = v; }
+    public void setRelatedUsername(String v) { relatedUsername = v; }
+    public void setType(String v) { type = v; }
+    public void setDescription(String v) { description = v; }
+    public void setAmount(BigDecimal v) { amount = v; }
+    public void setCreatedAt(Timestamp v) { createdAt = v; }
 
-    // Helper methods cho UI
     public String getFormattedTime() {
-        if (createdAt == null) return "";
-        return createdAt.toLocalDateTime()
+        return createdAt == null ? "" :
+                createdAt.toLocalDateTime()
                 .format(DateTimeFormatter.ofPattern("dd/MM/yyyy - HH:mm"));
     }
 
+    public String getDisplayTitle() {
+        return switch (type) {
+            case "DEPOSIT" -> "Deposit Successfully";
+            case "WITHDRAW" -> "Withdraw Successfully";
+            case "TRANSFER_OUT" -> "Paid to " + relatedUsername;
+            case "TRANSFER_IN" -> "Received from " + relatedUsername;
+            default -> type;
+        };
+    }
+
+    public boolean isPositive() {
+        return "DEPOSIT".equals(type) || "TRANSFER_IN".equals(type);
+    }
+
     public String getFormattedAmount() {
-        if ("DEPOSIT".equals(type)) {
-            return "+ " + String.format("%,.0f", amount) + " USD";
-        } else {
-            return "- " + String.format("%,.0f", amount) + " USD";
-        }
+        return (isPositive() ? "+ " : "- ")
+                + String.format("%,.0f", amount)
+                + " USD";
     }
 }

@@ -1,6 +1,7 @@
 package client.network.response.handler;
 
 import client.controller.*;
+import client.controller.admin.ManageProductController;
 import client.network.ClientSocket;
 import client.network.response.parser.AuctionParser;
 import client.network.response.parser.BidParser;

@@ -148,7 +148,7 @@ public class ResponseRouter {
             case BALANCE_UPDATE_FAILED ->
                     BalanceHandler.failed(data, stage);
 
-            case TRANSACTION_HISTORY_SUCCESS ->
+            case TRANSACTIONS_LIST ->
                     BalanceHandler.transactions(data);
 
 

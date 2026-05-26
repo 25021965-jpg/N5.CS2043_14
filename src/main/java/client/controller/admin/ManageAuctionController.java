@@ -1,4 +1,4 @@
-package client.controller;
+package client.controller.admin;
 
 import client.network.ClientSocket;
 import client.util.NavigationUtils;

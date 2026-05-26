@@ -153,7 +153,7 @@ public class LiveAuctionController implements UserDataReceiver {
         // Balance ảo sẽ được khởi tạo trong setAuctionData() sau khi biết auctionId
         // Không khởi tạo ở đây để tránh race condition (setUser gọi trước setAuctionData)
         if (user != null) {
-            System.out.println("🔥 setUser called for: " + user.getUsername());
+            System.out.println(" setUser called for: " + user.getUsername());
         }
     }
 
@@ -171,7 +171,7 @@ public class LiveAuctionController implements UserDataReceiver {
             this.virtualBalance = globalVirtualBalance;
             this.myPendingBid = (globalMyPendingBid != null) ? globalMyPendingBid : BigDecimal.ZERO;
             this.pendingBidAmount = BigDecimal.ZERO;
-            System.out.println("🔥 Restored virtual balance from static: " + virtualBalance);
+            System.out.println(" Restored virtual balance from static: " + virtualBalance);
         } else {
             // Auction mới → dùng balance thật từ user
             if (currentUser != null && currentUser.getBalance() != null) {
@@ -182,7 +182,7 @@ public class LiveAuctionController implements UserDataReceiver {
             this.myPendingBid = BigDecimal.ZERO;
             this.pendingBidAmount = BigDecimal.ZERO;
             globalAuctionId = auctionId; // Chỉ cập nhật khi là auction mới
-            System.out.println("🔥 New auction, init virtual balance: " + virtualBalance);
+            System.out.println(" New auction, init virtual balance: " + virtualBalance);
         }
 
         // Hiển thị thông tin sản phẩm
@@ -235,7 +235,7 @@ public class LiveAuctionController implements UserDataReceiver {
             globalVirtualBalance = virtualBalance;
             globalMyPendingBid = myPendingBid;
             updateBalanceDisplay();
-            System.out.println("🔥 Virtual balance deducted: " + amount + ", remaining: " + virtualBalance);
+            System.out.println(" Virtual balance deducted: " + amount + ", remaining: " + virtualBalance);
         }
     }
 
@@ -248,7 +248,7 @@ public class LiveAuctionController implements UserDataReceiver {
             globalVirtualBalance = virtualBalance;
             globalMyPendingBid = BigDecimal.ZERO;
             updateBalanceDisplay();
-            System.out.println("🔥 Virtual balance refunded, new balance: " + virtualBalance);
+            System.out.println(" Virtual balance refunded, new balance: " + virtualBalance);
             showToast("You were outbid! Money returned to your balance.");
         }
     }
@@ -371,7 +371,7 @@ public class LiveAuctionController implements UserDataReceiver {
             if (currentUser != null && virtualBalance != null) {
                 currentUser.setBalance(virtualBalance);
                 UserSession.setCurrentUser(currentUser);
-                System.out.println("🔥 Saved virtual balance to session: " + virtualBalance);
+                System.out.println(" Saved virtual balance to session: " + virtualBalance);
             }
 
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/HomePage.fxml"));
@@ -413,7 +413,7 @@ public class LiveAuctionController implements UserDataReceiver {
                                 && lastBid.getUsername().equals(bidder)
                                 && lastBid.getAmount().compareTo(new BigDecimal(newPrice)) == 0) {
                             isDuplicate = true;
-                            System.out.println("🔥 Duplicate bid ignored: " + bidTime);
+                            System.out.println(" Duplicate bid ignored: " + bidTime);
                         }
                     }
 
@@ -466,7 +466,7 @@ public class LiveAuctionController implements UserDataReceiver {
                         globalBidCounter = bidCounter;
                         globalCurrentPrice = currentPrice;
 
-                        System.out.println("🔥 Saved to static - Total bids: " + globalBidHistory.size());
+                        System.out.println(" Saved to static - Total bids: " + globalBidHistory.size());
                     }
                 }
                 return;
@@ -504,7 +504,7 @@ public class LiveAuctionController implements UserDataReceiver {
                         }
 
                         bidHistoryTable.refresh();
-                        System.out.println("🔥 Restored " + bidHistoryList.size() + " bids from static");
+                        System.out.println(" Restored " + bidHistoryList.size() + " bids from static");
                     } else {
                         System.out.println("No cached history, waiting for server...");
                     }
@@ -513,7 +513,7 @@ public class LiveAuctionController implements UserDataReceiver {
                     if (globalWinnerName != null) {
                         currentWinnerLabel.setText(globalWinnerName);
                         winnerTimeLabel.setText(globalWinnerTime);
-                        System.out.println("🔥 Restored winner: " + globalWinnerName + " at " + globalWinnerTime);
+                        System.out.println(" Restored winner: " + globalWinnerName + " at " + globalWinnerTime);
                     }
                 }
 
@@ -573,13 +573,13 @@ public class LiveAuctionController implements UserDataReceiver {
                     globalBidHistory = new ArrayList<>(bidHistoryList);
                     globalBidCounter = bidCounter;
 
-                    System.out.println("🔥 Total bids after server sync: " + bidHistoryList.size());
+                    System.out.println(" Total bids after server sync: " + bidHistoryList.size());
                 }
                 return;
             }
 
             if (msg.startsWith("BID_HISTORY_EMPTY")) {
-                System.out.println("🔥 Server returned empty bid history (keeping existing)");
+                System.out.println(" Server returned empty bid history (keeping existing)");
                 return;
             }
 
@@ -634,11 +634,11 @@ public class LiveAuctionController implements UserDataReceiver {
     public void loadBidHistory(List<Bid> history) {
         Platform.runLater(() -> {
             if (history == null || history.isEmpty()) {
-                System.out.println("🔥 No new bid history to load");
+                System.out.println(" No new bid history to load");
                 return;
             }
 
-            System.out.println("🔥 Loading " + history.size() + " bids from server");
+            System.out.println(" Loading " + history.size() + " bids from server");
 
             bidHistoryList.clear();
 
@@ -672,7 +672,7 @@ public class LiveAuctionController implements UserDataReceiver {
             globalBidHistory = new ArrayList<>(bidHistoryList);
             globalBidCounter = bidCounter;
 
-            System.out.println("🔥 Total bids: " + bidHistoryList.size());
+            System.out.println(" Total bids: " + bidHistoryList.size());
         });
     }
 

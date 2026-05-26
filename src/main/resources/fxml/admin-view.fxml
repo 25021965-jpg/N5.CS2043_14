@@ -10,7 +10,7 @@
             style="-fx-background-color: linear-gradient(to bottom right,#0f0f0f,#1b1b1b);"
             xmlns="http://javafx.com/javafx/25"
             xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="client.controller.AdminController">
+            fx:controller="client.controller.admin.AdminController">
 
     <!-- TITLE -->
     <Label layoutX="455.0"

@@ -55,8 +55,7 @@ public enum ResponseType {
     // ================= USER BALANCE =================
     BALANCE_UPDATE_SUCCESS,
     BALANCE_UPDATE_FAILED,
-
-    TRANSACTION_HISTORY_SUCCESS,
+    TRANSACTIONS_LIST,
 
     // ================= ADMIN USER =================
     USER_LIST_SUCCESS,
