@@ -189,19 +189,21 @@ public class AuctionHistoryController implements UserDataReceiver {
 
                     String imagePath = data[5];
 
-                    if (imagePath != null
-                            && !imagePath.isBlank()
-                            && !imagePath.equals("NO_IMAGE")) {
+                    if (imagePath != null && !imagePath.isBlank() && !imagePath.equals("NO_IMAGE")) {
+                        String finalPath;
 
-                        if (!imagePath.startsWith("file:")) {
-                            imagePath =
-                                    "file:" +
-                                            imagePath.replace("\\", "/");
+                        // Nếu là đường dẫn Cloudinary (http/https)
+                        if (imagePath.startsWith("http")) {
+                            finalPath = imagePath;
+                        }
+                        // Nếu là đường dẫn file local
+                        else if (!imagePath.startsWith("file:")) {
+                            finalPath = "file:" + imagePath.replace("\\", "/");
+                        } else {
+                            finalPath = imagePath;
                         }
 
-                        item.setImages(
-                                java.util.Collections.singletonList(imagePath)
-                        );
+                        item.setImages(java.util.Collections.singletonList(finalPath));
                     }
 
                     auction.setItem(item);
