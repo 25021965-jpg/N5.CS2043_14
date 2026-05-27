@@ -48,40 +48,6 @@ public class AuctionHistoryAdminController {
             ClientSocket.getInstance().sendRequest("LIST_AUCTION_HISTORY");
     }
 
-    @FXML
-    private void handleViewAuctionDetails() {
-        String[] selected = auctionHistoryTable.getSelectionModel().getSelectedItem();
-        if (selected == null) return;
-
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Auction Details");
-        alert.setHeaderText("Auction: " + selected[0]);
-        alert.setContentText(
-                "Item: " + selected[1] + "\n" +
-                        "Winner: " + selected[2] + "\n" +
-                        "Final Bid: " + selected[3] + "\n" +
-                        "End Date: " + selected[4] + "\n" +
-                        "Status: " + selected[5]
-        );
-        alert.showAndWait();
-    }
-
-    @FXML
-    private void handleDeleteAuctionHistory() {
-        // Auction History chỉ xem — không nên xóa thật
-        // Nếu muốn xóa thì thêm lệnh DELETE_AUCTION sau
-        Alert alert = new Alert(Alert.AlertType.WARNING,
-                "This action will permanently delete the history and cannot be undone. Are you sure you want to continue?",
-                ButtonType.YES, ButtonType.NO);
-        alert.showAndWait().ifPresent(res -> {
-            if (res == ButtonType.YES) {
-                String[] selected = auctionHistoryTable.getSelectionModel().getSelectedItem();
-                if (selected != null)
-                    ClientSocket.getInstance().sendRequest("CANCEL_AUCTION|" + selected[0]);
-            }
-        });
-    }
-
     // Được gọi từ ResponseHandler
     public void updateHistory(ObservableList<String[]> data) {
         Platform.runLater(() -> historyList.setAll(data));

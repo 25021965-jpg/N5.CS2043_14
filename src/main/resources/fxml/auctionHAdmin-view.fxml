@@ -114,15 +114,6 @@
 
                 </TableView>
 
-                <!-- BUTTONS -->
-                <HBox alignment="CENTER_RIGHT" spacing="15">
-
-                    <Button onAction="#handleViewAuctionDetails" prefHeight="45" prefWidth="180" style="                                 -fx-background-color: #d4af37;                                 -fx-text-fill: black;                                 -fx-font-size: 14;                                 -fx-font-weight: bold;                                 -fx-background-radius: 14;                             " text="VIEW DETAILS" />
-
-                    <Button onAction="#handleDeleteAuctionHistory" prefHeight="45" prefWidth="180" style="                                 -fx-background-color: #ff5252;                                 -fx-text-fill: white;                                 -fx-font-size: 14;                                 -fx-font-weight: bold;                                 -fx-background-radius: 14;                             " text="DELETE HISTORY" />
-
-                </HBox>
-
             </VBox>
 
         </VBox>
