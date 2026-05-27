@@ -12,9 +12,10 @@ public class ResponseRouter {
 
         // LIVE UPDATE
         if (raw.startsWith("UPDATE_PRICE")) {
-            AuctionHandler.updatePrice(raw);
+            Platform.runLater(() -> AuctionHandler.updatePrice(raw));
             return;
         }
+
 
         String[] parts = raw.split("\\|", 2);
 

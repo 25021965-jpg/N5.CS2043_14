@@ -23,6 +23,7 @@ import model.Bid;
 import model.User;
 
 import java.math.BigDecimal;
+import java.net.URL;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -197,10 +198,11 @@ public class LiveAuctionController implements UserDataReceiver {
         // Load image
         if (imageUrl != null && !imageUrl.isEmpty() && !imageUrl.equals("NO_IMAGE")) {
             try {
-                Image image = new Image(imageUrl);
+                Image image = new Image(imageUrl, true);
                 productImageView.setImage(image);
             } catch (Exception e) {
-                System.err.println("Cannot load image: " + imageUrl);
+                URL fallback = getClass().getResource("/image/no-image.png");
+                if (fallback != null) productImageView.setImage(new Image(fallback.toExternalForm()));
             }
         }
 

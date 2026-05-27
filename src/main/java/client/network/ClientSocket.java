@@ -127,7 +127,7 @@ public class ClientSocket {
     }
 
     // ================= SEND =================
-    public void sendMessage(String rawMessage){
+    public synchronized void sendMessage(String rawMessage){
         try {
             connect();
             out.println(rawMessage);

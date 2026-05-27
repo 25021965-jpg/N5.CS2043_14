@@ -16,7 +16,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import model.*;
-
+import javafx.scene.shape.Rectangle;
 import java.io.File;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -60,6 +60,21 @@ public class CreateAuctionController {
                 ResponseHandler.setMainStage(stage);
             }
         });
+        //đổi role nếu force close page (ấn X)
+        Platform.runLater(() -> {
+            Stage stage =
+                    (Stage) txtName.getScene().getWindow();
+
+            stage.addEventHandler(
+                    javafx.stage.WindowEvent.WINDOW_CLOSE_REQUEST,
+                    e -> resetRoleToBidder()
+            );
+        });
+        double radius = 20;
+        Rectangle clip = new Rectangle(500, 360);
+        clip.setArcWidth(radius * 2);
+        clip.setArcHeight(radius * 2);
+        imagePreview.setClip(clip);
     }
 
     @FXML
@@ -97,10 +112,18 @@ public class CreateAuctionController {
             int startH = txtStartHour.getText().isEmpty() ? 0 : Integer.parseInt(txtStartHour.getText());
             int startM = txtStartMin.getText().isEmpty() ? 0 : Integer.parseInt(txtStartMin.getText());
             LocalDateTime startDateTime = dpStartDate.getValue().atTime(startH, startM);
+            if (!startDateTime.isAfter(LocalDateTime.now())) {
+                showError("Start time must be in the future (after current time)!");
+                return;
+            }
 
             int endH = txtEndHour.getText().isEmpty() ? 0 : Integer.parseInt(txtEndHour.getText());
             int endM = txtEndMin.getText().isEmpty() ? 0 : Integer.parseInt(txtEndMin.getText());
             LocalDateTime endDateTime = dpEndDate.getValue().atTime(endH, endM);
+            if (!endDateTime.isAfter(startDateTime)) {
+                showError("End time must be after start time!");
+                return;
+            }
 
             // --- 3. MAP ITEM & AUCTION ---
             Item item = new Item();
@@ -129,13 +152,13 @@ public class CreateAuctionController {
             if (socket != null) {
                 socket.sendCreate(newAuction);
 
-                // Chuyển scene sau khi tạo thành công
-                User currentUser = UserSession.getCurrentUser();
-                if (currentUser != null) {
-                    currentUser.setRole(Role.BIDDER);
-                    Stage stage = (Stage)((Node)event.getSource()).getScene().getWindow();
-                    switchScene(stage, "/fxml/HomePage.fxml", "Home Page");
-                }
+                resetRoleToBidder();
+
+                switchScene(
+                        (Stage)((Node)event.getSource()).getScene().getWindow(),
+                        "/fxml/HomePage.fxml",
+                        "Home Page"
+                );
             } else {
                 showError("Connection Error: Not connected to server!");
             }
@@ -147,20 +170,22 @@ public class CreateAuctionController {
         }
     }
 
+
     @FXML
     private void handleCancel(ActionEvent event) {
+
+        resetRoleToBidder();
 
         User currentUser =
                 UserSession.getCurrentUser();
 
-        if (currentUser != null) {
-            currentUser.setRole(Role.BIDDER);
+        if(currentUser != null){
+            System.out.println(
+                    "[ROLE] User "
+                            + currentUser.getUsername()
+                            + " reverted role to BIDDER"
+            );
         }
-        System.out.println(
-                "[ROLE] User "
-                        + currentUser.getUsername()
-                        + " reverted role to BIDDER (cancel create auction)"
-        );
 
         Stage stage =
                 (Stage) ((Node) event.getSource())
@@ -170,6 +195,20 @@ public class CreateAuctionController {
         switchScene(stage,
                 "/fxml/HomePage.fxml",
                 "Auction Home");
+    }
+
+    private void resetRoleToBidder() {
+        User currentUser = UserSession.getCurrentUser();
+
+        if (currentUser != null) {
+            currentUser.setRole(Role.BIDDER);
+
+            System.out.println(
+                    "[ROLE] "
+                            + currentUser.getUsername()
+                            + " -> BIDDER"
+            );
+        }
     }
 
     // --- HÀM XỬ LÝ ẢNH ---

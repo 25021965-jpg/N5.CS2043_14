@@ -141,23 +141,14 @@ public class AuthHandler extends BaseHandler {
             if (!data[6].isEmpty()
                     && !data[6].equals("NO_IMAGE")) {
 
-                for (String path : data[6].split(",")) {
-                    imageList.add(path);
-                }
+                imageList.addAll(
+                        List.of(data[6].split(","))
+                );
             }
 
             item.setImages(imageList);
 
-            // upgrade role
-            if (currentUser.getRole() == Role.BIDDER) {
-
-                new UserDAO().updateRole(
-                        currentUser.getUser_id(),
-                        "SELLER"
-                );
-
-                currentUser.setRole(Role.SELLER);
-            }
+            // XÓA phần update role
 
             AuctionService.createAuction(
                     currentUser,

@@ -12,6 +12,9 @@ import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
 
+import java.time.LocalDate;
+import java.time.Period;
+
 public class RegisterController {
 
     @FXML
@@ -94,10 +97,16 @@ public class RegisterController {
             verifyPasswordField.requestFocus();
             return;
         }
+        LocalDate dob = dobField.getValue();
+        int age = Period.between(dob, LocalDate.now()).getYears();
+        if (age < 18) {
+            showError("You must be at least 18 years old to register!");
+            return;
+        }
 
-        String dob = dobField.getValue().toString();
+        String dobStr = dobField.getValue().toString();
 
-        client.sendRegister(fullname, username, email, password, dob);
+        client.sendRegister(fullname, username, email, password, dobStr);
     }
 
     @FXML

@@ -20,7 +20,7 @@ public class AuctionService {
             String startTime,
             String endTime
     ) {
-        // 1. Tự động nâng cấp quyền nếu là BIDDER
+        // 1. đổi role
         if (seller.getRole() == Role.BIDDER) {
             System.out.println("→ User " + seller.getUsername() + " upgraded to SELLER");
         }
@@ -44,7 +44,7 @@ public class AuctionService {
             throw new RuntimeException("Invalid date format. Use yyyy-MM-ddTHH:mm:ss (Ex: 2023-12-31T23:59:59)");
         }
 
-        // 4. Lưu vào DB (DAO xử lý cả Item và Auction như mày viết là chuẩn)
+        // 4. Lưu vào DB
         AuctionDAO.save(auction);
 
         return auction;
