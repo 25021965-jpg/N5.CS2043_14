@@ -32,6 +32,8 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import static client.util.NavigationUtils.showError;
+
 public class LiveAuctionController implements UserDataReceiver {
 
     // ==================== FXML COMPONENTS ====================
@@ -335,7 +337,15 @@ public class LiveAuctionController implements UserDataReceiver {
     private void leaveAndGoBack() {
         System.out.println("[LiveAuction] Leaving room permanently: " + auctionId);
 
-        // Hoàn tiền pending khi leave
+        if (currentUser != null
+                && globalWinnerName != null
+                && globalWinnerName.equals(currentUser.getUsername())
+                && myPendingBid != null
+                && myPendingBid.compareTo(BigDecimal.ZERO) > 0) {
+            showError("⚠️ You are the leading bidder! You cannot leave until you are outbid or the auction ends.");
+            return;
+        }
+        // Hoàn tiền pending khi leave balance ảo
         if (virtualBalance != null && myPendingBid != null
                 && myPendingBid.compareTo(BigDecimal.ZERO) > 0) {
             BigDecimal refund = myPendingBid;
