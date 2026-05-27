@@ -127,11 +127,43 @@ public class AuctionHandler extends BaseHandler {
                 writer
         );
 
-        return "JOIN_SUCCESS|"
-                + auctionId + "|"
+        if (auction.getEndTime() != null) {
+            long delay = java.time.Duration.between(
+                    LocalDateTime.now(), auction.getEndTime()
+            ).toMillis();
+
+            if (delay > 0) {
+                final String finalAuctionId = auctionId;
+                new java.util.Timer(true).schedule(
+                        new java.util.TimerTask() {
+                            @Override
+                            public void run() {
+                                Auction ended = AuctionService.getAuctionById(finalAuctionId);
+                                if (ended != null) {
+                                    BidService.settleAuction(ended);
+                                    RoomManager.broadcastToRoomAll(finalAuctionId, "AUCTION_ENDED");
+                                    java.util.List<model.Bid> bids =
+                                            server.dao.BidDAO.getBidsByAuctionId(finalAuctionId);
+                                    if (bids != null && !bids.isEmpty()) {
+                                        model.Bid topBid = bids.get(0);
+                                        if (topBid.getBidder() != null) {
+                                            RoomManager.broadcastToRoomAll(
+                                                    finalAuctionId,
+                                                    "YOU_WON|" + topBid.getAmount()
+                                            );
+                                        }
+                                    }
+                                }
+                            }
+                        }, delay);
+            }
+        }
+
+        return "JOIN_SUCCESS|" + auctionId + "|"
                 + auction.getCurrentPrice() + "|"
                 + auction.getMinIncrement() + "|"
                 + auction.getEndTime();
+
     }
 
     // ==================== LEAVE ====================
@@ -200,7 +232,8 @@ public class AuctionHandler extends BaseHandler {
                                     + currentUser.getUsername() + "|"
                                     + LocalDateTime.now().format(
                                     DateTimeFormatter.ofPattern("HH:mm:ss")
-                            );
+                            )+ "|"
+                                    + currentUser.getUser_id();
 
                     RoomManager.broadcastToRoomAll(
                             auctionId,

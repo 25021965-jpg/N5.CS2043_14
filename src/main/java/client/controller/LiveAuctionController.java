@@ -229,13 +229,16 @@ public class LiveAuctionController implements UserDataReceiver {
     // Trừ virtual balance khi đặt bid thành công
     private void deductVirtualBalance(BigDecimal amount) {
         if (virtualBalance != null && amount != null) {
-            virtualBalance = virtualBalance.subtract(amount);
-            myPendingBid = amount;
-            // Lưu vào static để khôi phục khi quay lại
+            // 🔥 Chỉ trừ hiệu so với lần bid trước
+            BigDecimal diff = amount.subtract(myPendingBid); // lần đầu: amount - 0 = amount, lần sau: amount mới - amount cũ
+            if (diff.compareTo(BigDecimal.ZERO) > 0) {
+                virtualBalance = virtualBalance.subtract(diff);
+            }
+            myPendingBid = amount; // cập nhật bid hiện tại
             globalVirtualBalance = virtualBalance;
             globalMyPendingBid = myPendingBid;
             updateBalanceDisplay();
-            System.out.println(" Virtual balance deducted: " + amount + ", remaining: " + virtualBalance);
+            System.out.println("🔥 Deducted diff: " + diff + ", myPendingBid: " + myPendingBid + ", remaining: " + virtualBalance);
         }
     }
 

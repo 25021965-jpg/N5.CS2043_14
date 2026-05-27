@@ -80,4 +80,8 @@ VALUES (?, ?, ?, ?, ?, ?)
         }
         return transactions;
     }
+
+    public static boolean addTransaction(String userId, BigDecimal amount, String type) {
+        return addTransaction(userId, null, amount, type, "");
+    }
 }
