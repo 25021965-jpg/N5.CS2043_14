@@ -167,7 +167,7 @@ public class ItemCardController {
 
             if (image == null) {
                 if (imagePath.startsWith("http")) {
-                    image = new Image(imagePath, 235, 165, false, true);
+                    image = new Image(imagePath, 235, 165, false, true, true);
                 } else {
                     File file = new File(imagePath);
                     image = file.exists()
