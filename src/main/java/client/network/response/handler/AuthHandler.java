@@ -1,6 +1,7 @@
 package client.network.response.handler;
 
 import client.controller.HomePageController;
+import client.controller.LoginController;
 import client.manager.UserSession;
 import client.network.response.parser.UserParser;
 import client.util.NavigationUtils;
@@ -12,7 +13,9 @@ import model.User;
 public class AuthHandler {
 
     public static void loginSuccess(String data, Stage stage) {
-
+        System.out.println(
+                "LOGIN_SUCCESS HANDLER CALLED"
+        );
         User user = UserParser.parse(data);
         UserSession.setCurrentUser(user);
 
@@ -33,7 +36,17 @@ public class AuthHandler {
     }
 
     public static void loginFailed(String data, Stage stage) {
-        NavigationUtils.showError("Login failed: " + data);
+
+        NavigationUtils.showError(
+                "Wrong username or password."
+        );
+
+        LoginController controller =
+                LoginController.getInstance();
+
+        if (controller != null) {
+            controller.onLoginFailed();
+        }
     }
 
     public static void registerSuccess(Stage stage) {
@@ -41,7 +54,7 @@ public class AuthHandler {
         NavigationUtils.showToast(stage, "Account created successfully!");
     }
 
-    public static void registerFailed(String data, Stage stage) {
+    public static void registerFailed(String data) {
         NavigationUtils.showError("Register failed: " + data);
     }
 
@@ -50,7 +63,7 @@ public class AuthHandler {
         NavigationUtils.showToast(stage, "Password reset successfully!");
     }
 
-    public static void forgotFailed(String data, Stage stage) {
+    public static void forgotFailed(String data) {
         NavigationUtils.showError("Reset failed: " + data);
     }
 }

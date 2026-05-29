@@ -505,7 +505,7 @@ public class HomePageController
 
             LiveAuctionController controller =
                     loader.getController();
-
+            controller.setClient(client);
             controller.setUser(
                     UserSession.getCurrentUser()
             );

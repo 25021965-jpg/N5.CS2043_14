@@ -116,7 +116,7 @@ public abstract class BaseController
                 stage,
                 fxml,
                 title,
-                ClientSocket.getInstance(),
+                client,
                 UserSession.getCurrentUser()
         );
     }

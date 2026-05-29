@@ -63,13 +63,13 @@ public class ResponseRouter {
                     AuthHandler.registerSuccess(stage);
 
             case REGISTER_FAILED ->
-                    AuthHandler.registerFailed(data, stage);
+                    AuthHandler.registerFailed(data);
 
             case FORGOT_SUCCESS ->
                     AuthHandler.forgotSuccess(stage);
 
             case FORGOT_FAILED ->
-                    AuthHandler.forgotFailed(data, stage);
+                    AuthHandler.forgotFailed(data);
 
 
             // ===== AUCTION =====

@@ -5,11 +5,9 @@ import client.util.NavigationUtils;
 import client.util.TextUtils;
 
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 
 import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 
 import javafx.scene.control.Label;
 
@@ -26,7 +24,6 @@ import model.Auction;
 import model.Item;
 
 import java.io.File;
-import java.io.IOException;
 
 import java.net.URL;
 
@@ -395,19 +392,20 @@ public class ItemCardController {
 
     @FXML
     private void handleCardClick(MouseEvent event) {
-
         if (auction == null) return;
 
         Stage stage = (Stage) ((Node) event.getSource())
                 .getScene()
                 .getWindow();
 
-        NavigationUtils.switchScene(
-                stage,
-                "/fxml/items-view.fxml",
-                "Item Detail",
-                client,
-                null
-        );
+        ItemViewController controller =
+                NavigationUtils.switchSceneAndGetController(
+                        stage,
+                        "/fxml/items-view.fxml",
+                        "Item Detail"
+                );
+
+        controller.setClient(client);
+        controller.setAuctionData(auction);
     }
 }

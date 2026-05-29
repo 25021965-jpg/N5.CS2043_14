@@ -2,6 +2,7 @@ package client.util;
 
 import client.controller.UserDataReceiver;
 
+import client.manager.UserSession;
 import client.network.ClientSocket;
 import javafx.animation.PauseTransition;
 import javafx.fxml.FXMLLoader;
@@ -199,8 +200,8 @@ public class NavigationUtils {
                 stage,
                 fxmlPath,
                 title,
-                null,
-                null
+                ClientSocket.getInstance(),
+                UserSession.getCurrentUser()
         );
     }
 
@@ -237,6 +238,34 @@ public class NavigationUtils {
         } catch (IOException e) {
             System.err.println("Navigation Error");
             e.printStackTrace();
+        }
+    }
+
+    public static <T> T switchSceneAndGetController(
+            Stage stage,
+            String fxmlPath,
+            String title
+    ) {
+
+        try {
+
+            FXMLLoader loader =
+                    loadFXML(fxmlPath);
+
+            Parent root =
+                    loader.load();
+
+            applyStage(
+                    stage,
+                    root,
+                    title
+            );
+
+            return loader.getController();
+
+        } catch (IOException e) {
+
+            throw new RuntimeException(e);
         }
     }
 

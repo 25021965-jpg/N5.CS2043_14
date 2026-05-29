@@ -12,29 +12,45 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane prefHeight="600.0" prefWidth="900.0" style="-fx-background-color: #121212;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controller.ItemViewController">
+<BorderPane
+        prefHeight="600.0"
+        prefWidth="900.0"
+        style="-fx-background-color: #121212;"
+        xmlns="http://javafx.com/javafx/25"
+        xmlns:fx="http://javafx.com/fxml/1"
+        fx:controller="client.controller.ItemViewController">
 
    <!-- ================= TOP ================= -->
 
    <top>
 
-      <VBox spacing="10" style="                     -fx-background-color: #1A1A1A;                     -fx-border-color: #D4AF37;                     -fx-border-width: 0 0 2 0;                 ">
+      <VBox
+              spacing="10"
+              style="
+                    -fx-background-color: #1A1A1A;
+                    -fx-border-color: #D4AF37;
+                    -fx-border-width: 0 0 2 0;
+                ">
 
          <padding>
-            <Insets bottom="20" left="30" top="20" />
+            <Insets
+                    bottom="20"
+                    left="30"
+                    top="20"/>
          </padding>
 
-         <children>
+         <Label
+                 fx:id="lblName"
+                 text="Item Information"
+                 textFill="#D4AF37">
 
-            <Label fx:id="lblName" text="Item Information" textFill="#D4AF37">
+            <font>
+               <Font
+                       name="Arial Bold"
+                       size="34.0"/>
+            </font>
 
-               <font>
-                  <Font name="Arial Bold" size="34.0" />
-               </font>
-
-            </Label>
-
-         </children>
+         </Label>
 
       </VBox>
 
@@ -44,45 +60,77 @@
 
    <left>
 
-      <VBox alignment="TOP_CENTER" prefWidth="420" spacing="20">
+      <VBox
+              alignment="TOP_CENTER"
+              prefWidth="420"
+              spacing="20">
 
          <padding>
-            <Insets left="25" right="10" top="30" />
+            <Insets
+                    left="25"
+                    right="10"
+                    top="30"/>
          </padding>
 
-         <children>
+         <StackPane
+                 prefHeight="340"
+                 prefWidth="380"
+                 style="
+                        -fx-background-color: #1F1F1F;
+                        -fx-background-radius: 18;
+                        -fx-border-radius: 18;
+                        -fx-border-color: #D4AF37;
+                        -fx-border-width: 2;
+                    ">
 
-            <StackPane prefHeight="340" prefWidth="380" style="                             -fx-background-color: #1F1F1F;                             -fx-background-radius: 18;                             -fx-border-radius: 18;                             -fx-border-color: #D4AF37;                             -fx-border-width: 2;                         ">
+            <ImageView
+                    fx:id="imgItem"
+                    fitHeight="340"
+                    fitWidth="380"/>
 
-               <children>
+            <!-- PREVIOUS -->
 
-                  <ImageView fx:id="imgItem" fitHeight="340" fitWidth="380" preserveRatio="false" />
+            <Button
+                    onAction="#showPreviousImage"
+                    prefHeight="40"
+                    prefWidth="40"
+                    text="❮"
+                    StackPane.alignment="CENTER_LEFT"
+                    style="
+                            -fx-background-color: rgba(0,0,0,0.5);
+                            -fx-text-fill: white;
+                            -fx-background-radius: 50;
+                            -fx-cursor: hand;
+                        ">
 
-                  <!-- PREVIOUS -->
+               <StackPane.margin>
+                  <Insets left="10"/>
+               </StackPane.margin>
 
-                  <Button onAction="#showPreviousImage" prefHeight="40" prefWidth="40" style="                                     -fx-background-color: rgba(0,0,0,0.5);                                     -fx-text-fill: white;                                     -fx-background-radius: 50;                                     -fx-cursor: hand;                                 " text="❮" StackPane.alignment="CENTER_LEFT">
+            </Button>
 
-                     <StackPane.margin>
-                        <Insets left="10" />
-                     </StackPane.margin>
+            <!-- NEXT -->
 
-                  </Button>
+            <Button
+                    onAction="#showNextImage"
+                    prefHeight="40"
+                    prefWidth="40"
+                    text="❯"
+                    StackPane.alignment="CENTER_RIGHT"
+                    style="
+                            -fx-background-color: rgba(0,0,0,0.5);
+                            -fx-text-fill: white;
+                            -fx-background-radius: 50;
+                            -fx-cursor: hand;
+                        ">
 
-                  <!-- NEXT -->
+               <StackPane.margin>
+                  <Insets right="10"/>
+               </StackPane.margin>
 
-                  <Button onAction="#showNextImage" prefHeight="40" prefWidth="40" style="                                     -fx-background-color: rgba(0,0,0,0.5);                                     -fx-text-fill: white;                                     -fx-background-radius: 50;                                     -fx-cursor: hand;                                 " text="❯" StackPane.alignment="CENTER_RIGHT">
+            </Button>
 
-                     <StackPane.margin>
-                        <Insets right="10" />
-                     </StackPane.margin>
-
-                  </Button>
-
-               </children>
-
-            </StackPane>
-
-         </children>
+         </StackPane>
 
       </VBox>
 
@@ -95,86 +143,122 @@
       <VBox spacing="22">
 
          <padding>
-            <Insets left="15" right="30" top="30" />
+            <Insets
+                    left="15"
+                    right="30"
+                    top="30"/>
          </padding>
 
-         <children>
+         <!-- DESCRIPTION -->
 
-            <!-- DESCRIPTION -->
+         <VBox spacing="10">
 
-            <VBox spacing="10">
+            <Label
+                    text="DESCRIPTION"
+                    textFill="#D4AF37">
 
-               <children>
+               <font>
+                  <Font
+                          name="Arial Bold"
+                          size="18"/>
+               </font>
 
-                  <Label text="DESCRIPTION" textFill="#D4AF37">
+            </Label>
 
-                     <font>
-                        <Font name="Arial Bold" size="18" />
-                     </font>
+            <TextArea
+                    fx:id="txtDescription"
+                    editable="false"
+                    prefHeight="180"
+                    wrapText="true"
+                    style="
+                            -fx-control-inner-background: #1F1F1F;
+                            -fx-text-fill: white;
+                            -fx-font-size: 14px;
+                            -fx-background-radius: 12;
+                            -fx-border-radius: 12;
+                            -fx-border-color: #333333;
+                            -fx-background-insets: 0;
+                        "/>
 
-                  </Label>
+         </VBox>
 
-                  <TextArea fx:id="txtDescription" editable="false" prefHeight="180" style="                                     -fx-control-inner-background: #1F1F1F;                                     -fx-text-fill: white;                                     -fx-font-size: 14px;                                     -fx-background-radius: 12;                                     -fx-border-radius: 12;                                     -fx-border-color: #333333;                                     -fx-background-insets: 0;                                 " wrapText="true" />
+         <!-- AUCTION INFO -->
 
-               </children>
+         <VBox
+                 prefWidth="400"
+                 spacing="18"
+                 style="
+                        -fx-background-color: #1A1A1A;
+                        -fx-background-radius: 16;
+                        -fx-border-radius: 16;
+                        -fx-border-color: #2C2C2C;
+                    ">
 
-            </VBox>
+            <padding>
+               <Insets
+                       top="20"
+                       right="20"
+                       bottom="20"
+                       left="20"/>
+            </padding>
 
-            <!-- AUCTION INFO -->
+            <Label
+                    text="AUCTION INFORMATION"
+                    textFill="#D4AF37">
 
-            <VBox prefWidth="400" spacing="18" style="                             -fx-background-color: #1A1A1A;                             -fx-background-radius: 16;                             -fx-border-radius: 16;                             -fx-border-color: #2C2C2C;                         ">
+               <font>
+                  <Font
+                          name="Arial Bold"
+                          size="18"/>
+               </font>
 
-               <padding>
-                  <Insets bottom="20" left="20" right="20" top="20" />
-               </padding>
+            </Label>
 
-               <children>
+            <Label
+                    fx:id="lblCurrentPrice"
+                    text="Current Price:"
+                    textFill="WHITE">
 
-                  <Label text="AUCTION INFORMATION" textFill="#D4AF37">
+               <font>
+                  <Font size="16"/>
+               </font>
 
-                     <font>
-                        <Font name="Arial Bold" size="18" />
-                     </font>
+            </Label>
 
-                  </Label>
+            <Label
+                    fx:id="lblStep"
+                    text="Min Increment:"
+                    textFill="WHITE">
 
-                  <Label fx:id="lblCurrentPrice" text="Current Price:" textFill="WHITE">
+               <font>
+                  <Font size="16"/>
+               </font>
 
-                     <font>
-                        <Font size="16" />
-                     </font>
+            </Label>
 
-                  </Label>
+            <Label
+                    fx:id="lblStart"
+                    text="Start Time:"
+                    textFill="WHITE">
 
-                  <Label fx:id="lblStep" text="Min Increment:" textFill="WHITE">
+               <font>
+                  <Font size="16"/>
+               </font>
 
-                     <font>
-                        <Font size="16" />
-                     </font>
+            </Label>
 
-                  </Label>
+            <Label
+                    fx:id="lblEnd"
+                    text="End Time:"
+                    textFill="WHITE">
 
-                  <Label fx:id="lblStart" text="Start Time:" textFill="WHITE">
+               <font>
+                  <Font size="16"/>
+               </font>
 
-                     <font>
-                        <Font size="16" />
-                     </font>
+            </Label>
 
-                  </Label>
-
-                  <Label fx:id="lblEnd" text="End Time:" textFill="WHITE">
-
-                     <font>
-                        <Font size="16" />
-                     </font>
-
-                  </Label>
-
-               </children>
-
-            </VBox>
-
-         </children>
+         </VBox>
 
       </VBox>
 
@@ -184,47 +268,99 @@
 
    <bottom>
 
-      <HBox alignment="CENTER" prefHeight="90" spacing="20" style="                     -fx-background-color: #1A1A1A;                     -fx-border-color: #2C2C2C;                     -fx-border-width: 2 0 0 0;                 ">
+      <HBox
+              alignment="CENTER"
+              prefHeight="90"
+              spacing="20"
+              style="
+                    -fx-background-color: #1A1A1A;
+                    -fx-border-color: #2C2C2C;
+                    -fx-border-width: 2 0 0 0;
+                ">
 
          <padding>
-            <Insets left="30" right="30" />
+            <Insets
+                    left="30"
+                    right="30"/>
          </padding>
 
-         <children>
+         <!-- BACK -->
 
-            <!-- BACK -->
+         <Button
+                 onMouseClicked="#handleBack"
+                 prefHeight="45"
+                 prefWidth="140"
+                 text="BACK"
+                 style="
+                        -fx-background-color: transparent;
+                        -fx-text-fill: #D4AF37;
+                        -fx-border-color: #D4AF37;
+                        -fx-border-width: 2;
+                        -fx-border-radius: 12;
+                        -fx-background-radius: 12;
+                        -fx-cursor: hand;
+                    ">
 
-            <Button onAction="#handleBack" prefHeight="45" prefWidth="140" style="                             -fx-background-color: transparent;                             -fx-text-fill: #D4AF37;                             -fx-border-color: #D4AF37;                             -fx-border-width: 2;                             -fx-border-radius: 12;                             -fx-background-radius: 12;                             -fx-font-weight: bold;                             -fx-cursor: hand;                         " text="BACK">
+            <font>
+               <Font
+                       name="Berlin Sans FB Demi Bold"
+                       size="15"/>
+            </font>
 
-               <font>
-                  <Font name="Berlin Sans FB Demi Bold" size="15" />
-               </font>
+         </Button>
 
-            </Button>
+         <Region HBox.hgrow="ALWAYS"/>
 
-            <Region HBox.hgrow="ALWAYS" />
+         <!-- FAVOURITE -->
 
-            <!-- FAVOURITE -->
+         <Button
+                 fx:id="btnFavourite"
+                 onAction="#handleAddToFavourite"
+                 prefHeight="45"
+                 prefWidth="210"
+                 text="Add to favourite"
+                 style="
+                        -fx-background-color: transparent;
+                        -fx-text-fill: #D4AF37;
+                        -fx-border-color: #D4AF37;
+                        -fx-border-width: 2;
+                        -fx-border-radius: 12;
+                        -fx-background-radius: 12;
+                        -fx-cursor: hand;
+                    ">
 
-            <Button fx:id="btnFavourite" onAction="#handleAddToFavourite" prefHeight="45" prefWidth="210" style="                             -fx-background-color: #D4AF37;                             -fx-text-fill: black;                             -fx-font-weight: bold;                             -fx-background-radius: 12;                             -fx-font-size: 15px;                             -fx-cursor: hand;                         " text="ADD TO FAVOURITE">
+            <font>
+               <Font
+                       name="Berlin Sans FB Demi Bold"
+                       size="15"/>
+            </font>
 
-               <font>
-                  <Font name="Berlin Sans FB Demi Bold" size="15" />
-               </font>
+         </Button>
 
-            </Button>
+         <!-- JOIN -->
 
-            <!-- JOIN -->
+         <Button
+                 fx:id="btnJoinAuction"
+                 onAction="#handleJoinAuction"
+                 prefHeight="45"
+                 prefWidth="180"
+                 text="JOIN AUCTION"
+                 style="
+                        -fx-background-color: #D4AF37;
+                        -fx-text-fill: black;
+                        -fx-font-weight: bold;
+                        -fx-background-radius: 12;
+                        -fx-font-size: 15px;
+                        -fx-cursor: hand;
+                    ">
 
-            <Button fx:id="btnJoinAuction" onAction="#handleJoinAuction" prefHeight="45" prefWidth="180" style="                             -fx-background-color: #D4AF37;                             -fx-text-fill: black;                             -fx-font-weight: bold;                             -fx-background-radius: 12;                             -fx-font-size: 15px;                             -fx-cursor: hand;                         " text="JOIN AUCTION">
+            <font>
+               <Font
+                       name="Berlin Sans FB Demi Bold"
+                       size="15"/>
+            </font>
 
-               <font>
-                  <Font name="Berlin Sans FB Demi Bold" size="15" />
-               </font>
-
-            </Button>
-
-         </children>
+         </Button>
 
       </HBox>
 

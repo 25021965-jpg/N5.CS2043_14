@@ -1,6 +1,5 @@
 package client.controller;
 
-import client.manager.UserSession;
 import client.network.ClientSocket;
 import client.util.NavigationUtils;
 
@@ -13,10 +12,6 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 
-import model.Role;
-import model.User;
-
-import java.math.BigDecimal;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -40,6 +35,11 @@ public class LoginController extends BaseController {
         forgotPasswordLink.setUnderline(false);
     }
 
+    private static LoginController instance;
+
+    public static LoginController getInstance() {
+        return instance;
+    }
     private final ClientSocket client =
             ClientSocket.getInstance();
 
@@ -57,47 +57,45 @@ public class LoginController extends BaseController {
                 return;
             }
 
-            client.setMessageListener(this::handleServerMessage);
-
             passField.setOnAction(e -> handleLogin());
             loginBtn.setOnMouseEntered(e ->
                     loginBtn.setStyle("""
-                -fx-background-color: #c8a432;
-                -fx-text-fill: black;
-                -fx-background-radius: 8;
-                -fx-cursor: hand;
-                -fx-padding: 10;
-                """)
+                            -fx-background-color: #c8a432;
+                            -fx-text-fill: black;
+                            -fx-background-radius: 8;
+                            -fx-cursor: hand;
+                            -fx-padding: 10;
+                            """)
             );
 
             loginBtn.setOnMouseExited(e ->
                     loginBtn.setStyle("""
-                -fx-background-color: #D4AF37;
-                -fx-text-fill: black;
-                -fx-background-radius: 8;
-                -fx-cursor: hand;
-                -fx-padding: 10;
-                """)
+                            -fx-background-color: #D4AF37;
+                            -fx-text-fill: black;
+                            -fx-background-radius: 8;
+                            -fx-cursor: hand;
+                            -fx-padding: 10;
+                            """)
             );
 
             loginBtn.setOnMousePressed(e ->
                     loginBtn.setStyle("""
-                -fx-background-color: #b8931f;
-                -fx-text-fill: black;
-                -fx-background-radius: 8;
-                -fx-cursor: hand;
-                -fx-padding: 10;
-                """)
+                            -fx-background-color: #b8931f;
+                            -fx-text-fill: black;
+                            -fx-background-radius: 8;
+                            -fx-cursor: hand;
+                            -fx-padding: 10;
+                            """)
             );
 
             loginBtn.setOnMouseReleased(e ->
                     loginBtn.setStyle("""
-                -fx-background-color: #c8a432;
-                -fx-text-fill: black;
-                -fx-background-radius: 8;
-                -fx-cursor: hand;
-                -fx-padding: 10;
-                """)
+                            -fx-background-color: #c8a432;
+                            -fx-text-fill: black;
+                            -fx-background-radius: 8;
+                            -fx-cursor: hand;
+                            -fx-padding: 10;
+                            """)
             );
             Platform.runLater(() -> {
                 Stage stage = getStage(userField);
@@ -126,12 +124,12 @@ public class LoginController extends BaseController {
     @FXML
     private void handleLogin() {
         loginBtn.setStyle("""
-        -fx-background-color: #b8931f;
-        -fx-text-fill: black;
-        -fx-background-radius: 8;
-        -fx-cursor: hand;
-        -fx-padding: 10;
-        """);
+                -fx-background-color: #b8931f;
+                -fx-text-fill: black;
+                -fx-background-radius: 8;
+                -fx-cursor: hand;
+                -fx-padding: 10;
+                """);
 
         if (client == null) {
             showError("Server not connected.");
@@ -159,40 +157,9 @@ public class LoginController extends BaseController {
         client.sendLogin(username, password);
     }
 
-    // ==================== SERVER RESPONSE ====================
+    public void onLoginFailed() {
 
-    private void handleServerMessage(String msg) {
-
-        Platform.runLater(() -> {
-
-            LOGGER.info(
-                    "[LoginController] Received: " + msg
-            );
-
-            if (msg.startsWith("LOGIN_SUCCESS")) {
-
-                User user =
-                        parseLoginUser(msg);
-
-                if (user == null) {
-                    showError("Failed to parse user data.");
-                    return;
-                }
-
-                UserSession.setCurrentUser(user);
-
-                if (user.getRole() == Role.ADMIN) {
-                    openAdminPage();
-                } else {
-                    openHomePage();
-                }
-
-                return;
-            }
-
-            if (msg.startsWith("LOGIN_FAILED")) {
-
-                loginBtn.setStyle("""
+        loginBtn.setStyle("""
         -fx-background-color: #D4AF37;
         -fx-text-fill: black;
         -fx-background-radius: 8;
@@ -200,89 +167,13 @@ public class LoginController extends BaseController {
         -fx-padding: 10;
         """);
 
-                showError("Wrong username or password.");
-
-                passField.clear();
-                passField.requestFocus();
-            }
-        });
+        passField.clear();
+        passField.requestFocus();
     }
-
-    // ==================== PARSE USER ====================
-
-    private User parseLoginUser(String msg) {
-
-        try {
-
-            String[] parts =
-                    msg.split("\\|");
-
-            if (parts.length < 5) {
-                return null;
-            }
-
-            User user = new User();
-
-            user.setUser_id(parts[1]);
-            user.setFullname(parts[2]);
-            user.setUsername(parts[3]);
-            user.setEmail(parts[4]);
-
-            if (parts.length >= 6) {
-                user.setDob(parts[5]);
-            }
-
-            if (parts.length >= 7) {
-
-                try {
-
-                    user.setRole(
-                            Role.valueOf(
-                                    parts[6]
-                                            .trim()
-                                            .toUpperCase()
-                            )
-                    );
-
-                } catch (Exception e) {
-                    user.setRole(Role.BIDDER);
-                }
-            }
-
-            if (parts.length >= 8) {
-
-                try {
-
-                    user.setBalance(
-                            new BigDecimal(parts[7])
-                    );
-
-                } catch (Exception e) {
-                    user.setBalance(BigDecimal.ZERO);
-                }
-            }
-
-            user.setPassword(passField.getText());
-
-            return user;
-
-        } catch (Exception e) {
-
-            LOGGER.log(
-                    Level.SEVERE,
-                    "Parse login user failed",
-                    e
-            );
-
-            return null;
-        }
-    }
-
     // ==================== NAVIGATION ====================
 
     @FXML
     private void goToRegister(ActionEvent event) {
-
         switchScene(
                 event,
                 "/fxml/register-view.fxml",
@@ -292,31 +183,10 @@ public class LoginController extends BaseController {
 
     @FXML
     private void goforgotPass(ActionEvent event) {
-
         switchScene(
                 event,
                 "/fxml/forgotPass-view.fxml",
                 "Forgot Password"
-        );
-    }
-
-    private void openHomePage() {
-        NavigationUtils.switchScene(
-                getStage(userField),
-                "/fxml/HomePage.fxml",
-                "Auction System",
-                client,
-                UserSession.getCurrentUser()
-        );
-    }
-
-    private void openAdminPage() {
-        NavigationUtils.switchScene(
-                getStage(userField),
-                "/fxml/admin-view.fxml",
-                "Admin Dashboard",
-                client,
-                UserSession.getCurrentUser()
         );
     }
 }

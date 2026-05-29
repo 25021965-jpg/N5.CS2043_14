@@ -3,11 +3,9 @@ package client.controller;
 import client.manager.FavouriteManager;
 import client.manager.UserSession;
 
-import client.network.ClientSocket;
-
-import client.util.NavigationUtils;
 import client.util.TextUtils;
 
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 
@@ -129,12 +127,8 @@ public class ItemViewController
 
     // ==================== SET DATA ====================
 
-    public void setAuctionData(
-            Auction auction
-    ) {
-
+    public void setAuctionData(Auction auction) {
         this.auction = auction;
-
         if (auction == null
                 || auction.getItem() == null) {
 
@@ -142,18 +136,13 @@ public class ItemViewController
         }
 
         setupFavourite();
-
         setupLabels();
-
         setupSellerUI();
-
         currentImageIndex = 0;
-
         showImage(currentImageIndex);
     }
 
     private void setupFavourite() {
-
         String itemId =
                 auction.getItem()
                         .getItem_id();
@@ -165,7 +154,6 @@ public class ItemViewController
     }
 
     private void setupLabels() {
-
         lblName.setText(
                 TextUtils.safeText(
                         auction.getItem().getName()
@@ -228,33 +216,20 @@ public class ItemViewController
 
     // ==================== FAVORITE ====================
 
-    private void updateFavouriteUI(
-            boolean isFavourite
-    ) {
-
+    private void updateFavouriteUI(boolean isFavourite) {
         if (isFavourite) {
-
-            btnFavourite.setText(
-                    "Remove From Favourite"
-            );
-
+            btnFavourite.setText("Remove from favourite");
             btnFavourite.setStyle("""
                 -fx-background-color: #EF4444;
                 -fx-text-fill: white;
-                -fx-font-weight: bold;
                 -fx-background-radius: 12;
             """);
 
         } else {
-
-            btnFavourite.setText(
-                    "Add To Favourite"
-            );
-
+            btnFavourite.setText("Add To Favourite");
             btnFavourite.setStyle("""
                 -fx-background-color: #d4af37;
                 -fx-text-fill: black;
-                -fx-font-weight: bold;
                 -fx-background-radius: 12;
             """);
         }
@@ -262,7 +237,6 @@ public class ItemViewController
 
     @FXML
     private void handleAddToFavourite() {
-
         User currentUser =
                 UserSession.getCurrentUser();
 
@@ -454,7 +428,7 @@ public class ItemViewController
 
     @FXML
     private void handleJoinAuction(
-            MouseEvent event
+            ActionEvent event
     ) {
 
         if (auction == null) {
