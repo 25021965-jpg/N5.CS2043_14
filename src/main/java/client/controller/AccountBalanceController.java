@@ -1,31 +1,22 @@
 package client.controller;
 
-import client.manager.UserSession;
 import client.network.ClientSocket;
 import model.User;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.Priority;
-import javafx.stage.Stage;
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.util.Locale;
-import java.util.Optional;
 
 public class AccountBalanceController implements UserDataReceiver {
 
     private ClientSocket client;
     private User currentUser;
 
-    @FXML private Button infoBtn, historyBtn, createdAuctionBtn, favoriteBtn, balanceBtn;
-    @FXML private Button logoutBtn, deleteAccountBtn, backHomeBtn;
     @FXML private Label balanceLabel;
     @FXML private TextField depositField, withdrawField;
     @FXML private VBox transactionContainer;
@@ -67,7 +58,6 @@ public class AccountBalanceController implements UserDataReceiver {
     @FXML
     public void initialize() {
         System.out.println("Account Balance Loaded");
-        setupMenuEvents();
         if (currentUser != null) {
             updateBalance();
         }
@@ -291,75 +281,12 @@ public class AccountBalanceController implements UserDataReceiver {
         return title;
     }
 
-    private void handleLogout() {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Logout");
-        alert.setHeaderText(null);
-        alert.setContentText("Are you sure you want to logout?");
-
-        ButtonType logoutButton = new ButtonType("Logout");
-        ButtonType cancelButton = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
-        alert.getButtonTypes().setAll(logoutButton, cancelButton);
-
-        Optional<ButtonType> result = alert.showAndWait();
-        if (result.isPresent() && result.get() == logoutButton) {
-            if (client != null) {
-                client.sendLogout();
-            }
-            UserSession.setCurrentUser(null);
-            openPage("/fxml/login-view.fxml", "Login");
-        }
-    }
-
-    private void setupMenuEvents() {
-        infoBtn.setOnAction(e -> openPage("/fxml/userProfile-view.fxml", "Profile"));
-        historyBtn.setOnAction(e -> openPage("/fxml/auctionHistory-view.fxml", "Auction History"));
-        createdAuctionBtn.setOnAction(e -> openPage("/fxml/myAuctions-view.fxml", "My Auctions"));
-        favoriteBtn.setOnAction(e -> openPage("/fxml/Favourite-view.fxml", "Favourite"));
-        balanceBtn.setOnAction(e -> openPage("/fxml/accountBalance-view.fxml", "Account Balance"));
-        backHomeBtn.setOnAction(e -> openPage("/fxml/HomePage.fxml", "Home"));
-        logoutBtn.setOnAction(e -> handleLogout());
-        deleteAccountBtn.setOnAction(e -> handleDeleteAccount());
-    }
-
-    private void handleDeleteAccount() {
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle("Delete Account");
-        alert.setHeaderText(null);
-        alert.setContentText("Are you sure you want to delete your account?");
-        ButtonType deleteButton = new ButtonType("Delete");
-        ButtonType cancelButton = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
-        alert.getButtonTypes().setAll(deleteButton, cancelButton);
-
-        Optional<ButtonType> result = alert.showAndWait();
-        if (result.isPresent() && result.get() == deleteButton) {
-            openPage("/fxml/login-view.fxml", "Login");
-        }
-    }
-
     private void showAlert(Alert.AlertType type, String title, String content) {
         Alert alert = new Alert(type);
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(content);
         alert.showAndWait();
-    }
-
-    private void openPage(String fxmlPath, String title) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
-            Parent root = loader.load();
-            if (loader.getController() instanceof UserDataReceiver c) {
-                c.setClient(client);
-                c.setUser(currentUser);
-            }
-            Stage stage = (Stage) backHomeBtn.getScene().getWindow();
-            stage.setScene(new Scene(root));
-            stage.setTitle(title);
-            stage.show();
-        } catch (IOException e) {
-            System.err.println("Error: " + e.getMessage());
-        }
     }
 
     public void updateBalanceFromServer(BigDecimal newBalance) {

@@ -2,10 +2,12 @@ package client.network.response.handler;
 
 import client.controller.*;
 import client.controller.admin.ManageProductController;
+
 import client.network.ClientSocket;
 import client.network.response.parser.AuctionParser;
 import client.network.response.parser.BidParser;
 import client.network.response.parser.ItemParser;
+
 import client.util.NavigationUtils;
 
 import javafx.collections.FXCollections;
@@ -20,10 +22,14 @@ public class AuctionHandler {
     // ===== AUCTION LIST =====
 
     public static void list(String data) {
+
         System.out.println("RAW LIST RESPONSE: " + data);
-        HomePageController ctrl = HomePageController.getInstance();
+
+        HomePageController ctrl =
+                HomePageController.getInstance();
 
         if (ctrl != null) {
+
             ctrl.updateAuctionList(
                     AuctionParser.parseList(data)
             );
@@ -31,6 +37,7 @@ public class AuctionHandler {
     }
 
     public static void listEmpty() {
+
         HomePageController ctrl =
                 HomePageController.getInstance();
 
@@ -41,7 +48,6 @@ public class AuctionHandler {
             );
         }
     }
-
 
     // ===== CREATE AUCTION =====
 
@@ -68,7 +74,6 @@ public class AuctionHandler {
                 "Failed to create auction: " + data
         );
     }
-
 
     // ===== JOINED AUCTIONS =====
 
@@ -98,14 +103,17 @@ public class AuctionHandler {
         }
     }
 
-
     // ===== MY AUCTIONS =====
 
     public static void myAuctions(String data) {
+
         System.out.println("RAW MY AUCTIONS: " + data);
-        MyAuctionsController ctrl = MyAuctionsController.getInstance();
+
+        MyAuctionsController ctrl =
+                MyAuctionsController.getInstance();
 
         if (ctrl != null) {
+
             ctrl.updateMyAuctions(
                     AuctionParser.parseList(data)
             );
@@ -113,19 +121,22 @@ public class AuctionHandler {
     }
 
     public static void myAuctionsEmpty() {
+
         MyAuctionsController ctrl =
                 MyAuctionsController.getInstance();
 
         if (ctrl != null) {
+
             ctrl.updateMyAuctions(
                     java.util.List.of()
             );
         }
     }
 
-
     // ===== BID =====
+
     public static void bidSuccess(Stage stage) {
+
         NavigationUtils.showToast(
                 stage,
                 "Bid placed!"
@@ -146,9 +157,10 @@ public class AuctionHandler {
         );
     }
 
-
     // ===== BID HISTORY =====
+
     public static void bidHistory(String data) {
+
         ObservableList<Bid> bids =
                 FXCollections.observableArrayList(
                         BidParser.parse(data)
@@ -164,38 +176,47 @@ public class AuctionHandler {
     }
 
     public static void bidHistoryEmpty() {
+
         LiveAuctionController ctrl =
                 LiveAuctionController.getInstance();
 
         if (ctrl != null) {
+
             ctrl.loadBidHistory(
                     FXCollections.observableArrayList()
             );
         }
     }
 
-
     // ===== LIVE UPDATE =====
+
     public static void updatePrice(String raw) {
+
         LiveAuctionController ctrl =
                 LiveAuctionController.getInstance();
 
         if (ctrl != null) {
+
             ctrl.handleServerMessage(raw);
         }
     }
 
-
     // ===== JOIN AUCTION =====
+
     public static void joinSuccess(
             String data,
             Stage stage
-    ) {LiveAuctionController ctrl = LiveAuctionController.getInstance();
+    ) {
+
+        LiveAuctionController ctrl =
+                LiveAuctionController.getInstance();
+
         if (ctrl != null) {
-            ctrl.handleServerMessage("JOIN_SUCCESS|" + data);
+
+            ctrl.handleServerMessage(
+                    "JOIN_SUCCESS|" + data
+            );
         }
-
-
     }
 
     public static void joinFailed(
@@ -208,14 +229,15 @@ public class AuctionHandler {
         );
     }
 
-
     // ===== ITEMS =====
 
     public static void items(String data) {
+
         ManageProductController ctrl =
                 ManageProductController.getInstance();
 
         if (ctrl != null) {
+
             ObservableList<String[]> items =
                     FXCollections.observableArrayList(
                             ItemParser.parse(data, 5)
@@ -226,19 +248,22 @@ public class AuctionHandler {
     }
 
     public static void itemsEmpty() {
+
         ManageProductController ctrl =
                 ManageProductController.getInstance();
 
         if (ctrl != null) {
+
             ctrl.updateProducts(
                     FXCollections.observableArrayList()
             );
         }
     }
 
-
     // ===== DELETE ITEM =====
+
     public static void deleteSuccess(Stage stage) {
+
         NavigationUtils.showToast(
                 stage,
                 "Deleted!"
@@ -246,7 +271,9 @@ public class AuctionHandler {
 
         ManageProductController ctrl =
                 ManageProductController.getInstance();
+
         if (ctrl != null) {
+
             ctrl.handleReloadProducts();
         }
     }
@@ -261,9 +288,10 @@ public class AuctionHandler {
         );
     }
 
-
     // ===== UPDATE ITEM =====
+
     public static void updateSuccess(Stage stage) {
+
         NavigationUtils.showToast(
                 stage,
                 "Updated!"
@@ -273,6 +301,7 @@ public class AuctionHandler {
                 ManageProductController.getInstance();
 
         if (ctrl != null) {
+
             ctrl.handleReloadProducts();
         }
     }

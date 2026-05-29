@@ -5,6 +5,7 @@ import client.network.response.ResponseHandler;
 import static client.util.NavigationUtils.*; // Sử dụng các hàm showInfo, showError
 
 import client.util.NavigationUtils;
+import client.util.TextUtils;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -56,7 +57,10 @@ public class RegisterController {
             return;
         }
 
-        String fullname = fullNameField.getText().trim();
+        String fullname =
+                TextUtils.toTitleCase(
+                        fullNameField.getText()
+                );
         String username = usernameField.getText().trim();
         String email = emailField.getText().trim();
         String password = passwordField.getText();

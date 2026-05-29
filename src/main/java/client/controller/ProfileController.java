@@ -2,46 +2,16 @@ package client.controller;
 
 import client.manager.UserSession;
 import client.network.ClientSocket;
-
-import javafx.event.ActionEvent;
+import client.util.TextUtils;
 
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-
-import javafx.scene.Node;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 
 import javafx.scene.control.*;
-
-import javafx.stage.Stage;
 
 import model.User;
 import server.dao.UserDAO;
 
-import java.io.IOException;
-import java.util.Optional;
-
 public class ProfileController implements UserDataReceiver {
-
-    public Button infoBtn;
-    @FXML
-    private Button logoutBtn;
-
-    @FXML
-    private Button deleteAccountBtn;
-
-    @FXML
-    private Button historyBtn;
-
-    @FXML
-    private Button favoriteBtn;
-
-    @FXML
-    private Button balanceBtn;
-
-    @FXML
-    private Button createdAuctionBtn;
 
     @FXML
     private Label fullNameLabel;
@@ -82,8 +52,6 @@ public class ProfileController implements UserDataReceiver {
     @FXML
     private Button toggleVerifyBtn;
 
-    private ClientSocket client;
-
     private User currentUser;
 
     @FXML
@@ -107,46 +75,6 @@ public class ProfileController implements UserDataReceiver {
                 toggleVerifyBtn
         );
 
-        logoutBtn.setOnAction(
-                e -> handleLogout()
-        );
-
-        deleteAccountBtn.setOnAction(
-                e -> handleDeleteAccount()
-        );
-
-        createdAuctionBtn.setOnAction(
-                e -> openPage(
-                        "/fxml/myAuctions-view.fxml",
-                        "My Auctions",
-                        null
-                )
-        );
-
-        historyBtn.setOnAction(
-                e ->
-                    openPage("/fxml/auctionHistory-view.fxml",
-                            "Profile",
-                            null
-                    )
-        );
-
-        favoriteBtn.setOnAction(
-                e -> openPage(
-                        "/fxml/Favourite-view.fxml",
-                        "Favourite",
-                        null
-                )
-        );
-
-        balanceBtn.setOnAction(
-                e -> openPage(
-                        "/fxml/accountBalance-view.fxml",
-                        "Account Balance",
-                        null
-                )
-        );
-
         currentUser = UserSession.getCurrentUser();
 
         if (currentUser != null) {
@@ -158,7 +86,6 @@ public class ProfileController implements UserDataReceiver {
 
     public void setClient(ClientSocket client) {
 
-        this.client = client;
     }
 
     public void setUser(User user) {
@@ -170,7 +97,9 @@ public class ProfileController implements UserDataReceiver {
         }
 
         fullNameLabel.setText(
-                user.getFullname()
+                TextUtils.toTitleCase(
+                        user.getFullname()
+                )
         );
 
         usernameLabel.setText(
@@ -183,18 +112,6 @@ public class ProfileController implements UserDataReceiver {
 
         dobLabel.setText(
                 user.getDob()
-        );
-    }
-
-    @FXML
-    private void handleBackHome(
-            ActionEvent event
-    ) {
-
-        openPage(
-                "/fxml/HomePage.fxml",
-                "Auction",
-                event
         );
     }
 
@@ -298,7 +215,6 @@ public class ProfileController implements UserDataReceiver {
             );
 
             showInfo(
-                    "Password changed successfully!"
             );
 
             clearPasswordFields();
@@ -332,119 +248,8 @@ public class ProfileController implements UserDataReceiver {
         verifyNewPasswordTextField.clear();
     }
 
-    @FXML
-    private void handleLogout() {
-
-        Alert alert = new Alert(
-                Alert.AlertType.CONFIRMATION
-        );
-
-        alert.setTitle("Logout");
-        alert.setHeaderText(null);
-        alert.setContentText(
-                "Are you sure you want to logout?"
-        );
-
-        ButtonType logoutButton =
-                new ButtonType("Logout");
-
-        ButtonType cancelButton =
-                new ButtonType(
-                        "Cancel",
-                        ButtonBar.ButtonData.CANCEL_CLOSE
-                );
-
-        alert.getButtonTypes().setAll(
-                logoutButton,
-                cancelButton
-        );
-
-        Optional<ButtonType> result =
-                alert.showAndWait();
-
-        if (result.isPresent()
-                && result.get() == logoutButton) {
-
-            ClientSocket socket =
-                    ClientSocket.getInstance();
-
-            if (socket != null) {
-                socket.logout();
-            }
-
-            UserSession.setCurrentUser(null);
-
-            openPage(
-                    "/fxml/login-view.fxml",
-                    "Login",
-                    null
-            );
-        }
-    }
-
-    private void handleDeleteAccount() {
-
-        Alert alert =
-                new Alert(
-                        Alert.AlertType.WARNING
-                );
-
-        alert.setTitle(
-                "Delete Account"
-        );
-
-        alert.setHeaderText(null);
-        alert.setContentText(
-                "Are you sure you want to delete your account? This action cannot be undone."
-        );
-
-        ButtonType deleteButton =
-                new ButtonType(
-                        "Delete"
-                );
-
-        ButtonType cancelButton =
-                new ButtonType(
-                        "Cancel",
-                        ButtonBar.ButtonData.CANCEL_CLOSE
-                );
-
-        alert.getButtonTypes().setAll(
-                deleteButton,
-                cancelButton
-        );
-
-        Optional<ButtonType> result =
-                alert.showAndWait();
-
-        if (
-                result.isPresent()
-                        &&
-                        result.get() == deleteButton
-        ) {
-
-            System.out.println(
-                    "Account deleted!"
-            );
-
-        /*
-            TODO:
-            - delete account from server
-            - clear session
-         */
-
-            openPage(
-                    "/fxml/login-view.fxml",
-                    "Login",
-                    null
-            );
-        }
-    }
-
-
     private void showInfo(
-            String message
-    ) {
+            ) {
 
         Alert alert =
                 new Alert(
@@ -454,7 +259,7 @@ public class ProfileController implements UserDataReceiver {
         alert.setHeaderText(null);
 
         alert.setContentText(
-                message
+                "Password changed successfully!"
         );
 
         alert.showAndWait();
@@ -476,78 +281,5 @@ public class ProfileController implements UserDataReceiver {
         );
 
         alert.showAndWait();
-    }
-
-    private void openPage(
-            String fxmlPath,
-            String title,
-            ActionEvent event
-    ) {
-
-        try {
-
-            FXMLLoader loader =
-                    new FXMLLoader(
-                            getClass().getResource(
-                                    fxmlPath
-                            )
-                    );
-
-            Parent root =
-                    loader.load();
-
-            passData(
-                    loader.getController()
-            );
-
-            Stage stage;
-
-            if (event != null) {
-
-                stage =
-                        (Stage)
-                                ((Node)
-                                        event.getSource())
-                                        .getScene()
-                                        .getWindow();
-
-            } else {
-
-                stage =
-                        (Stage)
-                                logoutBtn
-                                        .getScene()
-                                        .getWindow();
-            }
-
-            stage.setScene(
-                    new Scene(root)
-            );
-
-            stage.setTitle(
-                    title
-            );
-
-            stage.show();
-
-        } catch (IOException e) {
-            System.err.println("Error: " + e.getMessage());
-            System.out.println(
-                    "Cannot open: "
-                            + fxmlPath
-            );
-        }
-    }
-
-    private void passData(Object controller) {
-
-        if (controller instanceof UserDataReceiver c) {
-
-            c.setClient(client);
-            c.setUser(
-                    currentUser != null
-                            ? currentUser
-                            : UserSession.getCurrentUser()
-            );        }
     }
 }

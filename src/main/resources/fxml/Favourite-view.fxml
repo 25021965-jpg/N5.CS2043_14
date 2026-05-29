@@ -1,15 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
-<?import javafx.scene.control.Separator?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.Region?>
-<?import javafx.scene.layout.VBox?>
-<?import javafx.scene.text.Font?>
 
 <?import javafx.scene.layout.FlowPane?>
 <AnchorPane
@@ -25,185 +20,12 @@
             -fx-border-width: 6;
         ">
 
-    <!-- LEFT MENU -->
-    <VBox
-            prefWidth="250.0"
-            spacing="18"
+    <fx:include
+            source="sidebar-view.fxml"
 
             AnchorPane.topAnchor="0.0"
             AnchorPane.bottomAnchor="0.0"
-            AnchorPane.leftAnchor="0.0"
-
-            style="
-                -fx-background-color: #000000;
-                -fx-border-color: #D4AF37;
-                -fx-border-width: 0 3 0 0;
-                -fx-padding: 30 20 20 20;
-            ">
-
-        <!-- TITLE -->
-        <VBox alignment="CENTER" spacing="6">
-
-            <Label
-                    text="Auction System"
-
-                    style="
-                        -fx-text-fill: white;
-                        -fx-font-size: 26px;
-                        -fx-font-weight: bold;
-                    ">
-
-                <font>
-                    <Font
-                            name="Berlin Sans FB Demi Bold"
-                            size="14.0"/>
-                </font>
-
-            </Label>
-
-            <Label
-                    text="USER PANEL"
-
-                    style="
-                        -fx-text-fill: #94A3B8;
-                        -fx-font-size: 13px;
-                    "/>
-
-        </VBox>
-
-        <Separator style="-fx-background-color: #334155;"/>
-
-        <!-- PROFILE -->
-        <Button
-                fx:id="infoBtn"
-                text="Profile"
-
-                prefHeight="45"
-                prefWidth="210"
-
-                style="
-                    -fx-background-color: #334155;
-                    -fx-text-fill: white;
-                    -fx-font-size: 15px;
-                    -fx-font-weight: bold;
-                    -fx-background-radius: 8;
-                "/>
-
-        <!-- HISTORY -->
-        <Button
-                fx:id="historyBtn"
-                text="Auction History"
-
-                prefHeight="45"
-                prefWidth="210"
-
-                style="
-                    -fx-background-color: #334155;
-                    -fx-text-fill: white;
-                    -fx-font-size: 15px;
-                    -fx-font-weight: bold;
-                    -fx-background-radius: 8;
-                "/>
-
-        <!-- YOUR AUCTIONS -->
-        <Button
-                fx:id="createdAuctionBtn"
-                text="My Auctions"
-
-                prefHeight="45"
-                prefWidth="210"
-
-                style="
-                    -fx-background-color: #334155;
-                    -fx-text-fill: white;
-                    -fx-font-size: 15px;
-                    -fx-font-weight: bold;
-                    -fx-background-radius: 8;
-                "/>
-
-        <!-- FAVOURITE -->
-        <Button
-                fx:id="favoriteBtn"
-                text="Favourite"
-
-                prefHeight="45"
-                prefWidth="210"
-
-                style="
-                    -fx-background-color: #475569;
-                    -fx-text-fill: white;
-                    -fx-font-size: 15px;
-                    -fx-font-weight: bold;
-                    -fx-background-radius: 8;
-                "/>
-
-        <!-- BALANCE -->
-        <Button
-                fx:id="balanceBtn"
-                text="Account Balance"
-
-                prefHeight="45"
-                prefWidth="210"
-
-                style="
-                    -fx-background-color: #334155;
-                    -fx-text-fill: white;
-                    -fx-font-size: 15px;
-                    -fx-font-weight: bold;
-                    -fx-background-radius: 8;
-                "/>
-
-        <!-- LOGOUT -->
-        <Button
-                fx:id="logoutBtn"
-                text="Log Out"
-
-                prefHeight="48"
-                prefWidth="210"
-
-                style="
-                    -fx-background-color: #D4AF37;
-                    -fx-text-fill: white;
-                    -fx-font-size: 15px;
-                    -fx-font-weight: bold;
-                    -fx-background-radius: 8;
-                "/>
-
-        <!-- DELETE ACCOUNT -->
-        <Button
-                fx:id="deleteAccountBtn"
-                text="DELETE ACCOUNT"
-
-                prefHeight="48"
-                prefWidth="210"
-
-                style="
-                    -fx-background-color: #EF4444;
-                    -fx-text-fill: white;
-                    -fx-font-size: 15px;
-                    -fx-font-weight: bold;
-                    -fx-background-radius: 8;
-                "/>
-
-        <Region VBox.vgrow="ALWAYS"/>
-
-        <!-- BACK -->
-        <Button
-                fx:id="backHomeBtn"
-                text="← Back To Home"
-
-                prefHeight="48"
-                prefWidth="210"
-
-                style="
-                    -fx-background-color: #2563EB;
-                    -fx-text-fill: white;
-                    -fx-font-size: 15px;
-                    -fx-font-weight: bold;
-                    -fx-background-radius: 8;
-                "/>
-
-    </VBox>
+            AnchorPane.leftAnchor="0.0"/>
 
     <!-- PAGE TITLE -->
     <Label
@@ -294,7 +116,6 @@
             ">
 
         <FlowPane fx:id="favouriteListContainer"
-                  orientation="HORIZONTAL"
                   hgap="20"
                   vgap="20"
                   prefWrapLength="1100">

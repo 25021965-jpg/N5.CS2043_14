@@ -1,5 +1,9 @@
 package client.util;
 
+import client.controller.UserDataReceiver;
+import client.manager.UserSession;
+import client.network.ClientSocket;
+
 import javafx.animation.PauseTransition;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -11,10 +15,22 @@ import javafx.stage.Popup;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
+import model.User;
+
 import java.io.IOException;
 import java.util.Optional;
 
 public class NavigationUtils {
+
+    private static String currentPage;
+
+    public static void setCurrentPage(String page) {
+        currentPage = page;
+    }
+
+    public static String getCurrentPage() {
+        return currentPage;
+    }
 
     // ==================== TOAST ====================
 
@@ -27,7 +43,8 @@ public class NavigationUtils {
     }
 
     public static void showError(String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
+        Alert alert =
+                new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Error");
         alert.setHeaderText(null);
         alert.setContentText(message);
@@ -44,7 +61,6 @@ public class NavigationUtils {
         }
 
         Popup popup = new Popup();
-
         Label label = new Label(message);
 
         label.setStyle(
@@ -53,7 +69,8 @@ public class NavigationUtils {
                         "-fx-padding: 12 24 12 24;" +
                         "-fx-background-radius: 10;" +
                         "-fx-font-size: 14px;" +
-                        "-fx-font-weight: bold;"
+                        "-fx-font-weight: bold;"+
+                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.4), 15,0,0,4);"
         );
 
         popup.getContent().add(label);
@@ -69,8 +86,8 @@ public class NavigationUtils {
 
         double y =
                 stage.getY()
-                        + stage.getHeight()
-                        - 100;
+                        + (stage.getHeight() - label.getHeight()) / 2
+                        - 80;
 
         popup.setX(x);
         popup.setY(y);
@@ -83,7 +100,6 @@ public class NavigationUtils {
         delay.setOnFinished(e ->
                 popup.hide()
         );
-
         delay.play();
     }
 
@@ -96,11 +112,8 @@ public class NavigationUtils {
 
         Alert alert =
                 new Alert(Alert.AlertType.CONFIRMATION);
-
         alert.setTitle(title);
-
         alert.setHeaderText(null);
-
         alert.setContentText(message);
 
         Optional<ButtonType> result =
@@ -117,15 +130,10 @@ public class NavigationUtils {
             String message
     ) {
 
-        Alert alert =
-                new Alert(Alert.AlertType.WARNING);
-
+        Alert alert = new Alert(Alert.AlertType.WARNING);
         alert.setTitle(title);
-
         alert.setHeaderText(null);
-
         alert.setContentText(message);
-
         alert.showAndWait();
     }
 
@@ -137,8 +145,26 @@ public class NavigationUtils {
             String title
     ) {
 
-        try {
+        switchScene(
+                stage,
+                fxmlPath,
+                title,
+                ClientSocket.getInstance(),
+                UserSession.getCurrentUser()
+        );
+    }
 
+    // ==================== SWITCH SCENE WITH DATA ====================
+
+    public static void switchScene(
+            Stage stage,
+            String fxmlPath,
+            String title,
+            ClientSocket client,
+            User user
+    ) {
+
+        try {
             FXMLLoader loader =
                     new FXMLLoader(
                             NavigationUtils.class
@@ -146,18 +172,20 @@ public class NavigationUtils {
                     );
 
             Parent root = loader.load();
+            Object controller = loader.getController();
+
+            if (controller instanceof UserDataReceiver receiver) {
+                receiver.setClient(client);
+                receiver.setUser(user);
+            }
 
             stage.setScene(new Scene(root));
-
             stage.setTitle(title);
-
             stage.centerOnScreen();
+            stage.show();
 
         } catch (IOException e) {
-
-            System.err.println(
-                    "Error: " + e.getMessage()
-            );
+            System.err.println("Error: " + e.getMessage());
 
             showWarning(
                     "Navigation Error",
