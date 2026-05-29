@@ -1,225 +1,311 @@
 package client.controller;
 
 import client.manager.UserSession;
-import client.network.ClientSocket;
 import client.network.response.ResponseHandler;
-import static client.util.NavigationUtils.*;
+import client.util.CloudinaryUploader;
+import client.util.NavigationUtils;
 
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.Node;
-import javafx.scene.control.*;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.DatePicker;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
+import javafx.scene.shape.Rectangle;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import model.*;
-import javafx.scene.shape.Rectangle;
+
+import model.Auction;
+import model.Category;
+import model.Item;
+import model.Role;
+import model.User;
+
 import java.io.File;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class CreateAuctionController {
+public class CreateAuctionController
+        extends BaseController {
 
-    private List<File> imageFiles = new ArrayList<>();
+    private static final double IMAGE_RADIUS = 20;
+
+    private final List<File> imageFiles =
+            new ArrayList<>();
+
     private int currentImageIndex = 0;
 
-    @FXML private ComboBox<String> cbCategory;
-    @FXML private TextField txtName, txtStartingBid, txtMinIncrement;
-    @FXML private TextArea txtDescription;
-    @FXML private VBox imgItems;
-    @FXML private ImageView imagePreview;
-    @FXML private TextField txtStartHour, txtStartMin, txtEndHour, txtEndMin;
-    @FXML private DatePicker dpStartDate, dpEndDate;
+    // ==================== FXML ====================
+
+    @FXML
+    private ComboBox<String> cbCategory;
+
+    @FXML
+    private TextField txtName;
+
+    @FXML
+    private TextField txtStartingBid;
+
+    @FXML
+    private TextField txtMinIncrement;
+
+    @FXML
+    private TextArea txtDescription;
+
+    @FXML
+    private VBox imgItems;
+
+    @FXML
+    private ImageView imagePreview;
+
+    @FXML
+    private TextField txtStartHour;
+
+    @FXML
+    private TextField txtStartMin;
+
+    @FXML
+    private TextField txtEndHour;
+
+    @FXML
+    private TextField txtEndMin;
+
+    @FXML
+    private DatePicker dpStartDate;
+
+    @FXML
+    private DatePicker dpEndDate;
+
+    // ==================== INIT ====================
 
     @FXML
     public void initialize() {
 
-        User currentUser =
-                UserSession.getCurrentUser();
+        updateUserRole(Role.SELLER);
 
-        if(currentUser != null){
-            currentUser.setRole(Role.SELLER);
+        setupStage();
 
-            System.out.println(
-                    "[ROLE] "
-                            + currentUser.getUsername()
-                            + " -> SELLER"
-            );
-        }
+        setupImagePreview();
+    }
+
+    private void setupStage() {
 
         Platform.runLater(() -> {
-            if (txtName != null && txtName.getScene() != null) {
-                Stage stage =
-                        (Stage) txtName.getScene().getWindow();
 
-                ResponseHandler.setMainStage(stage);
+            if (txtName == null
+                    || txtName.getScene() == null) {
+                return;
             }
-        });
-        //đổi role nếu force close page (ấn X)
-        Platform.runLater(() -> {
-            Stage stage =
-                    (Stage) txtName.getScene().getWindow();
 
-            stage.addEventHandler(
-                    javafx.stage.WindowEvent.WINDOW_CLOSE_REQUEST,
+            Stage stage =
+                    (Stage) txtName
+                            .getScene()
+                            .getWindow();
+
+            ResponseHandler.setMainStage(stage);
+
+            stage.setOnCloseRequest(
                     e -> resetRoleToBidder()
             );
         });
-        double radius = 20;
-        Rectangle clip = new Rectangle(500, 360);
-        clip.setArcWidth(radius * 2);
-        clip.setArcHeight(radius * 2);
+    }
+
+    private void setupImagePreview() {
+
+        Rectangle clip =
+                new Rectangle(500, 360);
+
+        clip.setArcWidth(
+                IMAGE_RADIUS * 2
+        );
+
+        clip.setArcHeight(
+                IMAGE_RADIUS * 2
+        );
+
         imagePreview.setClip(clip);
     }
 
+    // ==================== CREATE ====================
+
     @FXML
-    private void handleCreate(ActionEvent event) {
+    private void handleCreate(
+            ActionEvent event
+    ) {
+
         try {
-            // --- VALIDATION ---
-            if (txtName.getText().trim().isEmpty() || txtStartingBid.getText().isEmpty() ||
-                    dpStartDate.getValue() == null || dpEndDate.getValue() == null ||
-                    cbCategory.getValue() == null) {
-                showError("Please fill in all information and select a category!");
+
+            if (!validateInput()) {
                 return;
             }
 
-            // --- UPLOAD ẢNH LÊN CLOUDINARY ---
-            List<String> cloudinaryUrls = new ArrayList<>();
-            if (imageFiles.isEmpty()) {
-                showError("Please upload at least one image!");
+            List<String> imageUrls =
+                    uploadImages();
+
+            if (imageUrls == null) {
                 return;
             }
 
-            for (File file : imageFiles) {
-                String url = client.util.CloudinaryUploader.upload(file);
-                if (url != null) {
-                    cloudinaryUrls.add(url);
-                } else {
-                    showError("Failed to upload image: " + file.getName());
-                    return;
-                }
-            }
+            Auction auction =
+                    createAuction(imageUrls);
 
-            // --- 2. DATA CLEANING & TIME ---
-            String cleanName = txtName.getText().replace("|", "-").replace(";", ",");
-            String cleanDesc = txtDescription.getText().replace("|", "-").replace(";", ",").replace("\n", " ");
+            client.sendCreate(auction);
 
-            int startH = txtStartHour.getText().isEmpty() ? 0 : Integer.parseInt(txtStartHour.getText());
-            int startM = txtStartMin.getText().isEmpty() ? 0 : Integer.parseInt(txtStartMin.getText());
-            LocalDateTime startDateTime = dpStartDate.getValue().atTime(startH, startM);
-            if (!startDateTime.isAfter(LocalDateTime.now())) {
-                showError("Start time must be in the future (after current time)!");
-                return;
-            }
+            resetRoleToBidder();
 
-            int endH = txtEndHour.getText().isEmpty() ? 0 : Integer.parseInt(txtEndHour.getText());
-            int endM = txtEndMin.getText().isEmpty() ? 0 : Integer.parseInt(txtEndMin.getText());
-            LocalDateTime endDateTime = dpEndDate.getValue().atTime(endH, endM);
-            if (!endDateTime.isAfter(startDateTime)) {
-                showError("End time must be after start time!");
-                return;
-            }
-
-            // --- 3. MAP ITEM & AUCTION ---
-            Item item = new Item();
-            item.setItem_id("ITM" + UUID.randomUUID().toString().substring(0, 8));
-            item.setName(cleanName);
-            item.setDescription(cleanDesc);
-
-            try {
-                item.setCategory(Category.valueOf(cbCategory.getValue().toUpperCase()));
-            } catch (Exception e) {
-                item.setCategory(Category.OTHER);
-            }
-
-            item.setImages(cloudinaryUrls);
-
-            Auction newAuction = new Auction();
-            newAuction.setAuction_id("AUC" + UUID.randomUUID().toString().substring(0, 8));
-            newAuction.setItem(item);
-            newAuction.setCurrentPrice(new java.math.BigDecimal(txtStartingBid.getText()));
-            newAuction.setMinIncrement(new java.math.BigDecimal(txtMinIncrement.getText()));
-            newAuction.setStartTime(startDateTime);
-            newAuction.setEndTime(endDateTime);
-
-            // --- 4. SEND TO SERVER ---
-            ClientSocket socket = ClientSocket.getInstance();
-            if (socket != null) {
-                socket.sendCreate(newAuction);
-
-                resetRoleToBidder();
-
-                switchScene(
-                        (Stage)((Node)event.getSource()).getScene().getWindow(),
-                        "/fxml/HomePage.fxml",
-                        "Home Page"
-                );
-            } else {
-                showError("Connection Error: Not connected to server!");
-            }
+            navigateHome(event);
 
         } catch (NumberFormatException e) {
-            showError("Invalid input: Price and time must be numeric values!");
+
+            showError(
+                    "Price and time must be numeric values."
+            );
+
         } catch (Exception e) {
-            showError("System Error: " + e.getMessage());
-        }
-    }
 
-
-    @FXML
-    private void handleCancel(ActionEvent event) {
-
-        resetRoleToBidder();
-
-        User currentUser =
-                UserSession.getCurrentUser();
-
-        if(currentUser != null){
-            System.out.println(
-                    "[ROLE] User "
-                            + currentUser.getUsername()
-                            + " reverted role to BIDDER"
-            );
-        }
-
-        Stage stage =
-                (Stage) ((Node) event.getSource())
-                        .getScene()
-                        .getWindow();
-
-        switchScene(stage,
-                "/fxml/HomePage.fxml",
-                "Auction Home");
-    }
-
-    private void resetRoleToBidder() {
-        User currentUser = UserSession.getCurrentUser();
-
-        if (currentUser != null) {
-            currentUser.setRole(Role.BIDDER);
-
-            System.out.println(
-                    "[ROLE] "
-                            + currentUser.getUsername()
-                            + " -> BIDDER"
+            showError(
+                    "System Error: "
+                            + e.getMessage()
             );
         }
     }
 
-    // --- HÀM XỬ LÝ ẢNH ---
+    // ==================== VALIDATION ====================
+
+    private boolean validateInput() {
+
+        if (txtName.getText().trim().isEmpty()
+                || txtStartingBid.getText().trim().isEmpty()
+                || cbCategory.getValue() == null
+                || dpStartDate.getValue() == null
+                || dpEndDate.getValue() == null) {
+
+            showError(
+                    "Please fill in all required fields."
+            );
+
+            return false;
+        }
+
+        if (imageFiles.isEmpty()) {
+
+            showError(
+                    "Please upload at least one image."
+            );
+
+            return false;
+        }
+
+        LocalDateTime start =
+                getStartDateTime();
+
+        LocalDateTime end =
+                getEndDateTime();
+
+        if (!start.isAfter(LocalDateTime.now())) {
+
+            showError(
+                    "Start time must be in the future."
+            );
+
+            return false;
+        }
+
+        if (!end.isAfter(start)) {
+
+            showError(
+                    "End time must be after start time."
+            );
+
+            return false;
+        }
+
+        return true;
+    }
+
+    // ==================== CREATE AUCTION ====================
+
+    private Auction createAuction(List<String> imageUrls) {
+        Item item = createItem(imageUrls);
+        Auction auction = new Auction();
+        auction.setAuction_id(
+                "AUC"
+                        + UUID.randomUUID()
+                        .toString()
+                        .substring(0, 8)
+        );
+
+        auction.setItem(item);
+        auction.setCurrentPrice(
+                new BigDecimal(
+                        txtStartingBid.getText()
+                )
+        );
+        auction.setMinIncrement(
+                new BigDecimal(
+                        txtMinIncrement.getText()
+                )
+        );
+        auction.setStartTime(getStartDateTime());
+        auction.setEndTime(getEndDateTime());
+        return auction;
+    }
+
+    private Item createItem(List<String> imageUrls) {
+        Item item = new Item();
+        item.setItem_id(
+                "ITM"
+                        + UUID.randomUUID()
+                        .toString()
+                        .substring(0, 8)
+        );
+        item.setName(sanitize(txtName.getText()));
+        item.setDescription(sanitize(txtDescription.getText()));
+        item.setCategory(parseCategory());
+        item.setImages(imageUrls);
+        return item;
+    }
+
+    // ==================== IMAGE UPLOAD ====================
+
+    private List<String> uploadImages() {
+        List<String> uploadedUrls =
+                new ArrayList<>();
+
+        for (File file : imageFiles) {
+            String url = CloudinaryUploader.upload(file);
+            if (url == null) {
+                showError(
+                        "Failed to upload image: "
+                                + file.getName()
+                );
+                return null;
+            }
+            uploadedUrls.add(url);
+        }
+        return uploadedUrls;
+    }
+
+    // ==================== IMAGE ====================
+
     @FXML
     private void handleUploadImages() {
 
-        FileChooser fileChooser = new FileChooser();
+        FileChooser chooser =
+                new FileChooser();
 
-        fileChooser.setTitle("Choose Images");
+        chooser.setTitle(
+                "Choose Images"
+        );
 
-        fileChooser.getExtensionFilters().add(
+        chooser.getExtensionFilters().add(
                 new FileChooser.ExtensionFilter(
                         "Image Files",
                         "*.png",
@@ -228,36 +314,40 @@ public class CreateAuctionController {
                 )
         );
 
-        List<File> files = fileChooser.showOpenMultipleDialog(imgItems.getScene().getWindow());
+        List<File> files =
+                chooser.showOpenMultipleDialog(
+                        imgItems.getScene()
+                                .getWindow()
+                );
 
-        if (files != null && !files.isEmpty()) {
-
-            imageFiles.clear();
-
-            imageFiles.addAll(files);
-
-            currentImageIndex = 0;
-
-            showImage(currentImageIndex);
-
-            imgItems.setVisible(false);
-
-            imagePreview.setOnMouseClicked(e -> handleUploadImages());
-
+        if (files == null || files.isEmpty()) {
+            return;
         }
+
+        imageFiles.clear();
+        imageFiles.addAll(files);
+        currentImageIndex = 0;
+        showImage(currentImageIndex);
+        imgItems.setVisible(false);
+        imagePreview.setOnMouseClicked(
+                e -> handleUploadImages()
+        );
     }
+
     private void showImage(int index) {
 
         if (imageFiles.isEmpty()) {
             return;
         }
-
-        Image image = new Image(
-                imageFiles.get(index).toURI().toString()
-        );
-
+        Image image =
+                new Image(
+                        imageFiles.get(index)
+                                .toURI()
+                                .toString()
+                );
         imagePreview.setImage(image);
     }
+
     @FXML
     private void showPreviousImage() {
 
@@ -268,24 +358,121 @@ public class CreateAuctionController {
         currentImageIndex--;
 
         if (currentImageIndex < 0) {
-            currentImageIndex = imageFiles.size() - 1;
+
+            currentImageIndex =
+                    imageFiles.size() - 1;
         }
 
         showImage(currentImageIndex);
     }
+
     @FXML
     private void showNextImage() {
-
         if (imageFiles.isEmpty()) {
             return;
         }
-
         currentImageIndex++;
-
         if (currentImageIndex >= imageFiles.size()) {
             currentImageIndex = 0;
         }
-
         showImage(currentImageIndex);
     }
+
+    // ==================== ROLE ====================
+    private void updateUserRole(Role role) {
+        User user = UserSession.getCurrentUser();
+        if (user == null) {
+            return;
+        }
+        user.setRole(role);
+        System.out.println(
+                "[ROLE] "
+                        + user.getUsername()
+                        + " -> "
+                        + role
+        );
+    }
+
+    private void resetRoleToBidder() {
+        updateUserRole(Role.BIDDER);
+    }
+
+    // ==================== UTIL ====================
+
+    private String sanitize(String text) {
+        return text
+                .replace("|", "-")
+                .replace(";", ",")
+                .replace("\n", " ");
+    }
+
+    private Category parseCategory() {
+        try {
+            return Category.valueOf(
+                    cbCategory.getValue()
+                            .toUpperCase()
+            );
+        } catch (Exception e) {
+            return Category.OTHER;
+        }
+    }
+
+    private LocalDateTime getStartDateTime() {
+        int hour =
+                txtStartHour.getText().isBlank()
+                        ? 0
+                        : Integer.parseInt(
+                        txtStartHour.getText()
+                );
+
+        int minute =
+                txtStartMin.getText().isBlank()
+                        ? 0
+                        : Integer.parseInt(
+                        txtStartMin.getText()
+                );
+
+        return dpStartDate
+                .getValue()
+                .atTime(hour, minute);
+    }
+
+    private LocalDateTime getEndDateTime() {
+        int hour =
+                txtEndHour.getText().isBlank()
+                        ? 0
+                        : Integer.parseInt(
+                        txtEndHour.getText()
+                );
+
+        int minute =
+                txtEndMin.getText().isBlank()
+                        ? 0
+                        : Integer.parseInt(
+                        txtEndMin.getText()
+                );
+
+        return dpEndDate
+                .getValue()
+                .atTime(hour, minute);
+    }
+
+    // ==================== NAVIGATION ====================
+
+    @FXML
+    private void handleCancel(ActionEvent event) {
+        resetRoleToBidder();
+        navigateHome(event);
+    }
+
+    private void navigateHome(ActionEvent event) {
+        NavigationUtils.switchScene(
+                (Stage) txtName
+                        .getScene()
+                        .getWindow(),
+                "/fxml/HomePage.fxml",
+                "Home Page"
+        );
+    }
 }
+

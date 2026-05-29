@@ -148,8 +148,7 @@ public class AuctionHandler {
     }
 
     public static void bidFailed(
-            String data,
-            Stage stage
+            String data
     ) {
 
         NavigationUtils.showError(
@@ -204,8 +203,7 @@ public class AuctionHandler {
     // ===== JOIN AUCTION =====
 
     public static void joinSuccess(
-            String data,
-            Stage stage
+            String data
     ) {
 
         LiveAuctionController ctrl =
@@ -220,8 +218,7 @@ public class AuctionHandler {
     }
 
     public static void joinFailed(
-            String data,
-            Stage stage
+            String data
     ) {
 
         NavigationUtils.showError(
@@ -279,8 +276,7 @@ public class AuctionHandler {
     }
 
     public static void deleteFailed(
-            String data,
-            Stage stage
+            String data
     ) {
 
         NavigationUtils.showError(

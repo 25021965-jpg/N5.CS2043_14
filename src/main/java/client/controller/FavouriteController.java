@@ -2,78 +2,119 @@ package client.controller;
 
 import client.network.ClientSocket;
 import client.network.response.parser.AuctionParser;
+import client.util.NavigationUtils;
 import client.util.TextUtils;
 
-import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-
 import javafx.scene.Parent;
-import javafx.scene.control.*;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
 import javafx.scene.layout.FlowPane;
 
 import model.Auction;
+import model.Category;
 import model.User;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class FavouriteController implements UserDataReceiver {
+public class FavouriteController
+        extends BaseController
+        implements UserDataReceiver {
 
-    private ClientSocket client;
-    private User currentUser;
-
-    private final List<Auction> originalAuctions = new ArrayList<>();
-
-    @FXML private FlowPane favouriteListContainer;
-    @FXML private ComboBox<String> statusFilterComboBox;
-    @FXML private ComboBox<String> categoryFilterComboBox;
-
-    // ================= SINGLETON =================
     private static FavouriteController instance;
 
     public static FavouriteController getInstance() {
         return instance;
     }
 
+    private static final List<String> STATUS_FILTERS = List.of(
+            "All",
+            "Active",
+            "Upcoming",
+            "Ended",
+            "Cancelled"
+    );
+
+    private final List<Auction> originalAuctions =
+            new ArrayList<>();
+
+    @FXML private FlowPane favouriteListContainer;
+    @FXML private ComboBox<String> statusFilterComboBox;
+    @FXML private ComboBox<String> categoryFilterComboBox;
+
+    // ==================== INIT ====================
     @FXML
     public void initialize() {
         instance = this;
         System.out.println("Favourite Page Loaded");
-
         setupStatusFilter();
         setupCategoryFilter();
-
-        Platform.runLater(this::loadFavourites);
     }
 
+    // ==================== CLIENT ====================
     @Override
     public void setClient(ClientSocket client) {
-        this.client = client;
-    }
 
-    @Override
-    public void setUser(User user) {
-        this.currentUser = user;
-    }
+        super.setClient(client);
 
-    public void loadFavourites() {
         if (client == null) {
-            System.err.println("ClientSocket is null");
             return;
         }
 
+        client.setMessageListener(msg -> {
+
+            if (msg.startsWith(
+                    "LIST_FAVOURITES_SUCCESS"
+            ) || msg.equals(
+                    "LIST_FAVOURITES_EMPTY"
+            )) {
+
+                renderFavourite(msg);
+            }
+        });
+
+        loadFavourites();
+    }
+
+    // ==================== USER ====================
+    @Override
+    public void setUser(User user) {}
+
+    // ==================== LOAD ====================
+
+    public void loadFavourites() {
         client.sendMessage("LIST_FAVOURITES");
     }
 
-    public void renderFavourite(String response) {
-        Platform.runLater(() -> {
+    public void reloadFavourites() {
+        loadFavourites();
+    }
 
-            favouriteListContainer.getChildren().clear();
+    // ==================== RENDER ====================
+
+    public void renderFavourite(
+            String response
+    ) {
+
+        runUI(() -> {
+
+            favouriteListContainer
+                    .getChildren()
+                    .clear();
+
             originalAuctions.clear();
 
-            if (response == null || response.equals("LIST_FAVOURITES_EMPTY")) {
-                favouriteListContainer.getChildren().add(new Label("No favourite items"));
+            if (response == null
+                    || response.equals(
+                    "LIST_FAVOURITES_EMPTY"
+            )) {
+
+                showEmptyMessage(
+                        "No favourite items"
+                );
+
                 return;
             }
 
@@ -81,144 +122,256 @@ public class FavouriteController implements UserDataReceiver {
 
                 String rawData =
                         response.substring(
-                                "LIST_FAVOURITES_SUCCESS|".length()
+                                "LIST_FAVOURITES_SUCCESS|"
+                                        .length()
                         );
 
                 List<Auction> auctions =
-                        AuctionParser.parseList(rawData);
+                        AuctionParser.parseList(
+                                rawData
+                        );
 
                 System.out.println(
-                        "Favourite count: " + auctions.size()
+                        "Favourite count: "
+                                + auctions.size()
                 );
 
-                originalAuctions.addAll(auctions);
+                originalAuctions.addAll(
+                        auctions
+                );
 
-                for (Auction auction : auctions) {
-                    addAuctionCard(auction);
-                }
+                refreshFavouriteList(
+                        auctions
+                );
 
             } catch (Exception e) {
+
                 e.printStackTrace();
+
+                showError(
+                        "Failed to load favourites."
+                );
             }
         });
     }
 
-    public void removeItemFromUI(String auctionId) {
-
-        Platform.runLater(() -> {
-
-            if (favouriteListContainer == null) return;
-
-            favouriteListContainer.getChildren().removeIf(node -> {
-                Object userData = node.getUserData();
-                return auctionId != null && auctionId.equals(userData);
-            });
-        });
-    }
-
-    public void reloadFavourites() {
-        loadFavourites();
-    }
+    // ==================== FILTER ====================
 
     private void setupStatusFilter() {
 
-        statusFilterComboBox.getItems().addAll(
-                "All",
-                TextUtils.toTitleCase("ACTIVE"),
-                TextUtils.toTitleCase("UPCOMING"),
-                TextUtils.toTitleCase("ENDED"),
-                TextUtils.toTitleCase("CANCELLED")
-        );
+        statusFilterComboBox
+                .getItems()
+                .addAll(STATUS_FILTERS);
 
-        statusFilterComboBox.setValue("All");
+        statusFilterComboBox
+                .setValue("All");
 
-        statusFilterComboBox.setOnAction(e -> filterFavourite());
+        statusFilterComboBox
+                .setOnAction(
+                        e -> filterFavourite()
+                );
     }
 
     private void setupCategoryFilter() {
 
-        categoryFilterComboBox.getItems().addAll(
-                "All",
-                TextUtils.toTitleCase("ACCESSORIES"),
-                TextUtils.toTitleCase("COLLECTIBLES"),
-                TextUtils.toTitleCase("ELECTRONICS"),
-                TextUtils.toTitleCase("FASHION"),
-                TextUtils.toTitleCase("HOME_APPLIANCES"),
-                TextUtils.toTitleCase("VEHICLES"),
-                TextUtils.toTitleCase("OTHER")
-        );
+        categoryFilterComboBox
+                .getItems()
+                .add("All");
 
-        categoryFilterComboBox.setValue("All");
+        for (Category category : Category.values()) {
 
-        categoryFilterComboBox.setOnAction(e -> filterFavourite());
+            categoryFilterComboBox
+                    .getItems()
+                    .add(
+                            TextUtils.toTitleCase(
+                                    category.name()
+                            )
+                    );
+        }
+
+        categoryFilterComboBox
+                .setValue("All");
+
+        categoryFilterComboBox
+                .setOnAction(
+                        e -> filterFavourite()
+                );
     }
 
     private void filterFavourite() {
 
-        if (favouriteListContainer == null) return;
+        String selectedStatus =
+                statusFilterComboBox.getValue();
 
-        favouriteListContainer.getChildren().clear();
+        String selectedCategory =
+                categoryFilterComboBox.getValue();
 
-        String selectedStatus = statusFilterComboBox.getValue();
-        String selectedCategory = categoryFilterComboBox.getValue();
+        List<Auction> filtered =
+                originalAuctions.stream()
 
-        for (Auction auction : originalAuctions) {
+                        .filter(auction ->
+                                matchesStatus(
+                                        auction,
+                                        selectedStatus
+                                )
+                        )
 
-            boolean statusMatch = true;
-            boolean categoryMatch = true;
+                        .filter(auction ->
+                                matchesCategory(
+                                        auction,
+                                        selectedCategory
+                                )
+                        )
 
-            if (selectedStatus != null && !selectedStatus.equalsIgnoreCase("All")) {
+                        .toList();
 
-                String auctionStatus =
-                        TextUtils.toTitleCase(
-                                auction.getStatus().name()
-                        );
+        refreshFavouriteList(filtered);
+    }
 
-                statusMatch = auctionStatus.equalsIgnoreCase(selectedStatus);
-            }
+    private boolean matchesStatus(
+            Auction auction,
+            String selectedStatus
+    ) {
 
-            if (selectedCategory != null && !selectedCategory.equalsIgnoreCase("All")) {
+        if (selectedStatus == null
+                || selectedStatus.equalsIgnoreCase(
+                "All"
+        )) {
 
-                String category =
-                        TextUtils.toTitleCase(
-                                auction.getItem().getCategory().name()
-                        );
-
-                categoryMatch = category.equalsIgnoreCase(selectedCategory);
-            }
-
-            if (statusMatch && categoryMatch) {
-                addAuctionCard(auction);
-            }
+            return true;
         }
 
-        if (favouriteListContainer.getChildren().isEmpty()) {
-            favouriteListContainer.getChildren().add(
-                    new Label("No matching favourite auctions")
+        return TextUtils.toTitleCase(
+                auction.getStatus().name()
+        ).equalsIgnoreCase(
+                selectedStatus
+        );
+    }
+
+    private boolean matchesCategory(
+            Auction auction,
+            String selectedCategory
+    ) {
+
+        if (selectedCategory == null
+                || selectedCategory.equalsIgnoreCase(
+                "All"
+        )) {
+
+            return true;
+        }
+
+        return TextUtils.toTitleCase(
+                auction.getItem()
+                        .getCategory()
+                        .name()
+        ).equalsIgnoreCase(
+                selectedCategory
+        );
+    }
+
+    // ==================== REFRESH ====================
+
+    private void refreshFavouriteList(
+            List<Auction> auctions
+    ) {
+
+        favouriteListContainer
+                .getChildren()
+                .clear();
+
+        if (auctions.isEmpty()) {
+
+            showEmptyMessage(
+                    "No matching favourite auctions"
             );
+
+            return;
+        }
+
+        for (Auction auction : auctions) {
+
+            Parent card =
+                    createAuctionCard(
+                            auction
+                    );
+
+            if (card != null) {
+
+                card.setUserData(
+                        auction.getAuction_id()
+                );
+
+                favouriteListContainer
+                        .getChildren()
+                        .add(card);
+            }
         }
     }
 
-    private void addAuctionCard(Auction auction) {
+    // ==================== CARD ====================
+
+    private Parent createAuctionCard(
+            Auction auction
+    ) {
 
         try {
-
-            FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/fxml/itemsCard-view.fxml")
-            );
-
+            FXMLLoader loader = NavigationUtils.loadFXML("/fxml/itemsCard-view.fxml");
             Parent card = loader.load();
 
-            ItemCardController controller = loader.getController();
+            ItemCardController controller =
+                    loader.getController();
 
             controller.setClient(client);
+
             controller.setRoot(card);
+
             controller.setData(auction);
 
-            favouriteListContainer.getChildren().add(card);
+            return card;
 
         } catch (Exception e) {
+
             e.printStackTrace();
+
+            return null;
         }
     }
+
+    // ==================== REMOVE ====================
+
+    public void removeItemFromUI(
+            String auctionId
+    ) {
+
+        runUI(() -> {
+
+            favouriteListContainer
+                    .getChildren()
+                    .removeIf(node -> {
+
+                        Object userData =
+                                node.getUserData();
+
+                        return auctionId != null
+                                && auctionId.equals(
+                                userData
+                        );
+                    });
+        });
+    }
+
+    // ==================== EMPTY ====================
+
+    private void showEmptyMessage(
+            String message
+    ) {
+
+        favouriteListContainer
+                .getChildren()
+                .add(
+                        new Label(message)
+                );
+    }
 }
+

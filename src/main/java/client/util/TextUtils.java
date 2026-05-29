@@ -1,17 +1,37 @@
 package client.util;
 
+import java.math.BigDecimal;
+import java.text.NumberFormat;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 public class TextUtils {
 
-    // ===== Title Case =====
-    // pending_approval -> Pending Approval
-    // nguyen van a -> Nguyen Van A
-    public static String toTitleCase(String input) {
+    private static final String EMPTY_TEXT = "—";
+
+    private static final DateTimeFormatter DATE_TIME_FORMATTER =
+            DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+    private static final NumberFormat USD_FORMAT =
+            NumberFormat.getCurrencyInstance(
+                    Locale.US
+            );
+
+    private TextUtils() {
+    }
+
+    // ==================== TITLE CASE ====================
+
+    public static String toTitleCase(
+            String input
+    ) {
 
         if (input == null || input.isBlank()) {
-            return "—";
+            return EMPTY_TEXT;
         }
 
         return Arrays.stream(
@@ -31,34 +51,52 @@ public class TextUtils {
                 .collect(Collectors.joining(" "));
     }
 
-    // ===== Safe Text =====
-    // null -> —
-    public static String safeText(String input) {
+    // ==================== SAFE TEXT ====================
 
-        return (input == null || input.isBlank())
-                ? "—"
-                : input.trim();
+    public static String fallback(
+            String value,
+            String fallback
+    ) {
+
+        return (value == null || value.isBlank())
+                ? fallback
+                : value.trim();
     }
 
-    // ===== Category Format =====
-    // HOME_APPLIANCES -> Category: Home Appliances
-    public static String formatCategory(String input) {
+    public static String safeText(
+            String value
+    ) {
 
-        return "Category: " + toTitleCase(input);
+        return fallback(
+                value,
+                EMPTY_TEXT
+        );
     }
 
-    // ===== Label Prefix =====
-    // Email: abc@gmail.com
+    // ==================== CATEGORY ====================
+
+    public static String formatCategory(
+            String input
+    ) {
+
+        return "Category: "
+                + toTitleCase(input);
+    }
+
+    // ==================== LABEL ====================
+
     public static String withLabel(
             String label,
             String value
     ) {
 
-        return label + ": " + safeText(value);
+        return label
+                + ": "
+                + safeText(value);
     }
 
-    // ===== Truncate =====
-    // Very long text -> Very long...
+    // ==================== TRUNCATE ====================
+
     public static String truncate(
             String text,
             int maxLength
@@ -67,6 +105,8 @@ public class TextUtils {
         if (text == null || text.isBlank()) {
             return "";
         }
+
+        text = text.trim();
 
         if (text.length() <= maxLength) {
             return text;
@@ -78,8 +118,8 @@ public class TextUtils {
         ) + "...";
     }
 
-    // ===== Username Format =====
-    // nguyenvana -> @nguyenvana
+    // ==================== USERNAME ====================
+
     public static String formatUsername(
             String username
     ) {
@@ -93,18 +133,22 @@ public class TextUtils {
                 : "@" + username;
     }
 
-    // ===== Hide Email =====
-    // abcdef@gmail.com -> ab****@gmail.com
+    // ==================== EMAIL ====================
+
     public static String hideEmail(
             String email
     ) {
 
         if (email == null || !email.contains("@")) {
-            return "—";
+            return EMPTY_TEXT;
         }
 
         String[] parts =
                 email.split("@");
+
+        if (parts.length != 2) {
+            return EMPTY_TEXT;
+        }
 
         String name =
                 parts[0];
@@ -118,9 +162,8 @@ public class TextUtils {
                 + parts[1];
     }
 
-    // ===== Enum Format =====
-    // ACTIVE -> Active
-    // HOME_APPLIANCES -> Home Appliances
+    // ==================== ENUM ====================
+
     public static String formatEnum(
             String value
     ) {
@@ -128,45 +171,80 @@ public class TextUtils {
         return toTitleCase(value);
     }
 
-    // ===== Empty Fallback =====
-    // "" -> No Data
-    public static String fallback(
-            String value,
-            String fallback
-    ) {
-
-        return (value == null || value.isBlank())
-                ? fallback
-                : value;
-    }
-
-    // ===== First Letter Only =====
-    // nguyen -> Nguyen
-    public static String capitalizeFirst(
-            String text
-    ) {
-
+    // ==================== CAPITALIZE ====================
+    public static String capitalizeFirst(String text) {
         if (text == null || text.isBlank()) {
             return "";
         }
 
         text = text.trim();
-
         return Character.toUpperCase(text.charAt(0))
                 + text.substring(1).toLowerCase();
     }
 
-    // ===== Remove Extra Spaces =====
-    // "  nguyen    van   a  " -> "nguyen van a"
-    public static String normalizeSpaces(
-            String text
-    ) {
-
+    // ==================== NORMALIZE ====================
+    public static String normalizeSpaces(String text) {
         if (text == null) {
             return "";
         }
-
         return text.trim()
                 .replaceAll("\\s+", " ");
     }
+
+    // ==================== CURRENCY ====================
+    public static String formatCurrency(BigDecimal amount) {
+        if (amount == null) {
+            return "$0.00";
+        }
+        return USD_FORMAT.format(amount);
+    }
+
+    // ==================== DATE TIME ====================
+    public static String formatDateTime(LocalDateTime time) {
+        if (time == null) {
+            return EMPTY_TEXT;
+        }
+
+        return time.format(
+                DATE_TIME_FORMATTER
+        );
+    }
+
+    // ==================== REMAINING TIME ====================
+
+    public static String formatRemainingTime(
+            Duration duration
+    ) {
+
+        if (duration == null || duration.isNegative()) {
+            return "Ended";
+        }
+
+        long hours =
+                duration.toHours();
+
+        long minutes =
+                duration.toMinutesPart();
+
+        long seconds =
+                duration.toSecondsPart();
+
+        return String.format(
+                "%02dh %02dm %02ds",
+                hours,
+                minutes,
+                seconds
+        );
+    }
+
+    // ==================== BID INCREMENT ====================
+
+    public static String formatBidIncrement(
+            BigDecimal amount
+    ) {
+
+        return "+ "
+                + formatCurrency(amount);
+    }
 }
+

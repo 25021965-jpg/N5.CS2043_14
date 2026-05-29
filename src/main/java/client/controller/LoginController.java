@@ -2,18 +2,17 @@ package client.controller;
 
 import client.manager.UserSession;
 import client.network.ClientSocket;
-import client.network.response.ResponseHandler;
+import client.util.NavigationUtils;
+
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
+
 import model.Role;
 import model.User;
 
@@ -21,121 +20,138 @@ import java.math.BigDecimal;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static client.util.NavigationUtils.switchScene;
+public class LoginController extends BaseController {
 
-public class LoginController {
+    private static final Logger LOGGER =
+            Logger.getLogger(LoginController.class.getName());
 
     @FXML private TextField userField;
     @FXML private PasswordField passField;
+    @FXML private Button loginBtn;
+    @FXML private Hyperlink forgotPasswordLink;
 
-    private ClientSocket client;
-    private static final Logger LOGGER = Logger.getLogger(LoginController.class.getName());
-
-    public void setClient(ClientSocket client) {
-        this.client = client;
+    @FXML
+    private void underlineLink() {
+        forgotPasswordLink.setUnderline(true);
     }
+
+    @FXML
+    private void removeUnderlineLink() {
+        forgotPasswordLink.setUnderline(false);
+    }
+
+    private final ClientSocket client =
+            ClientSocket.getInstance();
+
+    // ==================== INITIALIZE ====================
 
     @FXML
     public void initialize() {
-        LOGGER.info("LoginController initialize() START");
+
+        LOGGER.info("LoginController initialized");
+
         try {
+
             if (client == null) {
-                client = ClientSocket.getInstance();
+                showError("Cannot connect to server.");
+                return;
             }
-            LOGGER.info("ClientSocket created");
 
             client.setMessageListener(this::handleServerMessage);
 
+            passField.setOnAction(e -> handleLogin());
+            loginBtn.setOnMouseEntered(e ->
+                    loginBtn.setStyle("""
+                -fx-background-color: #c8a432;
+                -fx-text-fill: black;
+                -fx-background-radius: 8;
+                -fx-cursor: hand;
+                -fx-padding: 10;
+                """)
+            );
+
+            loginBtn.setOnMouseExited(e ->
+                    loginBtn.setStyle("""
+                -fx-background-color: #D4AF37;
+                -fx-text-fill: black;
+                -fx-background-radius: 8;
+                -fx-cursor: hand;
+                -fx-padding: 10;
+                """)
+            );
+
+            loginBtn.setOnMousePressed(e ->
+                    loginBtn.setStyle("""
+                -fx-background-color: #b8931f;
+                -fx-text-fill: black;
+                -fx-background-radius: 8;
+                -fx-cursor: hand;
+                -fx-padding: 10;
+                """)
+            );
+
+            loginBtn.setOnMouseReleased(e ->
+                    loginBtn.setStyle("""
+                -fx-background-color: #c8a432;
+                -fx-text-fill: black;
+                -fx-background-radius: 8;
+                -fx-cursor: hand;
+                -fx-padding: 10;
+                """)
+            );
             Platform.runLater(() -> {
-                if (userField.getScene() != null) {
-                    Stage stage = (Stage) userField.getScene().getWindow();
-                    ResponseHandler.setMainStage(stage);
+                Stage stage = getStage(userField);
+                if (stage != null) {
+                    NavigationUtils.setMainStage(stage);
                 }
             });
 
-            LOGGER.info("Connected to server successfully");
-
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Failed to connect to server", e);
-            showError("Cannot connect to server: " + e.getMessage());
+
+            LOGGER.log(
+                    Level.SEVERE,
+                    "Login initialize failed",
+                    e
+            );
+
+            showError(
+                    "Cannot connect to server: "
+                            + e.getMessage()
+            );
         }
-        LOGGER.info("LoginController initialize() END");
     }
 
-    // ==================== XỬ LÝ PHẢN HỒI TỪ SERVER ====================
-    private void handleServerMessage(String msg) {
-        Platform.runLater(() -> {
-            System.out.println("[LoginController] Received: " + msg);
-
-            if (msg.startsWith("LOGIN_SUCCESS")) {
-                // server gửi: LOGIN_SUCCESS|userId|fullname|username|email|dob|role|balance
-                String[] parts = msg.split("\\|");
-                User user = null;
-                if (parts.length >= 5) {
-                    user = new User();
-                    user.setUser_id(parts[1]);
-                    user.setFullname(parts[2]);
-                    user.setUsername(parts[3]);
-                    user.setEmail(parts[4]);
-
-                    if (parts.length >= 6) user.setDob(parts[5]);
-
-                    // ← FIX: parts[6] = role
-                    if (parts.length >= 7) {
-                        try {
-                            user.setRole(Role.valueOf(parts[6].trim().toUpperCase()));
-                        } catch (Exception e) {
-                            user.setRole(Role.BIDDER);
-                        }
-                    }
-
-                    if (parts.length >= 8) {
-                        try {
-                            user.setBalance(new BigDecimal(parts[7]));
-                        } catch (Exception e) {
-                            user.setBalance(BigDecimal.ZERO);
-                        }
-                    }
-                    user.setPassword(passField.getText());
-                }
-
-                if (user != null) {
-                    UserSession.setCurrentUser(user);
-                }
-
-                // ← FIX: check role trước khi navigate
-                if (user != null && user.getRole() == Role.ADMIN) {
-                    goToAdminPage();
-                } else {
-                    goToHomePage();
-                }
-
-            } else if (msg.startsWith("LOGIN_FAILED")) {
-                showError("Wrong username or password!");
-                passField.clear();
-                passField.requestFocus();
-            }
-        });
-    }
+    // ==================== LOGIN ====================
 
     @FXML
     private void handleLogin() {
+        loginBtn.setStyle("""
+        -fx-background-color: #b8931f;
+        -fx-text-fill: black;
+        -fx-background-radius: 8;
+        -fx-cursor: hand;
+        -fx-padding: 10;
+        """);
+
         if (client == null) {
-            showError("Not connected to server");
+            showError("Server not connected.");
             return;
         }
 
-        String username = userField.getText().trim();
-        String password = passField.getText();
+        String username =
+                safeTrim(userField.getText());
 
-        if (username.isEmpty()) {
-            showError("Enter username!");
+        String password =
+                safeTrim(passField.getText());
+
+        if (username.isBlank()) {
+            showError("Please enter username.");
             userField.requestFocus();
             return;
         }
 
-        if (password.isEmpty()) {
-            showError("Enter password!");
+        if (password.isBlank()) {
+            showError("Please enter password.");
             passField.requestFocus();
             return;
         }
@@ -143,73 +159,165 @@ public class LoginController {
         client.sendLogin(username, password);
     }
 
-    private void showError(String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Error");
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+    // ==================== SERVER RESPONSE ====================
+
+    private void handleServerMessage(String msg) {
+
+        Platform.runLater(() -> {
+
+            LOGGER.info(
+                    "[LoginController] Received: " + msg
+            );
+
+            if (msg.startsWith("LOGIN_SUCCESS")) {
+
+                User user =
+                        parseLoginUser(msg);
+
+                if (user == null) {
+                    showError("Failed to parse user data.");
+                    return;
+                }
+
+                UserSession.setCurrentUser(user);
+
+                if (user.getRole() == Role.ADMIN) {
+                    openAdminPage();
+                } else {
+                    openHomePage();
+                }
+
+                return;
+            }
+
+            if (msg.startsWith("LOGIN_FAILED")) {
+
+                loginBtn.setStyle("""
+        -fx-background-color: #D4AF37;
+        -fx-text-fill: black;
+        -fx-background-radius: 8;
+        -fx-cursor: hand;
+        -fx-padding: 10;
+        """);
+
+                showError("Wrong username or password.");
+
+                passField.clear();
+                passField.requestFocus();
+            }
+        });
     }
+
+    // ==================== PARSE USER ====================
+
+    private User parseLoginUser(String msg) {
+
+        try {
+
+            String[] parts =
+                    msg.split("\\|");
+
+            if (parts.length < 5) {
+                return null;
+            }
+
+            User user = new User();
+
+            user.setUser_id(parts[1]);
+            user.setFullname(parts[2]);
+            user.setUsername(parts[3]);
+            user.setEmail(parts[4]);
+
+            if (parts.length >= 6) {
+                user.setDob(parts[5]);
+            }
+
+            if (parts.length >= 7) {
+
+                try {
+
+                    user.setRole(
+                            Role.valueOf(
+                                    parts[6]
+                                            .trim()
+                                            .toUpperCase()
+                            )
+                    );
+
+                } catch (Exception e) {
+                    user.setRole(Role.BIDDER);
+                }
+            }
+
+            if (parts.length >= 8) {
+
+                try {
+
+                    user.setBalance(
+                            new BigDecimal(parts[7])
+                    );
+
+                } catch (Exception e) {
+                    user.setBalance(BigDecimal.ZERO);
+                }
+            }
+
+            user.setPassword(passField.getText());
+
+            return user;
+
+        } catch (Exception e) {
+
+            LOGGER.log(
+                    Level.SEVERE,
+                    "Parse login user failed",
+                    e
+            );
+
+            return null;
+        }
+    }
+
+    // ==================== NAVIGATION ====================
 
     @FXML
     private void goToRegister(ActionEvent event) {
-        try {
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            ResponseHandler.setMainStage(stage);
-            switchScene(stage, "/fxml/register-view.fxml", "Register");
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Cannot open register screen", e);
-            showError("Cannot open register screen!");
-        }
+
+        switchScene(
+                event,
+                "/fxml/register-view.fxml",
+                "Register"
+        );
     }
 
     @FXML
     private void goforgotPass(ActionEvent event) {
-        try {
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            ResponseHandler.setMainStage(stage);
-            switchScene(stage, "/fxml/forgotPass-view.fxml", "Forgot Password");
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Cannot open forgot pass screen", e);
-            showError("Cannot open forgot password screen!");
-        }
+
+        switchScene(
+                event,
+                "/fxml/forgotPass-view.fxml",
+                "Forgot Password"
+        );
     }
 
-    // ==================== CHUYỂN SANG HOMEPAGE ====================
-    private void goToHomePage() {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/HomePage.fxml"));
-            Parent root = loader.load();
-
-            Stage currentStage = (Stage) userField.getScene().getWindow();
-            ResponseHandler.setMainStage(currentStage);
-
-            currentStage.setScene(new Scene(root));
-            currentStage.setTitle("Auction System");
-            currentStage.show();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            showError("Cannot open homepage!");
-        }
+    private void openHomePage() {
+        NavigationUtils.switchScene(
+                getStage(userField),
+                "/fxml/HomePage.fxml",
+                "Auction System",
+                client,
+                UserSession.getCurrentUser()
+        );
     }
 
-    // ==================== CHUYỂN SANG ADMIN PAGE ====================
-    private void goToAdminPage() {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/admin-view.fxml"));
-            Parent root = loader.load();
-
-            Stage currentStage = (Stage) userField.getScene().getWindow();
-            ResponseHandler.setMainStage(currentStage);
-
-            currentStage.setScene(new Scene(root));
-            currentStage.setTitle("Admin Dashboard");
-            currentStage.show();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            showError("Cannot open admin page!");
-        }
+    private void openAdminPage() {
+        NavigationUtils.switchScene(
+                getStage(userField),
+                "/fxml/admin-view.fxml",
+                "Admin Dashboard",
+                client,
+                UserSession.getCurrentUser()
+        );
     }
 }
+

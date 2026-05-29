@@ -1,218 +1,413 @@
 package client.controller;
 
 import client.network.ClientSocket;
+import client.util.NavigationUtils;
 import client.util.TextUtils;
+
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+
 import javafx.scene.control.Label;
+
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+
 import javafx.scene.input.MouseEvent;
+
 import javafx.scene.shape.Rectangle;
+
 import javafx.stage.Stage;
+
 import model.Auction;
 import model.Item;
 
 import java.io.File;
 import java.io.IOException;
+
 import java.net.URL;
+
 import java.text.NumberFormat;
+
 import java.time.format.DateTimeFormatter;
+
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-
 public class ItemCardController {
 
-    // ==================== FXML ====================
+    // ==================== CONSTANTS ====================
 
-    @FXML private ImageView imgProduct;
+    private static final double IMAGE_WIDTH = 235;
 
-    @FXML private Label lblName;
-    @FXML private Label lblCategory;
-    @FXML private Label lblStatus;
+    private static final double IMAGE_HEIGHT = 165;
 
-    @FXML private Label lblCurrentPrice;
-    @FXML private Label lblStep;
-    @FXML private Label lblEndTime;
-
-    @FXML
-    public void initialize() {
-        Rectangle clip = new Rectangle();
-        clip.setArcWidth(20);
-        clip.setArcHeight(20);
-
-        clip.widthProperty().bind(imgProduct.fitWidthProperty());
-        clip.heightProperty().bind(imgProduct.fitHeightProperty());
-
-        imgProduct.setClip(clip);
-
-        imgProduct.setPreserveRatio(false);
-        imgProduct.setSmooth(true);
-    }
-
-    // ==================== VARIABLES ====================
+    private static final String DEFAULT_STATUS_STYLE =
+            "-fx-text-fill:white;";
 
     private static final Map<String, Image> IMAGE_CACHE =
             new HashMap<>();
 
+    private static final NumberFormat MONEY_FORMAT =
+            NumberFormat.getCurrencyInstance(Locale.US);
+
+    private static final DateTimeFormatter TIME_FORMAT =
+            DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
+
+    // ==================== FXML ====================
+
+    @FXML
+    private ImageView imgProduct;
+
+    @FXML
+    private Label lblName;
+
+    @FXML
+    private Label lblCategory;
+
+    @FXML
+    private Label lblStatus;
+
+    @FXML
+    private Label lblCurrentPrice;
+
+    @FXML
+    private Label lblStep;
+
+    @FXML
+    private Label lblEndTime;
+
+    // ==================== VARIABLES ====================
+
     private Auction auction;
+
     private Parent root;
+
     private ClientSocket client;
 
+    // ==================== INITIALIZE ====================
+
+    @FXML
+    public void initialize() {
+
+        setupImageView();
+    }
+
+    private void setupImageView() {
+
+        Rectangle clip = new Rectangle();
+
+        clip.setArcWidth(20);
+
+        clip.setArcHeight(20);
+
+        clip.widthProperty().bind(
+                imgProduct.fitWidthProperty()
+        );
+
+        clip.heightProperty().bind(
+                imgProduct.fitHeightProperty()
+        );
+
+        imgProduct.setClip(clip);
+
+        imgProduct.setPreserveRatio(false);
+
+        imgProduct.setSmooth(true);
+    }
 
     // ==================== SETTERS ====================
 
-    public void setClient(ClientSocket client) {
+    public void setClient(
+            ClientSocket client
+    ) {
+
         this.client = client;
     }
 
-    public void setRoot(Parent root) {
+    public void setRoot(
+            Parent root
+    ) {
+
         this.root = root;
     }
 
     public Parent getRoot() {
+
         return root;
     }
 
-
     // ==================== LOAD DATA ====================
 
-    public void setData(Auction auction) {
+    public void setData(
+            Auction auction
+    ) {
 
         this.auction = auction;
 
-        if (auction == null || auction.getItem() == null)
+        if (auction == null
+                || auction.getItem() == null) {
+
             return;
-
-        Item item = auction.getItem();
-
-        NumberFormat moneyFormatter =
-                NumberFormat.getCurrencyInstance(Locale.US);
-
-
-        // ---------- NAME ----------
-        lblName.setText(item.getName());
-
-
-        // ---------- CATEGORY ----------
-        if (item.getCategory() != null) {
-            lblCategory.setText(
-                    TextUtils.formatCategory(item.getCategory().name())
-            );
-        } else {
-            lblCategory.setText("Category: —");
         }
 
+        Item item =
+                auction.getItem();
 
-        // ---------- STATUS ----------
-        if (auction.getStatus() != null) {
-            lblStatus.setText(
-                    TextUtils.withLabel("Status", TextUtils.toTitleCase(auction.getStatus().name()))
-            );
+        setupName(item);
 
-            switch (auction.getStatus()) {
-                case ACTIVE ->
-                        lblStatus.setStyle("-fx-text-fill:#7CFC00;");
-                case ENDED ->
-                        lblStatus.setStyle("-fx-text-fill:#ff4d4d;");
-                case PENDING_APPROVAL ->
-                        lblStatus.setStyle("-fx-text-fill:#facc15;");
-                default ->
-                        lblStatus.setStyle("-fx-text-fill:white;");
-            }
-        } else {
-            lblStatus.setText("Status: —");
-        }
+        setupCategory(item);
 
+        setupStatus();
 
-        // ---------- PRICE ----------
-        lblCurrentPrice.setText(
-                TextUtils.withLabel("Current Price", moneyFormatter.format(auction.getCurrentPrice()))
-        );
+        setupPrices();
 
-        lblStep.setText(
-                TextUtils.withLabel("Step", moneyFormatter.format(auction.getMinIncrement()))
-        );
+        setupEndTime();
 
-
-        // ---------- END TIME ----------
-        if (auction.getEndTime() != null) {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
-            lblEndTime.setText("End at: " + auction.getEndTime().format(formatter));
-        }
-
-
-        // ---------- IMAGE ----------
         loadImage(item);
     }
 
+    private void setupName(
+            Item item
+    ) {
+
+        lblName.setText(
+                TextUtils.safeText(
+                        item.getName()
+                )
+        );
+    }
+
+    private void setupCategory(
+            Item item
+    ) {
+
+        String categoryText =
+                item.getCategory() != null
+
+                        ? TextUtils.formatCategory(
+                        item.getCategory().name()
+                )
+
+                        : "Category: —";
+
+        lblCategory.setText(categoryText);
+    }
+
+    private void setupStatus() {
+
+        if (auction.getStatus() == null) {
+
+            lblStatus.setText("Status: —");
+
+            lblStatus.setStyle(DEFAULT_STATUS_STYLE);
+
+            return;
+        }
+
+        String status =
+                TextUtils.toTitleCase(
+                        auction.getStatus().name()
+                );
+
+        lblStatus.setText(
+                TextUtils.withLabel(
+                        "Status",
+                        status
+                )
+        );
+
+        lblStatus.setStyle(
+                getStatusStyle(
+                        auction.getStatus().name()
+                )
+        );
+    }
+
+    private String getStatusStyle(
+            String status
+    ) {
+
+        return switch (status) {
+
+            case "ACTIVE" ->
+                    "-fx-text-fill:#7CFC00;";
+
+            case "ENDED" ->
+                    "-fx-text-fill:#ff4d4d;";
+
+            case "PENDING_APPROVAL" ->
+                    "-fx-text-fill:#facc15;";
+
+            default ->
+                    DEFAULT_STATUS_STYLE;
+        };
+    }
+
+    private void setupPrices() {
+
+        lblCurrentPrice.setText(
+                TextUtils.withLabel(
+                        "Current Price",
+                        MONEY_FORMAT.format(
+                                auction.getCurrentPrice()
+                        )
+                )
+        );
+
+        lblStep.setText(
+                TextUtils.withLabel(
+                        "Step",
+                        MONEY_FORMAT.format(
+                                auction.getMinIncrement()
+                        )
+                )
+        );
+    }
+
+    private void setupEndTime() {
+
+        if (auction.getEndTime() == null) {
+
+            lblEndTime.setText(
+                    "End at: —"
+            );
+
+            return;
+        }
+
+        lblEndTime.setText(
+                "End at: "
+                        + auction.getEndTime()
+                        .format(TIME_FORMAT)
+        );
+    }
 
     // ==================== IMAGE ====================
 
-    private void loadImage(Item item) {
+    private void loadImage(
+            Item item
+    ) {
 
-        if (item.getImages() == null || item.getImages().isEmpty()) {
-            imgProduct.setImage(getFallbackImage());
+        if (item.getImages() == null
+                || item.getImages().isEmpty()) {
+
+            imgProduct.setImage(
+                    getFallbackImage()
+            );
+
             return;
         }
 
         try {
-            String imagePath = item.getImages().getFirst();
-            Image image = IMAGE_CACHE.get(imagePath);
+
+            String imagePath =
+                    item.getImages()
+                            .getFirst();
+
+            Image image =
+                    IMAGE_CACHE.get(imagePath);
 
             if (image == null) {
-                if (imagePath.startsWith("http")) {
-                    image = new Image(imagePath, 235, 165, false, true, true);
-                } else {
-                    File file = new File(imagePath);
-                    image = file.exists()
-                            ? new Image(file.toURI().toString(), 235, 165, false, true)
-                            : getFallbackImage();
-                }
-                IMAGE_CACHE.put(imagePath, image);
+
+                image =
+                        createImage(imagePath);
+
+                IMAGE_CACHE.put(
+                        imagePath,
+                        image
+                );
             }
 
             imgProduct.setImage(image);
 
         } catch (Exception e) {
-            System.out.println("Image error: " + e.getMessage());
-            imgProduct.setImage(getFallbackImage());
+
+            System.out.println(
+                    "Image error: "
+                            + e.getMessage()
+            );
+
+            imgProduct.setImage(
+                    getFallbackImage()
+            );
         }
     }
 
+    private Image createImage(
+            String imagePath
+    ) {
+
+        if (imagePath.startsWith("http")) {
+
+            return new Image(
+                    imagePath,
+                    IMAGE_WIDTH,
+                    IMAGE_HEIGHT,
+                    false,
+                    true,
+                    true
+            );
+        }
+
+        File file =
+                new File(imagePath);
+
+        return file.exists()
+
+                ? new Image(
+                file.toURI().toString(),
+                IMAGE_WIDTH,
+                IMAGE_HEIGHT,
+                false,
+                true
+        )
+
+                : getFallbackImage();
+    }
 
     private Image getFallbackImage() {
-        URL url = getClass().getResource("/image/no-image.png");
-        if (url != null) {
-            return new Image(url.toExternalForm());
-        }
-        System.out.println("Missing fallback image");
-        return null;
-    }
 
+        URL url =
+                getClass().getResource(
+                        "/image/no-image.png"
+                );
+
+        if (url == null) {
+
+            System.out.println(
+                    "Missing fallback image"
+            );
+
+            return null;
+        }
+
+        return new Image(
+                url.toExternalForm()
+        );
+    }
 
     // ==================== OPEN DETAIL ====================
 
     @FXML
     private void handleCardClick(MouseEvent event) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/items-view.fxml"));
-            Parent root = loader.load();
 
-            ItemViewController controller = loader.getController();
-            controller.setAuctionData(auction);
+        if (auction == null) return;
 
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            stage.setScene(new Scene(root));
-            stage.show();
+        Stage stage = (Stage) ((Node) event.getSource())
+                .getScene()
+                .getWindow();
 
-        } catch (IOException e) {
-            System.out.println("Error: " + e.getMessage());
-        }
+        NavigationUtils.switchScene(
+                stage,
+                "/fxml/items-view.fxml",
+                "Item Detail",
+                client,
+                null
+        );
     }
 }

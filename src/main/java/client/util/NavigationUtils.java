@@ -1,9 +1,8 @@
 package client.util;
 
 import client.controller.UserDataReceiver;
-import client.manager.UserSession;
-import client.network.ClientSocket;
 
+import client.network.ClientSocket;
 import javafx.animation.PauseTransition;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -18,9 +17,12 @@ import javafx.util.Duration;
 import model.User;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.Optional;
 
 public class NavigationUtils {
+
+    private static Stage mainStage;
 
     private static String currentPage;
 
@@ -32,8 +34,32 @@ public class NavigationUtils {
         return currentPage;
     }
 
-    // ==================== TOAST ====================
+    public static void setMainStage(Stage stage) {
+        mainStage = stage;
+    }
 
+    public static Stage getMainStage() {
+        return mainStage;
+    }
+
+    // ==================== ALERT FACTORY ====================
+
+    private static Alert createAlert(
+            Alert.AlertType type,
+            String title,
+            String message
+    ) {
+
+        Alert alert = new Alert(type);
+
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+
+        return alert;
+    }
+
+    // ==================== INFO ====================
     public static void showInfo(
             Stage stage,
             String message
@@ -42,14 +68,52 @@ public class NavigationUtils {
         showToast(stage, message);
     }
 
-    public static void showError(String message) {
-        Alert alert =
-                new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Error");
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+    // ==================== ERROR ====================
+
+    public static void showError(
+            String message
+    ) {
+
+        createAlert(
+                Alert.AlertType.ERROR,
+                "Error",
+                message
+        ).showAndWait();
     }
+
+    // ==================== WARNING ====================
+
+    public static void showWarning(
+            String title,
+            String message
+    ) {
+
+        createAlert(
+                Alert.AlertType.WARNING,
+                title,
+                message
+        ).showAndWait();
+    }
+
+    // ==================== CONFIRM ====================
+
+    public static boolean showConfirm(
+            String title,
+            String message
+    ) {
+
+        Optional<ButtonType> result =
+                createAlert(
+                        Alert.AlertType.CONFIRMATION,
+                        title,
+                        message
+                ).showAndWait();
+
+        return result.isPresent()
+                && result.get() == ButtonType.OK;
+    }
+
+    // ==================== TOAST ====================
 
     public static void showToast(
             Stage stage,
@@ -61,21 +125,25 @@ public class NavigationUtils {
         }
 
         Popup popup = new Popup();
+
         Label label = new Label(message);
 
+        label.getStyleClass().add("toast-label");
+
+        // fallback style nếu chưa có css
         label.setStyle(
                 "-fx-background-color: rgba(0,0,0,0.9);" +
                         "-fx-text-fill: white;" +
                         "-fx-padding: 12 24 12 24;" +
                         "-fx-background-radius: 10;" +
                         "-fx-font-size: 14px;" +
-                        "-fx-font-weight: bold;"+
+                        "-fx-font-weight: bold;" +
                         "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.4), 15,0,0,4);"
         );
 
         popup.getContent().add(label);
 
-        popup.show(stage.getScene().getWindow());
+        popup.show(stage);
 
         label.applyCss();
         label.layout();
@@ -93,48 +161,30 @@ public class NavigationUtils {
         popup.setY(y);
 
         PauseTransition delay =
-                new PauseTransition(
-                        Duration.seconds(2)
-                );
+                new PauseTransition(Duration.seconds(2));
 
         delay.setOnFinished(e ->
                 popup.hide()
         );
+
         delay.play();
     }
 
-    // ==================== CONFIRM ALERT ====================
+    // ==================== LOAD FXML ====================
 
-    public static boolean showConfirm(
-            String title,
-            String message
+    public static FXMLLoader loadFXML(
+            String fxmlPath
     ) {
 
-        Alert alert =
-                new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
+        URL url = NavigationUtils.class.getResource(fxmlPath);
 
-        Optional<ButtonType> result =
-                alert.showAndWait();
+        if (url == null) {
+            throw new RuntimeException(
+                    "FXML NOT FOUND: " + fxmlPath
+            );
+        }
 
-        return result.isPresent()
-                && result.get() == ButtonType.OK;
-    }
-
-    // ==================== WARNING ALERT ====================
-
-    public static void showWarning(
-            String title,
-            String message
-    ) {
-
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+        return new FXMLLoader(url);
     }
 
     // ==================== SWITCH SCENE ====================
@@ -149,8 +199,8 @@ public class NavigationUtils {
                 stage,
                 fxmlPath,
                 title,
-                ClientSocket.getInstance(),
-                UserSession.getCurrentUser()
+                null,
+                null
         );
     }
 
@@ -165,32 +215,59 @@ public class NavigationUtils {
     ) {
 
         try {
+
             FXMLLoader loader =
-                    new FXMLLoader(
-                            NavigationUtils.class
-                                    .getResource(fxmlPath)
-                    );
+                    loadFXML(fxmlPath);
 
-            Parent root = loader.load();
-            Object controller = loader.getController();
+            Parent root =
+                    loader.load();
 
-            if (controller instanceof UserDataReceiver receiver) {
-                receiver.setClient(client);
-                receiver.setUser(user);
-            }
+            injectUserData(
+                    loader.getController(),
+                    client,
+                    user
+            );
 
-            stage.setScene(new Scene(root));
-            stage.setTitle(title);
-            stage.centerOnScreen();
-            stage.show();
+            applyStage(
+                    stage,
+                    root,
+                    title
+            );
 
         } catch (IOException e) {
-            System.err.println("Error: " + e.getMessage());
+            System.err.println("Navigation Error");
+            e.printStackTrace();
+        }
+    }
 
-            showWarning(
-                    "Navigation Error",
-                    "Could not load screen: " + title
-            );
+    // ==================== APPLY STAGE ====================
+
+    private static void applyStage(
+            Stage stage,
+            Parent root,
+            String title
+    ) {
+
+        stage.setScene(new Scene(root));
+        stage.setTitle(title);
+
+        stage.centerOnScreen();
+        stage.show();
+    }
+
+    // ==================== INJECT DATA ====================
+
+    private static void injectUserData(
+            Object controller,
+            ClientSocket client,
+            User user
+    ) {
+
+        if (controller instanceof UserDataReceiver receiver) {
+
+            receiver.setClient(client);
+            receiver.setUser(user);
         }
     }
 }
+

@@ -1,298 +1,535 @@
 package client.controller;
 
 import client.network.ClientSocket;
-import model.User;
+import client.util.TextUtils;
+
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
-import javafx.scene.layout.VBox;
+import javafx.geometry.Pos;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Region;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
+
+import model.User;
+
 import java.math.BigDecimal;
-import java.text.NumberFormat;
-import java.util.Locale;
+import java.util.List;
 
-public class AccountBalanceController implements UserDataReceiver {
+import static client.util.NavigationUtils.showToast;
 
-    private ClientSocket client;
-    private User currentUser;
-
-    @FXML private Label balanceLabel;
-    @FXML private TextField depositField, withdrawField;
-    @FXML private VBox transactionContainer;
-    @FXML private ComboBox<String> filterBox;
-
+public class AccountBalanceController
+        extends BaseController
+        implements UserDataReceiver {
     private static AccountBalanceController instance;
-
-    public AccountBalanceController() {
-        instance = this;
-    }
 
     public static AccountBalanceController getInstance() {
         return instance;
     }
+    private static final List<String> FILTERS = List.of(
+            "All",
+            "Deposit",
+            "Withdraw",
+            "Paid",
+            "Received"
+    );
 
-    public void setClient(ClientSocket client) {
-        this.client = client;
-        if (client != null) {
-            client.setMessageListener(this::handleServerMessage);
-        }
+    @FXML private Label balanceLabel;
+    @FXML private TextField depositField;
+    @FXML private TextField withdrawField;
+    @FXML private VBox transactionContainer;
+    @FXML private ComboBox<String> filterBox;
+
+    protected User currentUser;
+    // ==================== INIT ====================
+
+    @FXML
+    public void initialize() {
+        instance = this;
+        System.out.println("Account Balance Loaded");
+
+        setupFilterBox();
     }
+
+    private void setupFilterBox() {
+
+        filterBox.getItems().addAll(FILTERS);
+
+        filterBox.setValue("All");
+
+        filterBox.setOnAction(e ->
+                loadTransactions()
+        );
+    }
+
+    // ==================== USER ====================
 
     @Override
     public void setUser(User user) {
         if (user == null) {
-            System.out.println("Received NULL user");
+            showError("No user data found.");
             return;
         }
+
         this.currentUser = user;
-        if (currentUser.getBalance() == null) {
-            currentUser.setBalance(BigDecimal.ZERO);
-        }
         updateBalance();
-        if (client != null && currentUser != null) {
-            client.sendGetTransactions(currentUser.getUser_id());
-        }
+        loadTransactions();
     }
 
-    @FXML
-    public void initialize() {
-        System.out.println("Account Balance Loaded");
-        if (currentUser != null) {
-            updateBalance();
+    // ==================== CLIENT ====================
+
+    @Override
+    public void setClient(
+            ClientSocket client
+    ) {
+
+        if (client == null) {
+            return;
         }
-        filterBox.getItems().addAll(
-                "All",
-                "Deposit",
-                "Withdraw",
-                "Paid",
-                "Received"
+        this.client = client;
+        client.setMessageListener(
+                this::handleServerMessage
         );
-
-        filterBox.setValue("All");
-
-        filterBox.setOnAction(e -> {
-            if (client != null && currentUser != null) {
-                client.sendGetTransactions(currentUser.getUser_id());
-            }
-        });
     }
 
-    private void handleServerMessage(String msg) {
-        javafx.application.Platform.runLater(() -> {
-            System.out.println("[BalanceController] Received: " + msg);
+
+
+    // ==================== SERVER ====================
+
+    private void handleServerMessage(
+            String msg
+    ) {
+
+        runUI(() -> {
+
+            System.out.println(
+                    "[BalanceController] Received: "
+                            + msg
+            );
 
             if (msg.startsWith("BALANCE_UPDATE_SUCCESS")) {
-                String[] parts = msg.split("\\|");
-                if (parts.length >= 2) {
-                    BigDecimal newBalance = new BigDecimal(parts[1]);
-                    currentUser.setBalance(newBalance);
-                    updateBalance();
-                    showAlert(Alert.AlertType.INFORMATION, "Success", "Transaction successful!");
-                    if (client != null && currentUser != null) {
-                        client.sendGetTransactions(currentUser.getUser_id());
-                    }
-                }
+
+                handleBalanceSuccess(msg);
+
             } else if (msg.startsWith("BALANCE_UPDATE_FAILED")) {
-                String errorMsg = msg.split("\\|").length > 1 ? msg.split("\\|")[1] : "Transaction failed";
-                showAlert(Alert.AlertType.ERROR, "Error", errorMsg);
+
+                handleBalanceFailed(msg);
+
             } else if (msg.startsWith("TRANSACTIONS_LIST")) {
-                String transactionsData = msg.substring("TRANSACTIONS_LIST|".length());
-                updateTransactionList(transactionsData);
+
+                handleTransactionList(msg);
             }
         });
     }
+
+    private void handleBalanceSuccess(
+            String msg
+    ) {
+
+        String[] parts =
+                msg.split("\\|");
+
+        if (parts.length < 2) {
+            return;
+        }
+
+        BigDecimal newBalance =
+                new BigDecimal(parts[1]);
+
+        currentUser.setBalance(newBalance);
+
+        updateBalance();
+
+        showToast(
+                (javafx.stage.Stage)
+                        balanceLabel.getScene().getWindow(),
+                "Transaction successful!"
+        );
+
+        loadTransactions();
+    }
+
+    private void handleBalanceFailed(
+            String msg
+    ) {
+
+        String[] parts =
+                msg.split("\\|");
+
+        String errorMessage =
+                parts.length > 1
+                        ? parts[1]
+                        : "Transaction failed.";
+
+        showError(errorMessage);
+    }
+
+    private void handleTransactionList(
+            String msg
+    ) {
+
+        String data =
+                msg.substring(
+                        "TRANSACTIONS_LIST|".length()
+                );
+
+        updateTransactionList(data);
+    }
+
+    // ==================== DEPOSIT ====================
 
     @FXML
     public void handleDeposit() {
-        if (client == null) {
-            client = ClientSocket.getInstance();
-            if (client == null) {
-                showAlert(Alert.AlertType.ERROR, "Error", "Not connected to server!");
-                return;
-            }
-        }
-        if (currentUser == null) {
-            showAlert(Alert.AlertType.ERROR, "Error", "No user logged in.");
+
+        BigDecimal amount =
+                parseAmount(
+                        depositField.getText(),
+                        "Deposit"
+                );
+
+        if (amount == null) {
             return;
         }
 
-        String input = depositField.getText().trim();
-        if (input.isEmpty()) {
-            showAlert(Alert.AlertType.ERROR, "Deposit Error", "Please enter an amount.");
-            return;
-        }
+        client.sendDeposit(
+                currentUser.getUser_id(),
+                amount
+        );
 
-        try {
-            BigDecimal amount = new BigDecimal(input);
-            if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-                showAlert(Alert.AlertType.ERROR, "Deposit Error", "Amount must be greater than 0.");
-                return;
-            }
-
-            client.sendDeposit(currentUser.getUser_id(), amount);
-            depositField.clear();
-
-        } catch (NumberFormatException e) {
-            showAlert(Alert.AlertType.ERROR, "Deposit Error", "Invalid amount.");
-        }
+        depositField.clear();
     }
 
-    //  ĐỔI TỪ private THÀNH @FXML public
+    // ==================== WITHDRAW ====================
+
     @FXML
     public void handleWithdraw() {
-        if (client == null) {
-            client = ClientSocket.getInstance();
-            if (client == null) {
-                showAlert(Alert.AlertType.ERROR, "Error", "Not connected to server!");
-                return;
-            }
-        }
-            if (currentUser == null) {
-            showAlert(Alert.AlertType.ERROR, "Error", "No user logged in.");
+
+        BigDecimal amount =
+                parseAmount(
+                        withdrawField.getText(),
+                        "Withdraw"
+                );
+
+        if (amount == null) {
             return;
         }
 
-        String input = withdrawField.getText().trim();
-        if (input.isEmpty()) {
-            showAlert(Alert.AlertType.ERROR, "Withdraw Error", "Please enter an amount.");
-            return;
+        client.sendWithdraw(
+                currentUser.getUser_id(),
+                amount
+        );
+
+        withdrawField.clear();
+    }
+
+    // ==================== AMOUNT VALIDATION ====================
+
+    private BigDecimal parseAmount(
+            String input,
+            String action
+    ) {
+
+        if (input == null || input.isBlank()) {
+
+            showError(
+                    action + " amount is required."
+            );
+
+            return null;
         }
 
         try {
-            BigDecimal amount = new BigDecimal(input);
+
+            BigDecimal amount =
+                    new BigDecimal(input.trim());
+
             if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-                showAlert(Alert.AlertType.ERROR, "Withdraw Error", "Amount must be greater than 0.");
-                return;
+
+                showError(
+                        action
+                                + " amount must be greater than 0."
+                );
+
+                return null;
             }
 
-            client.sendWithdraw(currentUser.getUser_id(), amount);
-            withdrawField.clear();
+            return amount;
 
         } catch (NumberFormatException e) {
-            showAlert(Alert.AlertType.ERROR, "Withdraw Error", "Invalid amount.");
+
+            showError("Invalid amount.");
+
+            return null;
         }
     }
 
+    // ==================== BALANCE ====================
+
     private void updateBalance() {
-        if (currentUser == null) return;
+
+        if (currentUser == null) {
+            return;
+        }
+
         if (currentUser.getBalance() == null) {
             currentUser.setBalance(BigDecimal.ZERO);
         }
-        NumberFormat format = NumberFormat.getCurrencyInstance(Locale.US);
-        balanceLabel.setText(format.format(currentUser.getBalance()) + " USD");
+
+        balanceLabel.setText(
+                TextUtils.formatCurrency(
+                        currentUser.getBalance()
+                )
+        );
     }
 
-    public void updateTransactionList(String data) {
-        transactionContainer.getChildren().clear();
+    public void updateBalanceFromServer(BigDecimal newBalance) {
+        if (currentUser == null) {
+            return;
+        }
+        currentUser.setBalance(newBalance);
+        updateBalance();
+    }
 
-        if (data == null || data.isEmpty()) {
-            Label emptyLabel = new Label("No transactions yet");
-            emptyLabel.setStyle("-fx-text-fill:#64748B; -fx-padding:20;");
-            transactionContainer.getChildren().add(emptyLabel);
+    // ==================== TRANSACTIONS ====================
+
+    private void loadTransactions() {
+        if (currentUser == null) {
             return;
         }
 
-        String[] transactions = data.split("\\|");
+        client.sendGetTransactions(
+                currentUser.getUser_id()
+        );
+    }
+
+    public void updateTransactionList(
+            String data
+    ) {
+
+        transactionContainer
+                .getChildren()
+                .clear();
+
+        if (data == null || data.isBlank()) {
+
+            Label emptyLabel =
+                    new Label("No transactions yet");
+
+            emptyLabel.setStyle(
+                    "-fx-text-fill:#64748B; -fx-padding:20;"
+            );
+
+            transactionContainer
+                    .getChildren()
+                    .add(emptyLabel);
+
+            return;
+        }
+
+        String[] transactions =
+                data.split("\\|");
 
         for (String tx : transactions) {
-            String[] parts = tx.split(";");
 
-            if (parts.length >= 4) {
+            String[] parts =
+                    tx.split(";");
 
-                String type = parts[0];
-                String selected = filterBox.getValue();
-                if (selected != null && !"All".equals(selected)) {
-                    if ("Deposit".equals(selected) && !type.equals("DEPOSIT")) continue;
-                    if ("Withdraw".equals(selected) && !type.equals("WITHDRAW")) continue;
-                    if ("Paid".equals(selected) && !type.equals("TRANSFER_OUT")) continue;
-                    if ("Received".equals(selected) && !type.equals("TRANSFER_IN")) continue;
-                }
+            if (parts.length < 4) {
+                continue;
+            }
 
-                String amount = parts[1];
-                String time = parts[2];
-                String desc = parts[3];
+            String type = parts[0];
 
-                HBox card = new HBox(20);
-                card.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+            if (!shouldDisplay(type)) {
+                continue;
+            }
 
-                card.setStyle("""
+            String amount = parts[1];
+            String time = parts[2];
+            String desc = parts[3];
+
+            transactionContainer
+                    .getChildren()
+                    .add(
+                            createTransactionCard(
+                                    type,
+                                    amount,
+                                    time,
+                                    desc
+                            )
+                    );
+        }
+    }
+
+    // ==================== FILTER ====================
+
+    private boolean shouldDisplay(
+            String type
+    ) {
+
+        String selected =
+                filterBox.getValue();
+
+        if (selected == null
+                || selected.equals("All")) {
+
+            return true;
+        }
+
+        return switch (selected) {
+
+            case "Deposit" ->
+                    type.equals("DEPOSIT");
+
+            case "Withdraw" ->
+                    type.equals("WITHDRAW");
+
+            case "Paid" ->
+                    type.equals("TRANSFER_OUT");
+
+            case "Received" ->
+                    type.equals("TRANSFER_IN");
+
+            default -> true;
+        };
+    }
+
+    // ==================== CARD ====================
+
+    private HBox createTransactionCard(
+            String type,
+            String amount,
+            String time,
+            String desc
+    ) {
+
+        HBox card =
+                new HBox(20);
+
+        card.setAlignment(Pos.CENTER_LEFT);
+
+        card.setStyle("""
                 -fx-background-color:white;
                 -fx-background-radius:12;
                 -fx-border-radius:12;
                 -fx-border-color:#E2E8F0;
                 -fx-padding:15;
-            """);
+                """);
 
-                VBox left = new VBox(5);
+        VBox left =
+                new VBox(5);
 
-                Label title = getLabel(type, desc);
+        Label title =
+                createTitleLabel(type, desc);
 
-                Label timeLabel = new Label(time);
-                timeLabel.setStyle("""
-                -fx-text-fill:#64748B;
-                -fx-font-size:13px;
-            """);
+        Label timeLabel =
+                createTimeLabel(time);
 
-                left.getChildren().addAll(title, timeLabel);
-                Region spacer = new Region();
-                HBox.setHgrow(spacer, Priority.ALWAYS);
+        left.getChildren().addAll(
+                title,
+                timeLabel
+        );
 
-                Label amountLabel = getAmountLabel(type, amount);
+        Region spacer =
+                new Region();
 
-                card.getChildren().addAll(left, spacer, amountLabel);
-                transactionContainer.getChildren().add(card);
-            }
-        }
+        HBox.setHgrow(
+                spacer,
+                Priority.ALWAYS
+        );
+
+        Label amountLabel =
+                createAmountLabel(
+                        type,
+                        amount
+                );
+
+        card.getChildren().addAll(
+                left,
+                spacer,
+                amountLabel
+        );
+
+        return card;
     }
 
-    private static Label getAmountLabel(String type, String amount) {
+    // ==================== LABELS ====================
+
+    private Label createTitleLabel(
+            String type,
+            String desc
+    ) {
+
+        String titleText =
+                switch (type) {
+
+                    case "DEPOSIT" ->
+                            "Deposit Successfully";
+
+                    case "WITHDRAW" ->
+                            "Withdraw Successfully";
+
+                    case "TRANSFER_OUT" ->
+                            "Paid to " + desc;
+
+                    case "TRANSFER_IN" ->
+                            "Received from " + desc;
+
+                    default -> type;
+                };
+
+        Label label =
+                new Label(titleText);
+
+        label.setStyle("""
+                -fx-font-size:16px;
+                -fx-font-weight:bold;
+                -fx-text-fill:#0F172A;
+                """);
+
+        return label;
+    }
+
+    private Label createTimeLabel(
+            String time
+    ) {
+
+        Label label =
+                new Label(time);
+
+        label.setStyle("""
+                -fx-text-fill:#64748B;
+                -fx-font-size:13px;
+                """);
+
+        return label;
+    }
+
+    private Label createAmountLabel(
+            String type,
+            String amount
+    ) {
+
         boolean positive =
                 type.equals("DEPOSIT")
                         || type.equals("TRANSFER_IN");
 
-        Label amountLabel = new Label(
-                (positive ? "+ " : "- ") + amount + " USD"
-        );
+        Label label =
+                new Label(
+                        (positive ? "+ " : "- ")
+                                + amount
+                                + " USD"
+                );
 
-        amountLabel.setStyle(
+        label.setStyle(
                 positive
                         ? "-fx-text-fill:#16A34A; -fx-font-size:18px; -fx-font-weight:bold;"
                         : "-fx-text-fill:#EF4444; -fx-font-size:18px; -fx-font-weight:bold;"
         );
-        return amountLabel;
-    }
 
-    private static Label getLabel(String type, String desc) {
-        String titleText = switch (type) {
-            case "DEPOSIT" -> "Deposit Successfully";
-            case "WITHDRAW" -> "Withdraw Successfully";
-            case "TRANSFER_OUT" -> "Paid to " + desc;
-            case "TRANSFER_IN" -> "Received from " + desc;
-            default -> type;
-        };
-
-        Label title = new Label(titleText);
-        title.setStyle("""
-        -fx-font-size:16px;
-        -fx-font-weight:bold;
-        -fx-text-fill:#0F172A;
-    """);
-        return title;
-    }
-
-    private void showAlert(Alert.AlertType type, String title, String content) {
-        Alert alert = new Alert(type);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(content);
-        alert.showAndWait();
-    }
-
-    public void updateBalanceFromServer(BigDecimal newBalance) {
-        if (currentUser != null) {
-            currentUser.setBalance(newBalance);
-            updateBalance();
-        }
+        return label;
     }
 }
+

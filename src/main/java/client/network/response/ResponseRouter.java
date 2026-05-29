@@ -87,16 +87,16 @@ public class ResponseRouter {
                     AuctionHandler.createFailed(data, stage);
 
             case JOIN_SUCCESS ->
-                    AuctionHandler.joinSuccess(data, stage);
+                    AuctionHandler.joinSuccess(data);
 
             case JOIN_FAILED ->
-                    AuctionHandler.joinFailed(data, stage);
+                    AuctionHandler.joinFailed(data);
 
             case BID_SUCCESS ->
                     AuctionHandler.bidSuccess(stage);
 
             case BID_FAILED ->
-                    AuctionHandler.bidFailed(data, stage);
+                    AuctionHandler.bidFailed(data);
 
             case BID_HISTORY_SUCCESS ->
                     AuctionHandler.bidHistory(data);
@@ -165,7 +165,7 @@ public class ResponseRouter {
                     AuctionHandler.deleteSuccess(stage);
 
             case DELETE_ITEM_FAILED ->
-                    AuctionHandler.deleteFailed(data, stage);
+                    AuctionHandler.deleteFailed(data);
 
             case UPDATE_ITEM_SUCCESS ->
                     AuctionHandler.updateSuccess(stage);

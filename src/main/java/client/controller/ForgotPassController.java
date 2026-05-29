@@ -1,18 +1,18 @@
 package client.controller;
 
-import client.network.ClientSocket;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.DatePicker;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.TextField;
 import javafx.stage.Stage;
-import java.time.LocalDate;
-import common.Command;
-import common.CommandBuilder;
 
-public class ForgotPassController {
+import java.time.LocalDate;
+
+import static client.util.NavigationUtils.showWarning;
+
+public class ForgotPassController
+        extends BaseController {
 
     @FXML
     private TextField fullNameField;
@@ -32,90 +32,126 @@ public class ForgotPassController {
     @FXML
     private PasswordField verifyPasswordField;
 
-    /*
-        RESET PASSWORD
-     */
+    // ==================== RESET PASSWORD ====================
+
     @FXML
     private void handleResetPassword() {
-        String fullName       = fullNameField.getText().trim();
-        LocalDate dob         = dobField.getValue();
-        String username       = usernameField.getText().trim();
-        String email          = emailField.getText().trim();
-        String newPassword    = newPasswordField.getText().trim();
-        String verifyPassword = verifyPasswordField.getText().trim();
 
-        if (fullName.isEmpty() || dob == null || username.isEmpty()
-                || email.isEmpty() || newPassword.isEmpty() || verifyPassword.isEmpty()) {
-            showAlert(Alert.AlertType.WARNING, "Missing Information", "Please fill all fields.");
+        String fullName =
+                fullNameField.getText().trim();
+
+        LocalDate dob =
+                dobField.getValue();
+
+        String username =
+                usernameField.getText().trim();
+
+        String email =
+                emailField.getText().trim();
+
+        String newPassword =
+                newPasswordField.getText().trim();
+
+        String verifyPassword =
+                verifyPasswordField.getText().trim();
+
+        if (!validateInput(
+                fullName,
+                dob,
+                username,
+                email,
+                newPassword,
+                verifyPassword
+        )) {
+
             return;
         }
 
-        if (!newPassword.equals(verifyPassword)) {
-            showAlert(Alert.AlertType.ERROR, "Password Error", "Passwords do not match.");
-            newPasswordField.clear();
-            verifyPasswordField.clear();
-            return;
-        }
-
-        ClientSocket socket = ClientSocket.getInstance();
-        if (socket == null) {
-            showAlert(Alert.AlertType.ERROR, "Connection Error", "Could not connect to server.");
-            return;
-        }
-
-        socket.sendForgotPassword(fullName, dob.toString(), username, email, newPassword);
+        client.sendForgotPassword(
+                fullName,
+                dob.toString(),
+                username,
+                email,
+                newPassword
+        );
     }
-    /*
-        BACK TO LOGIN
-     */
-    @FXML
-    private void handleBack(ActionEvent event) {
 
-        try {
+    // ==================== VALIDATION ====================
 
-            Parent root = FXMLLoader.load(
-                    getClass().getResource("/fxml/login-view.fxml")
+    private boolean validateInput(
+            String fullName,
+            LocalDate dob,
+            String username,
+            String email,
+            String newPassword,
+            String verifyPassword
+    ) {
+
+        if (fullName.isBlank()
+                || dob == null
+                || username.isBlank()
+                || email.isBlank()
+                || newPassword.isBlank()
+                || verifyPassword.isBlank()) {
+
+            showWarning(
+                    "Missing Information",
+                    "Please fill all fields."
             );
 
-            Stage stage = (Stage) ((Button) event.getSource())
-                    .getScene()
-                    .getWindow();
+            return false;
+        }
 
-            stage.setScene(new Scene(root));
-            stage.show();
+        if (!newPassword.equals(
+                verifyPassword
+        )) {
 
-        } catch (Exception e) {
-            System.err.println("Error: " + e.getMessage());        }
+            showError(
+                    "Passwords do not match."
+            );
+
+            newPasswordField.clear();
+
+            verifyPasswordField.clear();
+
+            return false;
+        }
+
+        return true;
     }
 
-    /*
-        CLEAR ALL FIELDS
-     */
+    // ==================== BACK ====================
+
+    @FXML
+    private void handleBack(
+            ActionEvent event
+    ) {
+
+        navigate(
+                (Stage) fullNameField
+                        .getScene()
+                        .getWindow(),
+
+                "/fxml/login-view.fxml",
+
+                "Login"
+        );
+    }
+
+    // ==================== CLEAR ====================
+
     private void clearAllFields() {
 
         fullNameField.clear();
+
         dobField.setValue(null);
+
         usernameField.clear();
+
         emailField.clear();
+
         newPasswordField.clear();
+
         verifyPasswordField.clear();
-    }
-
-    /*
-        ALERT
-     */
-    private void showAlert(
-            Alert.AlertType type,
-            String title,
-            String message
-    ) {
-
-        Alert alert = new Alert(type);
-
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-
-        alert.showAndWait();
     }
 }

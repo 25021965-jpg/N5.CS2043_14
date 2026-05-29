@@ -291,7 +291,9 @@ public class SidebarController {
         NavigationUtils.switchScene(
                 stage,
                 fxmlPath,
-                title
+                title,
+                ClientSocket.getInstance(),
+                UserSession.getCurrentUser()
         );
     }
 }

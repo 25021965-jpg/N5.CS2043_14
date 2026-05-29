@@ -1,33 +1,44 @@
 package client.controller;
 
+import client.util.TextUtils;
+
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+
 import model.Auction;
 
-import java.io.IOException;
+import java.math.BigDecimal;
 import java.net.URL;
-import java.text.NumberFormat;
 import java.util.List;
-import java.util.Locale;
 import java.util.ResourceBundle;
 
-public class AuctionRoomController implements Initializable {
-    private long currentPrice;
-    private long stepPrice;
+import static client.util.NavigationUtils.showToast;
+
+public class AuctionRoomController
+        extends BaseController
+        implements Initializable {
+
     private Auction auction;
+
     private int currentImageIndex = 0;
 
+    private BigDecimal currentPrice =
+            BigDecimal.ZERO;
+
+    private BigDecimal stepPrice =
+            BigDecimal.ZERO;
 
     @FXML
     private ImageView imgItem;
@@ -59,200 +70,367 @@ public class AuctionRoomController implements Initializable {
     @FXML
     private VBox bidHistoryContainer;
 
+    // ==================== INIT ====================
 
     @Override
-    public void initialize(URL url, ResourceBundle resourceBundle) {
+    public void initialize(
+            URL url,
+            ResourceBundle resourceBundle
+    ) {
 
+        System.out.println(
+                "Auction Room Loaded"
+        );
     }
 
-    public void setAuctionData(Auction auction) {
+    // ==================== SET DATA ====================
+
+    public void setAuctionData(
+            Auction auction
+    ) {
+
+        if (auction == null) {
+            return;
+        }
 
         this.auction = auction;
-        // tên item
-        lblItemName.setText(auction.getItem().getName());
 
-        // giá
-        lblCurrent.setText(
-                "Current Price: $" + auction.getCurrentPrice()
-        );
+        this.currentPrice =
+                auction.getCurrentPrice();
 
-        // bước giá
-        lblStep.setText(
-                "Min Increment: $" + auction.getMinIncrement()
-        );
+        this.stepPrice =
+                auction.getMinIncrement();
 
-        currentImageIndex = 0;
-        showImage(currentImageIndex);
+        setupAuctionInfo();
 
+        showImage(0);
     }
-    private void showImage(int index) {
-        List<String> images = auction.getItem().getImages();
-        if (images != null && !images.isEmpty()) {
-            try {
-                Image image = new Image(images.get(index), true);
-                imgItem.setImage(image);
-            } catch (Exception e) {
-                URL url = getClass().getResource("/image/no-image.png");
-                if (url != null) imgItem.setImage(new Image(url.toExternalForm()));
+
+    // ==================== AUCTION INFO ====================
+
+    private void setupAuctionInfo() {
+
+        lblItemName.setText(
+                auction.getItem().getName()
+        );
+
+        updatePriceLabels();
+
+        lblStatus.setText(
+                TextUtils.toTitleCase(
+                        auction.getStatus().name()
+                )
+        );
+    }
+
+    private void updatePriceLabels() {
+
+        String current =
+                TextUtils.formatCurrency(
+                        currentPrice
+                );
+
+        String step =
+                TextUtils.formatCurrency(
+                        stepPrice
+                );
+
+        lblCurrent.setText(
+                "Current Price: " + current
+        );
+
+        lblCurrentPrice.setText(current);
+
+        lblStep.setText(
+                "Min Increment: " + step
+        );
+    }
+
+    // ==================== IMAGE ====================
+
+    private void showImage(
+            int index
+    ) {
+
+        List<String> images =
+                auction.getItem().getImages();
+
+        if (images == null || images.isEmpty()) {
+
+            loadFallbackImage();
+
+            return;
+        }
+
+        try {
+
+            Image image =
+                    new Image(
+                            images.get(index),
+                            true
+                    );
+
+            imgItem.setImage(image);
+
+        } catch (Exception e) {
+
+            loadFallbackImage();
+        }
+    }
+
+    private void loadFallbackImage() {
+
+        try {
+
+            URL url =
+                    getClass().getResource(
+                            "/image/no-image.png"
+                    );
+
+            if (url != null) {
+
+                imgItem.setImage(
+                        new Image(
+                                url.toExternalForm()
+                        )
+                );
             }
+
+        } catch (Exception ignored) {
         }
     }
 
     @FXML
     private void showPreviousImage() {
-        java.util.List<String> images = auction.getItem().getImages();
-        if (images == null || images.isEmpty()) return;
+
+        List<String> images =
+                auction.getItem().getImages();
+
+        if (images == null || images.isEmpty()) {
+            return;
+        }
 
         currentImageIndex--;
-        // Nếu lùi quá ảnh đầu thì quay về ảnh cuối
+
         if (currentImageIndex < 0) {
-            currentImageIndex = images.size() - 1;
+
+            currentImageIndex =
+                    images.size() - 1;
         }
+
         showImage(currentImageIndex);
     }
 
     @FXML
     private void showNextImage() {
-        java.util.List<String> images = auction.getItem().getImages();
-        if (images == null || images.isEmpty()) return;
+
+        List<String> images =
+                auction.getItem().getImages();
+
+        if (images == null || images.isEmpty()) {
+            return;
+        }
 
         currentImageIndex++;
-        // Nếu quá ảnh cuối thì quay về ảnh đầu
+
         if (currentImageIndex >= images.size()) {
+
             currentImageIndex = 0;
         }
+
         showImage(currentImageIndex);
     }
-    @FXML
 
+    // ==================== BID ====================
+
+    @FXML
     private void handleBid() {
+
+        BigDecimal bidAmount =
+                parseBidAmount();
+
+        if (bidAmount == null) {
+            return;
+        }
+
+        BigDecimal minimumBid =
+                currentPrice.add(stepPrice);
+
+        if (bidAmount.compareTo(minimumBid) < 0) {
+
+            showError(
+                    "Bid must be at least "
+                            + TextUtils.formatCurrency(
+                            minimumBid
+                    )
+            );
+
+            return;
+        }
+
+        currentPrice = bidAmount;
+
+        updatePriceLabels();
+
+        addBidHistory(
+                "You",
+                bidAmount
+        );
+
+        txtBid.clear();
+
+        showToast(
+                (Stage) txtBid
+                        .getScene()
+                        .getWindow(),
+
+                "Bid placed successfully"
+        );
+    }
+
+    private BigDecimal parseBidAmount() {
+
+        String input =
+                txtBid.getText();
+
+        if (input == null || input.isBlank()) {
+
+            showError(
+                    "Please enter bid amount."
+            );
+
+            return null;
+        }
 
         try {
 
-            String input = txtBid.getText().trim();
+            BigDecimal amount =
+                    new BigDecimal(
+                            input.trim()
+                    );
 
-            if (input.isEmpty()) {
-                showAlert("Please enter bid amount.");
-                return;
-            }
+            if (amount.compareTo(
+                    BigDecimal.ZERO
+            ) <= 0) {
 
-            long bidAmount = Long.parseLong(input);
-
-            // phải lớn hơn current + step
-            if (bidAmount < currentPrice + stepPrice) {
-
-                showAlert(
-                        "Bid must be at least "
-                                + formatMoney(currentPrice + stepPrice)
+                showError(
+                        "Bid amount must be greater than 0."
                 );
 
-                return;
+                return null;
             }
 
-            // cập nhật giá
-            currentPrice = bidAmount;
-
-            updatePriceLabels();
-
-            // thêm lịch sử
-            addBidHistory("You", bidAmount);
-
-            // clear ô nhập
-            txtBid.clear();
+            return amount;
 
         } catch (NumberFormatException e) {
 
-            showAlert("Invalid number.");
-
-        }
-    }
-
-
-    private void updatePriceLabels() {
-
-        lblCurrent.setText(formatMoney(currentPrice));
-        lblCurrentPrice.setText(formatMoney(currentPrice));
-        lblStep.setText(formatMoney(stepPrice));
-
-    }
-
-
-    private void addBidHistory(String username, long amount) {
-
-        HBox row = new HBox();
-
-        row.setSpacing(10);
-        row.setAlignment(Pos.CENTER_LEFT);
-
-        row.setStyle("""
-            -fx-background-color: #F8FAFC;
-            -fx-padding: 10;
-            -fx-background-radius: 8;
-            -fx-border-radius: 8;
-            -fx-border-color: #E2E8F0;
-        """);
-
-        Label userLabel = new Label(username);
-
-        userLabel.setStyle("""
-            -fx-font-weight: bold;
-            -fx-text-fill: #0F172A;
-            -fx-font-size: 14px;
-        """);
-
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-
-        Label amountLabel = new Label(formatMoney(amount));
-
-        amountLabel.setStyle("""
-            -fx-text-fill: #2563EB;
-            -fx-font-weight: bold;
-            -fx-font-size: 14px;
-        """);
-
-        row.getChildren().addAll(userLabel, spacer, amountLabel);
-
-        // add lên đầu danh sách
-        bidHistoryContainer.getChildren().add(0, row);
-    }
-    @FXML
-    private void handleBack(ActionEvent event) {
-
-        try {
-
-            Parent root = FXMLLoader.load(
-                    getClass().getResource("/fxml/HomePage.fxml")
+            showError(
+                    "Invalid bid amount."
             );
 
-            Stage stage = (Stage)
-                    ((Node) event.getSource())
-                            .getScene()
-                            .getWindow();
-
-            stage.setScene(new Scene(root));
-            stage.show();
-
-        } catch (IOException e) {
-            e.printStackTrace();
+            return null;
         }
     }
 
-    private String formatMoney(long amount) {
+    // ==================== BID HISTORY ====================
 
-        NumberFormat format =
-                NumberFormat.getInstance(new Locale("vi", "VN"));
+    private void addBidHistory(
+            String username,
+            BigDecimal amount
+    ) {
 
-        return format.format(amount) + " VNĐ";
+        HBox row =
+                new HBox(10);
+
+        row.setAlignment(
+                Pos.CENTER_LEFT
+        );
+
+        row.setStyle("""
+                -fx-background-color: #F8FAFC;
+                -fx-padding: 10;
+                -fx-background-radius: 8;
+                -fx-border-radius: 8;
+                -fx-border-color: #E2E8F0;
+                """);
+
+        Label userLabel =
+                createUserLabel(username);
+
+        Region spacer =
+                new Region();
+
+        HBox.setHgrow(
+                spacer,
+                Priority.ALWAYS
+        );
+
+        Label amountLabel =
+                createAmountLabel(amount);
+
+        row.getChildren().addAll(
+                userLabel,
+                spacer,
+                amountLabel
+        );
+
+        bidHistoryContainer
+                .getChildren()
+                .add(0, row);
     }
 
-    private void showAlert(String message) {
+    private Label createUserLabel(
+            String username
+    ) {
 
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        Label label =
+                new Label(username);
 
-        alert.setHeaderText(null);
-        alert.setContentText(message);
+        label.setStyle("""
+                -fx-font-weight: bold;
+                -fx-text-fill: #0F172A;
+                -fx-font-size: 14px;
+                """);
 
-        alert.showAndWait();
+        return label;
+    }
+
+    private Label createAmountLabel(
+            BigDecimal amount
+    ) {
+
+        Label label =
+                new Label(
+                        TextUtils.formatCurrency(
+                                amount
+                        )
+                );
+
+        label.setStyle("""
+                -fx-text-fill: #2563EB;
+                -fx-font-weight: bold;
+                -fx-font-size: 14px;
+                """);
+
+        return label;
+    }
+
+    // ==================== BACK ====================
+
+    @FXML
+    private void handleBack(
+            ActionEvent event
+    ) {
+
+        navigate(
+                (Stage) btnBid
+                        .getScene()
+                        .getWindow(),
+
+                "/fxml/HomePage.fxml",
+
+                "Home"
+        );
     }
 }
+

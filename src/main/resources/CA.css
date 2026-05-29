@@ -6,7 +6,7 @@
 /* Đổi màu chữ của các mục trong danh sách khi bấm xổ xuống */
 .combo-box-popup .list-view .list-cell {
     -fx-text-fill: white;
-    -fx-background-color: #262626; /* Màu nền xám tối như bạn đang để */
+    -fx-background-color: #262626;
 }
 
 /* Hiệu ứng khi chọn (hover) vào danh sách */
