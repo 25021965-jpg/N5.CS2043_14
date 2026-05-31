@@ -1,42 +1,84 @@
 package client.network;
 
 import common.Command;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
 import static org.junit.jupiter.api.Assertions.*;
 
-public class MessageParserTest {
+class MessageParserTest {
+
+    // ==================== HAPPY PATH ====================
 
     @Test
-    @DisplayName("Test 1: Parse Login command")
-    void testParseLogin() {
-        // Thay LOGIN_SUCCESS bằng LOGIN (vì Enum Command có LOGIN)
-        String rawMsg = "LOGIN|user123|pass123";
-        MessageParser parser = new MessageParser(rawMsg);
-
-        // Bây giờ Command.from("LOGIN") sẽ trả về Command.LOGIN (hết null)
-        assertNotNull(parser.getCommand());
-        assertEquals(Command.LOGIN, parser.getCommand());
-
-        String[] args = parser.getArgs();
-        assertEquals(2, args.length);
-        assertEquals("user123", args[0]);
-        assertEquals("pass123", args[1]);
-
-        System.out.println(">>> Parse Login: OK");
+    void parse_loginCommand_commandIsLogin() {
+        MessageParser mp = new MessageParser("LOGIN|alice|password");
+        assertEquals(Command.LOGIN, mp.getCommand());
     }
 
     @Test
-    @DisplayName("Test 2: Parse Bid command")
-    void testParseBid() {
-        // Thử với lệnh BID có trong Enum của bạn
-        String rawMsg = "BID|item01|500";
-        MessageParser parser = new MessageParser(rawMsg);
+    void parse_loginCommand_argsCorrect() {
+        MessageParser mp = new MessageParser("LOGIN|alice|password");
+        assertArrayEquals(new String[]{"alice", "password"}, mp.getArgs());
+    }
 
-        assertEquals(Command.BID, parser.getCommand());
-        assertEquals("item01", parser.getArgs()[0]);
-        assertEquals("500", parser.getArgs()[1]);
+    @Test
+    void parse_noArgs_emptyArgsArray() {
+        MessageParser mp = new MessageParser("LIST");
+        assertEquals(Command.LIST, mp.getCommand());
+        assertEquals(0, mp.getArgs().length);
+    }
 
-        System.out.println(">>> Parse Bid: OK");
+    @Test
+    void parse_singleArg_argParsedCorrectly() {
+        MessageParser mp = new MessageParser("BID|500");
+        assertEquals(Command.BID, mp.getCommand());
+        assertArrayEquals(new String[]{"500"}, mp.getArgs());
+    }
+
+    @Test
+    void parse_manyArgs_allArgsPresent() {
+        MessageParser mp = new MessageParser("REGISTER|Alice|alice|alice@mail.com|pass123|1990-01-01");
+        assertEquals(Command.REGISTER, mp.getCommand());
+        assertEquals(5, mp.getArgs().length);
+        assertEquals("Alice", mp.getArgs()[0]);
+        assertEquals("1990-01-01", mp.getArgs()[4]);
+    }
+
+    // ==================== UNKNOWN COMMAND ====================
+
+    @Test
+    void parse_unknownCommand_commandIsNull() {
+        MessageParser mp = new MessageParser("UNKNOWN_CMD|arg");
+        assertNull(mp.getCommand());
+        // args still parsed
+        assertArrayEquals(new String[]{"arg"}, mp.getArgs());
+    }
+
+    // ==================== EDGE CASES ====================
+
+    @Test
+    void parse_emptyArg_emptyStringInArgs() {
+        MessageParser mp = new MessageParser("LOGIN||password");
+        assertEquals("", mp.getArgs()[0]);
+        assertEquals("password", mp.getArgs()[1]);
+    }
+
+    @Test
+    void parse_lowercaseCommand_returnsCorrectCommand() {
+        MessageParser mp = new MessageParser("login|user|pass");
+        assertEquals(Command.LOGIN, mp.getCommand());
+    }
+
+    @Test
+    void parse_commandOnly_argsLengthZero() {
+        MessageParser mp = new MessageParser("LOGOUT");
+        assertEquals(0, mp.getArgs().length);
+    }
+
+    @Test
+    void parse_emptyString_commandNull() {
+        MessageParser mp = new MessageParser("");
+        assertNull(mp.getCommand());
+        assertEquals(0, mp.getArgs().length);
     }
 }

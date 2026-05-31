@@ -9,7 +9,6 @@ public class ServerSecurityTest {
     @Test
     @DisplayName("Server should not crash when receiving incomplete REGISTER data")
     void testIncompleteDataHandling() {
-        // Missing email and password
         String badData = "REGISTER|Some Name|someuser";
         String[] parts = badData.split("\\|");
 
