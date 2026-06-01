@@ -1,5 +1,6 @@
 package client.network.response;
 
+import client.controller.LiveAuctionController;
 import client.network.response.handler.*;
 import client.util.NavigationUtils;
 import common.ResponseType;
@@ -10,12 +11,40 @@ public class ResponseRouter {
 
     public static void route(String raw, Stage stage) {
 
-        // LIVE UPDATE
+        // ===== LIVE UPDATE (xử lý riêng vì không có ResponseType) =====
         if (raw.startsWith("UPDATE_PRICE")) {
             Platform.runLater(() -> AuctionHandler.updatePrice(raw));
             return;
         }
 
+        // 🔥 THÊM XỬ LÝ JOIN_SUCCESS
+        if (raw.startsWith("JOIN_SUCCESS")) {
+            Platform.runLater(() -> AuctionHandler.joinSuccess(raw.substring("JOIN_SUCCESS|".length())));
+            return;
+        }
+
+        // 🔥 THÊM XỬ LÝ YOU_WON
+        if (raw.startsWith("YOU_WON")) {
+            Platform.runLater(() -> LiveAuctionController.getInstance().handleServerMessage(raw));
+            return;
+        }
+
+        // 🔥 THÊM XỬ LÝ AUCTION_ENDED
+        if (raw.startsWith("AUCTION_ENDED")) {
+            Platform.runLater(() -> LiveAuctionController.getInstance().handleServerMessage(raw));
+            return;
+        }
+
+        // 🔥 THÊM XỬ LÝ BID_HISTORY
+        if (raw.startsWith("BID_HISTORY_SUCCESS")) {
+            Platform.runLater(() -> AuctionHandler.bidHistory(raw.substring("BID_HISTORY_SUCCESS|".length())));
+            return;
+        }
+
+        if (raw.startsWith("BID_HISTORY_EMPTY")) {
+            Platform.runLater(() -> AuctionHandler.bidHistoryEmpty());
+            return;
+        }
 
         String[] parts = raw.split("\\|", 2);
 
@@ -86,9 +115,6 @@ public class ResponseRouter {
             case CREATE_FAILED ->
                     AuctionHandler.createFailed(data, stage);
 
-            case JOIN_SUCCESS ->
-                    AuctionHandler.joinSuccess(data);
-
             case JOIN_FAILED ->
                     AuctionHandler.joinFailed(data);
 
@@ -97,12 +123,6 @@ public class ResponseRouter {
 
             case BID_FAILED ->
                     AuctionHandler.bidFailed(data);
-
-            case BID_HISTORY_SUCCESS ->
-                    AuctionHandler.bidHistory(data);
-
-            case BID_HISTORY_EMPTY ->
-                    AuctionHandler.bidHistoryEmpty();
 
             case LIST_MY_AUCTIONS_SUCCESS ->
                     AuctionHandler.myAuctions(data);

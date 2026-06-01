@@ -798,4 +798,16 @@ public class AuctionDAO {
 
         return images;
     }
+
+    public static void updateAuctionStatus(String auctionId, String status) {
+        String sql = "UPDATE auctions SET status = ? WHERE auction_id = ?";
+        try (Connection conn = DatabaseService.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, status);
+            ps.setString(2, auctionId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 }

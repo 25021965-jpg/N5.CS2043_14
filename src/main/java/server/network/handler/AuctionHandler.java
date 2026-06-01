@@ -138,21 +138,74 @@ public class AuctionHandler extends BaseHandler {
                         new java.util.TimerTask() {
                             @Override
                             public void run() {
-                                Auction ended = AuctionService.getAuctionById(finalAuctionId);
-                                if (ended != null) {
-                                    BidService.settleAuction(ended);
-                                    RoomManager.broadcastToRoomAll(finalAuctionId, "AUCTION_ENDED");
-                                    java.util.List<model.Bid> bids =
-                                            server.dao.BidDAO.getBidsByAuctionId(finalAuctionId);
+                                try {
+                                    Auction ended = AuctionService.getAuctionById(finalAuctionId);
+                                    if (ended == null) return;
+
+                                    // Lấy danh sách bid của auction
+                                    List<model.Bid> bids = server.dao.BidDAO.getBidsByAuctionId(finalAuctionId);
+
+                                    // Xác định winner và final price
+                                    model.Bid winningBid = null;
+                                    BigDecimal finalPrice = ended.getCurrentPrice();
+
                                     if (bids != null && !bids.isEmpty()) {
-                                        model.Bid topBid = bids.get(0);
-                                        if (topBid.getBidder() != null) {
-                                            RoomManager.broadcastToRoomAll(
-                                                    finalAuctionId,
-                                                    "YOU_WON|" + topBid.getAmount()
-                                            );
-                                        }
+                                        winningBid = bids.get(0); // Bid cao nhất
+                                        finalPrice = winningBid.getAmount();
                                     }
+
+                                    // Nếu có winner (có người đặt giá)
+                                    if (winningBid != null && winningBid.getBidder() != null) {
+                                        User winner = winningBid.getBidder();
+                                        User seller = ended.getSeller();
+                                        String itemName = ended.getItem() != null ? ended.getItem().getName() : "item";
+
+                                        // Trừ tiền winner
+                                        BigDecimal winnerNewBalance = winner.getBalance().subtract(finalPrice);
+                                        boolean winnerUpdated = UserDAO.updateBalance(winner.getUser_id(), winnerNewBalance);
+
+                                        // Cộng tiền seller
+                                        BigDecimal sellerNewBalance = seller.getBalance().add(finalPrice);
+                                        boolean sellerUpdated = UserDAO.updateBalance(seller.getUser_id(), sellerNewBalance);
+
+                                        // Ghi transaction cho winner
+                                        if (winnerUpdated) {
+                                            TransactionDAO.addTransaction(
+                                                    winner.getUser_id(),
+                                                    seller.getUser_id(),
+                                                    finalPrice,
+                                                    "WIN_BID",
+                                                    "Won auction: " + itemName
+                                            );
+                                            System.out.println("[AuctionHandler] Winner " + winner.getUsername() + " deducted: " + finalPrice);
+                                        }
+
+                                        // Ghi transaction cho seller
+                                        if (sellerUpdated) {
+                                            TransactionDAO.addTransaction(
+                                                    seller.getUser_id(),
+                                                    winner.getUser_id(),
+                                                    finalPrice,
+                                                    "SOLD",
+                                                    "Sold item: " + itemName
+                                            );
+                                            System.out.println("[AuctionHandler] Seller " + seller.getUsername() + " received: " + finalPrice);
+                                        }
+
+                                        // Broadcast YOU_WON cho winner
+                                        RoomManager.broadcastToRoomAll(finalAuctionId, "YOU_WON|" + finalPrice);
+                                    }
+
+                                    // Broadcast AUCTION_ENDED cho tất cả
+                                    RoomManager.broadcastToRoomAll(finalAuctionId, "AUCTION_ENDED");
+
+                                    // Cập nhật status auction thành ENDED
+                                    ended.setStatus(AuctionStatus.ENDED);
+                                    AuctionDAO.updateAuctionStatus(finalAuctionId, "ENDED");
+
+                                } catch (Exception e) {
+                                    System.err.println("[AuctionHandler] Error ending auction: " + e.getMessage());
+                                    e.printStackTrace();
                                 }
                             }
                         }, delay);
