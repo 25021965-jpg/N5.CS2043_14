@@ -18,6 +18,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import model.Bid;
 import model.User;
@@ -60,13 +61,14 @@ public class LiveAuctionController implements UserDataReceiver {
     @FXML private Button leaveBtn;
     @FXML private Button refreshBtn;
     @FXML private LineChart<String, Number> priceChart;
-    @FXML private CategoryAxis xAxis;
-    @FXML private NumberAxis yAxis;
     @FXML private TableView<Bid> bidHistoryTable;
     @FXML private TableColumn<Bid, String> timeColumn;
     @FXML private TableColumn<Bid, String> bidderColumn;
     @FXML private TableColumn<Bid, String> amountColumn;
     @FXML private TableColumn<Bid, String> statusColumn;
+    @FXML private VBox centerPanel;
+    @FXML private VBox chartContainer;
+    @FXML private VBox historyContainer;
 
     // ==================== INSTANCE VARIABLES ====================
 
@@ -135,6 +137,26 @@ public class LiveAuctionController implements UserDataReceiver {
 
         // Đăng ký listener nhận message từ server
         ResponseHandler.setLiveAuctionListener(this::handleServerMessage);
+
+        //style
+        timeColumn.prefWidthProperty().bind(
+                bidHistoryTable.widthProperty().multiply(0.25));
+
+        bidderColumn.prefWidthProperty().bind(
+                bidHistoryTable.widthProperty().multiply(0.30));
+
+        amountColumn.prefWidthProperty().bind(
+                bidHistoryTable.widthProperty().multiply(0.30));
+
+        statusColumn.prefWidthProperty().bind(
+                bidHistoryTable.widthProperty().multiply(0.15));
+        Platform.runLater(() -> {
+            chartContainer.prefHeightProperty().bind(
+                    centerPanel.heightProperty().multiply(0.6));
+
+            historyContainer.prefHeightProperty().bind(
+                    centerPanel.heightProperty().multiply(0.4));
+        });
     }
 
     // ==================== SINGLETON ====================
@@ -233,7 +255,7 @@ public class LiveAuctionController implements UserDataReceiver {
     // Trừ virtual balance khi đặt bid thành công
     private void deductVirtualBalance(BigDecimal amount) {
         if (virtualBalance != null && amount != null) {
-            // 🔥 Chỉ trừ hiệu so với lần bid trước
+            // Chỉ trừ hiệu so với lần bid trước
             BigDecimal diff = amount.subtract(myPendingBid); // lần đầu: amount - 0 = amount, lần sau: amount mới - amount cũ
             if (diff.compareTo(BigDecimal.ZERO) > 0) {
                 virtualBalance = virtualBalance.subtract(diff);
@@ -242,7 +264,7 @@ public class LiveAuctionController implements UserDataReceiver {
             globalVirtualBalance = virtualBalance;
             globalMyPendingBid = myPendingBid;
             updateBalanceDisplay();
-            System.out.println("🔥 Deducted diff: " + diff + ", myPendingBid: " + myPendingBid + ", remaining: " + virtualBalance);
+            System.out.println("Deducted diff: " + diff + ", myPendingBid: " + myPendingBid + ", remaining: " + virtualBalance);
         }
     }
 
@@ -488,7 +510,7 @@ public class LiveAuctionController implements UserDataReceiver {
 
             // ==================== JOIN THÀNH CÔNG ====================
             if (msg.startsWith("JOIN_SUCCESS")) {
-                System.out.println("✅ Successfully joined auction: " + auctionId);
+                System.out.println("Successfully joined auction: " + auctionId);
 
                 String[] parts = msg.split("\\|");
                 if (parts.length >= 4) {

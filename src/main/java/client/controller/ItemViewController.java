@@ -22,6 +22,7 @@ import javafx.scene.image.ImageView;
 
 import javafx.scene.input.MouseEvent;
 
+import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
 
 import javafx.stage.Stage;
@@ -43,17 +44,12 @@ import java.util.Locale;
 public class ItemViewController
         extends BaseController {
 
-    // ==================== CONSTANTS ====================
-
-    private static final double IMAGE_WIDTH = 380;
-
-    private static final double IMAGE_HEIGHT = 340;
-
     private static final NumberFormat MONEY_FORMAT =
             NumberFormat.getCurrencyInstance(Locale.US);
 
     private static final DateTimeFormatter TIME_FORMAT =
             DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
+    public StackPane imageContainer;
 
     // ==================== VARIABLES ====================
 
@@ -62,67 +58,34 @@ public class ItemViewController
     private int currentImageIndex = 0;
 
     // ==================== FXML ====================
-
-    @FXML
-    private Label lblName;
-
-    @FXML
-    private TextArea txtDescription;
-
-    @FXML
-    private Label lblCurrentPrice;
-
-    @FXML
-    private Label lblStep;
-
-    @FXML
-    private Label lblStart;
-
-    @FXML
-    private Label lblEnd;
-
-    @FXML
-    private ImageView imgItem;
-
-    @FXML
-    private Button btnJoinAuction;
-
-    @FXML
-    private Button btnFavourite;
+    @FXML private Label lblName;
+    @FXML private TextArea txtDescription;
+    @FXML private Label lblCurrentPrice;
+    @FXML private Label lblStep;
+    @FXML private Label lblStart;
+    @FXML private Label lblEnd;
+    @FXML private ImageView imgItem;
+    @FXML private Button btnJoinAuction;
+    @FXML private Button btnFavourite;
 
     // ==================== INITIALIZE ====================
 
     @FXML
     public void initialize() {
-
         setupImageView();
     }
 
     private void setupImageView() {
-
         Rectangle clip = new Rectangle();
-
         clip.setArcWidth(36);
-
         clip.setArcHeight(36);
-
-        clip.widthProperty().bind(
-                imgItem.fitWidthProperty()
-        );
-
-        clip.heightProperty().bind(
-                imgItem.fitHeightProperty()
-        );
-
+        clip.widthProperty().bind(imageContainer.widthProperty());
+        clip.heightProperty().bind(imageContainer.heightProperty());
         imgItem.setClip(clip);
-
-        // ===== AUTO CROP =====
-        imgItem.setPreserveRatio(false);
-
+        imgItem.setPreserveRatio(true);
         imgItem.setSmooth(true);
-
-        // Quan trọng để crop thay vì bóp ảnh
-        imgItem.setViewport(null);
+        imgItem.fitWidthProperty().bind(imageContainer.widthProperty().subtract(20));
+        imgItem.fitHeightProperty().bind(imageContainer.heightProperty().subtract(20));
     }
 
     // ==================== SET DATA ====================
@@ -325,18 +288,9 @@ public class ItemViewController
                 images.get(index);
 
         try {
-
-            Image image =
-                    new Image(
-                            imagePath,
-                            IMAGE_WIDTH,
-                            IMAGE_HEIGHT,
-                            false,
-                            true,
-                            true
-                    );
-
+            Image image = new Image(imagePath);
             imgItem.setImage(image);
+
 
         } catch (Exception e) {
 

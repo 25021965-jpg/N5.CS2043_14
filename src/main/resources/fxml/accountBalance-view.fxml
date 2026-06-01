@@ -5,12 +5,11 @@
 <?import javafx.scene.text.Font?>
 
 <AnchorPane
-        prefHeight="720.0"
-        prefWidth="1080.0"
+        prefHeight="850.0"
+        prefWidth="1100.0"
         xmlns="http://javafx.com/javafx/25"
         xmlns:fx="http://javafx.com/fxml/1"
         fx:controller="client.controller.AccountBalanceController"
-
         style="
             -fx-background-color: #F8FAFC;
             -fx-border-color: #D4AF37;
@@ -27,8 +26,8 @@
     <!-- PAGE TITLE -->
 
     <Label
-            layoutX="290.0"
-            layoutY="35.0"
+            AnchorPane.topAnchor="30.0"
+            AnchorPane.leftAnchor="300.0"
             text="Balance"
 
             style="
@@ -49,9 +48,9 @@
     <!-- BALANCE CARD -->
 
     <VBox
-            layoutX="290.0"
-            layoutY="100.0"
-            prefWidth="760.0"
+            AnchorPane.topAnchor="90.0"
+            AnchorPane.leftAnchor="280.0"
+            AnchorPane.rightAnchor="40.0"
             spacing="10"
 
             style="
@@ -85,16 +84,18 @@
     <!-- ACTION AREA -->
 
     <HBox
-            layoutX="290.0"
-            layoutY="250.0"
-            spacing="25">
+            spacing="25"
+            alignment="CENTER"
+            AnchorPane.topAnchor="270.0"
+            AnchorPane.leftAnchor="280.0"
+            AnchorPane.rightAnchor="40.0">
 
         <!-- DEPOSIT -->
 
         <VBox
-                prefWidth="360"
+                maxWidth="380.0"
                 spacing="18"
-
+                alignment="CENTER"
                 style="
                     -fx-background-color: white;
                     -fx-background-radius: 18;
@@ -129,7 +130,8 @@
                     fx:id="depositBtn"
                     text="Deposit"
                     onAction="#handleDeposit"
-
+                    VBox.vgrow="NEVER"
+                    maxWidth="1.7976931348623157E308"
                     prefHeight="45"
                     prefWidth="300"
 
@@ -146,9 +148,9 @@
         <!-- WITHDRAW -->
 
         <VBox
-                prefWidth="360"
+                maxWidth="1.7976931348623157E308"
                 spacing="18"
-
+                alignment="CENTER"
                 style="
                     -fx-background-color: white;
                     -fx-background-radius: 18;
@@ -183,7 +185,8 @@
                     fx:id="withdrawBtn"
                     text="Withdraw"
                     onAction="#handleWithdraw"
-
+                    VBox.vgrow="NEVER"
+                    maxWidth="1.7976931348623157E308"
                     prefHeight="45"
                     prefWidth="300"
 
@@ -202,9 +205,9 @@
     <!-- TRANSACTION HISTORY -->
 
     <HBox
-            layoutX="290.0"
-            layoutY="500.0"
-            prefWidth="760.0"
+            AnchorPane.topAnchor="520.0"
+            AnchorPane.leftAnchor="300.0"
+            AnchorPane.rightAnchor="40.0"
             alignment="CENTER_LEFT">
 
         <Label
@@ -229,12 +232,10 @@
     </HBox>
 
     <ScrollPane
-            layoutX="290.0"
-            layoutY="545.0"
-
-            prefWidth="760.0"
-            prefHeight="145.0"
-
+            AnchorPane.topAnchor="565.0"
+            AnchorPane.leftAnchor="300.0"
+            AnchorPane.rightAnchor="40.0"
+            AnchorPane.bottomAnchor="30.0"
             fitToWidth="true">
 
         <VBox

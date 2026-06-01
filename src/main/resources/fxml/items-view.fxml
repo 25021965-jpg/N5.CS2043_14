@@ -13,17 +13,13 @@
 <?import javafx.scene.text.Font?>
 
 <BorderPane
-        prefHeight="600.0"
-        prefWidth="900.0"
         style="-fx-background-color: #121212;"
         xmlns="http://javafx.com/javafx/25"
         xmlns:fx="http://javafx.com/fxml/1"
         fx:controller="client.controller.ItemViewController">
 
    <!-- ================= TOP ================= -->
-
    <top>
-
       <VBox
               spacing="10"
               style="
@@ -38,58 +34,55 @@
                     left="30"
                     top="20"/>
          </padding>
-
          <Label
                  fx:id="lblName"
                  text="Item Information"
                  textFill="#D4AF37">
-
             <font>
                <Font
                        name="Arial Bold"
                        size="34.0"/>
             </font>
-
          </Label>
-
       </VBox>
-
    </top>
 
    <!-- ================= LEFT IMAGE ================= -->
-
    <left>
-
       <VBox
-              alignment="TOP_CENTER"
-              prefWidth="420"
+              alignment="CENTER"
+              minWidth="420"
+              prefWidth="480"
+              maxWidth="550"
               spacing="20">
 
          <padding>
             <Insets
-                    left="25"
-                    right="10"
+                    left="40"
                     top="30"/>
          </padding>
 
          <StackPane
-                 prefHeight="340"
-                 prefWidth="380"
+                 fx:id="imageContainer"
+                 minHeight="380"
+                 minWidth="380"
+                 prefHeight="420"
+                 prefWidth="420"
+                 maxHeight="500"
+                 maxWidth="500"
                  style="
-                        -fx-background-color: #1F1F1F;
-                        -fx-background-radius: 18;
-                        -fx-border-radius: 18;
-                        -fx-border-color: #D4AF37;
-                        -fx-border-width: 2;
-                    ">
+        -fx-background-color: #1F1F1F;
+        -fx-background-radius: 18;
+        -fx-border-radius: 18;
+        -fx-border-color: #D4AF37;
+        -fx-border-width: 2;
+    ">
 
             <ImageView
                     fx:id="imgItem"
-                    fitHeight="340"
-                    fitWidth="380"/>
+                    preserveRatio="true"/>
 
             <!-- PREVIOUS -->
-
             <Button
                     onAction="#showPreviousImage"
                     prefHeight="40"
@@ -110,7 +103,6 @@
             </Button>
 
             <!-- NEXT -->
-
             <Button
                     onAction="#showNextImage"
                     prefHeight="40"
@@ -127,50 +119,38 @@
                <StackPane.margin>
                   <Insets right="10"/>
                </StackPane.margin>
-
             </Button>
-
          </StackPane>
-
       </VBox>
-
    </left>
 
    <!-- ================= CENTER ================= -->
-
    <center>
+      <VBox alignment="CENTER">
+         <Region VBox.vgrow="ALWAYS"/>
+         <VBox spacing="22">
 
-      <VBox spacing="22">
+            <!-- DESCRIPTION -->
+            <VBox spacing="22"
+            >
 
-         <padding>
-            <Insets
-                    left="15"
-                    right="30"
-                    top="30"/>
-         </padding>
+               <Label text="DESCRIPTION"
+                      textFill="#D4AF37">
+                  <font>
+                     <Font name="Arial Bold" size="18"/>
+                  </font>
+               </Label>
 
-         <!-- DESCRIPTION -->
-
-         <VBox spacing="10">
-
-            <Label
-                    text="DESCRIPTION"
-                    textFill="#D4AF37">
-
-               <font>
-                  <Font
-                          name="Arial Bold"
-                          size="18"/>
-               </font>
-
-            </Label>
-
-            <TextArea
-                    fx:id="txtDescription"
-                    editable="false"
-                    prefHeight="180"
-                    wrapText="true"
-                    style="
+               <TextArea
+                       fx:id="txtDescription"
+                       editable="false"
+                       prefWidth="700"
+                       maxWidth="Infinity"
+                       minHeight="180"
+                       prefHeight="220"
+                       wrapText="true"
+                       VBox.vgrow="ALWAYS"
+                       style="
                             -fx-control-inner-background: #1F1F1F;
                             -fx-text-fill: white;
                             -fx-font-size: 14px;
@@ -180,88 +160,99 @@
                             -fx-background-insets: 0;
                         "/>
 
-         </VBox>
+            </VBox>
+            <padding>
+               <Insets
+                       top="20"
+                       right="40"
+                       bottom="20"
+                       left="40"/>
+            </padding>
 
-         <!-- AUCTION INFO -->
+            <!-- AUCTION INFO -->
 
-         <VBox
-                 prefWidth="400"
-                 spacing="18"
-                 style="
+            <VBox spacing="18"
+                  prefWidth="700"
+                  maxWidth="Infinity"
+                  style="
                         -fx-background-color: #1A1A1A;
                         -fx-background-radius: 16;
                         -fx-border-radius: 16;
                         -fx-border-color: #2C2C2C;
                     ">
 
-            <padding>
-               <Insets
-                       top="20"
-                       right="20"
-                       bottom="20"
-                       left="20"/>
-            </padding>
+               <!-- content -->
+               <padding>
+                  <Insets
+                          top="20"
+                          right="40"
+                          bottom="20"
+                          left="40"/>
+               </padding>
 
-            <Label
-                    text="AUCTION INFORMATION"
-                    textFill="#D4AF37">
+               <Label
+                       text="AUCTION INFORMATION"
+                       textFill="#D4AF37">
 
-               <font>
-                  <Font
-                          name="Arial Bold"
-                          size="18"/>
-               </font>
+                  <font>
+                     <Font
+                             name="Arial Bold"
+                             size="18"/>
+                  </font>
 
-            </Label>
+               </Label>
 
-            <Label
-                    fx:id="lblCurrentPrice"
-                    text="Current Price:"
-                    textFill="WHITE">
+               <Label
+                       fx:id="lblCurrentPrice"
+                       text="Current Price:"
+                       textFill="WHITE">
 
-               <font>
-                  <Font size="16"/>
-               </font>
+                  <font>
+                     <Font size="16"/>
+                  </font>
 
-            </Label>
+               </Label>
 
-            <Label
-                    fx:id="lblStep"
-                    text="Min Increment:"
-                    textFill="WHITE">
+               <Label
+                       fx:id="lblStep"
+                       text="Min Increment:"
+                       textFill="WHITE">
 
-               <font>
-                  <Font size="16"/>
-               </font>
+                  <font>
+                     <Font size="16"/>
+                  </font>
 
-            </Label>
+               </Label>
 
-            <Label
-                    fx:id="lblStart"
-                    text="Start Time:"
-                    textFill="WHITE">
+               <Label
+                       fx:id="lblStart"
+                       text="Start Time:"
+                       textFill="WHITE">
 
-               <font>
-                  <Font size="16"/>
-               </font>
+                  <font>
+                     <Font size="16"/>
+                  </font>
 
-            </Label>
+               </Label>
 
-            <Label
-                    fx:id="lblEnd"
-                    text="End Time:"
-                    textFill="WHITE">
+               <Label
+                       fx:id="lblEnd"
+                       text="End Time:"
+                       textFill="WHITE">
 
-               <font>
-                  <Font size="16"/>
-               </font>
+                  <font>
+                     <Font size="16"/>
+                  </font>
 
-            </Label>
+               </Label>
+
+            </VBox>
 
          </VBox>
 
-      </VBox>
+         <Region VBox.vgrow="ALWAYS"/>
 
+      </VBox>
    </center>
 
    <!-- ================= BOTTOM ================= -->
@@ -270,6 +261,7 @@
 
       <HBox
               alignment="CENTER"
+              minHeight="90"
               prefHeight="90"
               spacing="20"
               style="
@@ -285,11 +277,10 @@
          </padding>
 
          <!-- BACK -->
-
          <Button
                  onMouseClicked="#handleBack"
                  prefHeight="45"
-                 prefWidth="140"
+                 minWidth="140"
                  text="BACK"
                  style="
                         -fx-background-color: transparent;
@@ -343,7 +334,7 @@
                  fx:id="btnJoinAuction"
                  onAction="#handleJoinAuction"
                  prefHeight="45"
-                 prefWidth="180"
+                 minWidth="180"
                  text="JOIN AUCTION"
                  style="
                         -fx-background-color: #D4AF37;
@@ -361,9 +352,6 @@
             </font>
 
          </Button>
-
       </HBox>
-
    </bottom>
-
 </BorderPane>

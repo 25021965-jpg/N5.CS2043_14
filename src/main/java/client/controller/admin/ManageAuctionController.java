@@ -38,6 +38,22 @@ public class ManageAuctionController {
         searchAuctionField.textProperty().addListener((obs, old, val) -> filterAuctions(val));
 
         handleReloadAuctions();
+
+        //style
+        auctionIdCol.prefWidthProperty().bind(
+                auctionTable.widthProperty().multiply(0.12));
+
+        auctionItemCol.prefWidthProperty().bind(
+                auctionTable.widthProperty().multiply(0.30));
+
+        sellerCol.prefWidthProperty().bind(
+                auctionTable.widthProperty().multiply(0.20));
+
+        currentBidCol.prefWidthProperty().bind(
+                auctionTable.widthProperty().multiply(0.18));
+
+        auctionStatusCol.prefWidthProperty().bind(
+                auctionTable.widthProperty().multiply(0.18));
     }
 
     @FXML

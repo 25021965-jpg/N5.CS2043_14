@@ -7,7 +7,6 @@ import client.util.TextUtils;
 import javafx.fxml.FXML;
 
 import javafx.scene.Node;
-import javafx.scene.Parent;
 
 import javafx.scene.control.Label;
 
@@ -61,7 +60,6 @@ public class ItemCardController {
 
     // ==================== VARIABLES ====================
     private Auction auction;
-    private Parent root;
     private ClientSocket client;
 
     // ==================== INITIALIZE ====================
@@ -74,27 +72,61 @@ public class ItemCardController {
 
     private void setupImageView() {
 
-        Rectangle clip = new Rectangle();
-
-        clip.setArcWidth(20);
-
-        clip.setArcHeight(20);
-
-        clip.widthProperty().bind(
-                imgProduct.fitWidthProperty()
+        Rectangle clip = new Rectangle(
+                240,
+                180
         );
 
-        clip.heightProperty().bind(
-                imgProduct.fitHeightProperty()
-        );
+        clip.setArcWidth(30);
+        clip.setArcHeight(30);
 
         imgProduct.setClip(clip);
 
-        imgProduct.setPreserveRatio(false);
+        imgProduct.setFitWidth(240);
+        imgProduct.setFitHeight(180);
 
+        imgProduct.setPreserveRatio(true);
         imgProduct.setSmooth(true);
     }
 
+    private void applyCoverCrop(Image image) {
+
+        double viewWidth = 240;
+        double viewHeight = 180;
+
+        double imageWidth = image.getWidth();
+        double imageHeight = image.getHeight();
+
+        double imageRatio = imageWidth / imageHeight;
+        double viewRatio = viewWidth / viewHeight;
+
+        if (imageRatio > viewRatio) {
+            double cropWidth = imageHeight * viewRatio;
+            double x = (imageWidth - cropWidth) / 2;
+
+            imgProduct.setViewport(
+                    new javafx.geometry.Rectangle2D(
+                            x,
+                            0,
+                            cropWidth,
+                            imageHeight
+                    )
+            );
+
+        } else {
+            double cropHeight = imageWidth / viewRatio;
+            double y = (imageHeight - cropHeight) / 2;
+
+            imgProduct.setViewport(
+                    new javafx.geometry.Rectangle2D(
+                            0,
+                            y,
+                            imageWidth,
+                            cropHeight
+                    )
+            );
+        }
+    }
     // ==================== SETTERS ====================
 
     public void setClient(
@@ -104,17 +136,9 @@ public class ItemCardController {
         this.client = client;
     }
 
-    public void setRoot(
-            Parent root
-    ) {
-
-        this.root = root;
+    public void setRoot() {
     }
 
-    public Parent getRoot() {
-
-        return root;
-    }
 
     // ==================== LOAD DATA ====================
 
@@ -262,6 +286,19 @@ public class ItemCardController {
         );
     }
 
+    public void updateAuction(
+            Auction auction
+    ) {
+
+        this.auction = auction;
+
+        setupPrices();
+
+        setupStatus();
+
+        setupEndTime();
+    }
+
     // ==================== IMAGE ====================
 
     private void loadImage(
@@ -284,19 +321,27 @@ public class ItemCardController {
                     item.getImages()
                             .getFirst();
 
-            Image image =
-                    IMAGE_CACHE.get(imagePath);
+            Image image = IMAGE_CACHE.get(imagePath);
 
             if (image == null) {
 
-                image =
-                        createImage(imagePath);
+                image = createImage(imagePath);
 
                 IMAGE_CACHE.put(
                         imagePath,
                         image
                 );
             }
+
+            Image finalImage = image;
+
+            image.progressProperty().addListener((obs, oldVal, newVal) -> {
+
+                if (newVal.doubleValue() >= 1.0) {
+
+                    applyCoverCrop(finalImage);
+                }
+            });
 
             imgProduct.setImage(image);
 
@@ -311,6 +356,7 @@ public class ItemCardController {
                     getFallbackImage()
             );
         }
+
     }
 
     private Image createImage(

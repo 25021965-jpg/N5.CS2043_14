@@ -43,6 +43,22 @@ public class ManageProductController {
         searchProductField.textProperty().addListener((obs, old, val) -> filterProducts(val));
 
         handleReloadProducts();
+
+        //style
+        productIdCol.prefWidthProperty().bind(
+                productTable.widthProperty().multiply(0.12));
+
+        productNameCol.prefWidthProperty().bind(
+                productTable.widthProperty().multiply(0.30));
+
+        categoryCol.prefWidthProperty().bind(
+                productTable.widthProperty().multiply(0.20));
+
+        sellerCol.prefWidthProperty().bind(
+                productTable.widthProperty().multiply(0.20));
+
+        statusCol.prefWidthProperty().bind(
+                productTable.widthProperty().multiply(0.15));
     }
 
     // ================= LOAD ALL PRODUCTS =================

@@ -2,14 +2,15 @@ package client.controller;
 
 import client.network.ClientSocket;
 import client.network.response.parser.AuctionParser;
-import client.util.NavigationUtils;
+import client.util.AuctionCardFactory;
 import client.util.TextUtils;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.FlowPane;
 
 import model.Auction;
@@ -39,7 +40,7 @@ public class FavouriteController
 
     private final List<Auction> originalAuctions =
             new ArrayList<>();
-
+    @FXML private ScrollPane scrollPane;
     @FXML private FlowPane favouriteListContainer;
     @FXML private ComboBox<String> statusFilterComboBox;
     @FXML private ComboBox<String> categoryFilterComboBox;
@@ -51,6 +52,19 @@ public class FavouriteController
         System.out.println("Favourite Page Loaded");
         setupStatusFilter();
         setupCategoryFilter();
+        Platform.runLater(() -> {
+
+            favouriteListContainer.setPrefWrapLength(
+                    scrollPane.getViewportBounds().getWidth() - 20
+            );
+
+            scrollPane.viewportBoundsProperty().addListener(
+                    (obs, oldVal, newVal) ->
+                            favouriteListContainer.setPrefWrapLength(
+                                    newVal.getWidth() - 20
+                            )
+            );
+        });
     }
 
     // ==================== CLIENT ====================
@@ -86,10 +100,6 @@ public class FavouriteController
 
     public void loadFavourites() {
         client.sendMessage("LIST_FAVOURITES");
-    }
-
-    public void reloadFavourites() {
-        loadFavourites();
     }
 
     // ==================== RENDER ====================
@@ -309,56 +319,19 @@ public class FavouriteController
         }
     }
 
+    public void reloadFavourites() {
+        loadFavourites();
+    }
+
     // ==================== CARD ====================
 
     private Parent createAuctionCard(
             Auction auction
     ) {
-
-        try {
-            FXMLLoader loader = NavigationUtils.loadFXML("/fxml/itemsCard-view.fxml");
-            Parent card = loader.load();
-
-            ItemCardController controller =
-                    loader.getController();
-
-            controller.setClient(client);
-
-            controller.setRoot(card);
-
-            controller.setData(auction);
-
-            return card;
-
-        } catch (Exception e) {
-
-            e.printStackTrace();
-
-            return null;
-        }
-    }
-
-    // ==================== REMOVE ====================
-
-    public void removeItemFromUI(
-            String auctionId
-    ) {
-
-        runUI(() -> {
-
-            favouriteListContainer
-                    .getChildren()
-                    .removeIf(node -> {
-
-                        Object userData =
-                                node.getUserData();
-
-                        return auctionId != null
-                                && auctionId.equals(
-                                userData
-                        );
-                    });
-        });
+        return AuctionCardFactory.createCard(
+                auction,
+                client
+        );
     }
 
     // ==================== EMPTY ====================

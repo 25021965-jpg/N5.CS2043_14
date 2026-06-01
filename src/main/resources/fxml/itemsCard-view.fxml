@@ -52,9 +52,9 @@
            prefHeight="185"
 
            style="
-                 -fx-background-color:#262626;
-                 -fx-background-radius:15;
-                 -fx-border-radius:15;
+                 -fx-background-color:#1a1a1a;
+                 -fx-background-radius:20;
+                 -fx-border-radius:20;
                  -fx-clip-to-padding: true;
              ">
 
@@ -66,8 +66,7 @@
               fx:id="imgProduct"
               fitWidth="240"
               fitHeight="180"
-              preserveRatio="false"
-              smooth="true"
+              preserveRatio="true"
               pickOnBounds="true">
       </ImageView>
 

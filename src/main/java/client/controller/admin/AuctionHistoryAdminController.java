@@ -39,6 +39,22 @@ public class AuctionHistoryAdminController {
 
         searchAuctionField.textProperty().addListener((obs, old, val) -> filterHistory(val));
 
+        //style
+        auctionIdCol.prefWidthProperty().bind(
+                auctionHistoryTable.widthProperty().multiply(0.12));
+
+        itemNameCol.prefWidthProperty().bind(
+                auctionHistoryTable.widthProperty().multiply(0.30));
+
+        winnerCol.prefWidthProperty().bind(
+                auctionHistoryTable.widthProperty().multiply(0.22));
+
+        finalBidCol.prefWidthProperty().bind(
+                auctionHistoryTable.widthProperty().multiply(0.18));
+
+        endDateCol.prefWidthProperty().bind(
+                auctionHistoryTable.widthProperty().multiply(0.18));
+
         handleReloadAuctionHistory();
     }
 

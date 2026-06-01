@@ -8,8 +8,8 @@
 
 <?import javafx.scene.layout.FlowPane?>
 <AnchorPane
-        prefHeight="720.0"
-        prefWidth="1080.0"
+        prefHeight="850.0"
+        prefWidth="1100.0"
         xmlns="http://javafx.com/javafx/26"
         xmlns:fx="http://javafx.com/fxml/1"
         fx:controller="client.controller.FavouriteController"
@@ -29,8 +29,8 @@
 
     <!-- PAGE TITLE -->
     <Label
-            layoutX="290.0"
-            layoutY="35.0"
+            AnchorPane.topAnchor="30.0"
+            AnchorPane.leftAnchor="280.0"
 
             text="Favourite Auctions"
 
@@ -42,11 +42,11 @@
 
     <!-- FILTER -->
     <HBox
-            layoutX="290.0"
-            layoutY="100.0"
-
             alignment="CENTER_LEFT"
-            spacing="15">
+            spacing="15"
+            AnchorPane.topAnchor="95.0"
+            AnchorPane.leftAnchor="280.0"
+            AnchorPane.rightAnchor="40.0">
 
         <!-- STATUS -->
         <Label
@@ -102,11 +102,11 @@
 
     <!-- FAVOURITE LIST -->
     <ScrollPane
-            layoutX="290.0"
-            layoutY="160.0"
-
-            prefHeight="520.0"
-            prefWidth="760.0"
+            fx:id="scrollPane"
+            AnchorPane.topAnchor="155.0"
+            AnchorPane.leftAnchor="280.0"
+            AnchorPane.rightAnchor="10.0"
+            AnchorPane.bottomAnchor="10.0"
 
             fitToWidth="true"
 
@@ -117,8 +117,7 @@
 
         <FlowPane fx:id="favouriteListContainer"
                   hgap="20"
-                  vgap="20"
-                  prefWrapLength="1100">
+                  vgap="20">
 
         </FlowPane>
 

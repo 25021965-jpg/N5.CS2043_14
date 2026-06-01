@@ -4,12 +4,12 @@ import client.manager.UserSession;
 import client.manager.ViewCache;
 import client.network.ClientSocket;
 import client.network.response.ResponseHandler;
+import client.util.AuctionCardFactory;
 import client.util.NavigationUtils;
 
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 
 import javafx.scene.Parent;
 
@@ -24,8 +24,6 @@ import model.Auction;
 import model.Category;
 import model.User;
 
-import java.io.IOException;
-
 import java.util.*;
 
 public class HomePageController
@@ -38,7 +36,6 @@ public class HomePageController
     public List<Auction> getAuctionList() {
         return auctionList;
     }
-    private static final double CARD_WIDTH = 260;
 
     // ==================== DATA ====================
     private final List<Auction> auctionList =
@@ -75,13 +72,10 @@ public class HomePageController
                     (obs, oldVal, newVal) -> applyFilters()
             );
 
-            Platform.runLater(() -> {
-                itemGrid.getScene()
-                        .widthProperty()
-                        .addListener((obs, oldVal, newVal) ->
-                                applyFilters());
-
-            });
+            Platform.runLater(() -> itemGrid.getScene()
+                    .widthProperty()
+                    .addListener((obs, oldVal, newVal) ->
+                            applyFilters()));
         });
     }
 
@@ -367,55 +361,12 @@ public class HomePageController
     private Parent createAuctionCard(
             Auction auction
     ) {
-
-        try {
-
-            String auctionId =
-                    auction.getAuction_id();
-
-            Parent cached =
-                    cardCache.get(auctionId);
-
-            if (cached != null) {
-                return cached;
-            }
-
-            FXMLLoader loader =
-                    new FXMLLoader(
-                            getClass().getResource(
-                                    "/fxml/itemsCard-view.fxml"
-                            )
-                    );
-
-            Parent root =
-                    loader.load();
-
-            ItemCardController controller =
-                    loader.getController();
-
-            controller.setRoot(root);
-
-            controller.setClient(client);
-
-            controller.setData(auction);
-
-            cardCache.put(
-                    auctionId,
-                    root
-            );
-
-            return root;
-
-        } catch (IOException e) {
-
-            System.err.println(
-                    "[HomePage] Card load error: "
-                            + e.getMessage()
-            );
-
-            return null;
-        }
+        return AuctionCardFactory.createCard(
+                auction,
+                client
+        );
     }
+
     // ==================== NAVIGATION ====================
 
     @FXML

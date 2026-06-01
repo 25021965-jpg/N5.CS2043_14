@@ -17,25 +17,25 @@ public class ResponseRouter {
             return;
         }
 
-        // 🔥 THÊM XỬ LÝ JOIN_SUCCESS
+        // THÊM XỬ LÝ JOIN_SUCCESS
         if (raw.startsWith("JOIN_SUCCESS")) {
             Platform.runLater(() -> AuctionHandler.joinSuccess(raw.substring("JOIN_SUCCESS|".length())));
             return;
         }
 
-        // 🔥 THÊM XỬ LÝ YOU_WON
+        // THÊM XỬ LÝ YOU_WON
         if (raw.startsWith("YOU_WON")) {
             Platform.runLater(() -> LiveAuctionController.getInstance().handleServerMessage(raw));
             return;
         }
 
-        // 🔥 THÊM XỬ LÝ AUCTION_ENDED
+        // THÊM XỬ LÝ AUCTION_ENDED
         if (raw.startsWith("AUCTION_ENDED")) {
             Platform.runLater(() -> LiveAuctionController.getInstance().handleServerMessage(raw));
             return;
         }
 
-        // 🔥 THÊM XỬ LÝ BID_HISTORY
+        // THÊM XỬ LÝ BID_HISTORY
         if (raw.startsWith("BID_HISTORY_SUCCESS")) {
             Platform.runLater(() -> AuctionHandler.bidHistory(raw.substring("BID_HISTORY_SUCCESS|".length())));
             return;

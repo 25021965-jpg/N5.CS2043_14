@@ -5,8 +5,7 @@
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.VBox?>
-<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.FlowPane?>
 <AnchorPane
         prefHeight="720.0"
         prefWidth="1080.0"
@@ -31,8 +30,8 @@
 
     <!-- PAGE TITLE -->
     <Label
-            layoutX="290"
-            layoutY="35"
+            AnchorPane.topAnchor="30.0"
+            AnchorPane.leftAnchor="280.0"
 
             text="My Auctions"
 
@@ -42,13 +41,12 @@
                 -fx-text-fill: #0F172A;
             "/>
 
-    <!-- FILTER -->
     <HBox
-            layoutX="290"
-            layoutY="100"
-
+            alignment="CENTER_LEFT"
             spacing="15"
-            alignment="CENTER_LEFT">
+            AnchorPane.topAnchor="95.0"
+            AnchorPane.leftAnchor="280.0"
+            AnchorPane.rightAnchor="40.0">
 
         <Label
                 text="Status"
@@ -100,11 +98,11 @@
 
     <!-- AUCTION LIST -->
     <ScrollPane
-            layoutX="290"
-            layoutY="160"
-
-            prefHeight="520"
-            prefWidth="760"
+            fx:id="scrollPane"
+            AnchorPane.topAnchor="155.0"
+            AnchorPane.leftAnchor="280.0"
+            AnchorPane.rightAnchor="10.0"
+            AnchorPane.bottomAnchor="10.0"
 
             fitToWidth="true"
 
@@ -113,18 +111,13 @@
                 -fx-background: transparent;
             ">
 
-        <VBox
-                prefWidth="730"
-                spacing="20"
+        <FlowPane
+                fx:id="itemGrid"
+                hgap="20"
+                vgap="20"
+                prefWrapLength="750"
 
-                style="-fx-padding: 10;">
-
-            <GridPane
-                    fx:id="itemGrid"
-                    hgap="20"
-                    vgap="20"/>
-
-        </VBox>
+                style="-fx-padding: 10;"/>
 
     </ScrollPane>
 

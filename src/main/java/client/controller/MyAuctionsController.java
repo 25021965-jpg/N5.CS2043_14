@@ -2,16 +2,16 @@ package client.controller;
 
 import client.network.ClientSocket;
 
+import client.util.AuctionCardFactory;
 import client.util.TextUtils;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 
 import javafx.scene.Parent;
 
 import javafx.scene.control.*;
 
-import javafx.scene.layout.GridPane;
-
+import javafx.scene.layout.FlowPane;
 
 import model.Auction;
 import model.User;
@@ -21,24 +21,15 @@ import java.util.List;
 
 public class MyAuctionsController implements UserDataReceiver{
 
-    @FXML
-    private ComboBox<String> statusFilterComboBox;
-
-    @FXML
-    private ComboBox<String> categoryFilterComboBox;
-
-    @FXML
-    private GridPane itemGrid;
+    @FXML private ComboBox<String> statusFilterComboBox;
+    @FXML private ComboBox<String> categoryFilterComboBox;
+    @FXML private FlowPane itemGrid;
+    @FXML private ScrollPane scrollPane;
 
     private final List<Auction> myAuctions = new ArrayList<>();
-    private static final int MAX_COLUMNS = 3;
-    public void setClient(ClientSocket client) {
-    }
-
-    public void setUser(User user) {
-    }
+    public void setClient(ClientSocket client) {}
+    public void setUser(User user) {}
     private static MyAuctionsController instance;
-
     public static MyAuctionsController getInstance() {
         return instance;
     }
@@ -53,6 +44,19 @@ public class MyAuctionsController implements UserDataReceiver{
 
         ClientSocket.getInstance()
                 .sendMyAuctions();
+
+        Platform.runLater(() -> {
+            itemGrid.setPrefWrapLength(
+                    scrollPane.getViewportBounds().getWidth()
+            );
+
+            scrollPane.viewportBoundsProperty().addListener(
+                    (obs, oldVal, newVal) ->
+                            itemGrid.setPrefWrapLength(
+                                    newVal.getWidth() - 20
+                            )
+            );
+        });
     }
 
     private void setupStatusFilter() {
@@ -150,49 +154,24 @@ public class MyAuctionsController implements UserDataReceiver{
 
         itemGrid.getChildren().clear();
 
-        int col = 0;
-        int row = 0;
-
         for (Auction auction : list) {
 
-            try {
+            Parent card =
+                    AuctionCardFactory.createCard(
+                            auction,
+                            ClientSocket.getInstance()
+                    );
 
-                FXMLLoader loader =
-                        new FXMLLoader(
-                                getClass().getResource(
-                                        "/fxml/itemsCard-view.fxml"
-                                )
-                        );
+            if (card != null) {
 
-                Parent card =
-                        loader.load();
-
-                ItemCardController controller =
-                        loader.getController();
-
-                controller.setClient(
-                        ClientSocket.getInstance()
+                itemGrid.getChildren().add(
+                        card
                 );
-
-                controller.setData(
-                        auction
-                );
-
-                itemGrid.add(
-                        card,
-                        col++,
-                        row
-                );
-
-                if (col == MAX_COLUMNS) {
-                    col = 0;
-                    row++;
-                }
-
-            } catch (Exception e) {
-                e.printStackTrace();
             }
         }
     }
 
+    public void reloadMyAuctions() {
+        ClientSocket.getInstance().sendMyAuctions();
+    }
 }

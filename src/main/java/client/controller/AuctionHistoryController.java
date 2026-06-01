@@ -2,13 +2,15 @@ package client.controller;
 
 import client.network.ClientSocket;
 import client.network.response.parser.AuctionParser;
+import client.util.AuctionCardFactory;
 import client.util.TextUtils;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.FlowPane;
 
 import model.Auction;
@@ -23,7 +25,6 @@ public class AuctionHistoryController
         implements UserDataReceiver {
 
     private static AuctionHistoryController instance;
-
     public static AuctionHistoryController getInstance() {
         return instance;
     }
@@ -38,7 +39,7 @@ public class AuctionHistoryController
 
     private final List<Auction> joinedAuctions =
             new ArrayList<>();
-
+    @FXML private ScrollPane scrollPane;
     @FXML private FlowPane historyContainer;
     @FXML private ComboBox<String> statusFilterComboBox;
     @FXML private ComboBox<String> categoryFilterComboBox;
@@ -53,6 +54,19 @@ public class AuctionHistoryController
         );
         setupStatusFilter();
         setupCategoryFilter();
+        Platform.runLater(() -> {
+
+            historyContainer.setPrefWrapLength(
+                    scrollPane.getViewportBounds().getWidth() - 20
+            );
+
+            scrollPane.viewportBoundsProperty().addListener(
+                    (obs, oldVal, newVal) ->
+                            historyContainer.setPrefWrapLength(
+                                    newVal.getWidth() - 20
+                            )
+            );
+        });
     }
 
     // ==================== CLIENT ====================
@@ -60,19 +74,16 @@ public class AuctionHistoryController
     @Override
     public void setClient(ClientSocket client) {
         super.setClient(client);
-
         if (client == null) {
             return;
         }
 
         client.setMessageListener(msg -> {
-
             if (msg.startsWith(
                     "LIST_JOINED_AUCTIONS_SUCCESS"
             ) || msg.equals(
                     "LIST_JOINED_AUCTIONS_EMPTY"
             )) {
-
                 renderHistory(msg);
             }
         });
@@ -80,26 +91,22 @@ public class AuctionHistoryController
     }
 
     // ==================== USER ====================
-
     @Override
-    public void setUser(
-            User user
-    ) {
-    }
+    public void setUser(User user) {}
 
     // ==================== LOAD HISTORY ====================
-
     public void loadHistory() {
-
         client.sendMessage(
-                "LIST_JOINED_AUCTIONS"
-        );
+                "LIST_JOINED_AUCTIONS");
+    }
+
+    public void reloadHistory() {
+        loadHistory();
     }
 
     // ==================== FILTER SETUP ====================
 
     private void setupStatusFilter() {
-
         statusFilterComboBox
                 .getItems()
                 .addAll(STATUS_FILTERS);
@@ -114,13 +121,11 @@ public class AuctionHistoryController
     }
 
     private void setupCategoryFilter() {
-
         categoryFilterComboBox
                 .getItems()
                 .add("All");
 
         for (Category category : Category.values()) {
-
             categoryFilterComboBox
                     .getItems()
                     .add(
@@ -141,12 +146,8 @@ public class AuctionHistoryController
 
     // ==================== RENDER ====================
 
-    public void renderHistory(
-            String response
-    ) {
-
+    public void renderHistory(String response) {
         runUI(() -> {
-
             historyContainer
                     .getChildren()
                     .clear();
@@ -308,36 +309,10 @@ public class AuctionHistoryController
     private Parent createAuctionCard(
             Auction auction
     ) {
-
-        try {
-
-            FXMLLoader loader =
-                    new FXMLLoader(
-                            getClass().getResource(
-                                    "/fxml/itemsCard-view.fxml"
-                            )
-                    );
-
-            Parent card =
-                    loader.load();
-
-            ItemCardController controller =
-                    loader.getController();
-
-            controller.setClient(client);
-
-            controller.setRoot(card);
-
-            controller.setData(auction);
-
-            return card;
-
-        } catch (Exception e) {
-
-            e.printStackTrace();
-
-            return null;
-        }
+        return AuctionCardFactory.createCard(
+                auction,
+                client
+        );
     }
 
     // ==================== EMPTY ====================

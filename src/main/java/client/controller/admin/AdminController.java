@@ -35,6 +35,19 @@ public class AdminController {
 
         searchField.textProperty().addListener((obs, old, newVal) -> filterUsers(newVal));
         handleReload();
+
+        //style
+        userIdCol.prefWidthProperty().bind(
+                userTable.widthProperty().multiply(0.10));
+
+        usernameCol.prefWidthProperty().bind(
+                userTable.widthProperty().multiply(0.25));
+
+        emailCol.prefWidthProperty().bind(
+                userTable.widthProperty().multiply(0.40));
+
+        roleCol.prefWidthProperty().bind(
+                userTable.widthProperty().multiply(0.20));
     }
 
     @FXML

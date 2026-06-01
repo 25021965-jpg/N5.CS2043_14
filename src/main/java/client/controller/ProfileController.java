@@ -13,50 +13,24 @@ import server.dao.UserDAO;
 
 public class ProfileController implements UserDataReceiver {
 
-    @FXML
-    private Label fullNameLabel;
-
-    @FXML
-    private Label usernameLabel;
-
-    @FXML
-    private Label dobLabel;
-
-    @FXML
-    private Label emailLabel;
-
-    @FXML
-    private PasswordField oldPasswordField;
-
-    @FXML
-    private PasswordField newPasswordField;
-
-    @FXML
-    private PasswordField verifyNewPasswordField;
-
-    @FXML
-    private TextField oldPasswordTextField;
-
-    @FXML
-    private TextField newPasswordTextField;
-
-    @FXML
-    private TextField verifyNewPasswordTextField;
-
-    @FXML
-    private Button toggleOldBtn;
-
-    @FXML
-    private Button toggleNewBtn;
-
-    @FXML
-    private Button toggleVerifyBtn;
+    @FXML private Label fullNameLabel;
+    @FXML private Label usernameLabel;
+    @FXML private Label dobLabel;
+    @FXML private Label emailLabel;
+    @FXML private PasswordField oldPasswordField;
+    @FXML private PasswordField newPasswordField;
+    @FXML private PasswordField verifyNewPasswordField;
+    @FXML private TextField oldPasswordTextField;
+    @FXML private TextField newPasswordTextField;
+    @FXML private TextField verifyNewPasswordTextField;
+    @FXML private Button toggleOldBtn;
+    @FXML private Button toggleNewBtn;
+    @FXML private Button toggleVerifyBtn;
 
     private User currentUser;
 
     @FXML
     public void initialize() {
-
         setupPasswordToggle(
                 oldPasswordField,
                 oldPasswordTextField,

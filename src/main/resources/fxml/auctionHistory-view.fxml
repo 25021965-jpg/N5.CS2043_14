@@ -9,8 +9,6 @@
 
 <?import javafx.scene.layout.FlowPane?>
 <AnchorPane
-        prefHeight="720.0"
-        prefWidth="1080.0"
         style="
             -fx-background-color: #F8FAFC;
             -fx-border-color: #D4AF37;
@@ -29,8 +27,8 @@
 
     <!-- PAGE TITLE -->
     <Label
-            layoutX="290.0"
-            layoutY="35.0"
+            AnchorPane.topAnchor="30.0"
+            AnchorPane.leftAnchor="280.0"
             text="Auction History"
             style="
                 -fx-font-size: 32px;
@@ -40,10 +38,11 @@
 
     <!-- FILTER -->
     <HBox
-            layoutX="290.0"
-            layoutY="100.0"
             alignment="CENTER_LEFT"
-            spacing="15">
+            spacing="15"
+            AnchorPane.topAnchor="95.0"
+            AnchorPane.leftAnchor="280.0"
+            AnchorPane.rightAnchor="40.0">
 
         <Label
                 text="Status"
@@ -101,10 +100,11 @@
 
     <!-- HISTORY LIST -->
     <ScrollPane
-            layoutX="290.0"
-            layoutY="160.0"
-            prefHeight="520.0"
-            prefWidth="760.0"
+            fx:id="scrollPane"
+            AnchorPane.topAnchor="160.0"
+            AnchorPane.leftAnchor="280.0"
+            AnchorPane.rightAnchor="10.0"
+            AnchorPane.bottomAnchor="10.0"
             fitToWidth="true"
             style="-fx-background-color: transparent;">
 
@@ -113,8 +113,7 @@
                 prefWidth="730"
                 hgap="20"
                 vgap="20"
-                prefWrapLength="700"
-                style="-fx-padding: 10;">
+                prefWrapLength="750">
         </FlowPane>
 
     </ScrollPane>

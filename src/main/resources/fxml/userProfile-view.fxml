@@ -27,7 +27,11 @@
     <!-- RIGHT CONTENT -->
     <!-- ================================================= -->
 
-    <VBox layoutX="320" layoutY="90" spacing="25">
+    <VBox
+            spacing="25"
+            AnchorPane.topAnchor="30.0"
+            AnchorPane.leftAnchor="280.0"
+            AnchorPane.rightAnchor="40.0">
 
         <!-- TITLE -->
 
@@ -50,8 +54,8 @@
         <GridPane hgap="20" vgap="18">
 
             <columnConstraints>
-                <ColumnConstraints/>
-                <ColumnConstraints/>
+                <ColumnConstraints minWidth="140"/>
+                <ColumnConstraints hgrow="ALWAYS"/>
             </columnConstraints>
 
             <rowConstraints>
@@ -78,7 +82,7 @@
 
             <HBox
                     prefHeight="50"
-                    prefWidth="520"
+                    maxWidth="1.7976931348623157E308"
                     GridPane.columnIndex="1"
                     GridPane.rowIndex="0"
                     style="
@@ -119,7 +123,7 @@
 
             <HBox
                     prefHeight="50"
-                    prefWidth="520"
+                    maxWidth="1.7976931348623157E308"
                     GridPane.columnIndex="1"
                     GridPane.rowIndex="1"
                     style="
@@ -175,7 +179,7 @@
 
             <HBox
                     prefHeight="50"
-                    prefWidth="520"
+                    maxWidth="1.7976931348623157E308"
                     GridPane.columnIndex="1"
                     GridPane.rowIndex="2"
                     style="
@@ -223,7 +227,7 @@
             <HBox
                     alignment="CENTER_LEFT"
                     prefHeight="45"
-                    prefWidth="420"
+                    maxWidth="1.7976931348623157E308"
                     spacing="5"
                     style="
                         -fx-background-color: white;
@@ -271,7 +275,7 @@
             <HBox
                     alignment="CENTER_LEFT"
                     prefHeight="45"
-                    prefWidth="420"
+                    maxWidth="1.7976931348623157E308"
                     spacing="5"
                     style="
                         -fx-background-color: white;
@@ -319,7 +323,7 @@
             <HBox
                     alignment="CENTER_LEFT"
                     prefHeight="45"
-                    prefWidth="420"
+                    maxWidth="1.7976931348623157E308"
                     spacing="5"
                     style="
                         -fx-background-color: white;
@@ -364,27 +368,26 @@
 
         </VBox>
 
-    </VBox>
+        <!-- RESET BUTTON -->
+        <HBox alignment="CENTER_RIGHT">
 
-    <!-- RESET BUTTON -->
+            <Button
+                    text="Reset Password"
+                    onAction="#resetPassword"
 
-    <Button
-            layoutX="789.0"
-            layoutY="582.0"
-            prefHeight="31.0"
-            prefWidth="143.0"
-            text="Reset Password"
-            onAction="#resetPassword"
-            style="
+                    prefWidth="160"
+                    prefHeight="40"
+
+                    style="
                 -fx-background-color: #D4AF37;
                 -fx-text-fill: white;
                 -fx-font-size: 15px;
                 -fx-font-weight: bold;
                 -fx-background-radius: 8;
-            ">
-        <font>
-            <Font name="Berlin Sans FB Demi Bold" size="14.0"/>
-        </font>
-    </Button>
+            "/>
+
+        </HBox>
+
+    </VBox>
 
 </AnchorPane>

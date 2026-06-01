@@ -1,37 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.chart.CategoryAxis?>
-<?import javafx.scene.chart.LineChart?>
-<?import javafx.scene.chart.NumberAxis?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ProgressBar?>
-<?import javafx.scene.control.Separator?>
-<?import javafx.scene.control.TableColumn?>
-<?import javafx.scene.control.TableView?>
-<?import javafx.scene.control.TextField?>
-<?import javafx.scene.image.ImageView?>
-<?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.Region?>
-<?import javafx.scene.layout.VBox?>
-<?import javafx.scene.layout.StackPane?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.chart.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
 
-<AnchorPane prefHeight="800.0" prefWidth="1400.0" style="-fx-background-color: #0D0D0D;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controller.LiveAuctionController">
+<AnchorPane prefHeight="850.0" prefWidth="1100.0" style="-fx-background-color: #0D0D0D;" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controller.LiveAuctionController">
 
-    <VBox spacing="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+    <VBox AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
 
         <!-- ==================== HEADER ==================== -->
-        <HBox alignment="CENTER_LEFT" spacing="16.0"
-              style="-fx-background-color: #161616; -fx-border-color: #2A2A2A; -fx-border-width: 0 0 1 0;">
+        <HBox alignment="CENTER_LEFT" spacing="16.0" style="-fx-background-color: #161616; -fx-border-color: #2A2A2A; -fx-border-width: 0 0 1 0;">
             <padding>
                 <Insets bottom="14.0" left="28.0" right="28.0" top="14.0" />
             </padding>
 
             <!-- Logo + Title -->
             <HBox alignment="CENTER_LEFT" spacing="10.0">
-                <Label style="-fx-text-fill: #D4AF37; -fx-font-size: 20; -fx-font-weight: bold;" text="" />
+                <Label style="-fx-text-fill: #D4AF37; -fx-font-size: 20; -fx-font-weight: bold;" />
                 <Label style="-fx-text-fill: #FFFFFF; -fx-font-size: 18; -fx-font-weight: bold; -fx-letter-spacing: 2;" text="LIVE AUCTION" />
                 <!-- Live badge -->
                 <Label style="-fx-background-color: #EF4444; -fx-text-fill: white; -fx-font-size: 10; -fx-font-weight: bold; -fx-background-radius: 4; -fx-padding: 2 7 2 7;" text="● LIVE" />
@@ -40,8 +27,7 @@
             <Region HBox.hgrow="ALWAYS" />
 
             <!-- Clock -->
-            <HBox alignment="CENTER" spacing="8.0"
-                  style="-fx-background-color: #1E1E1E; -fx-background-radius: 8; -fx-padding: 6 14 6 14;">
+            <HBox alignment="CENTER" spacing="8.0" style="-fx-background-color: #1E1E1E; -fx-background-radius: 8; -fx-padding: 6 14 6 14;">
                 <Label style="-fx-text-fill: #888888; -fx-font-size: 12;" text="⏰" />
                 <Label fx:id="currentTimeLabel" style="-fx-text-fill: #D4AF37; -fx-font-size: 14; -fx-font-weight: bold;" text="--:--:--" />
             </HBox>
@@ -49,30 +35,24 @@
 
         <!-- ==================== MAIN CONTENT ==================== -->
         <!-- Layout: LEFT(product+bid) | CENTER(chart+history) | RIGHT(stats) -->
-        <HBox spacing="0.0" VBox.vgrow="ALWAYS">
+        <HBox VBox.vgrow="ALWAYS">
 
-            <!-- ========== LEFT PANEL (300px) ========== -->
-            <VBox prefWidth="300.0" spacing="0.0"
-                  style="-fx-background-color: #161616; -fx-border-color: #2A2A2A; -fx-border-width: 0 1 0 0;">
+            <!-- ========== LEFT PANEL ========== -->
+            <VBox maxWidth="350.0" minWidth="250.0" prefWidth="300.0" style="-fx-background-color: #161616; -fx-border-color: #2A2A2A; -fx-border-width: 0 1 0 0;">
 
                 <!-- Product Image -->
-                <StackPane style="-fx-background-color: #111111;" prefHeight="200.0">
-                    <ImageView fx:id="productImageView" fitHeight="200.0" fitWidth="300.0"
-                               preserveRatio="true" smooth="true" />
+                <StackPane prefHeight="200.0" style="-fx-background-color: #111111;">
+                    <ImageView fx:id="productImageView" fitHeight="200.0" preserveRatio="true" />
                 </StackPane>
 
-                <VBox spacing="0.0" VBox.vgrow="ALWAYS">
+                <VBox VBox.vgrow="ALWAYS">
                     <padding>
                         <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
                     </padding>
 
                     <!-- Product Name -->
-                    <Label fx:id="productNameLabel"
-                           style="-fx-text-fill: #FFFFFF; -fx-font-size: 17; -fx-font-weight: bold;"
-                           text="Product Name" wrapText="true" />
-                    <Label fx:id="productDescLabel"
-                           style="-fx-text-fill: #666666; -fx-font-size: 12; -fx-padding: 4 0 12 0;"
-                           text="Description" wrapText="true" maxHeight="48.0" />
+                    <Label fx:id="productNameLabel" style="-fx-text-fill: #FFFFFF; -fx-font-size: 17; -fx-font-weight: bold;" text="Product Name" wrapText="true" />
+                    <Label fx:id="productDescLabel" maxHeight="48.0" style="-fx-text-fill: #666666; -fx-font-size: 12; -fx-padding: 4 0 12 0;" text="Description" wrapText="true" />
 
                     <Separator style="-fx-background-color: #222222;" />
 
@@ -80,21 +60,15 @@
                     <HBox spacing="8.0" style="-fx-padding: 12 0 0 0;">
                         <VBox spacing="3.0" HBox.hgrow="ALWAYS">
                             <Label style="-fx-text-fill: #555555; -fx-font-size: 10;" text="CURRENT" />
-                            <Label fx:id="currentPriceLabel"
-                                   style="-fx-text-fill: #D4AF37; -fx-font-size: 16; -fx-font-weight: bold;"
-                                   text="0 USD" />
+                            <Label fx:id="currentPriceLabel" style="-fx-text-fill: #D4AF37; -fx-font-size: 16; -fx-font-weight: bold;" text="0 USD" />
                         </VBox>
                         <VBox spacing="3.0" HBox.hgrow="ALWAYS">
                             <Label style="-fx-text-fill: #555555; -fx-font-size: 10;" text="STEP" />
-                            <Label fx:id="stepPriceLabel"
-                                   style="-fx-text-fill: #AAAAAA; -fx-font-size: 13; -fx-font-weight: bold;"
-                                   text="0 USD" />
+                            <Label fx:id="stepPriceLabel" style="-fx-text-fill: #AAAAAA; -fx-font-size: 13; -fx-font-weight: bold;" text="0 USD" />
                         </VBox>
                         <VBox spacing="3.0" HBox.hgrow="ALWAYS">
                             <Label style="-fx-text-fill: #555555; -fx-font-size: 10;" text="FLOOR" />
-                            <Label fx:id="floorPriceLabel"
-                                   style="-fx-text-fill: #AAAAAA; -fx-font-size: 13;"
-                                   text="0 USD" />
+                            <Label fx:id="floorPriceLabel" style="-fx-text-fill: #AAAAAA; -fx-font-size: 13;" text="0 USD" />
                         </VBox>
                     </HBox>
 
@@ -107,12 +81,8 @@
                             <Label style="-fx-text-fill: #888888; -fx-font-size: 10;" text="🏆 LEADING BIDDER" />
                         </HBox>
                         <HBox alignment="CENTER_LEFT" spacing="8.0">
-                            <Label fx:id="currentWinnerLabel"
-                                   style="-fx-text-fill: #D4AF37; -fx-font-size: 15; -fx-font-weight: bold;"
-                                   text="No bids yet" HBox.hgrow="ALWAYS"/>
-                            <Label fx:id="winnerTimeLabel"
-                                   style="-fx-text-fill: #555555; -fx-font-size: 11;"
-                                   text="--:--:--" />
+                            <Label fx:id="currentWinnerLabel" style="-fx-text-fill: #D4AF37; -fx-font-size: 15; -fx-font-weight: bold;" text="No bids yet" HBox.hgrow="ALWAYS" />
+                            <Label fx:id="winnerTimeLabel" style="-fx-text-fill: #555555; -fx-font-size: 11;" text="--:--:--" />
                         </HBox>
                     </VBox>
 
@@ -122,9 +92,7 @@
                             <Insets top="8.0" />
                         </padding>
                         <Label style="-fx-text-fill: #888888; -fx-font-size: 10;" text="⏳ TIME REMAINING" />
-                        <Label fx:id="countdownLabel"
-                               style="-fx-text-fill: #EF4444; -fx-font-size: 26; -fx-font-weight: bold; -fx-font-family: 'Monospaced';"
-                               text="00:00:00" />
+                        <Label fx:id="countdownLabel" style="-fx-text-fill: #EF4444; -fx-font-size: 26; -fx-font-weight: bold; -fx-font-family: 'Monospaced';" text="00:00:00" />
                     </VBox>
 
                     <Region VBox.vgrow="ALWAYS" />
@@ -134,23 +102,17 @@
                         <padding>
                             <Insets top="8.0" />
                         </padding>
-                        <Button fx:id="backHomeBtn"
-                                style="-fx-background-color: transparent; -fx-text-fill: #888888; -fx-font-size: 12; -fx-border-color: #333333; -fx-border-radius: 6; -fx-padding: 8 12; -fx-cursor: hand;"
-                                text="← HOME" HBox.hgrow="ALWAYS" />
-                        <Button fx:id="leaveBtn"
-                                style="-fx-background-color: #3D1515; -fx-text-fill: #EF4444; -fx-font-size: 12; -fx-font-weight: bold; -fx-border-color: #5A1E1E; -fx-border-radius: 6; -fx-padding: 8 12; -fx-cursor: hand;"
-                                text="🚪 LEAVE" HBox.hgrow="ALWAYS" />
+                        <Button fx:id="backHomeBtn" style="-fx-background-color: transparent; -fx-text-fill: #888888; -fx-font-size: 12; -fx-border-color: #333333; -fx-border-radius: 6; -fx-padding: 8 12; -fx-cursor: hand;" text="← HOME" HBox.hgrow="ALWAYS" />
+                        <Button fx:id="leaveBtn" style="-fx-background-color: #3D1515; -fx-text-fill: #EF4444; -fx-font-size: 12; -fx-font-weight: bold; -fx-border-color: #5A1E1E; -fx-border-radius: 6; -fx-padding: 8 12; -fx-cursor: hand;" text="🚪 LEAVE" HBox.hgrow="ALWAYS" />
                     </HBox>
                 </VBox>
             </VBox>
 
             <!-- ========== CENTER PANEL (grows) ========== -->
-            <VBox spacing="0.0" HBox.hgrow="ALWAYS"
-                  style="-fx-background-color: #0D0D0D;">
+            <VBox fx:id="centerPanel" style="-fx-background-color: #0D0D0D;" HBox.hgrow="ALWAYS">
 
                 <!-- Chart -->
-                <VBox spacing="8.0" VBox.vgrow="ALWAYS"
-                      style="-fx-background-color: #0D0D0D; -fx-border-color: #2A2A2A; -fx-border-width: 0 0 1 0;">
+                <VBox fx:id="chartContainer" maxHeight="Infinity" spacing="8.0" style="-fx-background-color: #0D0D0D; -fx-border-color: #2A2A2A; -fx-border-width: 0 0 1 0;" VBox.vgrow="ALWAYS">
                     <padding>
                         <Insets bottom="16.0" left="20.0" right="20.0" top="16.0" />
                     </padding>
@@ -159,8 +121,7 @@
                         <Label style="-fx-text-fill: #444444; -fx-font-size: 11;" text="— realtime" />
                     </HBox>
 
-                    <LineChart fx:id="priceChart" VBox.vgrow="ALWAYS"
-                               style="-fx-background-color: transparent; -fx-plot-background-color: #111111; -fx-background-radius: 8;">
+                    <LineChart fx:id="priceChart" style="-fx-background-color: transparent; -fx-plot-background-color: #111111; -fx-background-radius: 8;" VBox.vgrow="ALWAYS">
                         <xAxis>
                             <CategoryAxis label="Bid #" style="-fx-text-fill: #555555; -fx-tick-label-fill: #555555;" />
                         </xAxis>
@@ -171,55 +132,43 @@
                 </VBox>
 
                 <!-- Bid History -->
-                <VBox spacing="10.0" prefHeight="260.0"
-                      style="-fx-background-color: #0D0D0D;">
+                <VBox fx:id="historyContainer" maxHeight="Infinity" spacing="10.0" style="-fx-background-color: #0D0D0D;" VBox.vgrow="ALWAYS">
                     <padding>
                         <Insets bottom="16.0" left="20.0" right="20.0" top="14.0" />
                     </padding>
                     <HBox alignment="CENTER_LEFT" spacing="10.0">
                         <Label style="-fx-text-fill: #D4AF37; -fx-font-size: 13; -fx-font-weight: bold;" text="🕒 BID HISTORY" />
                         <Region HBox.hgrow="ALWAYS" />
-                        <Button fx:id="refreshBtn"
-                                style="-fx-background-color: #1E1E1E; -fx-text-fill: #888888; -fx-font-size: 11; -fx-background-radius: 6; -fx-cursor: hand; -fx-padding: 5 12; -fx-border-color: #2A2A2A; -fx-border-radius: 6;"
-                                text="↻ REFRESH" />
+                        <Button fx:id="refreshBtn" style="-fx-background-color: #1E1E1E; -fx-text-fill: #888888; -fx-font-size: 11; -fx-background-radius: 6; -fx-cursor: hand; -fx-padding: 5 12; -fx-border-color: #2A2A2A; -fx-border-radius: 6;" text="↻ REFRESH" />
                     </HBox>
 
-                    <TableView fx:id="bidHistoryTable" VBox.vgrow="ALWAYS"
-                               style="-fx-background-color: #111111; -fx-background-radius: 8; -fx-border-color: #222222; -fx-border-radius: 8;">
+                    <TableView fx:id="bidHistoryTable" style="-fx-background-color: #111111; -fx-background-radius: 8; -fx-border-color: #222222; -fx-border-radius: 8;" VBox.vgrow="ALWAYS">
                         <columns>
-                            <TableColumn fx:id="timeColumn" prefWidth="110.0" text="⏰ TIME" />
-                            <TableColumn fx:id="bidderColumn" prefWidth="150.0" text="👤 BIDDER" />
-                            <TableColumn fx:id="amountColumn" prefWidth="160.0" text="💰 AMOUNT" />
-                            <TableColumn fx:id="statusColumn" prefWidth="90.0" text="📌 STATUS" />
+                            <TableColumn fx:id="timeColumn" text="TIME" />
+                            <TableColumn fx:id="bidderColumn" text="BIDDER" />
+                            <TableColumn fx:id="amountColumn" text="AMOUNT" />
+                            <TableColumn fx:id="statusColumn" text="STATUS" />
                         </columns>
                     </TableView>
                 </VBox>
             </VBox>
 
             <!-- ========== RIGHT PANEL (260px) ========== -->
-            <VBox prefWidth="260.0" spacing="0.0"
-                  style="-fx-background-color: #161616; -fx-border-color: #2A2A2A; -fx-border-width: 0 0 0 1;">
+            <VBox prefWidth="260.0" style="-fx-background-color: #161616; -fx-border-color: #2A2A2A; -fx-border-width: 0 0 0 1;">
                 <padding>
                     <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
                 </padding>
 
                 <!-- Balance -->
-                <VBox spacing="6.0"
-                      style="-fx-background-color: #1A1A1A; -fx-background-radius: 10; -fx-padding: 14;">
-                    <Label style="-fx-text-fill: #888888; -fx-font-size: 10;" text="💰 YOUR BALANCE" />
-                    <Label fx:id="estimatedBalanceLabel"
-                           style="-fx-text-fill: #FFFFFF; -fx-font-size: 22; -fx-font-weight: bold;"
-                           text="0 USD" wrapText="true"/>
-                    <ProgressBar fx:id="balanceProgressBar" prefHeight="5.0" prefWidth="228.0"
-                                 progress="0.0"
-                                 style="-fx-accent: #D4AF37; -fx-background-color: #2A2A2A; -fx-background-radius: 3;" />
-                    <Label fx:id="maxBidLabel"
-                           style="-fx-text-fill: #555555; -fx-font-size: 10;"
-                           text="Max: 0 USD" wrapText="true"/>
+                <VBox spacing="6.0" style="-fx-background-color: #1A1A1A; -fx-background-radius: 10; -fx-padding: 14;">
+                    <Label style="-fx-text-fill: #888888; -fx-font-size: 10;" text="YOUR BALANCE" />
+                    <Label fx:id="estimatedBalanceLabel" style="-fx-text-fill: #FFFFFF; -fx-font-size: 22; -fx-font-weight: bold;" text="0 USD" wrapText="true" />
+                    <ProgressBar fx:id="balanceProgressBar" maxWidth="Infinity" prefHeight="5.0" progress="0.0" style="-fx-accent: #D4AF37; -fx-background-color: #2A2A2A; -fx-background-radius: 3;" VBox.vgrow="ALWAYS" />
+                    <Label fx:id="maxBidLabel" style="-fx-text-fill: #555555; -fx-font-size: 10;" text="Max: 0 USD" wrapText="true" />
                 </VBox>
 
                 <!-- Divider -->
-                <Separator style="-fx-background-color: #222222; -fx-padding: 12 0 12 0;" >
+                <Separator style="-fx-background-color: #222222; -fx-padding: 12 0 12 0;">
                     <VBox.margin>
                         <Insets bottom="12.0" top="12.0" />
                     </VBox.margin>
@@ -227,44 +176,31 @@
 
                 <!-- Place Bid -->
                 <VBox spacing="10.0">
-                    <Label style="-fx-text-fill: #888888; -fx-font-size: 10;" text="📝 PLACE NEW BID" />
+                    <Label style="-fx-text-fill: #888888; -fx-font-size: 10;" text="PLACE NEW BID" />
 
-                    <HBox alignment="CENTER_LEFT" spacing="8.0"
-                          style="-fx-background-color: #1A1A1A; -fx-background-radius: 8; -fx-border-color: #333333; -fx-border-radius: 8; -fx-padding: 4 8 4 8;">
+                    <HBox alignment="CENTER_LEFT" spacing="8.0" style="-fx-background-color: #1A1A1A; -fx-background-radius: 8; -fx-border-color: #333333; -fx-border-radius: 8; -fx-padding: 4 8 4 8;">
                         <Label style="-fx-text-fill: #D4AF37; -fx-font-size: 12; -fx-font-weight: bold;" text="USD" />
-                        <TextField fx:id="bidAmountField"
-                                   promptText="Enter amount..."
-                                   style="-fx-background-color: transparent; -fx-text-fill: #FFFFFF; -fx-font-size: 14; -fx-prompt-text-fill: #444444; -fx-border-width: 0;"
-                                   HBox.hgrow="ALWAYS" />
+                        <TextField fx:id="bidAmountField" promptText="Enter amount..." style="-fx-background-color: transparent; -fx-text-fill: #FFFFFF; -fx-font-size: 14; -fx-prompt-text-fill: #444444; -fx-border-width: 0;" HBox.hgrow="ALWAYS" />
                     </HBox>
 
-                    <Label fx:id="bidWarningLabel"
-                           style="-fx-text-fill: #EF4444; -fx-font-size: 10;"
-                           text="" visible="false" wrapText="true"/>
+                    <Label fx:id="bidWarningLabel" style="-fx-text-fill: #EF4444; -fx-font-size: 10;" visible="false" wrapText="true" />
 
                     <!-- Quick buttons -->
                     <HBox spacing="6.0">
-                        <Button fx:id="addStepBtn"
-                                style="-fx-background-color: #1E1E1E; -fx-text-fill: #D4AF37; -fx-font-size: 11; -fx-background-radius: 6; -fx-cursor: hand; -fx-padding: 7 10; -fx-border-color: #333333; -fx-border-radius: 6;"
-                                text="+ STEP" HBox.hgrow="ALWAYS"/>
-                        <Button fx:id="maxBidBtn"
-                                style="-fx-background-color: #1E1E1E; -fx-text-fill: #888888; -fx-font-size: 11; -fx-background-radius: 6; -fx-cursor: hand; -fx-padding: 7 10; -fx-border-color: #333333; -fx-border-radius: 6;"
-                                text="MAX" HBox.hgrow="ALWAYS"/>
+                        <Button fx:id="addStepBtn" style="-fx-background-color: #1E1E1E; -fx-text-fill: #D4AF37; -fx-font-size: 11; -fx-background-radius: 6; -fx-cursor: hand; -fx-padding: 7 10; -fx-border-color: #333333; -fx-border-radius: 6;" text="+ STEP" HBox.hgrow="ALWAYS" />
+                        <Button fx:id="maxBidBtn" style="-fx-background-color: #1E1E1E; -fx-text-fill: #888888; -fx-font-size: 11; -fx-background-radius: 6; -fx-cursor: hand; -fx-padding: 7 10; -fx-border-color: #333333; -fx-border-radius: 6;" text="MAX" HBox.hgrow="ALWAYS" />
                     </HBox>
 
                     <!-- Place Bid Button -->
-                    <Button fx:id="placeBidBtn"
-                            style="-fx-background-color: #D4AF37; -fx-text-fill: #0D0D0D; -fx-font-size: 14; -fx-font-weight: bold; -fx-background-radius: 8; -fx-cursor: hand; -fx-padding: 12 0;"
-                            text=" PLACE BID" maxWidth="Infinity" />
+                    <Button fx:id="placeBidBtn" maxWidth="Infinity" style="-fx-background-color: #D4AF37; -fx-text-fill: #0D0D0D; -fx-font-size: 14; -fx-font-weight: bold; -fx-background-radius: 8; -fx-cursor: hand; -fx-padding: 12 0;" text=" PLACE BID" />
                 </VBox>
 
                 <Region VBox.vgrow="ALWAYS" />
 
                 <!-- Info footer -->
-                <VBox spacing="6.0"
-                      style="-fx-background-color: #111111; -fx-background-radius: 8; -fx-padding: 12;">
+                <VBox spacing="6.0" style="-fx-background-color: #111111; -fx-background-radius: 8; -fx-padding: 12;">
                     <Label style="-fx-text-fill: #444444; -fx-font-size: 10;" text="Min bid = current + step price" />
-                    <Label style="-fx-text-fill: #444444; -fx-font-size: 10;" text="Balance deducted on bid success" />
+                    <Label style="-fx-text-fill: #444444; -fx-font-size: 10;" text="Virtual balance deducted on bid success" />
                     <Label style="-fx-text-fill: #444444; -fx-font-size: 10;" text="Refunded automatically if outbid" />
                 </VBox>
             </VBox>

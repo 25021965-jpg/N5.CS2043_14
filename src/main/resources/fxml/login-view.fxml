@@ -13,13 +13,16 @@
 <?import javafx.scene.text.Font?>
 
 <HBox
-        prefWidth="900.0"
-        prefHeight="600.0"
+        prefWidth="1100.0"
+        prefHeight="850"
         minWidth="-Infinity"
         minHeight="-Infinity"
         maxWidth="-Infinity"
         maxHeight="-Infinity"
-        style="-fx-background-color: #121212;"
+        style="
+        -fx-background-color: #121212;
+        -fx-border-color: #D4AF37;
+        -fx-border-width: 6;"
         xmlns="http://javafx.com/javafx/25"
         xmlns:fx="http://javafx.com/fxml/1"
         fx:controller="client.controller.LoginController">

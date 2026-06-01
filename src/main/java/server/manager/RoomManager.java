@@ -11,17 +11,17 @@ public class RoomManager {
 
     public static void addClient(String auctionId, PrintWriter writer) {
         rooms.computeIfAbsent(auctionId, k -> new CopyOnWriteArrayList<>()).add(writer);
-        System.out.println("[RoomManager] ✅ Client joined room: " + auctionId);
+        System.out.println("[RoomManager] Client joined room: " + auctionId);
     }
 
     public static void removeClient(String auctionId, PrintWriter writer) {
         List<PrintWriter> room = rooms.get(auctionId);
         if (room != null) {
             room.remove(writer);
-            System.out.println("[RoomManager] ❌ Client left room: " + auctionId);
+            System.out.println("[RoomManager] Client left room: " + auctionId);
             if (room.isEmpty()) {
                 rooms.remove(auctionId);
-                System.out.println("[RoomManager] 🗑️ Room deleted: " + auctionId);
+                System.out.println("[RoomManager] Room deleted: " + auctionId);
             }
         }
     }
@@ -34,7 +34,7 @@ public class RoomManager {
                     writer.println(message);
                 }
             }
-            System.out.println("[RoomManager] 📢 Broadcast to room: " + auctionId);
+            System.out.println("[RoomManager] Broadcast to room: " + auctionId);
         }
     }
 
@@ -44,7 +44,7 @@ public class RoomManager {
             for (PrintWriter writer : room) {
                 writer.println(message);
             }
-            System.out.println("[RoomManager] 📢 Broadcast to ALL in room: " + auctionId);
+            System.out.println("[RoomManager] Broadcast to ALL in room: " + auctionId);
         }
     }
 }
