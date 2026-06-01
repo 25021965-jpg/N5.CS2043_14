@@ -38,52 +38,30 @@ import java.util.Map;
 public class ItemCardController {
 
     // ==================== CONSTANTS ====================
-
     private static final double IMAGE_WIDTH = 235;
-
     private static final double IMAGE_HEIGHT = 165;
-
     private static final String DEFAULT_STATUS_STYLE =
             "-fx-text-fill:white;";
-
     private static final Map<String, Image> IMAGE_CACHE =
             new HashMap<>();
-
     private static final NumberFormat MONEY_FORMAT =
             NumberFormat.getCurrencyInstance(Locale.US);
-
     private static final DateTimeFormatter TIME_FORMAT =
             DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
 
     // ==================== FXML ====================
 
-    @FXML
-    private ImageView imgProduct;
-
-    @FXML
-    private Label lblName;
-
-    @FXML
-    private Label lblCategory;
-
-    @FXML
-    private Label lblStatus;
-
-    @FXML
-    private Label lblCurrentPrice;
-
-    @FXML
-    private Label lblStep;
-
-    @FXML
-    private Label lblEndTime;
+    @FXML private ImageView imgProduct;
+    @FXML private Label lblName;
+    @FXML private Label lblCategory;
+    @FXML private Label lblStatus;
+    @FXML private Label lblCurrentPrice;
+    @FXML private Label lblStep;
+    @FXML private Label lblEndTime;
 
     // ==================== VARIABLES ====================
-
     private Auction auction;
-
     private Parent root;
-
     private ClientSocket client;
 
     // ==================== INITIALIZE ====================

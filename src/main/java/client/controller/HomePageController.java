@@ -1,6 +1,7 @@
 package client.controller;
 
 import client.manager.UserSession;
+import client.manager.ViewCache;
 import client.network.ClientSocket;
 import client.network.response.ResponseHandler;
 import client.util.NavigationUtils;
@@ -11,7 +12,6 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
@@ -26,9 +26,7 @@ import model.User;
 
 import java.io.IOException;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public class HomePageController
         extends BaseController {
@@ -40,12 +38,13 @@ public class HomePageController
     public List<Auction> getAuctionList() {
         return auctionList;
     }
-    private static final int MAX_COLUMNS = 3;
+    private static final double CARD_WIDTH = 260;
 
     // ==================== DATA ====================
-    private boolean initialized = false;
     private final List<Auction> auctionList =
             new ArrayList<>();
+    private final Map<String, Parent> cardCache =
+            new HashMap<>();
     private Category selectedCategory;
     private String selectedStatus;
 
@@ -65,8 +64,6 @@ public class HomePageController
     @FXML
     public void initialize() {
         instance = this;
-        if (initialized) return;
-        initialized = true;
         Platform.runLater(() -> {
             if (itemGrid != null && itemGrid.getScene() != null) {
                 ResponseHandler.setMainStage(
@@ -77,6 +74,14 @@ public class HomePageController
             txtSearch.textProperty().addListener(
                     (obs, oldVal, newVal) -> applyFilters()
             );
+
+            Platform.runLater(() -> {
+                itemGrid.getScene()
+                        .widthProperty()
+                        .addListener((obs, oldVal, newVal) ->
+                                applyFilters());
+
+            });
         });
     }
 
@@ -97,30 +102,6 @@ public class HomePageController
         }
     }
 
-    private void setupSearch() {
-
-        txtSearch.textProperty().addListener(
-                (obs, oldVal, newVal) ->
-                        applyFilters()
-        );
-    }
-
-    private void loadInitialData() {
-
-        User user =
-                UserSession.getCurrentUser();
-
-        if (user == null) {
-            return;
-        }
-
-        client.sendList();
-
-        client.sendGetFavourite(
-                user.getUser_id()
-        );
-    }
-
     // ==================== DATA ====================
 
     public void setUser(
@@ -130,31 +111,19 @@ public class HomePageController
         UserSession.setCurrentUser(user);
     }
 
-    public void updateAuctionList(
-            List<Auction> auctions
-    ) {
-
+    public void updateAuctionList(List<Auction> auctions) {
         if (!Platform.isFxApplicationThread()) {
-
             Platform.runLater(() ->
                     updateAuctionList(auctions)
             );
-
             return;
         }
-
-        if (isSameData(
-                auctionList,
-                auctions
-        )) {
-
+        if (isSameData(auctionList, auctions)) {
             return;
         }
-
         auctionList.clear();
-
         auctionList.addAll(auctions);
-
+        cardCache.clear();
         applyFilters();
     }
 
@@ -168,18 +137,12 @@ public class HomePageController
         }
 
         for (int i = 0; i < newList.size(); i++) {
-
-            Auction oldAuction =
-                    oldList.get(i);
-
-            Auction newAuction =
-                    newList.get(i);
-
+            Auction oldAuction = oldList.get(i);
+            Auction newAuction = newList.get(i);
             if (!Objects.equals(
                     oldAuction.getAuction_id(),
                     newAuction.getAuction_id()
             )) {
-
                 return false;
             }
 
@@ -187,39 +150,29 @@ public class HomePageController
                     oldAuction.getCurrentPrice(),
                     newAuction.getCurrentPrice()
             )) {
-
                 return false;
             }
 
             if (oldAuction.getStatus()
                     != newAuction.getStatus()) {
-
                 return false;
             }
         }
-
         return true;
     }
 
     // ==================== FILTER ====================
 
     @FXML
-    private void handleSearch(
-            ActionEvent event
-    ) {
-
+    private void handleSearch() {
         applyFilters();
     }
 
     @FXML
     private void showAll() {
-
         selectedCategory = null;
-
         selectedStatus = null;
-
         highlight(btnAll);
-
         applyFilters();
     }
 
@@ -285,54 +238,41 @@ public class HomePageController
     ) {
 
         selectedCategory = category;
-
         highlight(button);
-
         applyFilters();
     }
 
     @FXML
     private void showAllStatus() {
-
         selectedStatus = null;
-
         applyFilters();
     }
 
     @FXML
     private void showActive() {
-
         selectedStatus = "ACTIVE";
-
         applyFilters();
     }
 
     @FXML
     private void showEnded() {
-
         selectedStatus = "ENDED";
-
         applyFilters();
     }
 
     @FXML
     private void showCancelled() {
-
         selectedStatus = "CANCELLED";
-
         applyFilters();
     }
 
     @FXML
     private void showUpcoming() {
-
         selectedStatus = "UPCOMING";
-
         applyFilters();
     }
 
     private void applyFilters() {
-
         String keyword =
                 txtSearch.getText()
                         .trim()
@@ -340,7 +280,6 @@ public class HomePageController
 
         List<Auction> filtered =
                 auctionList.stream()
-
                         .filter(auction ->
                                 matchesSearch(
                                         auction,
@@ -348,20 +287,9 @@ public class HomePageController
                                 )
                         )
 
-                        .filter(auction ->
-                                matchesCategory(
-                                        auction
-                                )
-                        )
-
-                        .filter(auction ->
-                                matchesStatus(
-                                        auction
-                                )
-                        )
-
+                        .filter(this::matchesCategory)
+                        .filter(this::matchesStatus)
                         .toList();
-
         refreshGrid(filtered);
     }
 
@@ -384,20 +312,14 @@ public class HomePageController
                 .contains(keyword);
     }
 
-    private boolean matchesCategory(
-            Auction auction
-    ) {
-
+    private boolean matchesCategory(Auction auction) {
         return selectedCategory == null
                 || auction.getItem()
                 .getCategory()
                 == selectedCategory;
     }
 
-    private boolean matchesStatus(
-            Auction auction
-    ) {
-
+    private boolean matchesStatus(Auction auction) {
         return selectedStatus == null
                 || (
                 auction.getStatus() != null
@@ -410,38 +332,33 @@ public class HomePageController
     }
 
     // ==================== GRID ====================
-
-    private void refreshGrid(
-            List<Auction> auctions
-    ) {
+    private void refreshGrid(List<Auction> auctions) {
 
         itemGrid.getChildren().clear();
 
-        int column = 0;
+        double width = itemGrid.getScene() != null
+                ? itemGrid.getScene().getWidth()
+                : 1100;
 
+        int columns = width >= 1400 ? 4 : 3;
+
+        int column = 0;
         int row = 0;
 
         for (Auction auction : auctions) {
 
-            Parent card =
-                    createAuctionCard(auction);
+            Parent card = createAuctionCard(auction);
 
             if (card == null) {
                 continue;
             }
 
-            itemGrid.add(
-                    card,
-                    column,
-                    row
-            );
+            itemGrid.add(card, column, row);
 
             column++;
 
-            if (column == MAX_COLUMNS) {
-
+            if (column >= columns) {
                 column = 0;
-
                 row++;
             }
         }
@@ -452,6 +369,16 @@ public class HomePageController
     ) {
 
         try {
+
+            String auctionId =
+                    auction.getAuction_id();
+
+            Parent cached =
+                    cardCache.get(auctionId);
+
+            if (cached != null) {
+                return cached;
+            }
 
             FXMLLoader loader =
                     new FXMLLoader(
@@ -472,6 +399,11 @@ public class HomePageController
 
             controller.setData(auction);
 
+            cardCache.put(
+                    auctionId,
+                    root
+            );
+
             return root;
 
         } catch (IOException e) {
@@ -484,85 +416,6 @@ public class HomePageController
             return null;
         }
     }
-
-    // ==================== LIVE AUCTION ====================
-
-    public void openLiveAuction(
-            Auction auction
-    ) {
-
-        try {
-
-            FXMLLoader loader =
-                    new FXMLLoader(
-                            getClass().getResource(
-                                    "/fxml/liveAuction-view.fxml"
-                            )
-                    );
-
-            Parent root =
-                    loader.load();
-
-            LiveAuctionController controller =
-                    loader.getController();
-            controller.setClient(client);
-            controller.setUser(
-                    UserSession.getCurrentUser()
-            );
-
-            controller.setAuctionData(
-                    auction.getAuction_id(),
-                    auction.getItem().getName(),
-                    auction.getItem().getDescription(),
-                    auction.getCurrentPrice().toString(),
-                    auction.getMinIncrement().toString(),
-                    auction.getFloorPrice() != null
-                            ? auction.getFloorPrice().toString()
-                            : "0",
-                    auction.getEndTime().toString(),
-
-                    auction.getItem().getImages() != null
-                            && !auction.getItem()
-                            .getImages()
-                            .isEmpty()
-
-                            ? auction.getItem()
-                              .getImages()
-                              .get(0)
-
-                            : null
-            );
-
-            Stage stage =
-                    (Stage) itemGrid
-                            .getScene()
-                            .getWindow();
-
-            stage.setScene(
-                    new Scene(root)
-            );
-
-            stage.setTitle(
-                    "Live Auction - "
-                            + auction.getItem()
-                            .getName()
-            );
-
-            stage.show();
-
-        } catch (Exception e) {
-
-            System.err.println(
-                    "[HomePage] openLiveAuction error: "
-                            + e.getMessage()
-            );
-
-            showError(
-                    "Cannot open live auction."
-            );
-        }
-    }
-
     // ==================== NAVIGATION ====================
 
     @FXML
@@ -638,22 +491,17 @@ public class HomePageController
     }
 
     @FXML
-    private void handleLogout(
-            ActionEvent event
-    ) {
-
+    private void handleLogout(ActionEvent event) {
         boolean confirmed =
                 NavigationUtils.showConfirm(
                         "Logout",
                         "Are you sure you want to logout?"
                 );
-
-        if (!confirmed) {
-            return;
-        }
-
+        if (!confirmed) {return;}
+        ViewCache.clear();
+        cardCache.clear();
+        instance = null;
         UserSession.setCurrentUser(null);
-
         navigate(
                 getStage(event),
                 "/fxml/login-view.fxml",
@@ -703,5 +551,16 @@ public class HomePageController
     private void highlight(Button button) {
         resetCategoryStyles();
         button.setStyle("-fx-background-color: #ffe082;");
+    }
+
+    public void refreshData() {
+        User user = UserSession.getCurrentUser();
+        if (user == null) {
+            return;
+        }
+        client.sendList();
+        client.sendGetFavourite(
+                user.getUser_id()
+        );
     }
 }

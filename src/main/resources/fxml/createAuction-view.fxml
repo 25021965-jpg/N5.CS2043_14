@@ -17,19 +17,27 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="800.0" prefWidth="1100.0" style="-fx-background-color: linear-gradient(to bottom right, #0f0f0f, #1b1b1b);" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controller.CreateAuctionController">
+<AnchorPane prefHeight="800.0" prefWidth="1200.0" style="-fx-background-color: linear-gradient(to bottom right, #0f0f0f, #1b1b1b);" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controller.CreateAuctionController">
 
    <!-- TITLE -->
-   <Label layoutX="345.0" layoutY="30.0" text="CREATE AUCTION" textFill="#d4af37">
-
-      <font>
-         <Font name="Berlin Sans FB Demi Bold" size="48.0" />
-      </font>
-
-   </Label>
+   <HBox alignment="CENTER"
+         AnchorPane.topAnchor="30.0"
+         AnchorPane.leftAnchor="0.0"
+         AnchorPane.rightAnchor="0.0">
+      <Label text="CREATE AUCTION" textFill="#d4af37">
+         <font>
+            <Font name="Berlin Sans FB Demi Bold" size="48.0" />
+         </font>
+      </Label>
+   </HBox>
 
    <!-- MAIN CONTAINER -->
-   <HBox layoutX="45.0" layoutY="120.0" prefHeight="580.0" prefWidth="1010.0" spacing="35.0">
+   <HBox prefHeight="580.0"
+         prefWidth="1010.0"
+         spacing="35.0"
+         AnchorPane.topAnchor="120.0"
+         AnchorPane.leftAnchor="95.0"
+         AnchorPane.rightAnchor="95.0">
 
       <!-- LEFT SIDE -->
       <VBox prefWidth="500.0" spacing="20.0">
@@ -102,7 +110,18 @@
 
                </Label>
 
-               <TextArea fx:id="txtDescription" prefHeight="180.0" style="                               -fx-control-inner-background: #1f1f1f;                               -fx-text-fill: white;                               -fx-background-radius: 18;                               -fx-border-radius: 18;                               -fx-border-color: #2c2c2c;                               -fx-font-size: 14px;                               -fx-padding: 12;                               " wrapText="true" />
+               <TextArea fx:id="txtDescription"
+                         prefHeight="180.0"
+                         VBox.vgrow="ALWAYS"
+                         style="
+                         -fx-control-inner-background: #1f1f1f;
+                         -fx-text-fill: white;
+                         -fx-background-radius: 18;
+                         -fx-border-radius: 18;
+                         -fx-border-color: #2c2c2c;
+                         -fx-font-size: 14px;
+                         -fx-padding: 12;"
+                         wrapText="true" />
 
             </children>
 
@@ -111,7 +130,7 @@
       </VBox>
 
       <!-- RIGHT SIDE -->
-      <VBox prefWidth="470.0" spacing="22.0" style="               -fx-background-color: #181818;               -fx-background-radius: 25;               -fx-border-radius: 25;               -fx-border-color: #2b2b2b;               -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.45), 15,0,0,5);               ">
+      <VBox prefWidth="520.0" HBox.hgrow="ALWAYS" spacing="22.0" style="               -fx-background-color: #181818;               -fx-background-radius: 25;               -fx-border-radius: 25;               -fx-border-color: #2b2b2b;               -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.45), 15,0,0,5);               ">
 
          <padding>
             <Insets bottom="30.0" left="28.0" right="28.0" top="30.0" />
@@ -239,7 +258,10 @@
    </HBox>
 
    <!-- BOTTOM BUTTONS -->
-   <HBox layoutX="720.0" layoutY="730.0" spacing="18.0">
+   <HBox spacing="18.0"
+         AnchorPane.rightAnchor="40.0"
+         AnchorPane.bottomAnchor="25.0">
+
 
       <children>
 

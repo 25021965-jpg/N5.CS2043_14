@@ -3,6 +3,7 @@ package client.util;
 import client.controller.UserDataReceiver;
 
 import client.manager.UserSession;
+import client.manager.ViewCache;
 import client.network.ClientSocket;
 import javafx.animation.PauseTransition;
 import javafx.fxml.FXMLLoader;
@@ -206,7 +207,6 @@ public class NavigationUtils {
     }
 
     // ==================== SWITCH SCENE WITH DATA ====================
-
     public static void switchScene(
             Stage stage,
             String fxmlPath,
@@ -214,26 +214,20 @@ public class NavigationUtils {
             ClientSocket client,
             User user
     ) {
-
         try {
+            Parent root = ViewCache.get(fxmlPath);
+            if (root == null) {
+                FXMLLoader loader = loadFXML(fxmlPath);
+                root = loader.load();
+                injectUserData(
+                        loader.getController(),
+                        client,
+                        user
+                );
+                ViewCache.put(fxmlPath, root);
+            }
 
-            FXMLLoader loader =
-                    loadFXML(fxmlPath);
-
-            Parent root =
-                    loader.load();
-
-            injectUserData(
-                    loader.getController(),
-                    client,
-                    user
-            );
-
-            applyStage(
-                    stage,
-                    root,
-                    title
-            );
+            applyStage(stage, root, title);
 
         } catch (IOException e) {
             System.err.println("Navigation Error");
@@ -276,11 +270,12 @@ public class NavigationUtils {
             Parent root,
             String title
     ) {
-
-        stage.setScene(new Scene(root));
+        if (stage.getScene() == null) {
+            stage.setScene(new Scene(root));
+        } else {
+            stage.getScene().setRoot(root);
+        }
         stage.setTitle(title);
-
-        stage.centerOnScreen();
         stage.show();
     }
 
@@ -293,7 +288,6 @@ public class NavigationUtils {
     ) {
 
         if (controller instanceof UserDataReceiver receiver) {
-
             receiver.setClient(client);
             receiver.setUser(user);
         }

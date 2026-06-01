@@ -30,6 +30,8 @@ public class ClientApp extends Application {
 
         stage.setScene(scene);
         stage.setTitle("Auction System");
+        stage.setMinWidth(1100);
+        stage.setMinHeight(850);
         stage.show();
     }
 

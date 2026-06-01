@@ -44,73 +44,39 @@ public class CreateAuctionController
 
     // ==================== FXML ====================
 
-    @FXML
-    private ComboBox<String> cbCategory;
-
-    @FXML
-    private TextField txtName;
-
-    @FXML
-    private TextField txtStartingBid;
-
-    @FXML
-    private TextField txtMinIncrement;
-
-    @FXML
-    private TextArea txtDescription;
-
-    @FXML
-    private VBox imgItems;
-
-    @FXML
-    private ImageView imagePreview;
-
-    @FXML
-    private TextField txtStartHour;
-
-    @FXML
-    private TextField txtStartMin;
-
-    @FXML
-    private TextField txtEndHour;
-
-    @FXML
-    private TextField txtEndMin;
-
-    @FXML
-    private DatePicker dpStartDate;
-
-    @FXML
-    private DatePicker dpEndDate;
+    @FXML private ComboBox<String> cbCategory;
+    @FXML private TextField txtName;
+    @FXML private TextField txtStartingBid;
+    @FXML private TextField txtMinIncrement;
+    @FXML private TextArea txtDescription;
+    @FXML private VBox imgItems;
+    @FXML private ImageView imagePreview;
+    @FXML private TextField txtStartHour;
+    @FXML private TextField txtStartMin;
+    @FXML private TextField txtEndHour;
+    @FXML private TextField txtEndMin;
+    @FXML private DatePicker dpStartDate;
+    @FXML private DatePicker dpEndDate;
 
     // ==================== INIT ====================
-
     @FXML
     public void initialize() {
-
         updateUserRole(Role.SELLER);
-
         setupStage();
-
         setupImagePreview();
     }
 
     private void setupStage() {
-
         Platform.runLater(() -> {
-
             if (txtName == null
                     || txtName.getScene() == null) {
                 return;
             }
-
             Stage stage =
                     (Stage) txtName
                             .getScene()
                             .getWindow();
-
             ResponseHandler.setMainStage(stage);
-
             stage.setOnCloseRequest(
                     e -> resetRoleToBidder()
             );
@@ -118,34 +84,19 @@ public class CreateAuctionController
     }
 
     private void setupImagePreview() {
-
-        Rectangle clip =
-                new Rectangle(500, 360);
-
-        clip.setArcWidth(
-                IMAGE_RADIUS * 2
-        );
-
-        clip.setArcHeight(
-                IMAGE_RADIUS * 2
-        );
-
+        Rectangle clip = new Rectangle(500, 360);
+        clip.setArcWidth(IMAGE_RADIUS * 2);
+        clip.setArcHeight(IMAGE_RADIUS * 2);
         imagePreview.setClip(clip);
     }
 
     // ==================== CREATE ====================
-
     @FXML
-    private void handleCreate(
-            ActionEvent event
-    ) {
-
+    private void handleCreate(ActionEvent event) {
         try {
-
             if (!validateInput()) {
                 return;
             }
-
             List<String> imageUrls =
                     uploadImages();
 
@@ -153,80 +104,52 @@ public class CreateAuctionController
                 return;
             }
 
-            Auction auction =
-                    createAuction(imageUrls);
-
+            Auction auction = createAuction(imageUrls);
             client.sendCreate(auction);
-
+            HomePageController home = HomePageController.getInstance();
+            if (home != null) {
+                home.refreshData();
+            }
             resetRoleToBidder();
-
             navigateHome(event);
 
         } catch (NumberFormatException e) {
-
-            showError(
-                    "Price and time must be numeric values."
-            );
+            showError("Price and time must be numeric values.");
 
         } catch (Exception e) {
-
-            showError(
-                    "System Error: "
-                            + e.getMessage()
-            );
+            showError("System Error: " + e.getMessage());
         }
     }
 
     // ==================== VALIDATION ====================
 
     private boolean validateInput() {
-
         if (txtName.getText().trim().isEmpty()
                 || txtStartingBid.getText().trim().isEmpty()
                 || cbCategory.getValue() == null
                 || dpStartDate.getValue() == null
                 || dpEndDate.getValue() == null) {
 
-            showError(
-                    "Please fill in all required fields."
-            );
-
+            showError("Please fill in all required fields.");
             return false;
         }
 
         if (imageFiles.isEmpty()) {
-
-            showError(
-                    "Please upload at least one image."
-            );
-
+            showError("Please upload at least one image.");
             return false;
         }
 
-        LocalDateTime start =
-                getStartDateTime();
-
-        LocalDateTime end =
-                getEndDateTime();
-
+        LocalDateTime start = getStartDateTime();
+        LocalDateTime end = getEndDateTime();
         if (!start.isAfter(LocalDateTime.now())) {
-
-            showError(
-                    "Start time must be in the future."
-            );
-
+            showError("Start time must be in the future.");
             return false;
         }
 
         if (!end.isAfter(start)) {
-
-            showError(
-                    "End time must be after start time."
-            );
-
+            showError("End time must be after start time.");
             return false;
         }
-
         return true;
     }
 
@@ -297,14 +220,8 @@ public class CreateAuctionController
 
     @FXML
     private void handleUploadImages() {
-
-        FileChooser chooser =
-                new FileChooser();
-
-        chooser.setTitle(
-                "Choose Images"
-        );
-
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("Choose Images");
         chooser.getExtensionFilters().add(
                 new FileChooser.ExtensionFilter(
                         "Image Files",
@@ -313,7 +230,6 @@ public class CreateAuctionController
                         "*.jpeg"
                 )
         );
-
         List<File> files =
                 chooser.showOpenMultipleDialog(
                         imgItems.getScene()
@@ -335,7 +251,6 @@ public class CreateAuctionController
     }
 
     private void showImage(int index) {
-
         if (imageFiles.isEmpty()) {
             return;
         }
@@ -350,19 +265,14 @@ public class CreateAuctionController
 
     @FXML
     private void showPreviousImage() {
-
         if (imageFiles.isEmpty()) {
             return;
         }
-
         currentImageIndex--;
-
         if (currentImageIndex < 0) {
-
             currentImageIndex =
                     imageFiles.size() - 1;
         }
-
         showImage(currentImageIndex);
     }
 
