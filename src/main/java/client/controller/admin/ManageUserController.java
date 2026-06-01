@@ -11,8 +11,8 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
 import model.User;
 
-public class AdminController {
-    private static AdminController instance;
+public class ManageUserController {
+    private static ManageUserController instance;
     private ObservableList<User> userList = FXCollections.observableArrayList();
 
     @FXML private TableView<User> userTable;
@@ -22,8 +22,9 @@ public class AdminController {
     @FXML private TableColumn<User, String> roleCol;
     @FXML private TextField searchField;
 
-    public AdminController() { instance = this; }
-    public static AdminController getInstance() { return instance; }
+    public ManageUserController() { instance = this; }
+    public static ManageUserController getInstance() { return instance; }
+    private Stage getStage() {return NavigationUtils.getCurrentStage();}
 
     @FXML
     public void initialize() {
@@ -61,38 +62,51 @@ public class AdminController {
         handleReload();
     }
 
+    private User getSelectedUser(String errorMessage) {
+        User selected = userTable.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            NavigationUtils.showError(errorMessage);
+            return null;
+        }
+        return selected;
+    }
+
     @FXML
     public void handleManageProducts() {
-        Stage stage = (Stage) userTable.getScene().getWindow();
-        NavigationUtils.switchScene(stage, "/fxml/manageProduct-view.fxml", "Manage Products");
+        NavigationUtils.switchScene(getStage(), "/fxml/manageProduct-view.fxml", "Manage Products");
     }
 
     @FXML
     public void handleAuctionHistory() {
-        Stage stage = (Stage) userTable.getScene().getWindow();
-        NavigationUtils.switchScene(stage, "/fxml/auctionHAdmin-view.fxml", "Auction History");
+        NavigationUtils.switchScene(getStage(), "/fxml/auctionHAdmin-view.fxml", "Auction History");
     }
 
     @FXML
     public void handleManageAuctions() {
-        Stage stage = (Stage) userTable.getScene().getWindow();
-        NavigationUtils.switchScene(stage, "/fxml/manageAuction-view.fxml", "Manage Auctions");
+        NavigationUtils.switchScene(getStage(), "/fxml/manageAuction-view.fxml", "Manage Auctions");
     }
 
     @FXML
     public void handleLogout() {
         if (ClientSocket.getInstance() != null) ClientSocket.getInstance().sendLogout();
-        NavigationUtils.switchScene((Stage) userTable.getScene().getWindow(), "/fxml/login-view.fxml", "Login");
+        NavigationUtils.switchScene(getStage(), "/fxml/login-view.fxml", "Login");
     }
 
     @FXML
     private void handleDeleteUser() {
-        User selected = userTable.getSelectionModel().getSelectedItem();
-        if (selected != null) {
-            Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Xóa " + selected.getUsername() + "?", ButtonType.YES, ButtonType.NO);
-            alert.showAndWait().ifPresent(res -> {
-                if (res == ButtonType.YES) ClientSocket.getInstance().sendRequest("DELETE_USER|" + selected.getUser_id());
-            });
+        User selected = getSelectedUser("Please select a user to delete!");
+        if (selected == null) {
+            return;
+        }
+        if (NavigationUtils.showConfirm(
+                "Delete User",
+                "Delete user " + selected.getUsername() + "?"
+        )) {
+            ClientSocket.getInstance()
+                    .sendRequest(
+                            "DELETE_USER|"
+                                    + selected.getUser_id()
+                    );
         }
     }
 
@@ -101,15 +115,25 @@ public class AdminController {
     }
 
     private void filterUsers(String keyword) {
-        if (keyword == null || keyword.isEmpty()) { userTable.setItems(userList); return; }
-        userTable.setItems(userList.filtered(u -> u.getUsername().toLowerCase().contains(keyword.toLowerCase())));
+        if (keyword == null || keyword.isBlank()) {
+            userTable.setItems(userList);
+            return;
+        }
+
+        String search = keyword.toLowerCase();
+        userTable.setItems(
+                userList.filtered(u ->
+                        u.getUsername().toLowerCase().contains(search)
+                                || u.getEmail().toLowerCase().contains(search)
+                                || u.getRole().name().toLowerCase().contains(search)
+                )
+        );
     }
 
     @FXML
     private void handleUpdateUser() {
-        User selected = userTable.getSelectionModel().getSelectedItem();
+        User selected = getSelectedUser("Select user to update!");
         if (selected == null) {
-            NavigationUtils.showError("Select user to update!");
             return;
         }
 

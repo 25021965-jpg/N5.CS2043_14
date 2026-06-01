@@ -13,7 +13,7 @@ import javafx.stage.Stage;
 public class ManageAuctionController {
 
     private static ManageAuctionController instance;
-    private ObservableList<String[]> auctionList = FXCollections.observableArrayList();
+    private final ObservableList<String[]> auctionList = FXCollections.observableArrayList();
 
     @FXML private TableView<String[]>       auctionTable;
     @FXML private TableColumn<String[], String> auctionIdCol;
@@ -56,6 +56,21 @@ public class ManageAuctionController {
                 auctionTable.widthProperty().multiply(0.18));
     }
 
+    private String[] getSelectedAuction(String errorMessage) {
+        String[] selected = auctionTable.getSelectionModel().getSelectedItem();
+
+        if (selected == null) {
+            NavigationUtils.showError(errorMessage);
+            return null;
+        }
+
+        return selected;
+    }
+
+    private Stage getStage() {
+        return NavigationUtils.getCurrentStage();
+    }
+
     @FXML
     public void handleReloadAuctions() {
         if (ClientSocket.getInstance() != null)
@@ -64,46 +79,75 @@ public class ManageAuctionController {
 
     @FXML
     private void handleStopAuction() {
-        String[] selected = auctionTable.getSelectionModel().getSelectedItem();
-        if (selected == null) { NavigationUtils.showError("Chọn auction cần dừng!"); return; }
-        if (selected[4].equals("ENDED") || selected[4].equals("CANCELLED")) {
-            NavigationUtils.showError("Auction này đã kết thúc hoặc bị hủy!");
+
+        String[] selected =
+                getSelectedAuction("Please select an auction to stop!");
+
+        if (selected == null) return;
+
+        if ("ENDED".equals(selected[4])
+                || "CANCELLED".equals(selected[4])) {
+
+            NavigationUtils.showError(
+                    "This auction has ended or been cancelled."
+            );
             return;
         }
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION,
-                "Dừng auction: " + selected[1] + "?", ButtonType.YES, ButtonType.NO);
-        alert.showAndWait().ifPresent(res -> {
-            if (res == ButtonType.YES)
-                ClientSocket.getInstance().sendRequest("STOP_AUCTION|" + selected[0]);
-        });
+
+        if (NavigationUtils.showConfirm(
+                "Stop Auction",
+                "Stop this auction: " + selected[1] + "?"
+        )) {
+
+            ClientSocket.getInstance()
+                    .sendRequest("STOP_AUCTION|" + selected[0]);
+        }
     }
 
     @FXML
     private void handleResumeAuction() {
-        String[] selected = auctionTable.getSelectionModel().getSelectedItem();
-        if (selected == null) { NavigationUtils.showError("Chọn auction cần khôi phục!"); return; }
-        if (!selected[4].equals("CANCELLED")) {
-            NavigationUtils.showError("Chỉ có thể resume auction đang CANCELLED!");
+
+        String[] selected =
+                getSelectedAuction("Please select an auction to resume!");
+
+        if (selected == null) return;
+
+        if (!"CANCELLED".equals(selected[4])) {
+
+            NavigationUtils.showError(
+                    "Only stopped auctions can be resumed!"
+            );
             return;
         }
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION,
-                "Khôi phục auction: " + selected[1] + "?", ButtonType.YES, ButtonType.NO);
-        alert.showAndWait().ifPresent(res -> {
-            if (res == ButtonType.YES)
-                ClientSocket.getInstance().sendRequest("RESUME_AUCTION|" + selected[0]);
-        });
+
+        if (NavigationUtils.showConfirm(
+                "Resume Auction",
+                "Resume this auction: " + selected[1] + "?"
+        )) {
+
+            ClientSocket.getInstance()
+                    .sendRequest("RESUME_AUCTION|" + selected[0]);
+        }
     }
 
     @FXML
-    private void handleDeleteAuction() {
-        String[] selected = auctionTable.getSelectionModel().getSelectedItem();
-        if (selected == null) { NavigationUtils.showError("Chọn auction cần hủy!"); return; }
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION,
-                "Hủy vĩnh viễn auction: " + selected[1] + "?", ButtonType.YES, ButtonType.NO);
-        alert.showAndWait().ifPresent(res -> {
-            if (res == ButtonType.YES)
-                ClientSocket.getInstance().sendRequest("CANCEL_AUCTION|" + selected[0]);
-        });
+    private void handleCancelAuction() {
+
+        String[] selected =
+                getSelectedAuction("Please select an auction to cancel!");
+
+        if (selected == null) return;
+
+        if (NavigationUtils.showConfirm(
+                "Cancel Auction",
+                "Cancel this auction: "
+                        + selected[1]
+                        + "? This auction will not be able to resume."
+        )) {
+
+            ClientSocket.getInstance()
+                    .sendRequest("CANCEL_AUCTION|" + selected[0]);
+        }
     }
 
     // Được gọi từ ResponseHandler
@@ -124,21 +168,18 @@ public class ManageAuctionController {
 
     // Navigation
     @FXML public void handleManageUsers() {
-        Stage stage = (Stage) auctionTable.getScene().getWindow();
-        NavigationUtils.switchScene(stage, "/fxml/manageUser-view.fxml", "Admin");
+        NavigationUtils.switchScene(getStage(), "/fxml/manageUser-view.fxml", "Admin");
     }
     @FXML public void handleManageProducts() {
-        Stage stage = (Stage) auctionTable.getScene().getWindow();
-        NavigationUtils.switchScene(stage, "/fxml/manageProduct-view.fxml", "Manage Products");
+        NavigationUtils.switchScene(getStage(), "/fxml/manageProduct-view.fxml", "Manage Products");
     }
     @FXML public void handleAuctionHistory() {
-        Stage stage = (Stage) auctionTable.getScene().getWindow();
-        NavigationUtils.switchScene(stage, "/fxml/auctionHAdmin-view.fxml", "Auction History");
+        NavigationUtils.switchScene(getStage(), "/fxml/auctionHAdmin-view.fxml", "Auction History");
     }
     @FXML public void handleLogout() {
         if (ClientSocket.getInstance() != null) ClientSocket.getInstance().sendLogout();
         NavigationUtils.switchScene(
-                (Stage) auctionTable.getScene().getWindow(),
+                getStage(),
                 "/fxml/login-view.fxml", "Login"
         );
     }

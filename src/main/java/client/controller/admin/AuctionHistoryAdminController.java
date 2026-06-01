@@ -26,6 +26,7 @@ public class AuctionHistoryAdminController {
 
     public AuctionHistoryAdminController() { instance = this; }
     public static AuctionHistoryAdminController getInstance() { return instance; }
+    private Stage getStage() {return NavigationUtils.getCurrentStage();}
 
     @FXML
     public void initialize() {
@@ -100,21 +101,18 @@ public class AuctionHistoryAdminController {
 
     // Navigation
     @FXML public void handleManageUsers() {
-        Stage stage = (Stage) auctionHistoryTable.getScene().getWindow();
-        NavigationUtils.switchScene(stage, "/fxml/manageUser-view.fxml", "Admin");
+        NavigationUtils.switchScene(getStage(), "/fxml/manageUser-view.fxml", "Admin");
     }
     @FXML public void handleManageProducts() {
-        Stage stage = (Stage) auctionHistoryTable.getScene().getWindow();
-        NavigationUtils.switchScene(stage, "/fxml/manageProduct-view.fxml", "Manage Products");
+        NavigationUtils.switchScene(getStage(), "/fxml/manageProduct-view.fxml", "Manage Products");
     }
     @FXML public void handleManageAuctions() {
-        Stage stage = (Stage) auctionHistoryTable.getScene().getWindow();
-        NavigationUtils.switchScene(stage, "/fxml/manageAuction-view.fxml", "Manage Auctions");
+        NavigationUtils.switchScene(getStage(), "/fxml/manageAuction-view.fxml", "Manage Auctions");
     }
     @FXML public void handleLogout() {
         if (ClientSocket.getInstance() != null) ClientSocket.getInstance().sendLogout();
         NavigationUtils.switchScene(
-                (Stage) auctionHistoryTable.getScene().getWindow(),
+                getStage(),
                 "/fxml/login-view.fxml", "Login"
         );
     }

@@ -13,7 +13,7 @@ public class ManageProductController {
     private static ManageProductController instance;
 
     // String[]: [0]auctionId/itemId, [1]name, [2]seller, [3]price/category, [4]status
-    private ObservableList<String[]> productList = FXCollections.observableArrayList();
+    private final ObservableList<String[]> productList = FXCollections.observableArrayList();
 
     // Đang hiển thị pending hay all products
     private boolean showingPending = false;
@@ -26,7 +26,6 @@ public class ManageProductController {
     @FXML private TableColumn<String[], String> statusCol;
     @FXML private TextField searchProductField;
     @FXML private Button btnApprove;      // ← nút Approve trong FXML
-    @FXML private Button btnViewPending;  // ← nút xem Pending trong FXML
 
     public ManageProductController() { instance = this; }
     public static ManageProductController getInstance() { return instance; }
@@ -65,48 +64,78 @@ public class ManageProductController {
     @FXML
     public void handleReloadProducts() {
         showingPending = false;
-        if (btnApprove != null) btnApprove.setVisible(false);
-        if (ClientSocket.getInstance() != null)
+
+        if (btnApprove != null) {
+            btnApprove.setVisible(false);
+            btnApprove.setManaged(false);
+        }
+
+        if (ClientSocket.getInstance() != null) {
             ClientSocket.getInstance().sendRequest("LIST_ITEMS");
+        }
     }
 
     // ================= LOAD PENDING =================
     @FXML
     public void handleViewPending() {
+
+        if (showingPending) {
+            handleReloadProducts();
+            return;
+        }
+
         showingPending = true;
-        if (btnApprove != null) btnApprove.setVisible(true);
-        if (ClientSocket.getInstance() != null)
-            ClientSocket.getInstance().sendRequest("LIST_PENDING_AUCTIONS");
+
+        if (btnApprove != null) {
+            btnApprove.setVisible(true);
+            btnApprove.setManaged(true);
+        }
+
+        ClientSocket.getInstance().sendRequest("LIST_PENDING_AUCTIONS");
     }
 
     // ================= APPROVE =================
     @FXML
     public void handleApprove() {
+
         String[] selected = productTable.getSelectionModel().getSelectedItem();
+
         if (selected == null) {
             NavigationUtils.showError("Please select an auction to approve!");
             return;
         }
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION,
-                "Approve auction: " + selected[1] + "?", ButtonType.YES, ButtonType.NO);
-        alert.showAndWait().ifPresent(res -> {
-            if (res == ButtonType.YES)
-                // selected[0] = auctionId
-                ClientSocket.getInstance().sendRequest("APPROVE_AUCTION|" + selected[0]);
-        });
+
+        boolean confirmed = NavigationUtils.showConfirm(
+                "Approve Auction",
+                "Approve this auction: " + selected[1] + "?"
+        );
+
+        if (confirmed) {
+            ClientSocket.getInstance()
+                    .sendRequest("APPROVE_AUCTION|" + selected[0]);
+        }
     }
 
     // ================= DELETE =================
     @FXML
     private void handleDeleteProduct() {
+
         String[] selected = productTable.getSelectionModel().getSelectedItem();
-        if (selected == null) return;
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION,
-                "Delete item: " + selected[1] + "?", ButtonType.YES, ButtonType.NO);
-        alert.showAndWait().ifPresent(res -> {
-            if (res == ButtonType.YES)
-                ClientSocket.getInstance().sendRequest("DELETE_ITEM|" + selected[0]);
-        });
+
+        if (selected == null) {
+            NavigationUtils.showError("Please select a product!");
+            return;
+        }
+
+        boolean confirmed = NavigationUtils.showConfirm(
+                "Delete Product",
+                "Delete this product: " + selected[1] + "?"
+        );
+
+        if (confirmed) {
+            ClientSocket.getInstance()
+                    .sendRequest("DELETE_ITEM|" + selected[0]);
+        }
     }
 
     // ================= UPDATE =================
@@ -145,24 +174,6 @@ public class ManageProductController {
         Platform.runLater(() -> productList.setAll(items));
     }
 
-    // Gọi khi nhận PENDING_AUCTIONS_SUCCESS
-    public void showPendingList(ObservableList<String[]> items) {
-        Platform.runLater(() -> {
-            ObservableList<String[]> display = FXCollections.observableArrayList();
-            for (String[] f : items) {
-                display.add(new String[]{
-                        f[0], // ID
-                        f[1], // Product Name
-                        f[2], // Category
-                        f[3], // Seller
-                        f[4]  // Status
-                });
-            }
-            productList.setAll(display);
-            productTable.refresh();
-        });
-    }
-
     // ================= FILTER =================
     private void filterProducts(String keyword) {
         if (keyword == null || keyword.isEmpty()) {
@@ -177,15 +188,15 @@ public class ManageProductController {
 
     // ================= NAVIGATION =================
     @FXML public void handleManageUsers() {
-        Stage stage = (Stage) productTable.getScene().getWindow();
+        Stage stage = NavigationUtils.getMainStage();
         NavigationUtils.switchScene(stage, "/fxml/manageUser-view.fxml", "Admin");
     }
     @FXML public void handleManageAuctions() {
-        Stage stage = (Stage) productTable.getScene().getWindow();
+        Stage stage = NavigationUtils.getMainStage();
         NavigationUtils.switchScene(stage, "/fxml/manageAuction-view.fxml", "Manage Auctions");
     }
     @FXML public void handleAuctionHistory() {
-        Stage stage = (Stage) productTable.getScene().getWindow();
+        Stage stage = NavigationUtils.getMainStage();
         NavigationUtils.switchScene(stage, "/fxml/auctionHAdmin-view.fxml", "Auction History");
     }
     @FXML public void handleLogout() {

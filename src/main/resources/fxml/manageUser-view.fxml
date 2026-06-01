@@ -1,28 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
+<?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.Font?>
+<?import javafx.scene.text.*?>
 
-<AnchorPane
-            style="-fx-border-color: #D4AF37;
-        -fx-border-width: 6;
-        -fx-background-color: linear-gradient(to bottom right,#0f0f0f,#1b1b1b);"
-            xmlns="http://javafx.com/javafx/25"
-            xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="client.controller.admin.AdminController">
+<AnchorPane style="-fx-border-color: #D4AF37;         -fx-border-width: 6;         -fx-background-color: linear-gradient(to bottom right,#0f0f0f,#1b1b1b);" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controller.admin.ManageUserController">
 
     <!-- TITLE -->
-    <VBox alignment="CENTER"
-          AnchorPane.topAnchor="20"
-          AnchorPane.leftAnchor="0"
-          AnchorPane.rightAnchor="0">
-        <Label text="ADMIN DASHBOARD"
-               textFill="#d4af37">
+    <VBox alignment="CENTER" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="20">
+        <Label text="ADMIN DASHBOARD" textFill="#d4af37">
             <font>
-                <Font name="Berlin Sans FB Demi Bold"
-                      size="42"/>
+                <Font name="Berlin Sans FB Demi Bold" size="42" />
             </font>
         </Label>
     </VBox>
@@ -31,7 +20,7 @@
     <HBox spacing="25" AnchorPane.bottomAnchor="35" AnchorPane.leftAnchor="35" AnchorPane.rightAnchor="35" AnchorPane.topAnchor="100">
 
         <!-- LEFT MENU -->
-        <VBox maxWidth="300" minWidth="220" prefHeight="640.0" prefWidth="260" spacing="18.0" style="                 -fx-background-color: #181818;                 -fx-background-radius: 25;                 -fx-border-radius: 25;                 -fx-border-color: #2d2d2d;                 -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.45),15,0,0,5);               ">
+        <VBox prefHeight="640.0" prefWidth="260" spacing="18.0" style="                 -fx-background-color: #181818;                 -fx-background-radius: 25;                 -fx-border-radius: 25;                 -fx-border-color: #2d2d2d;                 -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.45),15,0,0,5);               ">
 
             <padding>
                 <Insets bottom="30" left="20" right="20" top="30" />
@@ -55,7 +44,7 @@
             <Separator style="-fx-background-color: #334155;" />
 
             <!-- MENU BUTTONS -->
-            <Button maxWidth="Infinity"  prefHeight="50" style="                         -fx-background-color: #162336;                         -fx-text-fill: white;                         -fx-background-radius: 15;                         -fx-font-size: 15;                         -fx-font-weight: bold;                         -fx-cursor: hand;                     " text="Manage Users" />
+            <Button maxWidth="Infinity" prefHeight="50" style="                         -fx-background-color: #162336;                         -fx-text-fill: white;                         -fx-background-radius: 15;                         -fx-font-size: 15;                         -fx-font-weight: bold;                         -fx-cursor: hand;                     " text="Manage Users" />
 
             <Button maxWidth="Infinity" onAction="#handleManageProducts" prefHeight="50" style="                         -fx-background-color: #334155;                         -fx-text-fill: white;                         -fx-background-radius: 15;                         -fx-font-size: 15;                         -fx-font-weight: bold;                         -fx-cursor: hand;                     " text="Manage Products" />
 
@@ -70,18 +59,10 @@
         </VBox>
 
         <!-- RIGHT CONTENT -->
-        <VBox HBox.hgrow="ALWAYS"
-              spacing="20"
-              style="
-                -fx-background-color: #181818;
-                -fx-background-radius: 25;
-                -fx-border-radius: 25;
-                -fx-border-color: #2d2d2d;
-                -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.45),15,0,0,5);
-              ">
+        <VBox spacing="20" style="                 -fx-background-color: #181818;                 -fx-background-radius: 25;                 -fx-border-radius: 25;                 -fx-border-color: #2d2d2d;                 -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.45),15,0,0,5);               " HBox.hgrow="ALWAYS">
 
             <padding>
-                <Insets top="25" left="25" right="25" bottom="25"/>
+                <Insets bottom="25" left="25" right="25" top="25" />
             </padding>
 
             <!-- TOP BAR -->
@@ -89,94 +70,36 @@
 
                 <Label text="USER MANAGEMENT" textFill="#d4af37">
                     <font>
-                        <Font name="Arial Bold" size="26"/>
+                        <Font name="Arial Bold" size="26" />
                     </font>
                 </Label>
 
-                <Region HBox.hgrow="ALWAYS"/>
+                <Region HBox.hgrow="ALWAYS" />
 
-                <TextField fx:id="searchField"
-                           promptText="Search user..."
-                           prefHeight="42"
-                           minWidth="180"
-                           prefWidth="250"
-                           maxWidth="350"
-                           style="
-                            -fx-background-color: #262626;
-                            -fx-text-fill: white;
-                            -fx-prompt-text-fill: #999;
-                            -fx-background-radius: 14;
-                            -fx-border-radius: 14;
-                            -fx-border-color: #3a3a3a;
-                           "/>
+                <TextField fx:id="searchField" maxWidth="350" minWidth="180" prefHeight="42" prefWidth="250" promptText="Search user..." style="                             -fx-background-color: #262626;                             -fx-text-fill: white;                             -fx-prompt-text-fill: #999;                             -fx-background-radius: 14;                             -fx-border-radius: 14;                             -fx-border-color: #3a3a3a;                            " />
 
-                <Button text="Reload"
-                        onAction="#handleReload"
-                        prefHeight="42"
-                        prefWidth="110"
-                        style="
-                            -fx-background-color: #d4af37;
-                            -fx-text-fill: black;
-                            -fx-font-weight: bold;
-                            -fx-background-radius: 14;
-                            -fx-cursor: hand;
-                        "/>
+                <Button onAction="#handleReload" prefHeight="42" prefWidth="110" style="-fx-background-color: #d4af37; -fx-text-fill: black; -fx-font-weight: bold; -fx-background-radius: 14;" text="Reload" />
 
             </HBox>
 
             <!-- TABLE CARD -->
-            <VBox VBox.vgrow="ALWAYS"
-                  spacing="15"
-                  style="
-                    -fx-background-color: #1f1f1f;
-                    -fx-background-radius: 20;
-                    -fx-padding: 20;
-                  ">
+            <VBox spacing="15" style="                     -fx-background-color: #1f1f1f;                     -fx-background-radius: 20;                     -fx-padding: 20;                   " VBox.vgrow="ALWAYS">
 
-                <TableView fx:id="userTable"
-                           VBox.vgrow="ALWAYS"
-                           style="
-                             -fx-background-color: #1f1f1f;
-                             -fx-control-inner-background: #1f1f1f;
-                             -fx-table-cell-border-color: transparent;
-                             -fx-text-background-color: white;
-                           ">
+                <TableView fx:id="userTable" style="                              -fx-background-color: #1f1f1f;                              -fx-control-inner-background: #1f1f1f;                              -fx-table-cell-border-color: transparent;                              -fx-text-background-color: white;                            " VBox.vgrow="ALWAYS">
                     <columns>
-                        <TableColumn fx:id="userIdCol"    text="ID"/>
-                        <TableColumn fx:id="usernameCol"  text="USERNAME"/>
-                        <TableColumn fx:id="emailCol"    text="EMAIL"/>
-                        <TableColumn fx:id="roleCol"   text="ROLE"/>
+                        <TableColumn fx:id="userIdCol" text="ID" />
+                        <TableColumn fx:id="usernameCol" text="USERNAME" />
+                        <TableColumn fx:id="emailCol" text="EMAIL" />
+                        <TableColumn fx:id="roleCol" text="ROLE" />
                     </columns>
                 </TableView>
 
                 <!-- ACTION BUTTONS -->
                 <HBox alignment="CENTER_RIGHT" spacing="15">
 
-                    <Button text="DELETE USER"
-                            onAction="#handleDeleteUser"
-                            prefHeight="45"
-                            prefWidth="180"
-                            style="
-                                -fx-background-color: #ff5252;
-                                -fx-text-fill: white;
-                                -fx-font-size: 14;
-                                -fx-font-weight: bold;
-                                -fx-background-radius: 14;
-                                -fx-cursor: hand;
-                            "/>
+                    <Button onAction="#handleUpdateUser" prefHeight="45" prefWidth="180" style="                                 -fx-background-color: #d4af37;                                 -fx-text-fill: white;                                 -fx-font-size: 14;                                 -fx-font-weight: bold;                                 -fx-background-radius: 14;                                 -fx-cursor: hand;                             " text="UPDATE USER" />
 
-                    <Button text="UPDATE USER"
-                            onAction="#handleUpdateUser"
-                            prefHeight="45"
-                            prefWidth="180"
-                            style="
-                                -fx-background-color: #d4af37;
-                                -fx-text-fill: black;
-                                -fx-font-size: 14;
-                                -fx-font-weight: bold;
-                                -fx-background-radius: 14;
-                                -fx-cursor: hand;
-                            "/>
+                    <Button onAction="#handleDeleteUser" prefHeight="45" prefWidth="180" style="                                 -fx-background-color: #ff5252;                                 -fx-text-fill: white;                                 -fx-font-size: 14;                                 -fx-font-weight: bold;                                 -fx-background-radius: 14;                                 -fx-cursor: hand;                             " text="DELETE USER" />
 
                 </HBox>
 

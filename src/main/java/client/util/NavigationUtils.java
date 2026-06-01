@@ -279,6 +279,10 @@ public class NavigationUtils {
         stage.show();
     }
 
+    public static Stage getCurrentStage() {
+        return mainStage;
+    }
+
     // ==================== INJECT DATA ====================
 
     private static void injectUserData(

@@ -1,6 +1,6 @@
 package client.network.response.handler;
 
-import client.controller.admin.AdminController;
+import client.controller.admin.ManageUserController;
 import client.controller.admin.AuctionHistoryAdminController;
 import client.controller.admin.ManageAuctionController;
 import client.controller.admin.ManageProductController;
@@ -37,8 +37,8 @@ public class AdminHandler {
             }
         }
 
-        AdminController ctrl =
-                AdminController.getInstance();
+        ManageUserController ctrl =
+                ManageUserController.getInstance();
 
         if (ctrl != null) {
             ctrl.updateUsers(users);
@@ -47,8 +47,8 @@ public class AdminHandler {
 
     public static void usersEmpty() {
 
-        AdminController ctrl =
-                AdminController.getInstance();
+        ManageUserController ctrl =
+                ManageUserController.getInstance();
 
         if (ctrl != null) {
             ctrl.updateUsers(
@@ -64,8 +64,8 @@ public class AdminHandler {
                 "User deleted!"
         );
 
-        AdminController ctrl =
-                AdminController.getInstance();
+        ManageUserController ctrl =
+                ManageUserController.getInstance();
 
         if (ctrl != null) {
             ctrl.handleReload();
@@ -87,8 +87,8 @@ public class AdminHandler {
                 "Role updated!"
         );
 
-        AdminController ctrl =
-                AdminController.getInstance();
+        ManageUserController ctrl =
+                ManageUserController.getInstance();
 
         if (ctrl != null) {
             ctrl.handleReload();
