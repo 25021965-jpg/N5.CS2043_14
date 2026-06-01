@@ -2,74 +2,84 @@ package server.dao;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+
+import java.io.InputStream;
+import java.lang.reflect.Proxy;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.util.ArrayList;
-import java.util.List;
+import java.sql.DriverManager;
+import java.util.Properties;
 import java.util.UUID;
 
 public abstract class TiDBRollbackBase {
 
-    protected Connection conn;
-    protected List<String> createdUserIds = new ArrayList<>();
-    protected List<String> createdItemIds = new ArrayList<>();
-    protected List<String> createdAuctionIds = new ArrayList<>();
+    // Connection thật đến TiDB — chỉ rollback và đóng ở @AfterEach
+    private Connection realConn;
 
-    protected String generateId(String prefix) {
-        return prefix + "_" + UUID.randomUUID().toString().substring(0, 8);
-    }
+    // Proxy connection trả về cho DAO — close() bị vô hiệu hóa
+    protected Connection conn;
+
+    private MockedStatic<DatabaseService> dbMock;
 
     @BeforeEach
     void openTransaction() throws Exception {
-        conn = DatabaseService.getConnection();
-        conn.setAutoCommit(true);
-        createdUserIds.clear();
-        createdItemIds.clear();
-        createdAuctionIds.clear();
+        realConn = openTestConnection();
+        // Tắt auto-commit — mọi SQL nằm trong transaction chưa commit
+        realConn.setAutoCommit(false);
+
+        // Tạo proxy: mọi method đều delegate về realConn, riêng close() bị bỏ qua
+        conn = (Connection) Proxy.newProxyInstance(
+                Connection.class.getClassLoader(),
+                new Class[]{Connection.class},
+                (proxy, method, args) -> {
+                    if ("close".equals(method.getName())) {
+                        // DAO gọi close() → bỏ qua, không thực sự đóng
+                        return null;
+                    }
+                    if ("isClosed".equals(method.getName())) {
+                        // Luôn báo "chưa đóng" để DAO không bỏ qua connection
+                        return false;
+                    }
+                    return method.invoke(realConn, args);
+                }
+        );
+
+        // Mock DatabaseService → luôn trả về proxy, không mở connection mới
+        dbMock = Mockito.mockStatic(DatabaseService.class);
+        dbMock.when(DatabaseService::getConnection).thenReturn(conn);
     }
 
     @AfterEach
-    void cleanUp() {
+    void rollbackTransaction() {
+        // Đóng mock trước để tránh can thiệp vào quá trình rollback
+        if (dbMock != null) {
+            try { dbMock.close(); } catch (Exception ignored) {}
+        }
+        // Rollback và đóng connection thật — đây là nơi duy nhất được đóng
         try {
-            if (conn != null && !conn.isClosed()) {
-                // 1. Xóa Bids trước để tránh lỗi khóa ngoại (Foreign Key)
-                try (var ps = conn.prepareStatement("DELETE FROM bids WHERE auction_id IN (SELECT auction_id FROM auctions) OR bidder_id IN (SELECT user_id FROM users)")) {
-                    ps.executeUpdate();
-                }
-
-                // 2. Xóa Auctions
-                for (String id : createdAuctionIds) {
-                    try (var ps = conn.prepareStatement("DELETE FROM auctions WHERE auction_id = ?")) {
-                        ps.setString(1, id); ps.executeUpdate();
-                    }
-                }
-
-                // 3. Xóa Items
-                for (String id : createdItemIds) {
-                    try (var ps = conn.prepareStatement("DELETE FROM items WHERE item_id = ?")) {
-                        ps.setString(1, id); ps.executeUpdate();
-                    }
-                }
-
-                // 4. Xóa Users
-                for (String id : createdUserIds) {
-                    try (var ps = conn.prepareStatement("DELETE FROM users WHERE user_id = ?")) {
-                        ps.setString(1, id); ps.executeUpdate();
-                    }
-                }
-                conn.close();
+            if (realConn != null && !realConn.isClosed()) {
+                realConn.rollback();
+                realConn.setAutoCommit(true);
+                realConn.close();
             }
         } catch (Exception e) {
-            System.err.println("Dọn dẹp DB lỗi: " + e.getMessage());
+            System.err.println("[TiDBRollbackBase] Rollback failed: " + e.getMessage());
         }
     }
 
-    // --- CÁC HÀM INSERT ĐỂ PHỤC VỤ TEST ---
+    // ==================== Các hàm helper để insert data test ====================
 
-    protected void insertUser(String id, String username, String email, String password, String role, double balance) throws Exception {
-        createdUserIds.add(id);
-        String sql = "INSERT INTO users(user_id,fullname,username,email,password,role,balance,verified) VALUES(?,?,?,?,?,?,?,TRUE)";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+    protected String generateId(String prefix) {
+        // Tạo ID ngẫu nhiên để tránh xung đột khi chạy song song hoặc chạy lại
+        return prefix + "_" + UUID.randomUUID().toString().substring(0, 8);
+    }
+
+    protected void insertUser(String id, String username, String email,
+                              String password, String role, double balance) throws Exception {
+        try (var ps = conn.prepareStatement(
+                "INSERT INTO users(user_id,fullname,username,email,password,role,balance,verified) " +
+                        "VALUES(?,?,?,?,?,?,?,TRUE)")) {
             ps.setString(1, id);
             ps.setString(2, "Test " + username);
             ps.setString(3, username);
@@ -82,9 +92,8 @@ public abstract class TiDBRollbackBase {
     }
 
     protected void insertItem(String itemId, String name, String category) throws Exception {
-        createdItemIds.add(itemId);
-        String sql = "INSERT INTO items(item_id,name,description,category) VALUES(?,?,?,?)";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (var ps = conn.prepareStatement(
+                "INSERT INTO items(item_id,name,description,category) VALUES(?,?,?,?)")) {
             ps.setString(1, itemId);
             ps.setString(2, name);
             ps.setString(3, "test-desc");
@@ -93,16 +102,12 @@ public abstract class TiDBRollbackBase {
         }
     }
 
-    protected void insertAuction(String auctionId, String itemId, String sellerId, double price,
-                                 boolean approved, boolean cancelled, String start, String end) throws Exception {
-        createdAuctionIds.add(auctionId);
-
-        String sql = """
-            INSERT INTO auctions(auction_id, item_id, seller_id, starting_price, current_price, 
-                                 min_increment, start_time, end_time, is_cancelled, is_approved) 
-            VALUES (?, ?, ?, ?, ?, 10, ?, ?, ?, ?)
-            """;
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+    protected void insertAuction(String auctionId, String itemId, String sellerId,
+                                 double price, boolean approved, boolean cancelled,
+                                 String start, String end) throws Exception {
+        try (var ps = conn.prepareStatement(
+                "INSERT INTO auctions(auction_id,item_id,seller_id,starting_price,current_price," +
+                        "min_increment,start_time,end_time,is_cancelled,is_approved) VALUES(?,?,?,?,?,10,?,?,?,?)")) {
             ps.setString(1, auctionId);
             ps.setString(2, itemId);
             ps.setString(3, sellerId);
@@ -114,5 +119,34 @@ public abstract class TiDBRollbackBase {
             ps.setBoolean(9, approved);
             ps.executeUpdate();
         }
+    }
+
+    // ==================== Kết nối đến TiDB (đọc từ env hoặc file config) ====================
+
+    private static Connection openTestConnection() throws Exception {
+        String host = System.getenv("TIDB_HOST");
+        String user = System.getenv("TIDB_USER");
+        String pass = System.getenv("TIDB_PASS");
+
+        // Nếu biến môi trường chưa set thì đọc từ file db-test.properties
+        if (host == null || host.isBlank()) {
+            Properties props = new Properties();
+            try (InputStream is = TiDBRollbackBase.class
+                    .getClassLoader()
+                    .getResourceAsStream("db-test.properties")) {
+                if (is == null) throw new IllegalStateException(
+                        "Missing TIDB_HOST env var and src/test/resources/db-test.properties not found.\n" +
+                                "Create the file with:\n  tidb.host=...\n  tidb.user=...\n  tidb.pass=...");
+                props.load(is);
+            }
+            host = props.getProperty("tidb.host");
+            user = props.getProperty("tidb.user");
+            pass = props.getProperty("tidb.pass");
+        }
+
+        String url = "jdbc:mysql://" + host + ":4000/auction_system" +
+                "?sslMode=REQUIRED&useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC";
+        Class.forName("com.mysql.cj.jdbc.Driver");
+        return DriverManager.getConnection(url, user, pass);
     }
 }

@@ -200,15 +200,15 @@ public class AuctionHandler extends BaseHandler {
                         + "|" + currentUser.getUser_id();
                 RoomManager.broadcastToRoomAll(auctionId, broadcastMsg);
 
-                // ⭐ Anti-snipe
+                // Anti-snipe
                 if (parts.length >= 4 && "EXTENDED".equals(parts[2])) {
                     String newEndTime = parts[3];
                     scheduleAuctionEnd(auctionId, LocalDateTime.parse(newEndTime));
                     RoomManager.broadcastToRoomAll(auctionId, "TIME_EXTENDED|" + auctionId + "|" + newEndTime);
-                    System.out.println("⏰ Broadcasted TIME_EXTENDED: " + newEndTime);
+                    System.out.println("Broadcasted TIME_EXTENDED: " + newEndTime);
                 }
 
-                return "BID_SUCCESS|" + newPrice; // ✅ chỉ trả newPrice, không kèm EXTENDED
+                return "BID_SUCCESS|" + newPrice;
             }
             return result;
 
