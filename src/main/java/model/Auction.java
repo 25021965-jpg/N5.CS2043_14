@@ -27,6 +27,9 @@ public class Auction implements Serializable {
 
     private List<Bid> bids = new ArrayList<>();
 
+    private int extendCount = 0;
+
+
 
     public Auction() {}
 
@@ -132,4 +135,8 @@ public class Auction implements Serializable {
 
     public List<Bid> getBids() { return bids; }
     public void setBids(List<Bid> bids) { this.bids = bids; }
+
+    public int getExtendCount() { return extendCount; }
+    public void setExtendCount(int extendCount) { this.extendCount = extendCount; }
+
 }

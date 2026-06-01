@@ -814,4 +814,18 @@ public class AuctionDAO {
             e.printStackTrace();
         }
     }
+
+    public static boolean updateEndTime(String auctionId, LocalDateTime newEndTime) {
+        String sql = "UPDATE auctions SET end_time = ? WHERE auction_id = ?";
+        try (Connection conn = DatabaseService.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setTimestamp(1, Timestamp.valueOf(newEndTime));
+            pstmt.setString(2, auctionId);
+            int rows = pstmt.executeUpdate();
+            return rows > 0;
+        } catch (SQLException e) {
+            System.err.println("✕ updateEndTime Error: " + e.getMessage());
+            return false;
+        }
+    }
 }

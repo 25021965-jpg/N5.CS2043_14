@@ -97,7 +97,9 @@ public enum ResponseType {
     PENDING_AUCTIONS_EMPTY,
 
     APPROVE_AUCTION_SUCCESS,
-    APPROVE_AUCTION_FAILED;
+    APPROVE_AUCTION_FAILED,
+
+    TIME_EXTENDED;
 
     public static ResponseType from(String msg) {
         if (msg == null || msg.isBlank()) {

@@ -35,6 +35,13 @@ public class ResponseRouter {
             return;
         }
 
+        // THÊM XỬ LÝ TIME_EXTENDED  ← thêm vào đây
+        if (raw.startsWith("TIME_EXTENDED")) {
+            Platform.runLater(() -> LiveAuctionController.getInstance().handleServerMessage(raw));
+            return;
+        }
+
+
         // THÊM XỬ LÝ BID_HISTORY
         if (raw.startsWith("BID_HISTORY_SUCCESS")) {
             Platform.runLater(() -> AuctionHandler.bidHistory(raw.substring("BID_HISTORY_SUCCESS|".length())));

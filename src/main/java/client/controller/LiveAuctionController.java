@@ -626,6 +626,26 @@ public class LiveAuctionController implements UserDataReceiver {
                 return;
             }
 
+            // ==================== TIME EXTENDED (Anti-Snipe) ====================
+            if (msg.startsWith("TIME_EXTENDED")) {
+                String[] parts = msg.split("\\|");
+                if (parts.length >= 3) {
+                    String newEndTimeStr = parts[2];
+
+                    // Reset countdown với thời gian mới
+                    startCountdown(newEndTimeStr);
+
+                    // Cập nhật endTime trong static để không bị mất khi back/quay lại
+                    // (nếu bạn có lưu globalEndTime thì cập nhật ở đây)
+
+                    // Hiện thông báo nổi cho user biết
+                    showAntiSnipeNotification();
+
+                    System.out.println("[LiveAuction] Time extended to: " + newEndTimeStr);
+                }
+                return;
+            }
+
             // ==================== AUCTION KẾT THÚC ====================
             if (msg.startsWith("AUCTION_ENDED")) {
                 isAuctionEnded = true;
@@ -643,11 +663,18 @@ public class LiveAuctionController implements UserDataReceiver {
             // ==================== THẮNG CUỘC ====================
             if (msg.startsWith("YOU_WON")) {
                 String[] parts = msg.split("\\|");
-                if (parts.length >= 2) {
+                if (parts.length >= 3) {
+                    // YOU_WON|finalPrice|winnerName
                     BigDecimal finalPrice = new BigDecimal(parts[1]);
-                    showInfo("🎉 CONGRATULATIONS! You won the auction for " + formatPrice(finalPrice));
-                } else {
-                    showInfo("🎉 CONGRATULATIONS! You won the auction!");
+                    String winnerName = parts[2];
+                    if (currentUser != null && currentUser.getUsername().equals(winnerName)) {
+                        showInfo("🎉 CONGRATULATIONS! You won the auction for " + formatPrice(finalPrice));
+                    } else {
+                        showInfo("🏆 " + winnerName + " won the auction for " + formatPrice(finalPrice));
+                    }
+                } else if (parts.length >= 2) {
+                    BigDecimal finalPrice = new BigDecimal(parts[1]);
+                    showInfo("🏆 Auction ended! Winning price: " + formatPrice(finalPrice));
                 }
                 placeBidBtn.setDisable(true);
                 addStepBtn.setDisable(true);
@@ -861,5 +888,27 @@ public class LiveAuctionController implements UserDataReceiver {
         if (bidWarningLabel != null) {
             bidWarningLabel.setVisible(false);
         }
+    }
+
+    private void showAntiSnipeNotification() {
+        // Tạo label thông báo tạm thời
+        Label notice = new Label("⏰ Time extended by 1 minute due to a new bid!");
+        notice.setStyle(
+                "-fx-background-color: #ff9800; " +
+                        "-fx-text-fill: white; " +
+                        "-fx-padding: 8 16; " +
+                        "-fx-background-radius: 6; " +
+                        "-fx-font-weight: bold;"
+        );
+        // Thêm vào centerPanel (hoặc bất kỳ container nào phù hợp)
+        centerPanel.getChildren().add(0, notice);
+
+        // Tự động ẩn sau 5 giây
+        new Timer(true).schedule(new TimerTask() {
+            @Override
+            public void run() {
+                Platform.runLater(() -> centerPanel.getChildren().remove(notice));
+            }
+        }, 5000);
     }
 }
