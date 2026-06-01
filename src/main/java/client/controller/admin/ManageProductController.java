@@ -178,7 +178,7 @@ public class ManageProductController {
     // ================= NAVIGATION =================
     @FXML public void handleManageUsers() {
         Stage stage = (Stage) productTable.getScene().getWindow();
-        NavigationUtils.switchScene(stage, "/fxml/admin-view.fxml", "Admin");
+        NavigationUtils.switchScene(stage, "/fxml/manageUser-view.fxml", "Admin");
     }
     @FXML public void handleManageAuctions() {
         Stage stage = (Stage) productTable.getScene().getWindow();

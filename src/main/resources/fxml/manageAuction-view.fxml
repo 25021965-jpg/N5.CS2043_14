@@ -13,65 +13,65 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane style="-fx-background-color: linear-gradient(to bottom right,#0f0f0f,#1b1b1b);" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controller.admin.ManageAuctionController">
+<AnchorPane style="-fx-background-color: linear-gradient(to bottom right,#0f0f0f,#1b1b1b);
+-fx-border-color: #D4AF37;
+        -fx-border-width: 6;"
+            xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controller.admin.ManageAuctionController">
 
     <!-- TITLE -->
-    <Label layoutX="455.0" layoutY="25.0" text="MANAGE AUCTIONS" textFill="#d4af37">
+    <VBox alignment="CENTER"
+          AnchorPane.topAnchor="20"
+          AnchorPane.leftAnchor="0"
+          AnchorPane.rightAnchor="0">
+        <Label text="ADMIN DASHBOARD"
+               textFill="#d4af37">
+            <font>
+                <Font name="Berlin Sans FB Demi Bold"
+                      size="42"/>
+            </font>
+        </Label>
+    </VBox>
 
-        <font>
-            <Font name="Berlin Sans FB Demi Bold" size="42.0" />
-        </font>
-
-    </Label>
-
-    <!-- MAIN -->
-    <HBox spacing="25"
-          AnchorPane.topAnchor="100"
-          AnchorPane.leftAnchor="35"
-          AnchorPane.rightAnchor="35"
-          AnchorPane.bottomAnchor="35">
+    <!-- MAIN CONTAINER -->
+    <HBox spacing="25" AnchorPane.bottomAnchor="35" AnchorPane.leftAnchor="35" AnchorPane.rightAnchor="35" AnchorPane.topAnchor="100">
 
         <!-- LEFT MENU -->
-        <VBox prefHeight="640.0"
-              minWidth="220"
-              prefWidth="260"
-              maxWidth="300">
-              spacing="18.0" style="                 -fx-background-color: #181818;                 -fx-background-radius: 25;                 -fx-border-radius: 25;                 -fx-border-color: #2d2d2d;                 -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.45),15,0,0,5);               ">
+        <VBox maxWidth="300" minWidth="220" prefHeight="640.0" prefWidth="260" spacing="18.0" style="                 -fx-background-color: #181818;                 -fx-background-radius: 25;                 -fx-border-radius: 25;                 -fx-border-color: #2d2d2d;                 -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.45),15,0,0,5);               ">
 
             <padding>
                 <Insets bottom="30" left="20" right="20" top="30" />
             </padding>
 
-            <!-- ADMIN -->
-            <VBox alignment="CENTER"
-                  AnchorPane.topAnchor="20"
-                  AnchorPane.leftAnchor="0"
-                  AnchorPane.rightAnchor="0">
+            <!-- TITLE -->
+            <VBox alignment="CENTER" spacing="6">
 
-                <Label text="MANAGE AUCTIONS" textFill="#d4af37">
+                <Label style="                     -fx-text-fill: white;                     -fx-font-size: 26px;                     -fx-font-weight: bold;                 " text="Auction System">
+
                     <font>
-                        <Font name="Berlin Sans FB Demi Bold" size="42.0"/>
+                        <Font name="Berlin Sans FB Demi Bold" size="24.0" />
                     </font>
+
                 </Label>
+
+                <Label style="                     -fx-text-fill: #94A3B8;                     -fx-font-size: 13px;                 " text="ADMIN PANEL" />
 
             </VBox>
 
-            <!-- MENU -->
+            <Separator style="-fx-background-color: #334155;" />
 
-            <Button onAction="#handleManageUsers" prefHeight="50" prefWidth="216.0" style="                         -fx-background-color: #262626;                         -fx-text-fill: white;                         -fx-background-radius: 15;                         -fx-font-size: 15;                         -fx-font-weight: bold;                     " text="Manage Users" />
+            <!-- MENU BUTTONS -->
+            <Button maxWidth="Infinity" onAction="#handleManageUsers" prefHeight="50" style="                         -fx-background-color: #334155;                         -fx-text-fill: white;                         -fx-background-radius: 15;                         -fx-font-size: 15;                         -fx-font-weight: bold;                         -fx-cursor: hand;                     " text="Manage Users" />
 
-            <Button onAction="#handleManageProducts" prefHeight="50" prefWidth="215.0" style="                         -fx-background-color: #262626;                         -fx-text-fill: white;                         -fx-background-radius: 15;                         -fx-font-size: 15;                         -fx-font-weight: bold;                     " text="Manage Products" />
+            <Button maxWidth="Infinity" onAction="#handleManageProducts" prefHeight="50" style="                         -fx-background-color: #334155;                         -fx-text-fill: white;                         -fx-background-radius: 15;                         -fx-font-size: 15;                         -fx-font-weight: bold;                         -fx-cursor: hand;                     " text="Manage Products" />
 
-            <Button onAction="#handleAuctionHistory" prefHeight="50" prefWidth="213.0" style="                         -fx-background-color: #262626;                         -fx-text-fill: white;                         -fx-background-radius: 15;                         -fx-font-size: 15;                         -fx-font-weight: bold;                     " text="Auction History" />
+            <Button maxWidth="Infinity" onAction="#handleAuctionHistory" prefHeight="50" style="                         -fx-background-color: #334155;                         -fx-text-fill: white;                         -fx-background-radius: 15;                         -fx-font-size: 15;                         -fx-font-weight: bold;                         -fx-cursor: hand;                     " text="Auction History" />
 
-            <Button prefHeight="50" prefWidth="211.0" style="                         -fx-background-color: #d4af37;                         -fx-text-fill: black;                         -fx-background-radius: 15;                         -fx-font-size: 15;                         -fx-font-weight: bold;                     " text="Manage Auctions" />
+            <Button maxWidth="Infinity"  prefHeight="50" style="                         -fx-background-color: #162336;                         -fx-text-fill: white;                         -fx-background-radius: 15;                         -fx-font-size: 15;                         -fx-font-weight: bold;                         -fx-cursor: hand;                     " text="Manage Auctions" />
 
             <Region VBox.vgrow="ALWAYS" />
 
             <!-- LOGOUT -->
-
-            <Button onAction="#handleLogout" prefHeight="50" prefWidth="221.0" style="                         -fx-background-color: #d32f2f;                         -fx-text-fill: white;                         -fx-background-radius: 15;                         -fx-font-size: 15;                         -fx-font-weight: bold;                     " text="Logout" />
-
+            <Button onAction="#handleLogout" prefHeight="50" prefWidth="216.0" style="                         -fx-background-color: #d4af37;                         -fx-text-fill: white;                         -fx-background-radius: 15;                         -fx-font-size: 15;                         -fx-font-weight: bold;                     " text="Log Out" />
         </VBox>
 
         <!-- RIGHT CONTENT -->

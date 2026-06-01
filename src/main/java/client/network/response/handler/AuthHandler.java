@@ -24,7 +24,7 @@ public class AuthHandler {
         NavigationUtils.showToast(stage, "Welcome " + user.getFullname() + "!");
 
         if (user.getRole() == Role.ADMIN) {
-            NavigationUtils.switchScene(stage, "/fxml/admin-view.fxml", "Admin Dashboard");
+            NavigationUtils.switchScene(stage, "/fxml/manageUser-view.fxml", "Admin Dashboard");
         } else {
             NavigationUtils.switchScene(stage, "/fxml/HomePage.fxml", "Home");
 

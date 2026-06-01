@@ -101,7 +101,7 @@ public class AuctionHistoryAdminController {
     // Navigation
     @FXML public void handleManageUsers() {
         Stage stage = (Stage) auctionHistoryTable.getScene().getWindow();
-        NavigationUtils.switchScene(stage, "/fxml/admin-view.fxml", "Admin");
+        NavigationUtils.switchScene(stage, "/fxml/manageUser-view.fxml", "Admin");
     }
     @FXML public void handleManageProducts() {
         Stage stage = (Stage) auctionHistoryTable.getScene().getWindow();

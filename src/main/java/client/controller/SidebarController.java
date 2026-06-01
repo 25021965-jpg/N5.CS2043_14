@@ -16,26 +16,13 @@ import javafx.stage.Stage;
 
 public class SidebarController {
 
-    @FXML
-    private Button infoBtn;
-
-    @FXML
-    private Button historyBtn;
-
-    @FXML
-    private Button createdAuctionBtn;
-
-    @FXML
-    private Button favoriteBtn;
-
-    @FXML
-    private Button balanceBtn;
-
-    @FXML
-    private Button logoutBtn;
-
-    @FXML
-    private Button deleteAccountBtn;
+    @FXML private Button infoBtn;
+    @FXML private Button historyBtn;
+    @FXML private Button createdAuctionBtn;
+    @FXML private Button favoriteBtn;
+    @FXML private Button balanceBtn;
+    @FXML private Button logoutBtn;
+    @FXML private Button deleteAccountBtn;
 
     // ================= INIT =================
 
@@ -83,7 +70,7 @@ public class SidebarController {
             """;
 
     private static final String ACTIVE_STYLE = """
-            -fx-background-color: #475569;
+            -fx-background-color: #162336;
             -fx-text-fill: white;
             -fx-font-size: 15px;
             -fx-font-weight: bold;
