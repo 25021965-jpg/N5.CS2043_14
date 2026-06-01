@@ -2,6 +2,7 @@ package client.network.response.handler;
 
 import client.controller.AccountBalanceController;
 import client.controller.LiveAuctionController;
+import client.manager.ControllerRegistry;
 import client.util.NavigationUtils;
 
 import javafx.stage.Stage;
@@ -11,103 +12,49 @@ import java.math.BigDecimal;
 public class BalanceHandler {
 
     private static final String SUCCESS_PREFIX =
-            "BALANCE_SUCCESS|";
+            "BALANCE_UPDATE_SUCCESS|";
 
     // ==================== SUCCESS ====================
 
-    public static void success(
-            String raw,
-            Stage stage
-    ) {
-
+    public static void success(String raw, Stage stage) {
         try {
-
-            BigDecimal newBalance =
-                    parseBalance(raw);
-
-            updateBalanceControllers(
-                    newBalance
-            );
-
-            NavigationUtils.showInfo(
-                    stage,
-                    "Balance updated!"
-            );
+            BigDecimal newBalance = parseBalance(raw);
+            updateBalanceControllers(newBalance);
+            NavigationUtils.showInfo(stage, "Balance updated!");
 
         } catch (Exception e) {
-
-            NavigationUtils.showError(
-                    "Invalid balance data."
-            );
+            NavigationUtils.showError("Invalid balance data.");
         }
     }
 
     // ==================== FAILED ====================
-
-    public static void failed(
-            String data,
-            Stage stage
-    ) {
-
-        NavigationUtils.showError(
-                "Balance update failed: " + data
-        );
+    public static void failed(String data) {
+        NavigationUtils.showError("Balance update failed: " + data);
     }
 
     // ==================== TRANSACTIONS ====================
-
-    public static void transactions(
-            String data
-    ) {
-
-        AccountBalanceController controller =
-                AccountBalanceController.getInstance();
-
+    public static void transactions(String data) {
+        AccountBalanceController controller = ControllerRegistry.get(AccountBalanceController.class);
         if (controller != null) {
-
-            controller.updateTransactionList(
-                    data
-            );
+            controller.updateTransactionList(data);
         }
     }
 
     // ==================== PARSE ====================
-
-    private static BigDecimal parseBalance(
-            String raw
-    ) {
-
-        String balance =
-                raw.replace(
-                        SUCCESS_PREFIX,
-                        ""
-                );
-
+    private static BigDecimal parseBalance(String raw) {
+        String balance = raw.replace(SUCCESS_PREFIX, "");
         return new BigDecimal(balance);
     }
 
     // ==================== UPDATE UI ====================
-
-    private static void updateBalanceControllers(
-            BigDecimal balance
-    ) {
-
-        AccountBalanceController accountController =
-                AccountBalanceController.getInstance();
-
+    private static void updateBalanceControllers(BigDecimal balance) {
+        AccountBalanceController accountController = ControllerRegistry.get(AccountBalanceController.class);
         if (accountController != null) {
-
-            accountController
-                    .updateBalanceFromServer(balance);
+            accountController.updateBalanceFromServer(balance);
         }
-
-        LiveAuctionController liveAuctionController =
-                LiveAuctionController.getInstance();
-
+        LiveAuctionController liveAuctionController = ControllerRegistry.get(LiveAuctionController.class);
         if (liveAuctionController != null) {
-
-            liveAuctionController
-                    .updateBalance(balance);
+            liveAuctionController.updateBalance(balance);
         }
     }
 }

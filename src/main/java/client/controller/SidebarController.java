@@ -60,7 +60,6 @@ public class SidebarController {
     }
 
     // ================= STYLES =================
-
     private static final String NORMAL_STYLE = """
             -fx-background-color: #334155;
             -fx-text-fill: white;
@@ -80,7 +79,6 @@ public class SidebarController {
     // ================= ACTIVE BUTTON =================
 
     private void resetButtons() {
-
         infoBtn.setStyle(NORMAL_STYLE);
         historyBtn.setStyle(NORMAL_STYLE);
         createdAuctionBtn.setStyle(NORMAL_STYLE);
@@ -89,9 +87,7 @@ public class SidebarController {
     }
 
     private void setActive(Button button) {
-
         resetButtons();
-
         button.setStyle(ACTIVE_STYLE);
     }
 
@@ -99,11 +95,7 @@ public class SidebarController {
 
     @FXML
     private void handleProfile(ActionEvent event) {
-
-        NavigationUtils.setCurrentPage(
-                "PROFILE"
-        );
-
+        NavigationUtils.setCurrentPage("PROFILE");
         switchPage(
                 event,
                 "/fxml/userProfile-view.fxml",
@@ -113,11 +105,7 @@ public class SidebarController {
 
     @FXML
     private void handleHistory(ActionEvent event) {
-
-        NavigationUtils.setCurrentPage(
-                "HISTORY"
-        );
-
+        NavigationUtils.setCurrentPage("HISTORY");
         switchPage(
                 event,
                 "/fxml/auctionHistory-view.fxml",
@@ -127,11 +115,7 @@ public class SidebarController {
 
     @FXML
     private void handleCreatedAuction(ActionEvent event) {
-
-        NavigationUtils.setCurrentPage(
-                "MY_AUCTIONS"
-        );
-
+        NavigationUtils.setCurrentPage("MY_AUCTIONS");
         switchPage(
                 event,
                 "/fxml/myAuctions-view.fxml",
@@ -141,11 +125,7 @@ public class SidebarController {
 
     @FXML
     private void handleFavourite(ActionEvent event) {
-
-        NavigationUtils.setCurrentPage(
-                "FAVOURITE"
-        );
-
+        NavigationUtils.setCurrentPage("FAVOURITE");
         switchPage(
                 event,
                 "/fxml/Favourite-view.fxml",
@@ -155,11 +135,7 @@ public class SidebarController {
 
     @FXML
     private void handleBalance(ActionEvent event) {
-
-        NavigationUtils.setCurrentPage(
-                "BALANCE"
-        );
-
+        NavigationUtils.setCurrentPage("BALANCE");
         switchPage(
                 event,
                 "/fxml/accountBalance-view.fxml",
@@ -169,13 +145,8 @@ public class SidebarController {
 
     @FXML
     private void handleBackHome(ActionEvent event) {
-
-        NavigationUtils.setCurrentPage(
-                "HOME"
-        );
-
+        NavigationUtils.setCurrentPage("HOME");
         resetButtons();
-
         switchPage(
                 event,
                 "/fxml/HomePage.fxml",
@@ -184,10 +155,8 @@ public class SidebarController {
     }
 
     // ================= LOGOUT =================
-
     @FXML
     private void handleLogout() {
-
         boolean confirmed =
                 NavigationUtils.showConfirm(
                         "Logout",
@@ -197,18 +166,14 @@ public class SidebarController {
         if (!confirmed) {
             return;
         }
-
-        ClientSocket socket =
-                ClientSocket.getInstance();
+        ClientSocket socket = ClientSocket.getInstance();
 
         if (socket != null) {
             socket.logout();
         }
 
         UserSession.setCurrentUser(null);
-
         NavigationUtils.setCurrentPage(null);
-
         Stage stage =
                 (Stage)
                         logoutBtn
@@ -226,7 +191,6 @@ public class SidebarController {
 
     @FXML
     private void handleDeleteAccount() {
-
         boolean confirmed =
                 NavigationUtils.showConfirm(
                         "Delete Account",
@@ -244,7 +208,6 @@ public class SidebarController {
          */
 
         UserSession.setCurrentUser(null);
-
         NavigationUtils.setCurrentPage(null);
 
         Stage stage =

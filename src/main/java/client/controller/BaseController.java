@@ -29,41 +29,7 @@ public abstract class BaseController
     public void setUser(User user) {
         this.currentUser = user;
     }
-
-    // ==================== ALERT ====================
-
-    protected void showError(String message) {
-        NavigationUtils.showError(message);
-    }
-
-    protected void showInfo(
-            String message
-    ) {
-
-        Stage stage =
-                NavigationUtils.getMainStage();
-
-        if (stage != null) {
-
-            NavigationUtils.showInfo(
-                    stage,
-                    message
-            );
-        }
-    }
-
-    protected boolean showConfirm(
-            String title,
-            String message
-    ) {
-        return NavigationUtils.showConfirm(
-                title,
-                message
-        );
-    }
-
     // ==================== NAVIGATION ====================
-
     protected void switchScene(
             ActionEvent event,
             String fxml,
@@ -78,9 +44,7 @@ public abstract class BaseController
     }
 
     // ==================== STAGE ====================
-
     protected Stage getStage(ActionEvent event) {
-
         if (event.getSource() instanceof MenuItem menuItem) {
 
             return (Stage)

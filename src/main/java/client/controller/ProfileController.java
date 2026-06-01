@@ -48,9 +48,7 @@ public class ProfileController implements UserDataReceiver {
                 verifyNewPasswordTextField,
                 toggleVerifyBtn
         );
-
         currentUser = UserSession.getCurrentUser();
-
         if (currentUser != null) {
             setUser(currentUser);
         } else {
@@ -58,18 +56,13 @@ public class ProfileController implements UserDataReceiver {
         }
     }
 
-    public void setClient(ClientSocket client) {
-
-    }
+    public void setClient(ClientSocket client) {}
 
     public void setUser(User user) {
-
         this.currentUser = user;
-
         if (user == null) {
             return;
         }
-
         fullNameLabel.setText(
                 TextUtils.toTitleCase(
                         user.getFullname()
@@ -96,21 +89,11 @@ public class ProfileController implements UserDataReceiver {
     ) {
 
         button.setOnAction(e -> {
-
-            boolean showingText =
-                    textField.isVisible();
-
+            boolean showingText = textField.isVisible();
             if (showingText) {
-
-                passwordField.setText(
-                        textField.getText()
-                );
-
+                passwordField.setText(textField.getText());
             } else {
-
-                textField.setText(
-                        passwordField.getText()
-                );
+                textField.setText(passwordField.getText());
             }
 
             passwordField.setVisible(showingText);
@@ -123,7 +106,6 @@ public class ProfileController implements UserDataReceiver {
 
     @FXML
     private void resetPassword() {
-
         if (currentUser == null) {
             showError("No user data!");
             return;
@@ -157,10 +139,7 @@ public class ProfileController implements UserDataReceiver {
                         dbUser.getPassword()
                 )) {
 
-            showError(
-                    "Old password incorrect!"
-            );
-
+            showError("Old password incorrect!");
             return;
         }
 
@@ -181,23 +160,13 @@ public class ProfileController implements UserDataReceiver {
                 );
 
         if (updated) {
-
             currentUser.setPassword(newPass);
-
-            UserSession.setCurrentUser(
-                    currentUser
-            );
-
-            showInfo(
-            );
-
+            UserSession.setCurrentUser(currentUser);
+            showInfo();
             clearPasswordFields();
 
         } else {
-
-            showError(
-                    "Update password failed!"
-            );
+            showError("Update password failed!");
         }
     }
 
@@ -222,20 +191,10 @@ public class ProfileController implements UserDataReceiver {
         verifyNewPasswordTextField.clear();
     }
 
-    private void showInfo(
-            ) {
-
-        Alert alert =
-                new Alert(
-                        Alert.AlertType.INFORMATION
-                );
-
+    private void showInfo() {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setHeaderText(null);
-
-        alert.setContentText(
-                "Password changed successfully!"
-        );
-
+        alert.setContentText("Password changed successfully!");
         alert.showAndWait();
     }
 

@@ -1,5 +1,7 @@
 package client.controller;
 
+import client.manager.ControllerRegistry;
+import client.manager.FavouriteManager;
 import client.manager.UserSession;
 import client.manager.ViewCache;
 import client.network.ClientSocket;
@@ -26,22 +28,15 @@ import model.User;
 
 import java.util.*;
 
-public class HomePageController
-        extends BaseController {
+public class HomePageController extends BaseController {
 
-    private static HomePageController instance;
-    public static HomePageController getInstance() {
-        return instance;
-    }
     public List<Auction> getAuctionList() {
         return auctionList;
     }
 
     // ==================== DATA ====================
-    private final List<Auction> auctionList =
-            new ArrayList<>();
-    private final Map<String, Parent> cardCache =
-            new HashMap<>();
+    private final List<Auction> auctionList = new ArrayList<>();
+    private final Map<String, Parent> cardCache = new HashMap<>();
     private Category selectedCategory;
     private String selectedStatus;
 
@@ -60,8 +55,10 @@ public class HomePageController
     // ==================== INIT ====================
     @FXML
     public void initialize() {
-        instance = this;
-        Platform.runLater(() -> {
+        ControllerRegistry.register(
+                HomePageController.class,
+                this
+        );        Platform.runLater(() -> {
             if (itemGrid != null && itemGrid.getScene() != null) {
                 ResponseHandler.setMainStage(
                         (Stage) itemGrid.getScene().getWindow()
@@ -97,11 +94,7 @@ public class HomePageController
     }
 
     // ==================== DATA ====================
-
-    public void setUser(
-            User user
-    ) {
-
+    public void setUser(User user) {
         UserSession.setCurrentUser(user);
     }
 
@@ -117,7 +110,6 @@ public class HomePageController
         }
         auctionList.clear();
         auctionList.addAll(auctions);
-        cardCache.clear();
         applyFilters();
     }
 
@@ -274,15 +266,10 @@ public class HomePageController
 
         List<Auction> filtered =
                 auctionList.stream()
-                        .filter(auction ->
-                                matchesSearch(
-                                        auction,
-                                        keyword
-                                )
-                        )
-
+                        .filter(auction -> matchesSearch(auction, keyword))
                         .filter(this::matchesCategory)
                         .filter(this::matchesStatus)
+                        .sorted(this::compareAuctions)
                         .toList();
         refreshGrid(filtered);
     }
@@ -304,6 +291,33 @@ public class HomePageController
                 .getName()
                 .toLowerCase()
                 .contains(keyword);
+    }
+
+    private int compareAuctions(Auction a1, Auction a2) {
+        boolean fav1 =
+                FavouriteManager.isFavourite(
+                        a1.getItem().getItem_id()
+                );
+
+        boolean fav2 =
+                FavouriteManager.isFavourite(
+                        a2.getItem().getItem_id()
+                );
+
+        if (fav1 != fav2) {
+            return fav1 ? -1 : 1;
+        }
+
+        boolean active1 =
+                a1.getStatus().name().equals("ACTIVE");
+
+        boolean active2 =
+                a2.getStatus().name().equals("ACTIVE");
+
+        if (active1 != active2) {
+            return active1 ? -1 : 1;
+        }
+        return 0;
     }
 
     private boolean matchesCategory(Auction auction) {
@@ -340,15 +354,12 @@ public class HomePageController
         int row = 0;
 
         for (Auction auction : auctions) {
-
             Parent card = createAuctionCard(auction);
-
             if (card == null) {
                 continue;
             }
 
             itemGrid.add(card, column, row);
-
             column++;
 
             if (column >= columns) {
@@ -358,22 +369,22 @@ public class HomePageController
         }
     }
 
-    private Parent createAuctionCard(
-            Auction auction
-    ) {
-        return AuctionCardFactory.createCard(
-                auction,
-                client
-        );
+    private Parent createAuctionCard(Auction auction) {
+        String id = auction.getAuction_id();
+        if (cardCache.containsKey(id)) {
+            return cardCache.get(id);
+        }
+        Parent card = AuctionCardFactory.createCard(auction, client);
+        if (card != null) {
+            cardCache.put(id, card);
+        }
+        return card;
     }
 
     // ==================== NAVIGATION ====================
 
     @FXML
-    private void handleCreateAuction(
-            ActionEvent event
-    ) {
-
+    private void handleCreateAuction(ActionEvent event) {
         navigate(
                 getStage(event),
                 "/fxml/createAuction-view.fxml",
@@ -382,10 +393,8 @@ public class HomePageController
     }
 
     @FXML
-    private void openProfile(
-            ActionEvent event
-    ) {
-
+    private void openProfile(ActionEvent event) {
+        NavigationUtils.setCurrentPage("PROFILE");
         navigate(
                 getStage(event),
                 "/fxml/userProfile-view.fxml",
@@ -394,10 +403,8 @@ public class HomePageController
     }
 
     @FXML
-    private void openHistory(
-            ActionEvent event
-    ) {
-
+    private void openHistory(ActionEvent event) {
+        NavigationUtils.setCurrentPage("HISTORY");
         navigate(
                 getStage(event),
                 "/fxml/auctionHistory-view.fxml",
@@ -406,10 +413,8 @@ public class HomePageController
     }
 
     @FXML
-    private void openYourAuctions(
-            ActionEvent event
-    ) {
-
+    private void openYourAuctions(ActionEvent event) {
+        NavigationUtils.setCurrentPage("MY_AUCTIONS");
         navigate(
                 getStage(event),
                 "/fxml/myAuctions-view.fxml",
@@ -418,10 +423,8 @@ public class HomePageController
     }
 
     @FXML
-    private void openFavourite(
-            ActionEvent event
-    ) {
-
+    private void openFavourite(ActionEvent event) {
+        NavigationUtils.setCurrentPage("FAVOURITE");
         navigate(
                 getStage(event),
                 "/fxml/Favourite-view.fxml",
@@ -430,10 +433,8 @@ public class HomePageController
     }
 
     @FXML
-    private void openBalance(
-            ActionEvent event
-    ) {
-
+    private void openBalance(ActionEvent event) {
+        NavigationUtils.setCurrentPage("BALANCE");
         navigate(
                 getStage(event),
                 "/fxml/accountBalance-view.fxml",
@@ -450,8 +451,6 @@ public class HomePageController
                 );
         if (!confirmed) {return;}
         ViewCache.clear();
-        cardCache.clear();
-        instance = null;
         UserSession.setCurrentUser(null);
         navigate(
                 getStage(event),
@@ -461,20 +460,15 @@ public class HomePageController
     }
 
     @FXML
-    private void handleDeleteAccount(
-            ActionEvent event
-    ) {
-
+    private void handleDeleteAccount(ActionEvent event) {
         boolean confirmed =
                 NavigationUtils.showConfirm(
                         "Danger",
                         "Permanently delete account?"
                 );
-
         if (!confirmed) {
             return;
         }
-
         navigate(
                 getStage(event),
                 "/fxml/login-view.fxml",
@@ -483,9 +477,7 @@ public class HomePageController
     }
 
     // ==================== STYLE ====================
-
     private void resetCategoryStyles() {
-
         final String defaultStyle =
                 "-fx-background-color: #d4af37;";
 

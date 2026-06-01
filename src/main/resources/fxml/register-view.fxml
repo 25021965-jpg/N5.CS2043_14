@@ -35,7 +35,7 @@
 
    <VBox alignment="CENTER" prefHeight="600.0" prefWidth="383.0" spacing="10.0" style="-fx-background-color: #121212;"
          HBox.hgrow="ALWAYS">
-      <Label style="-fx-text-fill: white; -fx-font-size: 41px; -fx-font-weight: bold;" text="CREATE ACCOUNT">
+      <Label style="-fx-text-fill: white; -fx-font-size: 41px;" text="CREATE ACCOUNT">
          <font>
             <Font name="Berlin Sans FB Demi Bold" size="41.0"/>
          </font>
@@ -92,7 +92,7 @@
          </font>
       </Button>
       <Button layoutX="77.0" layoutY="467.0" onAction="#handleBack" prefHeight="37.0" prefWidth="312.0"
-              style="-fx-background-color: #2C2C2C; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5;"
+              style="-fx-background-color: #2C2C2C; -fx-text-fill: white; -fx-background-radius: 5;"
               text="BACK">
          <font>
             <Font name="Berlin Sans FB Demi Bold" size="20.0"/>

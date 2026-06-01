@@ -1,6 +1,8 @@
 package client.controller;
 
+import client.manager.ControllerRegistry;
 import client.network.ClientSocket;
+import client.util.NavigationUtils;
 import client.util.TextUtils;
 
 import javafx.fxml.FXML;
@@ -18,16 +20,8 @@ import model.User;
 import java.math.BigDecimal;
 import java.util.List;
 
-import static client.util.NavigationUtils.showToast;
+public class AccountBalanceController extends BaseController implements UserDataReceiver {
 
-public class AccountBalanceController
-        extends BaseController
-        implements UserDataReceiver {
-    private static AccountBalanceController instance;
-
-    public static AccountBalanceController getInstance() {
-        return instance;
-    }
     private static final List<String> FILTERS = List.of(
             "All",
             "Deposit",
@@ -47,18 +41,14 @@ public class AccountBalanceController
 
     @FXML
     public void initialize() {
-        instance = this;
+        ControllerRegistry.register(AccountBalanceController.class, this);
         System.out.println("Account Balance Loaded");
-
         setupFilterBox();
     }
 
     private void setupFilterBox() {
-
         filterBox.getItems().addAll(FILTERS);
-
         filterBox.setValue("All");
-
         filterBox.setOnAction(e ->
                 loadTransactions()
         );
@@ -69,7 +59,7 @@ public class AccountBalanceController
     @Override
     public void setUser(User user) {
         if (user == null) {
-            showError("No user data found.");
+            NavigationUtils.showError("No user data found.");
             return;
         }
 
@@ -89,169 +79,56 @@ public class AccountBalanceController
             return;
         }
         this.client = client;
-        client.setMessageListener(
-                this::handleServerMessage
-        );
-    }
-
-
-
-    // ==================== SERVER ====================
-
-    private void handleServerMessage(
-            String msg
-    ) {
-
-        runUI(() -> {
-
-            System.out.println(
-                    "[BalanceController] Received: "
-                            + msg
-            );
-
-            if (msg.startsWith("BALANCE_UPDATE_SUCCESS")) {
-
-                handleBalanceSuccess(msg);
-
-            } else if (msg.startsWith("BALANCE_UPDATE_FAILED")) {
-
-                handleBalanceFailed(msg);
-
-            } else if (msg.startsWith("TRANSACTIONS_LIST")) {
-
-                handleTransactionList(msg);
-            }
-        });
-    }
-
-    private void handleBalanceSuccess(
-            String msg
-    ) {
-
-        String[] parts =
-                msg.split("\\|");
-
-        if (parts.length < 2) {
-            return;
-        }
-
-        BigDecimal newBalance =
-                new BigDecimal(parts[1]);
-
-        currentUser.setBalance(newBalance);
-
-        updateBalance();
-
-        showToast(
-                (javafx.stage.Stage)
-                        balanceLabel.getScene().getWindow(),
-                "Transaction successful!"
-        );
-
-        loadTransactions();
-    }
-
-    private void handleBalanceFailed(
-            String msg
-    ) {
-
-        String[] parts =
-                msg.split("\\|");
-
-        String errorMessage =
-                parts.length > 1
-                        ? parts[1]
-                        : "Transaction failed.";
-
-        showError(errorMessage);
-    }
-
-    private void handleTransactionList(
-            String msg
-    ) {
-
-        String data =
-                msg.substring(
-                        "TRANSACTIONS_LIST|".length()
-                );
-
-        updateTransactionList(data);
     }
 
     // ==================== DEPOSIT ====================
 
     @FXML
     public void handleDeposit() {
-
         BigDecimal amount =
                 parseAmount(
                         depositField.getText(),
                         "Deposit"
                 );
 
-        if (amount == null) {
+        if (client == null || currentUser == null) {
+            NavigationUtils.showError("Connection unavailable.");
             return;
         }
 
-        client.sendDeposit(
-                currentUser.getUser_id(),
-                amount
-        );
-
+        client.sendDeposit(currentUser.getUser_id(), amount);
         depositField.clear();
     }
 
     // ==================== WITHDRAW ====================
-
     @FXML
     public void handleWithdraw() {
-
         BigDecimal amount =
                 parseAmount(
                         withdrawField.getText(),
                         "Withdraw"
                 );
 
-        if (amount == null) {
+        if (client == null || currentUser == null) {
+            NavigationUtils.showError("Connection unavailable.");
             return;
         }
 
-        client.sendWithdraw(
-                currentUser.getUser_id(),
-                amount
-        );
-
+        client.sendWithdraw(currentUser.getUser_id(), amount);
         withdrawField.clear();
     }
 
     // ==================== AMOUNT VALIDATION ====================
-
-    private BigDecimal parseAmount(
-            String input,
-            String action
-    ) {
-
+    private BigDecimal parseAmount(String input, String action) {
         if (input == null || input.isBlank()) {
-
-            showError(
-                    action + " amount is required."
-            );
-
+            NavigationUtils.showError(action + " amount is required.");
             return null;
         }
 
         try {
-
-            BigDecimal amount =
-                    new BigDecimal(input.trim());
-
+            BigDecimal amount = new BigDecimal(input.trim());
             if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-
-                showError(
-                        action
-                                + " amount must be greater than 0."
-                );
-
+                NavigationUtils.showError(action + " amount must be greater than 0.");
                 return null;
             }
 
@@ -259,16 +136,14 @@ public class AccountBalanceController
 
         } catch (NumberFormatException e) {
 
-            showError("Invalid amount.");
+            NavigationUtils.showError("Invalid amount.");
 
             return null;
         }
     }
 
     // ==================== BALANCE ====================
-
     private void updateBalance() {
-
         if (currentUser == null) {
             return;
         }
@@ -293,55 +168,38 @@ public class AccountBalanceController
     }
 
     // ==================== TRANSACTIONS ====================
-
     private void loadTransactions() {
-        if (currentUser == null) {
+        if (currentUser == null || client == null) {
             return;
         }
-
-        client.sendGetTransactions(
-                currentUser.getUser_id()
-        );
+        client.sendGetTransactions(currentUser.getUser_id());
     }
 
-    public void updateTransactionList(
-            String data
-    ) {
-
-        transactionContainer
-                .getChildren()
-                .clear();
+    public void updateTransactionList(String data) {
+        if (transactionContainer == null) {
+            return;
+        }
+        transactionContainer.getChildren().clear();
 
         if (data == null || data.isBlank()) {
-
-            Label emptyLabel =
-                    new Label("No transactions yet");
-
-            emptyLabel.setStyle(
-                    "-fx-text-fill:#64748B; -fx-padding:20;"
-            );
+            Label emptyLabel = new Label("No transactions yet");
+            emptyLabel.setStyle("-fx-text-fill:#64748B; -fx-padding:20;");
 
             transactionContainer
                     .getChildren()
                     .add(emptyLabel);
-
             return;
         }
 
-        String[] transactions =
-                data.split("\\|");
-
+        String[] transactions = data.split("\\|");
         for (String tx : transactions) {
-
             String[] parts =
                     tx.split(";");
 
             if (parts.length < 4) {
                 continue;
             }
-
             String type = parts[0];
-
             if (!shouldDisplay(type)) {
                 continue;
             }
@@ -365,30 +223,20 @@ public class AccountBalanceController
 
     // ==================== FILTER ====================
 
-    private boolean shouldDisplay(
-            String type
-    ) {
-
-        String selected =
-                filterBox.getValue();
-
+    private boolean shouldDisplay(String type) {
+        String selected = filterBox.getValue();
         if (selected == null
                 || selected.equals("All")) {
-
             return true;
         }
 
         return switch (selected) {
-
             case "Deposit" ->
                     type.equals("DEPOSIT");
-
             case "Withdraw" ->
                     type.equals("WITHDRAW");
-
             case "Paid" ->
                     type.equals("TRANSFER_OUT");
-
             case "Received" ->
                     type.equals("TRANSFER_IN");
 

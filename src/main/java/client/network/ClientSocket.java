@@ -13,7 +13,6 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.net.Socket;
-import java.util.function.Consumer;
 
 public class ClientSocket {
 
@@ -26,8 +25,6 @@ public class ClientSocket {
     private boolean listening = false;
 
     public static String currentRequest = "";
-
-    private Consumer<String> messageListener = null;
 
     // ================= CONSTRUCTOR =================
 
@@ -97,9 +94,6 @@ public class ClientSocket {
                                             + msg
                             );
 
-                            if(messageListener != null){
-                                messageListener.accept(msg);
-                            }
                             ResponseHandler.handle(msg);
                         }
 
@@ -344,9 +338,5 @@ public class ClientSocket {
         } catch (Exception e){
             System.err.println(e.getMessage());
         }
-    }
-
-    public void setMessageListener(Consumer<String> listener){
-        this.messageListener = listener;
     }
 }

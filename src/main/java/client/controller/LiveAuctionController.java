@@ -1,18 +1,15 @@
 package client.controller;
 
+import client.manager.ControllerRegistry;
 import client.network.ClientSocket;
 import client.network.response.ResponseHandler;
 import client.manager.UserSession;
+import client.util.NavigationUtils;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.LineChart;
-import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -32,8 +29,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
-
-import static client.util.NavigationUtils.showError;
 
 public class LiveAuctionController implements UserDataReceiver {
 
@@ -90,8 +85,6 @@ public class LiveAuctionController implements UserDataReceiver {
     private ObservableList<Bid> bidHistoryList;
     private int bidCounter = 0;
 
-    private static LiveAuctionController instance;
-
     // ==================== STATIC STATE (lưu khi Back to Home, khôi phục khi quay lại) ====================
 
     private static List<Bid> globalBidHistory = new ArrayList<>();
@@ -99,15 +92,13 @@ public class LiveAuctionController implements UserDataReceiver {
     private static BigDecimal globalCurrentPrice = BigDecimal.ZERO;
     private static String globalWinnerName = null;
     private static String globalWinnerTime = null;
-    private static BigDecimal globalVirtualBalance = null;
-    private static BigDecimal globalMyPendingBid = BigDecimal.ZERO;
     private static String globalAuctionId = null;
 
     // ==================== INITIALIZE ====================
 
     @FXML
     public void initialize() {
-        instance = this;
+        ControllerRegistry.register(LiveAuctionController.class, this);
 
         // Setup Table Columns
         timeColumn.setCellValueFactory(new PropertyValueFactory<>("timeString"));
@@ -159,12 +150,6 @@ public class LiveAuctionController implements UserDataReceiver {
         });
     }
 
-    // ==================== SINGLETON ====================
-
-    public static LiveAuctionController getInstance() {
-        return instance;
-    }
-
     // ==================== SETTERS ====================
 
     @Override
@@ -185,32 +170,37 @@ public class LiveAuctionController implements UserDataReceiver {
     public void setAuctionData(String auctionId, String productName, String productDesc,
                                String currentPrice, String stepPrice, String floorPrice,
                                String endTime, String imageUrl) {
+
+        UserSession.setVirtualBalance(this.virtualBalance);
+        UserSession.setPendingBid(this.myPendingBid);
         this.auctionId = auctionId;
         this.currentPrice = new BigDecimal(currentPrice);
         this.stepPrice = new BigDecimal(stepPrice);
         this.floorPrice = new BigDecimal(floorPrice);
 
-        // ====== KHỞI TẠO BALANCE ẢO ======
-        // Nếu quay lại cùng auction → khôi phục từ static
-        if (auctionId.equals(globalAuctionId) && globalVirtualBalance != null) {
-            this.virtualBalance = globalVirtualBalance;
-            this.myPendingBid = (globalMyPendingBid != null) ? globalMyPendingBid : BigDecimal.ZERO;
-            this.pendingBidAmount = BigDecimal.ZERO;
-            System.out.println(" Restored virtual balance from static: " + virtualBalance);
+        // ==================== VIRTUAL BALANCE RESTORE ====================
+        // Ưu tiên Session (persist giữa các scene)
+        BigDecimal sessionBalance = UserSession.getVirtualBalance();
+        BigDecimal sessionPendingBid = UserSession.getPendingBid();
+
+        if (sessionBalance != null) {
+            this.virtualBalance = sessionBalance;
+        } else if (currentUser != null && currentUser.getBalance() != null) {
+            this.virtualBalance = currentUser.getBalance();
         } else {
-            // Auction mới → dùng balance thật từ user
-            if (currentUser != null && currentUser.getBalance() != null) {
-                this.virtualBalance = currentUser.getBalance();
-            } else {
-                this.virtualBalance = BigDecimal.ZERO;
-            }
-            this.myPendingBid = BigDecimal.ZERO;
-            this.pendingBidAmount = BigDecimal.ZERO;
-            globalAuctionId = auctionId; // Chỉ cập nhật khi là auction mới
-            System.out.println(" New auction, init virtual balance: " + virtualBalance);
+            this.virtualBalance = BigDecimal.ZERO;
         }
 
-        // Hiển thị thông tin sản phẩm
+        this.myPendingBid = (sessionPendingBid != null)
+                ? sessionPendingBid
+                : BigDecimal.ZERO;
+
+        this.pendingBidAmount = BigDecimal.ZERO;
+
+        System.out.println("[LiveAuction] VirtualBalance = " + virtualBalance
+                + ", PendingBid = " + myPendingBid);
+
+        // ==================== UI SETUP ====================
         productNameLabel.setText(productName);
         productDescLabel.setText(productDesc);
         currentPriceLabel.setText(formatPrice(this.currentPrice));
@@ -219,32 +209,35 @@ public class LiveAuctionController implements UserDataReceiver {
 
         updateBalanceDisplay();
 
-        // Load image
+        // ==================== IMAGE LOAD ====================
         if (imageUrl != null && !imageUrl.isEmpty() && !imageUrl.equals("NO_IMAGE")) {
             try {
                 Image image = new Image(imageUrl, true);
                 productImageView.setImage(image);
             } catch (Exception e) {
                 URL fallback = getClass().getResource("/image/no-image.png");
-                if (fallback != null) productImageView.setImage(new Image(fallback.toExternalForm()));
+                if (fallback != null) {
+                    productImageView.setImage(new Image(fallback.toExternalForm()));
+                }
             }
         }
 
+        // ==================== COUNTDOWN ====================
         startCountdown(endTime);
 
+        // ==================== JOIN SERVER ====================
         if (client != null) {
             client.sendJoin(auctionId);
         }
     }
 
     // ==================== BALANCE ẢO ====================
-
     private void updateBalanceDisplay() {
         if (estimatedBalanceLabel != null && virtualBalance != null) {
             estimatedBalanceLabel.setText(formatPrice(virtualBalance));
         }
         if (maxBidLabel != null && virtualBalance != null) {
-            maxBidLabel.setText("💰 Max possible bid: " + formatPrice(virtualBalance));
+            maxBidLabel.setText("Max possible bid: " + formatPrice(virtualBalance));
         }
         if (balanceProgressBar != null && virtualBalance != null) {
             double progress = virtualBalance.doubleValue() / 1_000_000_000.0;
@@ -255,30 +248,37 @@ public class LiveAuctionController implements UserDataReceiver {
     // Trừ virtual balance khi đặt bid thành công
     private void deductVirtualBalance(BigDecimal amount) {
         if (virtualBalance != null && amount != null) {
-            // Chỉ trừ hiệu so với lần bid trước
-            BigDecimal diff = amount.subtract(myPendingBid); // lần đầu: amount - 0 = amount, lần sau: amount mới - amount cũ
+            BigDecimal diff = amount.subtract(myPendingBid);
             if (diff.compareTo(BigDecimal.ZERO) > 0) {
                 virtualBalance = virtualBalance.subtract(diff);
             }
-            myPendingBid = amount; // cập nhật bid hiện tại
-            globalVirtualBalance = virtualBalance;
-            globalMyPendingBid = myPendingBid;
+            myPendingBid = amount;
+            //sync session
+            UserSession.setVirtualBalance(virtualBalance);
+            UserSession.setPendingBid(myPendingBid);
+
             updateBalanceDisplay();
-            System.out.println("Deducted diff: " + diff + ", myPendingBid: " + myPendingBid + ", remaining: " + virtualBalance);
+            System.out.println("Deduct diff=" + diff
+                    + ", pending=" + myPendingBid
+                    + ", balance=" + virtualBalance);
         }
     }
 
     // Cộng lại virtual balance khi bị outbid
     private void refundVirtualBalance() {
-        if (virtualBalance != null && myPendingBid != null && myPendingBid.compareTo(BigDecimal.ZERO) > 0) {
+        if (virtualBalance != null
+                && myPendingBid != null
+                && myPendingBid.compareTo(BigDecimal.ZERO) > 0) {
+
             virtualBalance = virtualBalance.add(myPendingBid);
             myPendingBid = BigDecimal.ZERO;
-            // Lưu vào static
-            globalVirtualBalance = virtualBalance;
-            globalMyPendingBid = BigDecimal.ZERO;
+
+            //sync session
+            UserSession.setVirtualBalance(virtualBalance);
+            UserSession.setPendingBid(BigDecimal.ZERO);
+
             updateBalanceDisplay();
-            System.out.println(" Virtual balance refunded, new balance: " + virtualBalance);
-            showToast("You were outbid! Money returned to your balance.");
+            showToast("You were outbid! Money returned.");
         }
     }
 
@@ -321,18 +321,20 @@ public class LiveAuctionController implements UserDataReceiver {
             return;
         }
 
+        // min bid rule
         BigDecimal minRequired = currentPrice.add(stepPrice);
         if (bidAmount.compareTo(minRequired) < 0) {
             showWarning("Minimum bid is " + formatPrice(minRequired));
             return;
         }
 
+        // balance check (simple & safe)
         if (virtualBalance != null && bidAmount.compareTo(virtualBalance) > 0) {
-            showWarning("Insufficient balance! Your balance: " + formatPrice(virtualBalance));
+            showWarning("Insufficient balance! Available: " + formatPrice(virtualBalance));
             return;
         }
 
-        // Lưu số tiền sẽ đặt để xử lý sau khi server xác nhận
+        // save pending bid
         pendingBidAmount = bidAmount;
 
         client.sendBid(auctionId, amountText);
@@ -341,18 +343,14 @@ public class LiveAuctionController implements UserDataReceiver {
     }
 
     // ==================== NAVIGATION ====================
-
     private void goBackToHome() {
-        System.out.println("[LiveAuction] Going back to home (keeping auction state)");
-
-        // Lưu balance ảo vào static trước khi rời (KHÔNG xóa static)
-        globalVirtualBalance = virtualBalance;
-        globalMyPendingBid = myPendingBid;
+        System.out.println("[LiveAuction] Going back home");
+        UserSession.setVirtualBalance(virtualBalance);
+        UserSession.setPendingBid(myPendingBid);
 
         if (countdownTimer != null) {
             countdownTimer.cancel();
         }
-
         navigateToHome();
     }
 
@@ -364,7 +362,7 @@ public class LiveAuctionController implements UserDataReceiver {
                 && globalWinnerName.equals(currentUser.getUsername())
                 && myPendingBid != null
                 && myPendingBid.compareTo(BigDecimal.ZERO) > 0) {
-            showError("⚠️ You are the leading bidder! You cannot leave until you are outbid or the auction ends.");
+            showError("You are the leading bidder! You cannot leave until you are outbid or the auction ends.");
             return;
         }
         // Hoàn tiền pending khi leave balance ảo
@@ -374,23 +372,16 @@ public class LiveAuctionController implements UserDataReceiver {
             virtualBalance = virtualBalance.add(refund);
             myPendingBid = BigDecimal.ZERO;
             updateBalanceDisplay();
-            showToast("💰 Refunded " + formatPrice(refund) + " because you left.");
+            showToast("Refunded " + formatPrice(refund) + " because you left.");
         }
-        // Lưu balance thật (sau khi đã hoàn tiền) vào session
-        if (currentUser != null && virtualBalance != null) {
+        // Lưu balance thật + state ảo vào session
+        if (currentUser != null) {
             currentUser.setBalance(virtualBalance);
             UserSession.setCurrentUser(currentUser);
         }
 
-        // Xóa toàn bộ static state (đã leave hẳn, không quay lại auction này)
-        globalBidHistory.clear();
-        globalBidCounter = 0;
-        globalCurrentPrice = BigDecimal.ZERO;
-        globalWinnerName = null;
-        globalWinnerTime = null;
-        globalVirtualBalance = null;
-        globalMyPendingBid = BigDecimal.ZERO;
-        globalAuctionId = null;
+        UserSession.setVirtualBalance(virtualBalance);
+        UserSession.setPendingBid(myPendingBid);
 
         if (countdownTimer != null) {
             countdownTimer.cancel();
@@ -403,28 +394,19 @@ public class LiveAuctionController implements UserDataReceiver {
     }
 
     private void navigateToHome() {
-        try {
-            // Lưu balance ảo vào session trước khi rời
-            if (currentUser != null && virtualBalance != null) {
-                currentUser.setBalance(virtualBalance);
-                UserSession.setCurrentUser(currentUser);
-                System.out.println(" Saved virtual balance to session: " + virtualBalance);
-            }
+        UserSession.setVirtualBalance(virtualBalance);
 
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/HomePage.fxml"));
-            Parent root = loader.load();
-
-            HomePageController controller = loader.getController();
-            controller.setUser(currentUser);
-
-            Stage stage = (Stage) backHomeBtn.getScene().getWindow();
-            stage.setScene(new Scene(root));
-            stage.setTitle("Auction System");
-            stage.show();
-        } catch (Exception e) {
-            e.printStackTrace();
-            showError("Cannot go back to home!");
+        if (countdownTimer != null) {
+            countdownTimer.cancel();
         }
+
+        NavigationUtils.switchScene(
+                (Stage) backHomeBtn.getScene().getWindow(),
+                "/fxml/HomePage.fxml",
+                "Auction System",
+                client,
+                currentUser
+        );
     }
 
     // ==================== SERVER MESSAGES ====================
@@ -564,7 +546,7 @@ public class LiveAuctionController implements UserDataReceiver {
                 String data = msg.substring("BID_HISTORY_SUCCESS|".length());
                 List<Bid> history = parseBidHistory(data);
 
-                if (history != null && !history.isEmpty()) {
+                if (!history.isEmpty()) {
                     bidHistoryList.clear();
 
                     for (Bid bid : history) {
@@ -664,17 +646,16 @@ public class LiveAuctionController implements UserDataReceiver {
             if (msg.startsWith("YOU_WON")) {
                 String[] parts = msg.split("\\|");
                 if (parts.length >= 3) {
-                    // YOU_WON|finalPrice|winnerName
                     BigDecimal finalPrice = new BigDecimal(parts[1]);
                     String winnerName = parts[2];
                     if (currentUser != null && currentUser.getUsername().equals(winnerName)) {
-                        showInfo("🎉 CONGRATULATIONS! You won the auction for " + formatPrice(finalPrice));
+                        showInfo("CONGRATULATIONS! You won the auction for " + formatPrice(finalPrice));
                     } else {
                         showInfo("🏆 " + winnerName + " won the auction for " + formatPrice(finalPrice));
                     }
                 } else if (parts.length >= 2) {
                     BigDecimal finalPrice = new BigDecimal(parts[1]);
-                    showInfo("🏆 Auction ended! Winning price: " + formatPrice(finalPrice));
+                    showInfo("Auction ended! Winning price: " + formatPrice(finalPrice));
                 }
                 placeBidBtn.setDisable(true);
                 addStepBtn.setDisable(true);
@@ -763,7 +744,7 @@ public class LiveAuctionController implements UserDataReceiver {
     }
 
     private void refreshBidHistory() {
-        System.out.println("🔄 Refreshing bid history for auction: " + auctionId);
+        System.out.println("Refreshing bid history for auction: " + auctionId);
         if (client != null && auctionId != null) {
             client.sendGetBidHistory(auctionId);
         }
@@ -841,12 +822,13 @@ public class LiveAuctionController implements UserDataReceiver {
         return String.format("%,.0f USD", price);
     }
 
-    // Gọi từ bên ngoài để cập nhật balance (ví dụ từ ResponseHandler)
     public void updateBalance(BigDecimal newBalance) {
         Platform.runLater(() -> {
-            if (virtualBalance != null) {
+            if (newBalance != null) {
                 this.virtualBalance = newBalance;
-                globalVirtualBalance = newBalance;
+                // sync session
+                UserSession.setVirtualBalance(newBalance);
+
                 updateBalanceDisplay();
                 System.out.println("[LiveAuction] Balance updated from server: " + newBalance);
             }
@@ -892,7 +874,7 @@ public class LiveAuctionController implements UserDataReceiver {
 
     private void showAntiSnipeNotification() {
         // Tạo label thông báo tạm thời
-        Label notice = new Label("⏰ Time extended by 1 minute due to a new bid!");
+        Label notice = new Label("Time extended by 1 minute due to a new bid!");
         notice.setStyle(
                 "-fx-background-color: #ff9800; " +
                         "-fx-text-fill: white; " +

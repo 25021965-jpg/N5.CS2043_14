@@ -2,6 +2,7 @@ package client.network.response.handler;
 
 import client.controller.HomePageController;
 import client.controller.LoginController;
+import client.manager.ControllerRegistry;
 import client.manager.UserSession;
 import client.network.response.parser.UserParser;
 import client.util.NavigationUtils;
@@ -29,20 +30,16 @@ public class AuthHandler {
             NavigationUtils.switchScene(stage, "/fxml/HomePage.fxml", "Home");
 
             Platform.runLater(() -> {
-                HomePageController ctrl = HomePageController.getInstance();
+                HomePageController ctrl = ControllerRegistry.get(HomePageController.class);
+
                 if (ctrl != null) ctrl.setUser(user);
             });
         }
     }
 
-    public static void loginFailed(String data, Stage stage) {
-
-        NavigationUtils.showError(
-                "Wrong username or password."
-        );
-
-        LoginController controller =
-                LoginController.getInstance();
+    public static void loginFailed() {
+        NavigationUtils.showError("Wrong username or password.");
+        LoginController controller = ControllerRegistry.get(LoginController.class);
 
         if (controller != null) {
             controller.onLoginFailed();

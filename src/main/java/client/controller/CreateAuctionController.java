@@ -1,12 +1,12 @@
 package client.controller;
 
+import client.manager.ControllerRegistry;
 import client.manager.UserSession;
 import client.network.response.ResponseHandler;
 import client.util.CloudinaryUploader;
 import client.util.NavigationUtils;
 
 import javafx.application.Platform;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
@@ -32,18 +32,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class CreateAuctionController
-        extends BaseController {
+public class CreateAuctionController extends BaseController {
 
     private static final double IMAGE_RADIUS = 20;
-
-    private final List<File> imageFiles =
-            new ArrayList<>();
-
+    private final List<File> imageFiles = new ArrayList<>();
     private int currentImageIndex = 0;
 
     // ==================== FXML ====================
-
     @FXML private ComboBox<String> cbCategory;
     @FXML private TextField txtName;
     @FXML private TextField txtStartingBid;
@@ -92,7 +87,7 @@ public class CreateAuctionController
 
     // ==================== CREATE ====================
     @FXML
-    private void handleCreate(ActionEvent event) {
+    private void handleCreate() {
         try {
             if (!validateInput()) {
                 return;
@@ -106,23 +101,23 @@ public class CreateAuctionController
 
             Auction auction = createAuction(imageUrls);
             client.sendCreate(auction);
-            HomePageController home = HomePageController.getInstance();
+            HomePageController home = ControllerRegistry.get(HomePageController.class);
+
             if (home != null) {
                 home.refreshData();
             }
             resetRoleToBidder();
-            navigateHome(event);
+            navigateHome();
 
         } catch (NumberFormatException e) {
-            showError("Price and time must be numeric values.");
+            NavigationUtils.showError("Price and time must be numeric values.");
 
         } catch (Exception e) {
-            showError("System Error: " + e.getMessage());
+            NavigationUtils.showError("System Error: " + e.getMessage());
         }
     }
 
     // ==================== VALIDATION ====================
-
     private boolean validateInput() {
         if (txtName.getText().trim().isEmpty()
                 || txtStartingBid.getText().trim().isEmpty()
@@ -130,31 +125,30 @@ public class CreateAuctionController
                 || dpStartDate.getValue() == null
                 || dpEndDate.getValue() == null) {
 
-            showError("Please fill in all required fields.");
+            NavigationUtils.showError("Please fill in all required fields.");
             return false;
         }
 
         if (imageFiles.isEmpty()) {
-            showError("Please upload at least one image.");
+            NavigationUtils.showError("Please upload at least one image.");
             return false;
         }
 
         LocalDateTime start = getStartDateTime();
         LocalDateTime end = getEndDateTime();
         if (!start.isAfter(LocalDateTime.now())) {
-            showError("Start time must be in the future.");
+            NavigationUtils.showError("Start time must be in the future.");
             return false;
         }
 
         if (!end.isAfter(start)) {
-            showError("End time must be after start time.");
+            NavigationUtils.showError("End time must be after start time.");
             return false;
         }
         return true;
     }
 
     // ==================== CREATE AUCTION ====================
-
     private Auction createAuction(List<String> imageUrls) {
         Item item = createItem(imageUrls);
         Auction auction = new Auction();
@@ -197,15 +191,13 @@ public class CreateAuctionController
     }
 
     // ==================== IMAGE UPLOAD ====================
-
     private List<String> uploadImages() {
         List<String> uploadedUrls =
                 new ArrayList<>();
-
         for (File file : imageFiles) {
             String url = CloudinaryUploader.upload(file);
             if (url == null) {
-                showError(
+                NavigationUtils.showError(
                         "Failed to upload image: "
                                 + file.getName()
                 );
@@ -217,7 +209,6 @@ public class CreateAuctionController
     }
 
     // ==================== IMAGE ====================
-
     @FXML
     private void handleUploadImages() {
         FileChooser chooser = new FileChooser();
@@ -308,7 +299,6 @@ public class CreateAuctionController
     }
 
     // ==================== UTIL ====================
-
     private String sanitize(String text) {
         return text
                 .replace("|", "-")
@@ -370,12 +360,12 @@ public class CreateAuctionController
     // ==================== NAVIGATION ====================
 
     @FXML
-    private void handleCancel(ActionEvent event) {
+    private void handleCancel() {
         resetRoleToBidder();
-        navigateHome(event);
+        navigateHome();
     }
 
-    private void navigateHome(ActionEvent event) {
+    private void navigateHome() {
         NavigationUtils.switchScene(
                 (Stage) txtName
                         .getScene()

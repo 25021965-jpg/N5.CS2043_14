@@ -1,5 +1,6 @@
 package client.controller.admin;
 
+import client.manager.ControllerRegistry;
 import client.network.ClientSocket;
 import client.util.NavigationUtils;
 import javafx.application.Platform;
@@ -12,9 +13,8 @@ import javafx.stage.Stage;
 
 public class AuctionHistoryAdminController {
 
-    private static AuctionHistoryAdminController instance;
 
-    private ObservableList<String[]> historyList = FXCollections.observableArrayList();
+    private final ObservableList<String[]> historyList = FXCollections.observableArrayList();
 
     @FXML private TableView<String[]> auctionHistoryTable;
     @FXML private TableColumn<String[], String> auctionIdCol;
@@ -24,12 +24,14 @@ public class AuctionHistoryAdminController {
     @FXML private TableColumn<String[], String> endDateCol;
     @FXML private TextField searchAuctionField;
 
-    public AuctionHistoryAdminController() { instance = this; }
-    public static AuctionHistoryAdminController getInstance() { return instance; }
     private Stage getStage() {return NavigationUtils.getCurrentStage();}
 
     @FXML
     public void initialize() {
+        ControllerRegistry.register(
+                AuctionHistoryAdminController.class,
+                this
+        );
         auctionIdCol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue()[0]));
         itemNameCol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue()[1]));
         winnerCol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue()[2]));

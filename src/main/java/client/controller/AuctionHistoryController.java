@@ -1,8 +1,10 @@
 package client.controller;
 
+import client.manager.ControllerRegistry;
 import client.network.ClientSocket;
 import client.network.response.parser.AuctionParser;
 import client.util.AuctionCardFactory;
+import client.util.NavigationUtils;
 import client.util.TextUtils;
 
 import javafx.application.Platform;
@@ -20,14 +22,7 @@ import model.User;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AuctionHistoryController
-        extends BaseController
-        implements UserDataReceiver {
-
-    private static AuctionHistoryController instance;
-    public static AuctionHistoryController getInstance() {
-        return instance;
-    }
+public class AuctionHistoryController extends BaseController implements UserDataReceiver {
 
     private static final List<String> STATUS_FILTERS = List.of(
             "All",
@@ -48,14 +43,11 @@ public class AuctionHistoryController
 
     @FXML
     public void initialize() {
-        instance = this;
-        System.out.println(
-                "AuctionHistory Loaded"
-        );
+        ControllerRegistry.register(AuctionHistoryController.class, this);
+        System.out.println("AuctionHistory Loaded");
         setupStatusFilter();
         setupCategoryFilter();
         Platform.runLater(() -> {
-
             historyContainer.setPrefWrapLength(
                     scrollPane.getViewportBounds().getWidth() - 20
             );
@@ -70,23 +62,12 @@ public class AuctionHistoryController
     }
 
     // ==================== CLIENT ====================
-
     @Override
     public void setClient(ClientSocket client) {
         super.setClient(client);
         if (client == null) {
             return;
         }
-
-        client.setMessageListener(msg -> {
-            if (msg.startsWith(
-                    "LIST_JOINED_AUCTIONS_SUCCESS"
-            ) || msg.equals(
-                    "LIST_JOINED_AUCTIONS_EMPTY"
-            )) {
-                renderHistory(msg);
-            }
-        });
         loadHistory();
     }
 
@@ -158,16 +139,11 @@ public class AuctionHistoryController
                     || response.equals(
                     "LIST_JOINED_AUCTIONS_EMPTY"
             )) {
-
-                showEmptyMessage(
-                        "No joined auctions"
-                );
-
+                showEmptyMessage("No joined auctions");
                 return;
             }
 
             try {
-
                 String rawData =
                         response.substring(
                                 "LIST_JOINED_AUCTIONS_SUCCESS|"
@@ -179,26 +155,17 @@ public class AuctionHistoryController
                                 rawData
                         )
                 );
-
-                refreshHistory(
-                        joinedAuctions
-                );
+                refreshHistory(joinedAuctions);
 
             } catch (Exception e) {
-
                 e.printStackTrace();
-
-                showError(
-                        "Failed to load auction history."
-                );
+                NavigationUtils.showError("Failed to load auction history.");
             }
         });
     }
 
     // ==================== FILTER ====================
-
     private void handleFilter() {
-
         String selectedStatus =
                 statusFilterComboBox.getValue();
 
@@ -227,24 +194,14 @@ public class AuctionHistoryController
         refreshHistory(filtered);
     }
 
-    private boolean matchesStatus(
-            Auction auction,
-            String selectedStatus
-    ) {
-
+    private boolean matchesStatus(Auction auction, String selectedStatus) {
         if (selectedStatus == null
                 || selectedStatus.equalsIgnoreCase(
                 "All"
         )) {
-
             return true;
         }
-
-        return TextUtils.toTitleCase(
-                auction.getStatus().name()
-        ).equalsIgnoreCase(
-                selectedStatus
-        );
+        return TextUtils.toTitleCase(auction.getStatus().name()).equalsIgnoreCase(selectedStatus);
     }
 
     private boolean matchesCategory(
@@ -256,7 +213,6 @@ public class AuctionHistoryController
                 || selectedCategory.equalsIgnoreCase(
                 "All"
         )) {
-
             return true;
         }
 
@@ -270,33 +226,15 @@ public class AuctionHistoryController
     }
 
     // ==================== REFRESH ====================
-
-    private void refreshHistory(
-            List<Auction> auctions
-    ) {
-
-        historyContainer
-                .getChildren()
-                .clear();
-
+    private void refreshHistory(List<Auction> auctions) {
+        historyContainer.getChildren().clear();
         if (auctions.isEmpty()) {
-
-            showEmptyMessage(
-                    "No matching auctions"
-            );
-
+            showEmptyMessage("No matching auctions");
             return;
         }
-
         for (Auction auction : auctions) {
-
-            Parent card =
-                    createAuctionCard(
-                            auction
-                    );
-
+            Parent card = createAuctionCard(auction);
             if (card != null) {
-
                 historyContainer
                         .getChildren()
                         .add(card);
@@ -305,10 +243,7 @@ public class AuctionHistoryController
     }
 
     // ==================== CARD ====================
-
-    private Parent createAuctionCard(
-            Auction auction
-    ) {
+    private Parent createAuctionCard(Auction auction) {
         return AuctionCardFactory.createCard(
                 auction,
                 client
@@ -316,11 +251,7 @@ public class AuctionHistoryController
     }
 
     // ==================== EMPTY ====================
-
-    private void showEmptyMessage(
-            String message
-    ) {
-
+    private void showEmptyMessage(String message) {
         historyContainer
                 .getChildren()
                 .add(

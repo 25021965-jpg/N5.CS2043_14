@@ -3,6 +3,7 @@ package client.controller;
 import client.manager.FavouriteManager;
 import client.manager.UserSession;
 
+import client.util.NavigationUtils;
 import client.util.TextUtils;
 
 import javafx.event.ActionEvent;
@@ -205,7 +206,7 @@ public class ItemViewController
 
         if (currentUser == null) {
 
-            showError("Please login again!");
+            NavigationUtils.showError("Please login again!");
 
             return;
         }
@@ -213,7 +214,7 @@ public class ItemViewController
         if (auction == null
                 || auction.getItem() == null) {
 
-            showError("Invalid auction data!");
+            NavigationUtils.showError("Invalid auction data!");
 
             return;
         }
@@ -227,7 +228,7 @@ public class ItemViewController
 
         if (client == null) {
 
-            showError("Server not connected!");
+            NavigationUtils.showError("Server not connected!");
 
             return;
         }
@@ -395,7 +396,7 @@ public class ItemViewController
         if (client == null
                 || user == null) {
 
-            showError("Cannot join auction!");
+            NavigationUtils.showError("Cannot join auction!");
 
             return;
         }
@@ -455,7 +456,7 @@ public class ItemViewController
 
         } catch (IOException e) {
 
-            showError(
+            NavigationUtils.showError(
                     "Cannot join auction."
             );
         }

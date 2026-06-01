@@ -1,5 +1,6 @@
 package client.controller.admin;
 
+import client.manager.ControllerRegistry;
 import client.network.ClientSocket;
 import client.util.NavigationUtils;
 import javafx.application.Platform;
@@ -12,7 +13,6 @@ import javafx.stage.Stage;
 
 public class ManageAuctionController {
 
-    private static ManageAuctionController instance;
     private final ObservableList<String[]> auctionList = FXCollections.observableArrayList();
 
     @FXML private TableView<String[]>       auctionTable;
@@ -23,11 +23,10 @@ public class ManageAuctionController {
     @FXML private TableColumn<String[], String> auctionStatusCol;
     @FXML private TextField searchAuctionField;
 
-    public ManageAuctionController() { instance = this; }
-    public static ManageAuctionController getInstance() { return instance; }
 
     @FXML
     public void initialize() {
+        ControllerRegistry.register(ManageAuctionController.class, this);
         auctionIdCol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue()[0]));
         auctionItemCol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue()[1]));
         sellerCol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue()[2]));
@@ -58,12 +57,10 @@ public class ManageAuctionController {
 
     private String[] getSelectedAuction(String errorMessage) {
         String[] selected = auctionTable.getSelectionModel().getSelectedItem();
-
         if (selected == null) {
             NavigationUtils.showError(errorMessage);
             return null;
         }
-
         return selected;
     }
 
@@ -79,18 +76,11 @@ public class ManageAuctionController {
 
     @FXML
     private void handleStopAuction() {
-
-        String[] selected =
-                getSelectedAuction("Please select an auction to stop!");
-
+        String[] selected = getSelectedAuction("Please select an auction to stop!");
         if (selected == null) return;
-
         if ("ENDED".equals(selected[4])
                 || "CANCELLED".equals(selected[4])) {
-
-            NavigationUtils.showError(
-                    "This auction has ended or been cancelled."
-            );
+            NavigationUtils.showError("This auction has ended or been cancelled.");
             return;
         }
 
@@ -98,25 +88,16 @@ public class ManageAuctionController {
                 "Stop Auction",
                 "Stop this auction: " + selected[1] + "?"
         )) {
-
-            ClientSocket.getInstance()
-                    .sendRequest("STOP_AUCTION|" + selected[0]);
+            ClientSocket.getInstance().sendRequest("STOP_AUCTION|" + selected[0]);
         }
     }
 
     @FXML
     private void handleResumeAuction() {
-
-        String[] selected =
-                getSelectedAuction("Please select an auction to resume!");
-
+        String[] selected = getSelectedAuction("Please select an auction to resume!");
         if (selected == null) return;
-
         if (!"CANCELLED".equals(selected[4])) {
-
-            NavigationUtils.showError(
-                    "Only stopped auctions can be resumed!"
-            );
+            NavigationUtils.showError("Only stopped auctions can be resumed!");
             return;
         }
 
@@ -124,29 +105,21 @@ public class ManageAuctionController {
                 "Resume Auction",
                 "Resume this auction: " + selected[1] + "?"
         )) {
-
-            ClientSocket.getInstance()
-                    .sendRequest("RESUME_AUCTION|" + selected[0]);
+            ClientSocket.getInstance().sendRequest("RESUME_AUCTION|" + selected[0]);
         }
     }
 
     @FXML
     private void handleCancelAuction() {
-
-        String[] selected =
-                getSelectedAuction("Please select an auction to cancel!");
-
+        String[] selected = getSelectedAuction("Please select an auction to cancel!");
         if (selected == null) return;
-
         if (NavigationUtils.showConfirm(
                 "Cancel Auction",
                 "Cancel this auction: "
                         + selected[1]
                         + "? This auction will not be able to resume."
         )) {
-
-            ClientSocket.getInstance()
-                    .sendRequest("CANCEL_AUCTION|" + selected[0]);
+            ClientSocket.getInstance().sendRequest("CANCEL_AUCTION|" + selected[0]);
         }
     }
 

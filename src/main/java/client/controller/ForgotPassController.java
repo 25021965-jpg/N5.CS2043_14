@@ -9,6 +9,7 @@ import javafx.stage.Stage;
 
 import java.time.LocalDate;
 
+import static client.util.NavigationUtils.showError;
 import static client.util.NavigationUtils.showWarning;
 
 public class ForgotPassController

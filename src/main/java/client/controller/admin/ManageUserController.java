@@ -1,5 +1,6 @@
 package client.controller.admin;
 
+import client.manager.ControllerRegistry;
 import client.network.ClientSocket;
 import client.util.NavigationUtils;
 import javafx.application.Platform;
@@ -12,7 +13,6 @@ import javafx.stage.Stage;
 import model.User;
 
 public class ManageUserController {
-    private static ManageUserController instance;
     private ObservableList<User> userList = FXCollections.observableArrayList();
 
     @FXML private TableView<User> userTable;
@@ -22,12 +22,14 @@ public class ManageUserController {
     @FXML private TableColumn<User, String> roleCol;
     @FXML private TextField searchField;
 
-    public ManageUserController() { instance = this; }
-    public static ManageUserController getInstance() { return instance; }
     private Stage getStage() {return NavigationUtils.getCurrentStage();}
 
     @FXML
     public void initialize() {
+        ControllerRegistry.register(
+                ManageUserController.class,
+                this
+        );
         userIdCol.setCellValueFactory(new PropertyValueFactory<>("user_id"));
         usernameCol.setCellValueFactory(new PropertyValueFactory<>("username"));
         emailCol.setCellValueFactory(new PropertyValueFactory<>("email"));

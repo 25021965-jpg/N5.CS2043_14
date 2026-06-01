@@ -63,7 +63,6 @@ public class ItemCardController {
     private ClientSocket client;
 
     // ==================== INITIALIZE ====================
-
     @FXML
     public void initialize() {
 
@@ -71,7 +70,6 @@ public class ItemCardController {
     }
 
     private void setupImageView() {
-
         Rectangle clip = new Rectangle(
                 240,
                 180
@@ -129,10 +127,7 @@ public class ItemCardController {
     }
     // ==================== SETTERS ====================
 
-    public void setClient(
-            ClientSocket client
-    ) {
-
+    public void setClient(ClientSocket client) {
         this.client = client;
     }
 
@@ -142,10 +137,7 @@ public class ItemCardController {
 
     // ==================== LOAD DATA ====================
 
-    public void setData(
-            Auction auction
-    ) {
-
+    public void setData(Auction auction) {
         this.auction = auction;
 
         if (auction == null
@@ -286,16 +278,11 @@ public class ItemCardController {
         );
     }
 
-    public void updateAuction(
-            Auction auction
-    ) {
-
+    public void updateAuction(Auction auction) {
         this.auction = auction;
 
         setupPrices();
-
         setupStatus();
-
         setupEndTime();
     }
 

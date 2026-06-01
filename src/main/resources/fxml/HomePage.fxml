@@ -33,7 +33,7 @@
 
             <Region HBox.hgrow="ALWAYS" />
 
-            <Button fx:id="btnCreate" mnemonicParsing="false" onAction="#handleCreateAuction" prefHeight="45.0" prefWidth="170.0" style="-fx-background-color: #d4af37;" text="Create Auction">
+            <Button mnemonicParsing="false" onAction="#handleCreateAuction" prefHeight="45.0" prefWidth="170.0" style="-fx-background-color: #d4af37;" text="Create Auction">
 
                 <font>
                     <Font name="Berlin Sans FB Demi Bold" size="16.0" />
@@ -55,25 +55,25 @@
                 <items>
 
                     <!-- PROFILE -->
-                    <MenuItem fx:id="profileMenuItem" mnemonicParsing="false" onAction="#openProfile" text="Profile" />
+                    <MenuItem mnemonicParsing="false" onAction="#openProfile" text="Profile" />
 
                     <!-- HISTORY -->
-                    <MenuItem fx:id="historyMenuItem" mnemonicParsing="false" onAction="#openHistory" text="Auction History" />
+                    <MenuItem mnemonicParsing="false" onAction="#openHistory" text="Auction History" />
 
                     <!-- YOUR AUCTIONS -->
-                    <MenuItem fx:id="yourAuctionMenuItem" mnemonicParsing="false" onAction="#openYourAuctions" text="My Auctions" />
+                    <MenuItem mnemonicParsing="false" onAction="#openYourAuctions" text="My Auctions" />
 
                     <!-- FAVOURITE -->
-                    <MenuItem fx:id="favouriteMenuItem" mnemonicParsing="false" onAction="#openFavourite" text="Favourite" />
+                    <MenuItem mnemonicParsing="false" onAction="#openFavourite" text="Favourite" />
 
                     <!-- BALANCE -->
-                    <MenuItem fx:id="balanceMenuItem" mnemonicParsing="false" onAction="#openBalance" text="Account Balance" />
+                    <MenuItem mnemonicParsing="false" onAction="#openBalance" text="Account Balance" />
 
                     <!-- LOGOUT -->
-                    <MenuItem fx:id="logoutMenuItem" mnemonicParsing="false" onAction="#handleLogout" text="Log Out" />
+                    <MenuItem  mnemonicParsing="false" onAction="#handleLogout" text="Log Out" />
 
                     <!-- DELETE -->
-                    <MenuItem fx:id="deleteAccountMenuItem" mnemonicParsing="false" onAction="#handleDeleteAccount" text="DELETE ACCOUNT" />
+                    <MenuItem mnemonicParsing="false" onAction="#handleDeleteAccount" text="DELETE ACCOUNT" />
 
                 </items>
 
@@ -196,7 +196,7 @@
 
     <!-- CENTER -->
     <center>
-        <ScrollPane fitToHeight="false" fitToWidth="true" style="-fx-background-color: black; -fx-background: white;">
+        <ScrollPane fitToWidth="true" style="-fx-background-color: black; -fx-background: white;">
 
             <VBox alignment="TOP_CENTER">
 

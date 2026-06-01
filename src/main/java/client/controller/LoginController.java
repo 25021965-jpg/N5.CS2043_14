@@ -35,25 +35,16 @@ public class LoginController extends BaseController {
         forgotPasswordLink.setUnderline(false);
     }
 
-    private static LoginController instance;
-
-    public static LoginController getInstance() {
-        return instance;
-    }
-    private final ClientSocket client =
-            ClientSocket.getInstance();
+    private final ClientSocket client = ClientSocket.getInstance();
 
     // ==================== INITIALIZE ====================
 
     @FXML
     public void initialize() {
-
         LOGGER.info("LoginController initialized");
-
         try {
-
             if (client == null) {
-                showError("Cannot connect to server.");
+                NavigationUtils.showError("Cannot connect to server.");
                 return;
             }
 
@@ -105,14 +96,13 @@ public class LoginController extends BaseController {
             });
 
         } catch (Exception e) {
-
             LOGGER.log(
                     Level.SEVERE,
                     "Login initialize failed",
                     e
             );
 
-            showError(
+            NavigationUtils.showError(
                     "Cannot connect to server: "
                             + e.getMessage()
             );
@@ -120,7 +110,6 @@ public class LoginController extends BaseController {
     }
 
     // ==================== LOGIN ====================
-
     @FXML
     private void handleLogin() {
         loginBtn.setStyle("""
@@ -132,33 +121,28 @@ public class LoginController extends BaseController {
                 """);
 
         if (client == null) {
-            showError("Server not connected.");
+            NavigationUtils.showError("Server not connected.");
             return;
         }
 
-        String username =
-                safeTrim(userField.getText());
-
-        String password =
-                safeTrim(passField.getText());
+        String username = safeTrim(userField.getText());
+        String password = safeTrim(passField.getText());
 
         if (username.isBlank()) {
-            showError("Please enter username.");
+            NavigationUtils.showError("Please enter username.");
             userField.requestFocus();
             return;
         }
 
         if (password.isBlank()) {
-            showError("Please enter password.");
+            NavigationUtils.showError("Please enter password.");
             passField.requestFocus();
             return;
         }
-
         client.sendLogin(username, password);
     }
 
     public void onLoginFailed() {
-
         loginBtn.setStyle("""
         -fx-background-color: #D4AF37;
         -fx-text-fill: black;

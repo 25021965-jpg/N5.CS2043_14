@@ -1,6 +1,7 @@
 package client.network.response;
 
 import client.controller.LiveAuctionController;
+import client.manager.ControllerRegistry;
 import client.network.response.handler.*;
 import client.util.NavigationUtils;
 import common.ResponseType;
@@ -25,19 +26,19 @@ public class ResponseRouter {
 
         // THÊM XỬ LÝ YOU_WON
         if (raw.startsWith("YOU_WON")) {
-            Platform.runLater(() -> LiveAuctionController.getInstance().handleServerMessage(raw));
+            Platform.runLater(() -> ControllerRegistry.get(LiveAuctionController.class).handleServerMessage(raw));
             return;
         }
 
         // THÊM XỬ LÝ AUCTION_ENDED
         if (raw.startsWith("AUCTION_ENDED")) {
-            Platform.runLater(() -> LiveAuctionController.getInstance().handleServerMessage(raw));
+            Platform.runLater(() -> ControllerRegistry.get(LiveAuctionController.class).handleServerMessage(raw));
             return;
         }
 
         // THÊM XỬ LÝ TIME_EXTENDED  ← thêm vào đây
         if (raw.startsWith("TIME_EXTENDED")) {
-            Platform.runLater(() -> LiveAuctionController.getInstance().handleServerMessage(raw));
+            Platform.runLater(() -> ControllerRegistry.get(LiveAuctionController.class).handleServerMessage(raw));
             return;
         }
 
@@ -49,7 +50,7 @@ public class ResponseRouter {
         }
 
         if (raw.startsWith("BID_HISTORY_EMPTY")) {
-            Platform.runLater(() -> AuctionHandler.bidHistoryEmpty());
+            Platform.runLater(AuctionHandler::bidHistoryEmpty);
             return;
         }
 
@@ -65,9 +66,7 @@ public class ResponseRouter {
         ResponseType type;
 
         try {
-
             type = ResponseType.from(header);
-
             if (type == null) return;
 
         } catch (Exception e) {
@@ -93,7 +92,7 @@ public class ResponseRouter {
                     AuthHandler.loginSuccess(data, stage);
 
             case LOGIN_FAILED ->
-                    AuthHandler.loginFailed(data, stage);
+                    AuthHandler.loginFailed();
 
             case REGISTER_SUCCESS ->
                     AuthHandler.registerSuccess(stage);
@@ -120,7 +119,7 @@ public class ResponseRouter {
                     AuctionHandler.createSuccess(stage);
 
             case CREATE_FAILED ->
-                    AuctionHandler.createFailed(data, stage);
+                    AuctionHandler.createFailed(data);
 
             case JOIN_FAILED ->
                     AuctionHandler.joinFailed(data);
@@ -156,13 +155,13 @@ public class ResponseRouter {
                     FavouriteHandler.addSuccess(stage);
 
             case ADD_FAVOURITE_FAILED ->
-                    FavouriteHandler.addFailed(data, stage);
+                    FavouriteHandler.addFailed(data);
 
             case REMOVE_FAVOURITE_SUCCESS ->
-                    FavouriteHandler.remove(data);
+                    FavouriteHandler.removeSuccess(data);
 
             case REMOVE_FAVOURITE_FAILED ->
-                    FavouriteHandler.removeFailed(data, stage);
+                    FavouriteHandler.removeFailed(data);
 
 
             // ===== BALANCE =====
@@ -174,7 +173,7 @@ public class ResponseRouter {
                     );
 
             case BALANCE_UPDATE_FAILED ->
-                    BalanceHandler.failed(data, stage);
+                    BalanceHandler.failed(data);
 
             case TRANSACTIONS_LIST ->
                     BalanceHandler.transactions(data);
@@ -198,7 +197,7 @@ public class ResponseRouter {
                     AuctionHandler.updateSuccess(stage);
 
             case UPDATE_ITEM_FAILED ->
-                    AuctionHandler.updateFailed(data, stage);
+                    AuctionHandler.updateFailed(data);
 
 
             // ===== ADMIN USER =====

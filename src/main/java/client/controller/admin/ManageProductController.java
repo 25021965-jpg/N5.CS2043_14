@@ -1,5 +1,6 @@
 package client.controller.admin;
 
+import client.manager.ControllerRegistry;
 import client.network.ClientSocket;
 import client.util.NavigationUtils;
 import javafx.application.Platform;
@@ -10,8 +11,6 @@ import javafx.scene.control.*;
 import javafx.stage.Stage;
 
 public class ManageProductController {
-    private static ManageProductController instance;
-
     // String[]: [0]auctionId/itemId, [1]name, [2]seller, [3]price/category, [4]status
     private final ObservableList<String[]> productList = FXCollections.observableArrayList();
 
@@ -27,11 +26,12 @@ public class ManageProductController {
     @FXML private TextField searchProductField;
     @FXML private Button btnApprove;      // ← nút Approve trong FXML
 
-    public ManageProductController() { instance = this; }
-    public static ManageProductController getInstance() { return instance; }
-
     @FXML
     public void initialize() {
+        ControllerRegistry.register(
+                ManageProductController.class,
+                this
+        );
         productIdCol.setCellValueFactory(d -> new javafx.beans.property.SimpleStringProperty(d.getValue()[0]));
         productNameCol.setCellValueFactory(d -> new javafx.beans.property.SimpleStringProperty(d.getValue()[1]));
         categoryCol.setCellValueFactory(d -> new javafx.beans.property.SimpleStringProperty(d.getValue()[2]));

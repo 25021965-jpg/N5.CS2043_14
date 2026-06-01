@@ -1,5 +1,6 @@
 package client.controller;
 
+import client.manager.ControllerRegistry;
 import client.network.ClientSocket;
 
 import client.util.AuctionCardFactory;
@@ -29,21 +30,16 @@ public class MyAuctionsController implements UserDataReceiver{
     private final List<Auction> myAuctions = new ArrayList<>();
     public void setClient(ClientSocket client) {}
     public void setUser(User user) {}
-    private static MyAuctionsController instance;
-    public static MyAuctionsController getInstance() {
-        return instance;
-    }
 
     @FXML
     public void initialize() {
-        instance = this;
+        ControllerRegistry.register(MyAuctionsController.class, this);
         System.out.println("MyAuctions Loaded");
 
         setupStatusFilter();
         setupCategoryFilter();
 
-        ClientSocket.getInstance()
-                .sendMyAuctions();
+        ClientSocket.getInstance().sendMyAuctions();
 
         Platform.runLater(() -> {
             itemGrid.setPrefWrapLength(
