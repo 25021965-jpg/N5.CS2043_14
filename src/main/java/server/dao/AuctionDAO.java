@@ -41,11 +41,15 @@ public class AuctionDAO {
 
         String category = rs.getString("category");
 
-        item.setCategory(
-                category != null
-                        ? Category.valueOf(category.toUpperCase())
-                        : Category.OTHER
-        );
+        if (category != null) {
+            try {
+                item.setCategory(Category.valueOf(category.toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                item.setCategory(Category.OTHER);
+            }
+        } else {
+            item.setCategory(Category.OTHER);
+        }
 
         item.setImages(getItemImages(conn, item.getItem_id()));
 

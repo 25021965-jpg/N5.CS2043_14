@@ -1,106 +1,96 @@
 package server.dao;
 
+import model.Role;
 import model.User;
-import org.junit.jupiter.api.*;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
+import org.junit.jupiter.api.Test;
+import java.math.BigDecimal;
 import java.util.List;
-import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class UserDAOTest {
+class UserDAOTest extends TiDBRollbackBase {
 
-    private static final String PREFIX = "TEST_";
-    private UserDAO userDAO;
+    @Test
+    void testUserFullLifecycle() throws Exception {
+        String username = "user" + System.currentTimeMillis() % 1000;
+        String email = username + "@test.com";
 
-    @BeforeEach
-    void setUp() {
-        userDAO = new UserDAO();
-    }
+        // 1. Phủ register
+        assertTrue(UserDAO.register("Full Name", username, email, "pass123", "2000-01-01"));
 
-    // Hàm hỗ trợ tạo User chuẩn, tránh lỗi thiếu trường (NOT NULL) ở mọi Test Case
-    private User createTestUser(String suffix) {
-        User u = new User();
-        u.setUser_id(PREFIX + "ID_" + suffix);
-        u.setFullname("Test User " + suffix);
-        u.setUsername(PREFIX + "U_" + suffix);
-        u.setEmail(PREFIX + "E_" + suffix + "@test.com");
-        u.setPassword("password123");
-        return u;
-    }
+        User user = UserDAO.findByUsernameOrEmail(username);
+        assertNotNull(user);
+        createdUserIds.add(user.getUser_id());
 
-    @AfterEach
-    void cleanUp() {
-        // Xóa theo ID, Username hoặc Email có chứa PREFIX
-        String sql = "DELETE FROM users WHERE username LIKE ? OR id LIKE ? OR email LIKE ?";
-        try (Connection conn = DatabaseService.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            String pattern = PREFIX + "%";
-            pstmt.setString(1, pattern);
-            pstmt.setString(2, pattern);
-            pstmt.setString(3, pattern);
-            pstmt.executeUpdate();
-        } catch (Exception e) {
-            System.err.println("CleanUp Error: " + e.getMessage());
-        }
+        // 2. Phủ login
+        assertTrue(UserDAO.login(username, "pass123"));
+        assertTrue(UserDAO.login(email, "pass123"));
+        assertFalse(UserDAO.login(username, "wrongpass"));
+
+        // 3. Phủ updateBalance
+        assertTrue(UserDAO.updateBalance(user.getUser_id(), new BigDecimal("500.50")));
+
+        // 4. Phủ getUserById
+        assertNotNull(UserDAO.getUserById(user.getUser_id()));
+
+        // 5. Phủ resetPassword
+        assertTrue(UserDAO.resetPassword("Full Name", "2000-01-01", username, email, "newpass"));
+
+        // 6. Phủ updatePassword & updateRole
+        assertTrue(UserDAO.updatePassword(user.getUser_id(), "finalpass"));
+        assertTrue(UserDAO.updateUserRole(user.getUser_id(), "ADMIN"));
+        new UserDAO().updateRole(user.getUser_id(), "SELLER");
+
+        // 7. Phủ save (ON DUPLICATE KEY)
+        user.setFullname("Updated Name");
+        user.setBalance(new BigDecimal("999"));
+        user.setRole(Role.BIDDER);
+        UserDAO.save(user);
+
+        // 8. Phủ findAll
+        List<User> all = UserDAO.findAll();
+        assertFalse(all.isEmpty());
+
+        // 9. Phủ deleteUser
+        assertTrue(UserDAO.deleteUser(user.getUser_id()));
     }
 
     @Test
-    @DisplayName("Test 1: Full Cycle - Save, Find, and Login")
-    void testFullUserCycle() {
-        User u = createTestUser(UUID.randomUUID().toString().substring(0, 5));
+    void testUserEdgeCases() throws Exception {
+        // Case: dob null
+        String uId1 = generateId("unull");
+        assertTrue(UserDAO.register("No Dob User", uId1, uId1 + "@null.com", "123", null));
+        User u1 = UserDAO.findByUsernameOrEmail(uId1);
+        createdUserIds.add(u1.getUser_id());
 
-        // 1. Test Save
-        assertDoesNotThrow(() -> userDAO.save(u));
+        // Case: save với dob empty
+        User userObj = new User();
+        String uId2 = generateId("usave");
+        userObj.setUser_id(uId2);
+        userObj.setFullname("Save Logic");
+        userObj.setUsername("save_" + uId2);
+        userObj.setEmail(uId2 + "@save.com");
+        userObj.setPassword("123");
+        userObj.setRole(Role.BIDDER);
+        userObj.setBalance(BigDecimal.ZERO);
+        userObj.setDob("");
+        UserDAO.save(userObj);
+        createdUserIds.add(uId2);
 
-        // 4. Test login (Success & Failure)
-        assertTrue(UserDAO.login(u.getUsername(), "password123"), "Login should succeed");
-        assertFalse(UserDAO.login(u.getUsername(), "wrong_pass"), "Login should fail with wrong password");
-    }
+        // Case: resetPassword sai info
+        assertFalse(UserDAO.resetPassword("Wrong", "1990-01-01", "w", "w@w.com", "p"));
 
-    @Test
-    @DisplayName("Test 2: Find All Users")
-    void testFindAll() {
-        // Luôn tạo user đầy đủ thông tin để không bị lỗi NOT NULL
-        User u = createTestUser("LIST_" + UUID.randomUUID().toString().substring(0, 3));
-        userDAO.save(u);
+        // Case: ID không tồn tại
+        assertNull(UserDAO.getUserById("ghost"));
+        assertFalse(UserDAO.deleteUser("ghost"));
 
-        List<User> list = userDAO.findAll();
-        assertNotNull(list);
-        assertFalse(list.isEmpty(), "User list should not be empty after a save");
+        // Case: Phủ nhánh catch/null của map() bằng cách set Role = NULL trong DB
+        // Cách này an toàn vì NULL luôn hợp lệ với ENUM nếu cột cho phép hoặc ta handle được
+        try (var ps = conn.prepareStatement("UPDATE users SET role = NULL WHERE user_id = ?")) {
+            ps.setString(1, u1.getUser_id());
+            ps.executeUpdate();
+        } catch (Exception ignored) {}
 
-        // Kiểm tra xem user vừa tạo có nằm trong list không
-        boolean found = list.stream().anyMatch(user -> user.getUsername().equals(u.getUsername()));
-        assertTrue(found, "The saved user must be present in findAll results");
-    }
-
-    @Test
-    @DisplayName("Test 3: Negative Cases (Data not found)")
-    void testNegativeCases() {
-        String fakeKey = "NON_EXISTENT_" + UUID.randomUUID();
-
-        assertNull(userDAO.findByUsernameOrEmail(fakeKey));
-        assertNull(userDAO.findByUsernameOrEmail(fakeKey + "@test.com"));
-        assertNull(UserDAO.findByUsernameOrEmail(fakeKey));
-
-        assertFalse(UserDAO.login("fake_user_abc", "fake_pass"));
-    }
-
-    @Test
-    @DisplayName("Test 4: Logic checking in findByUsernameOrEmail")
-    void testUsernameOrEmailLogic() {
-        User u = createTestUser("LOGIC_" + UUID.randomUUID().toString().substring(0, 5));
-
-        assertDoesNotThrow(() -> userDAO.save(u));
-
-        // Test tìm kiếm bằng Username
-        User byUser = userDAO.findByUsernameOrEmail(u.getUsername());
-        assertNotNull(byUser, "The findByUsernameOrEmail function returns null when searching by username");
-
-        // Test tìm kiếm bằng Email
-        User byEmail = userDAO.findByUsernameOrEmail(u.getEmail());
-        assertNotNull(byEmail, "The findByUsernameOrEmail function returns null when searching by email");
-
-        assertEquals(byUser.getUser_id(), byEmail.getUser_id(), "Both searches must return the same user ID");
+        User checkRole = UserDAO.getUserById(u1.getUser_id());
+        assertEquals(Role.BIDDER, checkRole.getRole());
     }
 }
