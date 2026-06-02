@@ -28,11 +28,20 @@ public class MyAuctionsController implements UserDataReceiver{
     @FXML private ScrollPane scrollPane;
 
     private final List<Auction> myAuctions = new ArrayList<>();
+
+    private static MyAuctionsController instance;
+
+    public static MyAuctionsController getInstance() {
+        return instance;
+    }
+
+
     public void setClient(ClientSocket client) {}
     public void setUser(User user) {}
 
     @FXML
     public void initialize() {
+        instance = this;
         ControllerRegistry.register(MyAuctionsController.class, this);
         System.out.println("MyAuctions Loaded");
 

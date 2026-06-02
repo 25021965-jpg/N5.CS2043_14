@@ -75,47 +75,49 @@ public class LiveAuctionController implements UserDataReceiver {
     private BigDecimal floorPrice;
     private boolean isAuctionEnded = false;
 
-    // Balance ảo (chỉ dự kiến, không lưu database)
+    // Balance ảo
     private BigDecimal virtualBalance;
-    private BigDecimal myPendingBid;      // Số tiền mình đang giữ chỗ (bid hiện tại)
-    private BigDecimal pendingBidAmount;  // Số tiền vừa gửi lên server, chờ xác nhận
+    private BigDecimal myPendingBid;
+    private BigDecimal pendingBidAmount;
 
     private Timer countdownTimer;
     private XYChart.Series<String, Number> chartSeries;
     private ObservableList<Bid> bidHistoryList;
     private int bidCounter = 0;
 
-    // ==================== STATIC STATE (lưu khi Back to Home, khôi phục khi quay lại) ====================
+    // ==================== STATIC STATE ====================
 
     private static List<Bid> globalBidHistory = new ArrayList<>();
     private static int globalBidCounter = 0;
     private static BigDecimal globalCurrentPrice = BigDecimal.ZERO;
     private static String globalWinnerName = null;
     private static String globalWinnerTime = null;
-    private static String globalAuctionId = null;
+
+    private static LiveAuctionController instance;
+
+    public static LiveAuctionController getInstance() {
+        return instance;
+    }
 
     // ==================== INITIALIZE ====================
 
     @FXML
     public void initialize() {
+        instance = this;
         ControllerRegistry.register(LiveAuctionController.class, this);
 
-        // Setup Table Columns
         timeColumn.setCellValueFactory(new PropertyValueFactory<>("timeString"));
         bidderColumn.setCellValueFactory(new PropertyValueFactory<>("username"));
         amountColumn.setCellValueFactory(new PropertyValueFactory<>("amountString"));
         statusColumn.setCellValueFactory(new PropertyValueFactory<>("status"));
 
-        // Khởi tạo bid history list
         bidHistoryList = FXCollections.observableArrayList();
         bidHistoryTable.setItems(bidHistoryList);
 
-        // Khởi tạo chart
         chartSeries = new XYChart.Series<>();
         chartSeries.setName("Price History");
         priceChart.getData().add(chartSeries);
 
-        // Setup button actions
         addStepBtn.setOnAction(e -> addStepPrice());
         maxBidBtn.setOnAction(e -> setMaxBid());
         placeBidBtn.setOnAction(e -> placeBid());
@@ -123,30 +125,17 @@ public class LiveAuctionController implements UserDataReceiver {
         leaveBtn.setOnAction(e -> leaveAndGoBack());
         refreshBtn.setOnAction(e -> refreshBidHistory());
 
-        // Start realtime clock
         startClock();
-
-        // Đăng ký listener nhận message từ server
         ResponseHandler.setLiveAuctionListener(this::handleServerMessage);
 
-        //style
-        timeColumn.prefWidthProperty().bind(
-                bidHistoryTable.widthProperty().multiply(0.25));
+        timeColumn.prefWidthProperty().bind(bidHistoryTable.widthProperty().multiply(0.25));
+        bidderColumn.prefWidthProperty().bind(bidHistoryTable.widthProperty().multiply(0.30));
+        amountColumn.prefWidthProperty().bind(bidHistoryTable.widthProperty().multiply(0.30));
+        statusColumn.prefWidthProperty().bind(bidHistoryTable.widthProperty().multiply(0.15));
 
-        bidderColumn.prefWidthProperty().bind(
-                bidHistoryTable.widthProperty().multiply(0.30));
-
-        amountColumn.prefWidthProperty().bind(
-                bidHistoryTable.widthProperty().multiply(0.30));
-
-        statusColumn.prefWidthProperty().bind(
-                bidHistoryTable.widthProperty().multiply(0.15));
         Platform.runLater(() -> {
-            chartContainer.prefHeightProperty().bind(
-                    centerPanel.heightProperty().multiply(0.6));
-
-            historyContainer.prefHeightProperty().bind(
-                    centerPanel.heightProperty().multiply(0.4));
+            chartContainer.prefHeightProperty().bind(centerPanel.heightProperty().multiply(0.6));
+            historyContainer.prefHeightProperty().bind(centerPanel.heightProperty().multiply(0.4));
         });
     }
 
@@ -160,10 +149,15 @@ public class LiveAuctionController implements UserDataReceiver {
     @Override
     public void setUser(User user) {
         this.currentUser = user;
-        // Balance ảo sẽ được khởi tạo trong setAuctionData() sau khi biết auctionId
-        // Không khởi tạo ở đây để tránh race condition (setUser gọi trước setAuctionData)
         if (user != null) {
-            System.out.println(" setUser called for: " + user.getUsername());
+            BigDecimal sessionVB = UserSession.getVirtualBalance();
+            if (sessionVB != null) {
+                this.virtualBalance = sessionVB;
+                this.myPendingBid = UserSession.getPendingBid() != null ? UserSession.getPendingBid() : BigDecimal.ZERO;
+                updateBalanceDisplay();
+                System.out.println("Restored virtual balance from session: " + virtualBalance);
+            }
+            System.out.println("setUser called for: " + user.getUsername());
         }
     }
 
@@ -171,35 +165,33 @@ public class LiveAuctionController implements UserDataReceiver {
                                String currentPrice, String stepPrice, String floorPrice,
                                String endTime, String imageUrl) {
 
-        UserSession.setVirtualBalance(this.virtualBalance);
-        UserSession.setPendingBid(this.myPendingBid);
         this.auctionId = auctionId;
         this.currentPrice = new BigDecimal(currentPrice);
         this.stepPrice = new BigDecimal(stepPrice);
         this.floorPrice = new BigDecimal(floorPrice);
 
-        // ==================== VIRTUAL BALANCE RESTORE ====================
-        // Ưu tiên Session (persist giữa các scene)
-        BigDecimal sessionBalance = UserSession.getVirtualBalance();
-        BigDecimal sessionPendingBid = UserSession.getPendingBid();
-
-        if (sessionBalance != null) {
-            this.virtualBalance = sessionBalance;
-        } else if (currentUser != null && currentUser.getBalance() != null) {
-            this.virtualBalance = currentUser.getBalance();
-        } else {
-            this.virtualBalance = BigDecimal.ZERO;
+        User latestUser = UserSession.getCurrentUser();
+        if (latestUser != null) {
+            this.currentUser = latestUser;
         }
 
-        this.myPendingBid = (sessionPendingBid != null)
-                ? sessionPendingBid
-                : BigDecimal.ZERO;
-
-        this.pendingBidAmount = BigDecimal.ZERO;
-
-        System.out.println("[LiveAuction] VirtualBalance = " + virtualBalance
-                + ", PendingBid = " + myPendingBid);
-
+        // ==================== VIRTUAL BALANCE ====================
+        BigDecimal sessionVB = UserSession.getVirtualBalance();
+        if (sessionVB != null) {
+            this.virtualBalance = sessionVB;
+            this.myPendingBid = UserSession.getPendingBid() != null ? UserSession.getPendingBid() : BigDecimal.ZERO;
+            System.out.println("[LiveAuction] Restored from session: " + virtualBalance);
+        } else if (currentUser != null && currentUser.getUser_id() != null) {
+            // Lấy virtual balance từ database
+            if (client != null) {
+                client.sendGetVirtualBalance(currentUser.getUser_id());
+            }
+            this.virtualBalance = BigDecimal.ZERO;
+            this.myPendingBid = BigDecimal.ZERO;
+        } else {
+            this.virtualBalance = BigDecimal.ZERO;
+            this.myPendingBid = BigDecimal.ZERO;
+        }
         // ==================== UI SETUP ====================
         productNameLabel.setText(productName);
         productDescLabel.setText(productDesc);
@@ -232,6 +224,7 @@ public class LiveAuctionController implements UserDataReceiver {
     }
 
     // ==================== BALANCE ẢO ====================
+
     private void updateBalanceDisplay() {
         if (estimatedBalanceLabel != null && virtualBalance != null) {
             estimatedBalanceLabel.setText(formatPrice(virtualBalance));
@@ -245,7 +238,6 @@ public class LiveAuctionController implements UserDataReceiver {
         }
     }
 
-    // Trừ virtual balance khi đặt bid thành công
     private void deductVirtualBalance(BigDecimal amount) {
         if (virtualBalance != null && amount != null) {
             BigDecimal diff = amount.subtract(myPendingBid);
@@ -253,27 +245,19 @@ public class LiveAuctionController implements UserDataReceiver {
                 virtualBalance = virtualBalance.subtract(diff);
             }
             myPendingBid = amount;
-            //sync session
+
             UserSession.setVirtualBalance(virtualBalance);
             UserSession.setPendingBid(myPendingBid);
 
             updateBalanceDisplay();
-            System.out.println("Deduct diff=" + diff
-                    + ", pending=" + myPendingBid
-                    + ", balance=" + virtualBalance);
+            System.out.println("Deduct diff=" + diff + ", pending=" + myPendingBid + ", balance=" + virtualBalance);
         }
     }
 
-    // Cộng lại virtual balance khi bị outbid
     private void refundVirtualBalance() {
-        if (virtualBalance != null
-                && myPendingBid != null
-                && myPendingBid.compareTo(BigDecimal.ZERO) > 0) {
-
+        if (virtualBalance != null && myPendingBid != null && myPendingBid.compareTo(BigDecimal.ZERO) > 0) {
             virtualBalance = virtualBalance.add(myPendingBid);
             myPendingBid = BigDecimal.ZERO;
-
-            //sync session
             UserSession.setVirtualBalance(virtualBalance);
             UserSession.setPendingBid(BigDecimal.ZERO);
 
@@ -321,28 +305,25 @@ public class LiveAuctionController implements UserDataReceiver {
             return;
         }
 
-        // min bid rule
         BigDecimal minRequired = currentPrice.add(stepPrice);
         if (bidAmount.compareTo(minRequired) < 0) {
             showWarning("Minimum bid is " + formatPrice(minRequired));
             return;
         }
 
-        // balance check (simple & safe)
         if (virtualBalance != null && bidAmount.compareTo(virtualBalance) > 0) {
             showWarning("Insufficient balance! Available: " + formatPrice(virtualBalance));
             return;
         }
 
-        // save pending bid
         pendingBidAmount = bidAmount;
-
         client.sendBid(auctionId, amountText);
         bidAmountField.clear();
         hideWarning();
     }
 
     // ==================== NAVIGATION ====================
+
     private void goBackToHome() {
         System.out.println("[LiveAuction] Going back home");
         UserSession.setVirtualBalance(virtualBalance);
@@ -357,24 +338,21 @@ public class LiveAuctionController implements UserDataReceiver {
     private void leaveAndGoBack() {
         System.out.println("[LiveAuction] Leaving room permanently: " + auctionId);
 
-        if (currentUser != null
-                && globalWinnerName != null
+        if (!isAuctionEnded && currentUser != null && globalWinnerName != null
                 && globalWinnerName.equals(currentUser.getUsername())
-                && myPendingBid != null
-                && myPendingBid.compareTo(BigDecimal.ZERO) > 0) {
+                && myPendingBid != null && myPendingBid.compareTo(BigDecimal.ZERO) > 0) {
             showError("You are the leading bidder! You cannot leave until you are outbid or the auction ends.");
             return;
         }
-        // Hoàn tiền pending khi leave balance ảo
-        if (virtualBalance != null && myPendingBid != null
-                && myPendingBid.compareTo(BigDecimal.ZERO) > 0) {
+
+        if (virtualBalance != null && myPendingBid != null && myPendingBid.compareTo(BigDecimal.ZERO) > 0) {
             BigDecimal refund = myPendingBid;
             virtualBalance = virtualBalance.add(refund);
             myPendingBid = BigDecimal.ZERO;
             updateBalanceDisplay();
             showToast("Refunded " + formatPrice(refund) + " because you left.");
         }
-        // Lưu balance thật + state ảo vào session
+
         if (currentUser != null) {
             currentUser.setBalance(virtualBalance);
             UserSession.setCurrentUser(currentUser);
@@ -415,6 +393,8 @@ public class LiveAuctionController implements UserDataReceiver {
         Platform.runLater(() -> {
             System.out.println("[LiveAuction] Received: " + msg);
 
+
+
             // ==================== UPDATE PRICE ====================
             if (msg.startsWith("UPDATE_PRICE")) {
                 String[] parts = msg.split("\\|");
@@ -424,7 +404,6 @@ public class LiveAuctionController implements UserDataReceiver {
                     String bidTime = parts[4];
                     String winnerId = parts.length >= 6 ? parts[5] : null;
 
-                    // Kiểm tra trùng lặp
                     boolean isDuplicate = false;
                     if (!bidHistoryList.isEmpty()) {
                         Bid lastBid = bidHistoryList.get(0);
@@ -432,28 +411,25 @@ public class LiveAuctionController implements UserDataReceiver {
                                 && lastBid.getUsername().equals(bidder)
                                 && lastBid.getAmount().compareTo(new BigDecimal(newPrice)) == 0) {
                             isDuplicate = true;
-                            System.out.println(" Duplicate bid ignored: " + bidTime);
+                            System.out.println("Duplicate bid ignored: " + bidTime);
                         }
                     }
 
-                    // Cập nhật giá và winner (luôn cập nhật dù có duplicate)
                     currentPrice = new BigDecimal(newPrice);
                     currentPriceLabel.setText(formatPrice(currentPrice));
+                    stepPriceLabel.setText(formatPrice(stepPrice));
                     currentWinnerLabel.setText(bidder);
                     winnerTimeLabel.setText(bidTime);
 
-                    // Lưu winner vào static để khôi phục khi quay lại
                     globalWinnerName = bidder;
                     globalWinnerTime = bidTime;
 
-                    // Nếu mình bị outbid → hoàn tiền
                     if (myPendingBid != null && myPendingBid.compareTo(BigDecimal.ZERO) > 0
                             && winnerId != null && currentUser != null
                             && !winnerId.equals(currentUser.getUser_id())) {
                         refundVirtualBalance();
                     }
 
-                    // Nếu mình là người vừa đặt giá thành công → trừ tiền
                     if (currentUser != null && bidder.equals(currentUser.getUsername())) {
                         if (pendingBidAmount != null && pendingBidAmount.compareTo(BigDecimal.ZERO) > 0) {
                             deductVirtualBalance(pendingBidAmount);
@@ -461,7 +437,6 @@ public class LiveAuctionController implements UserDataReceiver {
                         }
                     }
 
-                    // Thêm vào lịch sử & chart (nếu không trùng)
                     if (!isDuplicate) {
                         addChartData(bidCounter++, currentPrice);
 
@@ -473,19 +448,29 @@ public class LiveAuctionController implements UserDataReceiver {
                         bid.setStatus("LEADING");
                         bidHistoryList.add(0, bid);
 
-                        // Cập nhật trạng thái các bid cũ → OUTBID
                         for (int i = 1; i < bidHistoryList.size(); i++) {
                             bidHistoryList.get(i).setStatus("OUTBID");
                         }
                         bidHistoryTable.refresh();
 
-                        // Lưu vào static để khôi phục khi quay lại
                         globalBidHistory = new ArrayList<>(bidHistoryList);
                         globalBidCounter = bidCounter;
                         globalCurrentPrice = currentPrice;
 
-                        System.out.println(" Saved to static - Total bids: " + globalBidHistory.size());
+                        System.out.println("Saved to static - Total bids: " + globalBidHistory.size());
                     }
+                }
+                return;
+            }
+
+            if (msg.startsWith("VIRTUAL_BALANCE")) {
+                String[] parts = msg.split("\\|");
+                if (parts.length >= 2) {
+                    BigDecimal vb = new BigDecimal(parts[1]);
+                    this.virtualBalance = vb;
+                    UserSession.setVirtualBalance(vb);
+                    updateBalanceDisplay();
+                    System.out.println("[LiveAuction] Virtual balance loaded from DB: " + vb);
                 }
                 return;
             }
@@ -505,13 +490,11 @@ public class LiveAuctionController implements UserDataReceiver {
                         startCountdown(parts[4]);
                     }
 
-                    // Khôi phục bid history & chart từ static nếu quay lại cùng auction
                     if (!globalBidHistory.isEmpty()) {
                         bidHistoryList.clear();
                         bidHistoryList.addAll(globalBidHistory);
                         bidCounter = globalBidCounter;
 
-                        // Vẽ lại chart
                         chartSeries.getData().clear();
                         List<Bid> reversedForChart = new ArrayList<>(bidHistoryList);
                         java.util.Collections.reverse(reversedForChart);
@@ -521,20 +504,18 @@ public class LiveAuctionController implements UserDataReceiver {
                         }
 
                         bidHistoryTable.refresh();
-                        System.out.println(" Restored " + bidHistoryList.size() + " bids from static");
+                        System.out.println("Restored " + bidHistoryList.size() + " bids from static");
                     } else {
                         System.out.println("No cached history, waiting for server...");
                     }
 
-                    // Khôi phục tên winner
                     if (globalWinnerName != null) {
                         currentWinnerLabel.setText(globalWinnerName);
                         winnerTimeLabel.setText(globalWinnerTime);
-                        System.out.println(" Restored winner: " + globalWinnerName + " at " + globalWinnerTime);
+                        System.out.println("Restored winner: " + globalWinnerName + " at " + globalWinnerTime);
                     }
                 }
 
-                // Lấy lịch sử bid từ server
                 if (client != null && auctionId != null) {
                     client.sendGetBidHistory(auctionId);
                 }
@@ -556,10 +537,8 @@ public class LiveAuctionController implements UserDataReceiver {
                         bidHistoryList.add(bid);
                     }
 
-                    // Sắp xếp mới nhất lên đầu
                     bidHistoryList.sort((a, b) -> b.getAmount().compareTo(a.getAmount()));
 
-                    // Vẽ lại chart theo thứ tự thời gian
                     chartSeries.getData().clear();
                     bidCounter = 0;
                     List<Bid> chartOrder = new ArrayList<>(bidHistoryList);
@@ -568,12 +547,10 @@ public class LiveAuctionController implements UserDataReceiver {
                         addChartData(bidCounter++, bid.getAmount());
                     }
 
-                    // Cập nhật trạng thái LEADING / OUTBID
                     for (int i = 0; i < bidHistoryList.size(); i++) {
                         bidHistoryList.get(i).setStatus(i == 0 ? "LEADING" : "OUTBID");
                     }
 
-                    // Cập nhật winner label từ bid mới nhất
                     if (!bidHistoryList.isEmpty()) {
                         Bid topBid = bidHistoryList.get(0);
                         if (topBid.getUsername() != null && !topBid.getUsername().isEmpty()) {
@@ -586,17 +563,16 @@ public class LiveAuctionController implements UserDataReceiver {
 
                     bidHistoryTable.refresh();
 
-                    // Cập nhật static
                     globalBidHistory = new ArrayList<>(bidHistoryList);
                     globalBidCounter = bidCounter;
 
-                    System.out.println(" Total bids after server sync: " + bidHistoryList.size());
+                    System.out.println("Total bids after server sync: " + bidHistoryList.size());
                 }
                 return;
             }
 
             if (msg.startsWith("BID_HISTORY_EMPTY")) {
-                System.out.println(" Server returned empty bid history (keeping existing)");
+                System.out.println("Server returned empty bid history (keeping existing)");
                 return;
             }
 
@@ -608,22 +584,13 @@ public class LiveAuctionController implements UserDataReceiver {
                 return;
             }
 
-            // ==================== TIME EXTENDED (Anti-Snipe) ====================
+            // ==================== TIME EXTENDED ====================
             if (msg.startsWith("TIME_EXTENDED")) {
                 String[] parts = msg.split("\\|");
                 if (parts.length >= 3) {
-                    String newEndTimeStr = parts[2];
-
-                    // Reset countdown với thời gian mới
-                    startCountdown(newEndTimeStr);
-
-                    // Cập nhật endTime trong static để không bị mất khi back/quay lại
-                    // (nếu bạn có lưu globalEndTime thì cập nhật ở đây)
-
-                    // Hiện thông báo nổi cho user biết
+                    startCountdown(parts[2]);
                     showAntiSnipeNotification();
-
-                    System.out.println("[LiveAuction] Time extended to: " + newEndTimeStr);
+                    System.out.println("[LiveAuction] Time extended to: " + parts[2]);
                 }
                 return;
             }
@@ -672,16 +639,16 @@ public class LiveAuctionController implements UserDataReceiver {
         });
     }
 
-    // ==================== BID HISTORY (public, gọi từ ResponseHandler) ====================
+    // ==================== BID HISTORY ====================
 
     public void loadBidHistory(List<Bid> history) {
         Platform.runLater(() -> {
             if (history == null || history.isEmpty()) {
-                System.out.println(" No new bid history to load");
+                System.out.println("No new bid history to load");
                 return;
             }
 
-            System.out.println(" Loading " + history.size() + " bids from server");
+            System.out.println("Loading " + history.size() + " bids from server");
 
             bidHistoryList.clear();
 
@@ -692,10 +659,8 @@ public class LiveAuctionController implements UserDataReceiver {
                 bidHistoryList.add(bid);
             }
 
-            // Sắp xếp mới nhất lên đầu
             bidHistoryList.sort((a, b) -> b.getAmount().compareTo(a.getAmount()));
 
-            // Vẽ lại chart
             chartSeries.getData().clear();
             bidCounter = 0;
             List<Bid> chartOrder = new ArrayList<>(bidHistoryList);
@@ -704,18 +669,16 @@ public class LiveAuctionController implements UserDataReceiver {
                 addChartData(bidCounter++, bid.getAmount());
             }
 
-            // Cập nhật trạng thái LEADING / OUTBID
             for (int i = 0; i < bidHistoryList.size(); i++) {
                 bidHistoryList.get(i).setStatus(i == 0 ? "LEADING" : "OUTBID");
             }
 
             bidHistoryTable.refresh();
 
-            // Cập nhật static
             globalBidHistory = new ArrayList<>(bidHistoryList);
             globalBidCounter = bidCounter;
 
-            System.out.println(" Total bids: " + bidHistoryList.size());
+            System.out.println("Total bids: " + bidHistoryList.size());
         });
     }
 
@@ -826,9 +789,7 @@ public class LiveAuctionController implements UserDataReceiver {
         Platform.runLater(() -> {
             if (newBalance != null) {
                 this.virtualBalance = newBalance;
-                // sync session
                 UserSession.setVirtualBalance(newBalance);
-
                 updateBalanceDisplay();
                 System.out.println("[LiveAuction] Balance updated from server: " + newBalance);
             }
@@ -873,19 +834,10 @@ public class LiveAuctionController implements UserDataReceiver {
     }
 
     private void showAntiSnipeNotification() {
-        // Tạo label thông báo tạm thời
         Label notice = new Label("Time extended by 1 minute due to a new bid!");
-        notice.setStyle(
-                "-fx-background-color: #ff9800; " +
-                        "-fx-text-fill: white; " +
-                        "-fx-padding: 8 16; " +
-                        "-fx-background-radius: 6; " +
-                        "-fx-font-weight: bold;"
-        );
-        // Thêm vào centerPanel (hoặc bất kỳ container nào phù hợp)
+        notice.setStyle("-fx-background-color: #ff9800; -fx-text-fill: white; -fx-padding: 8 16; -fx-background-radius: 6; -fx-font-weight: bold;");
         centerPanel.getChildren().add(0, notice);
 
-        // Tự động ẩn sau 5 giây
         new Timer(true).schedule(new TimerTask() {
             @Override
             public void run() {

@@ -30,6 +30,12 @@ import java.util.*;
 
 public class HomePageController extends BaseController {
 
+    private static HomePageController instance;
+
+    public static HomePageController getInstance() {
+        return instance;
+    }
+
     public List<Auction> getAuctionList() {
         return auctionList;
     }
@@ -55,6 +61,7 @@ public class HomePageController extends BaseController {
     // ==================== INIT ====================
     @FXML
     public void initialize() {
+        instance=this;
         ControllerRegistry.register(
                 HomePageController.class,
                 this

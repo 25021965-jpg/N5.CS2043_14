@@ -26,8 +26,15 @@ public class ManageProductController {
     @FXML private TextField searchProductField;
     @FXML private Button btnApprove;      // ← nút Approve trong FXML
 
+    private static ManageProductController instance;
+
+    public static ManageProductController getInstance() {
+        return instance;
+    }
+
     @FXML
     public void initialize() {
+        instance = this;
         ControllerRegistry.register(
                 ManageProductController.class,
                 this

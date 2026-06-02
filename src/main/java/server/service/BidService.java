@@ -38,14 +38,23 @@ public class BidService {
                     );
                 }
 
-                // Kiểm tra số dư
-                if (bidder.getBalance().compareTo(amount) < 0) {
+                // 🔥🔥🔥 KIỂM TRA VIRTUAL BALANCE (KHÔNG PHẢI BALANCE THẬT) 🔥🔥🔥
+                BigDecimal virtualBal = UserDAO.getVirtualBalance(bidder.getUser_id());
+                if (virtualBal == null || virtualBal.compareTo(amount) < 0) {
                     throw new InvalidBidException(
-                            "Insufficient balance. Your balance: " + bidder.getBalance()
+                            "Insufficient balance. Your balance: " + (virtualBal != null ? virtualBal : 0)
                     );
                 }
 
-                // Lưu vào DB
+                // 🔥🔥🔥 TRỪ VIRTUAL BALANCE (ATOMIC) 🔥🔥🔥
+                boolean deducted = UserDAO.deductVirtualBalance(bidder.getUser_id(), amount);
+                if (!deducted) {
+                    throw new InvalidBidException(
+                            "Failed to deduct virtual balance. Please try again."
+                    );
+                }
+
+                // Lưu bid vào DB
                 boolean success = BidDAO.placeBid(auction.getAuction_id(), bidder.getUser_id(), amount);
 
                 if (success) {
@@ -94,21 +103,26 @@ public class BidService {
         User sellerFromDB = UserDAO.getUserById(seller.getUser_id());
         if (winnerFromDB == null || sellerFromDB == null) return;
 
+        // 🔥 Trừ account balance thật của winner (tiền thật)
         BigDecimal winnerNewBalance = winnerFromDB.getBalance().subtract(winAmount);
         if (winnerNewBalance.compareTo(BigDecimal.ZERO) < 0) {
             System.out.println("Winner has insufficient balance!");
             return;
         }
-
         UserDAO.updateBalance(winner.getUser_id(), winnerNewBalance);
+
+        // 🔥 Cập nhật lại virtual balance = account balance mới
+        UserDAO.updateVirtualBalance(winner.getUser_id(), winnerNewBalance);
         server.dao.TransactionDAO.addTransaction(winner.getUser_id(), winAmount, "WITHDRAW");
 
+        // 🔥 Cộng tiền cho seller
         BigDecimal sellerNewBalance = sellerFromDB.getBalance().add(winAmount);
         UserDAO.updateBalance(seller.getUser_id(), sellerNewBalance);
+        UserDAO.updateVirtualBalance(seller.getUser_id(), sellerNewBalance);
         server.dao.TransactionDAO.addTransaction(seller.getUser_id(), winAmount, "DEPOSIT");
 
-        System.out.println("Settled: " + winner.getUser_id()
-                + " paid " + winAmount + " to " + seller.getUser_id());
+        System.out.println("Settled: " + winner.getUsername()
+                + " paid " + winAmount + " to " + seller.getUsername());
     }
 
     public static LocalDateTime checkAntiSnipe(Auction auction) {

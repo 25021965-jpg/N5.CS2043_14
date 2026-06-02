@@ -1,8 +1,7 @@
 package client.controller;
 
-import client.manager.ControllerRegistry;
+import client.manager.UserSession;
 import client.network.ClientSocket;
-import client.util.NavigationUtils;
 import client.util.TextUtils;
 
 import javafx.fxml.FXML;
@@ -14,14 +13,27 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.application.Platform;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.scene.control.ListView;
 
 import model.User;
 
 import java.math.BigDecimal;
 import java.util.List;
 
-public class AccountBalanceController extends BaseController implements UserDataReceiver {
+import static client.util.NavigationUtils.showError;
+import static client.util.NavigationUtils.showToast;
 
+public class AccountBalanceController
+        extends BaseController
+        implements UserDataReceiver {
+    private static AccountBalanceController instance;
+
+    public static AccountBalanceController getInstance() {
+        return instance;
+    }
     private static final List<String> FILTERS = List.of(
             "All",
             "Deposit",
@@ -41,14 +53,26 @@ public class AccountBalanceController extends BaseController implements UserData
 
     @FXML
     public void initialize() {
-        ControllerRegistry.register(AccountBalanceController.class, this);
+        instance = this;
         System.out.println("Account Balance Loaded");
+
         setupFilterBox();
+
+
+        if (client == null) {
+            client = ClientSocket.getInstance();
+        }
+        if (client != null) {
+            client.addListener("AccountBalance", this::handleServerMessage);
+        }
     }
 
     private void setupFilterBox() {
+
         filterBox.getItems().addAll(FILTERS);
+
         filterBox.setValue("All");
+
         filterBox.setOnAction(e ->
                 loadTransactions()
         );
@@ -59,7 +83,7 @@ public class AccountBalanceController extends BaseController implements UserData
     @Override
     public void setUser(User user) {
         if (user == null) {
-            NavigationUtils.showError("No user data found.");
+            showError("No user data found.");
             return;
         }
 
@@ -79,56 +103,147 @@ public class AccountBalanceController extends BaseController implements UserData
             return;
         }
         this.client = client;
+        client.addListener("AccountBalance", this::handleServerMessage);
+    }
+
+
+
+    // ==================== SERVER ====================
+
+    private void handleServerMessage(String msg) {
+        System.out.println("🔥 handleServerMessage: " + msg);
+        if (msg == null) return;
+
+        if (msg.startsWith("TRANSACTIONS_LIST")) {
+            System.out.println("🔥 TRANSACTIONS_LIST detected");
+            String data = msg.substring("TRANSACTIONS_LIST|".length());
+            System.out.println("🔥 Data: " + data);
+            updateTransactionList(data);
+            return;
+        }
+
+        if (msg.startsWith("BALANCE_UPDATE_SUCCESS")) {
+            Platform.runLater(() -> handleBalanceSuccess(msg));
+        } else if (msg.startsWith("BALANCE_UPDATE_FAILED")) {
+            Platform.runLater(() -> handleBalanceFailed(msg));
+        }
+    }
+
+    private void handleBalanceSuccess(String msg) {
+        String[] parts = msg.split("\\|");
+        if (parts.length < 2) return;
+
+        BigDecimal newBalance = new BigDecimal(parts[1]);
+        currentUser.setBalance(newBalance);
+        UserSession.setCurrentUser(currentUser);
+
+        updateBalance();
+
+        showToast(
+                (javafx.stage.Stage) balanceLabel.getScene().getWindow(),
+                "Transaction successful!"
+        );
+
+        client.addListener("AccountBalance", this::handleServerMessage);
+        loadTransactions();
+    }
+
+    private void handleBalanceFailed(
+            String msg
+    ) {
+
+        String[] parts =
+                msg.split("\\|");
+
+        String errorMessage =
+                parts.length > 1
+                        ? parts[1]
+                        : "Transaction failed.";
+
+        showError(errorMessage);
+    }
+
+    private void handleTransactionList(String msg) {
+        System.out.println("🔥 handleTransactionList received: " + msg);
+        String data = msg.substring("TRANSACTIONS_LIST|".length());
+        System.out.println("🔥 data after substring: '" + data + "'");
+        updateTransactionList(data);
     }
 
     // ==================== DEPOSIT ====================
 
     @FXML
     public void handleDeposit() {
+
         BigDecimal amount =
                 parseAmount(
                         depositField.getText(),
                         "Deposit"
                 );
 
-        if (client == null || currentUser == null) {
-            NavigationUtils.showError("Connection unavailable.");
+        if (amount == null) {
             return;
         }
 
-        client.sendDeposit(currentUser.getUser_id(), amount);
+        client.sendDeposit(
+                currentUser.getUser_id(),
+                amount
+        );
+
         depositField.clear();
     }
 
     // ==================== WITHDRAW ====================
+
     @FXML
     public void handleWithdraw() {
+
         BigDecimal amount =
                 parseAmount(
                         withdrawField.getText(),
                         "Withdraw"
                 );
 
-        if (client == null || currentUser == null) {
-            NavigationUtils.showError("Connection unavailable.");
+        if (amount == null) {
             return;
         }
 
-        client.sendWithdraw(currentUser.getUser_id(), amount);
+        client.sendWithdraw(
+                currentUser.getUser_id(),
+                amount
+        );
+
         withdrawField.clear();
     }
 
     // ==================== AMOUNT VALIDATION ====================
-    private BigDecimal parseAmount(String input, String action) {
+
+    private BigDecimal parseAmount(
+            String input,
+            String action
+    ) {
+
         if (input == null || input.isBlank()) {
-            NavigationUtils.showError(action + " amount is required.");
+
+            showError(
+                    action + " amount is required."
+            );
+
             return null;
         }
 
         try {
-            BigDecimal amount = new BigDecimal(input.trim());
+
+            BigDecimal amount =
+                    new BigDecimal(input.trim());
+
             if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-                NavigationUtils.showError(action + " amount must be greater than 0.");
+
+                showError(
+                        action
+                                + " amount must be greater than 0."
+                );
+
                 return null;
             }
 
@@ -136,27 +251,29 @@ public class AccountBalanceController extends BaseController implements UserData
 
         } catch (NumberFormatException e) {
 
-            NavigationUtils.showError("Invalid amount.");
+            showError("Invalid amount.");
 
             return null;
         }
     }
 
     // ==================== BALANCE ====================
+
     private void updateBalance() {
-        if (currentUser == null) {
+        Platform.runLater(() -> {
+            if (currentUser == null) return;
+            if (currentUser.getBalance() == null) {
+                currentUser.setBalance(BigDecimal.ZERO);
+            }
+            String formatted = TextUtils.formatCurrency(currentUser.getBalance());
+            System.out.println("🔥 Formatted balance: " + formatted);
+            balanceLabel.setText(formatted != null ? formatted : "0 USD");
+            System.out.println("🔥 Balance updated: " + currentUser.getBalance());
+        });
+        if (balanceLabel == null) {
+            System.out.println("❌ balanceLabel is NULL! Check FXML fx:id");
             return;
         }
-
-        if (currentUser.getBalance() == null) {
-            currentUser.setBalance(BigDecimal.ZERO);
-        }
-
-        balanceLabel.setText(
-                TextUtils.formatCurrency(
-                        currentUser.getBalance()
-                )
-        );
     }
 
     public void updateBalanceFromServer(BigDecimal newBalance) {
@@ -168,139 +285,112 @@ public class AccountBalanceController extends BaseController implements UserData
     }
 
     // ==================== TRANSACTIONS ====================
+
     private void loadTransactions() {
-        if (currentUser == null || client == null) {
-            return;
-        }
+        if (currentUser == null) return;
+        if (client == null) client = ClientSocket.getInstance();
+
+        // ✅ Luôn đảm bảo listener đúng
+        client.addListener("AccountBalance", this::handleServerMessage);
+
+        System.out.println("loadTransactions: sending request for user " + currentUser.getUser_id());
         client.sendGetTransactions(currentUser.getUser_id());
     }
 
     public void updateTransactionList(String data) {
-        if (transactionContainer == null) {
-            return;
-        }
-        transactionContainer.getChildren().clear();
+        Platform.runLater(() -> {
+            try {
+                if (transactionContainer == null) {
+                    System.out.println("❌ transactionContainer is NULL!");
+                    return;
+                }
 
-        if (data == null || data.isBlank()) {
-            Label emptyLabel = new Label("No transactions yet");
-            emptyLabel.setStyle("-fx-text-fill:#64748B; -fx-padding:20;");
+                transactionContainer.getChildren().clear();
 
-            transactionContainer
-                    .getChildren()
-                    .add(emptyLabel);
-            return;
-        }
+                if (data == null || data.isBlank()) {
+                    transactionContainer.getChildren().add(new Label("No transactions yet"));
+                    return;
+                }
 
-        String[] transactions = data.split("\\|");
-        for (String tx : transactions) {
-            String[] parts =
-                    tx.split(";");
+                // Split theo | nhưng bỏ phần tử rỗng cuối (server gửi trailing |)
+                String[] transactions = data.split("\\|");
+                boolean hasAny = false;
 
-            if (parts.length < 4) {
-                continue;
+                for (String tx : transactions) {
+                    if (tx.isBlank()) continue;
+
+                    String[] parts = tx.split(";");
+                    if (parts.length >= 4) {
+                        String type   = parts[0]; // DEPOSIT, WITHDRAW, TRANSFER_IN, TRANSFER_OUT
+                        String amount = parts[1];
+                        String time   = parts[2];
+                        String desc   = parts[3];
+
+                        if (!shouldDisplay(type)) continue;
+
+                        HBox card = createTransactionCard(type, amount, time, desc);
+                        transactionContainer.getChildren().add(card);
+                        hasAny = true;
+                    }
+                }
+
+                if (!hasAny) {
+                    transactionContainer.getChildren().add(new Label("No transactions yet"));
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-            String type = parts[0];
-            if (!shouldDisplay(type)) {
-                continue;
-            }
-
-            String amount = parts[1];
-            String time = parts[2];
-            String desc = parts[3];
-
-            transactionContainer
-                    .getChildren()
-                    .add(
-                            createTransactionCard(
-                                    type,
-                                    amount,
-                                    time,
-                                    desc
-                            )
-                    );
-        }
+        });
     }
+
 
     // ==================== FILTER ====================
 
     private boolean shouldDisplay(String type) {
         String selected = filterBox.getValue();
-        if (selected == null
-                || selected.equals("All")) {
+        System.out.println("🔥 shouldDisplay: selected=" + selected + ", type=" + type);
+
+        if (selected == null || selected.equals("All")) {
             return true;
         }
 
-        return switch (selected) {
-            case "Deposit" ->
-                    type.equals("DEPOSIT");
-            case "Withdraw" ->
-                    type.equals("WITHDRAW");
-            case "Paid" ->
-                    type.equals("TRANSFER_OUT");
-            case "Received" ->
-                    type.equals("TRANSFER_IN");
-
+        boolean result = switch (selected) {
+            case "Deposit" -> type.equals("DEPOSIT");
+            case "Withdraw" -> type.equals("WITHDRAW");
+            case "Paid" -> type.equals("TRANSFER_OUT");
+            case "Received" -> type.equals("TRANSFER_IN");
             default -> true;
         };
+        System.out.println("🔥 shouldDisplay result: " + result);
+        return result;
     }
 
     // ==================== CARD ====================
 
-    private HBox createTransactionCard(
-            String type,
-            String amount,
-            String time,
-            String desc
-    ) {
+    private HBox createTransactionCard(String type, String amount, String time, String desc) {
+        try {
+            HBox card = new HBox(20);
+            card.setAlignment(Pos.CENTER_LEFT);
+            card.setStyle("-fx-background-color:white; -fx-background-radius:12; -fx-border-radius:12; -fx-border-color:#E2E8F0; -fx-padding:15;");
 
-        HBox card =
-                new HBox(20);
+            VBox left = new VBox(5);
+            Label title = createTitleLabel(type, desc);
+            Label timeLabel = createTimeLabel(time);
+            left.getChildren().addAll(title, timeLabel);
 
-        card.setAlignment(Pos.CENTER_LEFT);
+            Region spacer = new Region();
+            HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        card.setStyle("""
-                -fx-background-color:white;
-                -fx-background-radius:12;
-                -fx-border-radius:12;
-                -fx-border-color:#E2E8F0;
-                -fx-padding:15;
-                """);
+            Label amountLabel = createAmountLabel(type, amount);
 
-        VBox left =
-                new VBox(5);
-
-        Label title =
-                createTitleLabel(type, desc);
-
-        Label timeLabel =
-                createTimeLabel(time);
-
-        left.getChildren().addAll(
-                title,
-                timeLabel
-        );
-
-        Region spacer =
-                new Region();
-
-        HBox.setHgrow(
-                spacer,
-                Priority.ALWAYS
-        );
-
-        Label amountLabel =
-                createAmountLabel(
-                        type,
-                        amount
-                );
-
-        card.getChildren().addAll(
-                left,
-                spacer,
-                amountLabel
-        );
-
-        return card;
+            card.getChildren().addAll(left, spacer, amountLabel);
+            return card;
+        } catch (Exception e) {
+            System.out.println("Error creating transaction card: " + e.getMessage());
+            e.printStackTrace();
+            return new HBox(new Label("Error loading transaction"));
+        }
     }
 
     // ==================== LABELS ====================

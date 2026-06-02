@@ -39,10 +39,16 @@ public class AuctionHistoryController extends BaseController implements UserData
     @FXML private ComboBox<String> statusFilterComboBox;
     @FXML private ComboBox<String> categoryFilterComboBox;
 
+    public static AuctionHistoryController instance;
+    public static AuctionHistoryController getInstance() {
+        return instance;
+    }
+
     // ==================== INIT ====================
 
     @FXML
     public void initialize() {
+        instance = this;
         ControllerRegistry.register(AuctionHistoryController.class, this);
         System.out.println("AuctionHistory Loaded");
         setupStatusFilter();

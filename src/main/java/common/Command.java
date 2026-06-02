@@ -15,6 +15,7 @@ public enum Command {
     LEAVE,
     BID,
     GET_BID_HISTORY,
+    GET_VIRTUAL_BALANCE,
 
     // ================= USER PROFILE =================
     GET_PROFILE,

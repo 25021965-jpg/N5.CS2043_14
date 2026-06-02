@@ -3,7 +3,6 @@ package client.network.response.handler;
 import client.controller.*;
 import client.controller.admin.ManageProductController;
 
-import client.manager.ControllerRegistry;
 import client.network.ClientSocket;
 import client.network.response.parser.AuctionParser;
 import client.network.response.parser.BidParser;
@@ -21,15 +20,27 @@ import model.Bid;
 public class AuctionHandler {
 
     // ===== AUCTION LIST =====
+
     public static void list(String data) {
-        HomePageController ctrl = ControllerRegistry.get(HomePageController.class);
+
+        System.out.println("RAW LIST RESPONSE: " + data);
+
+        HomePageController ctrl =
+                HomePageController.getInstance();
+
         if (ctrl != null) {
-            ctrl.updateAuctionList(AuctionParser.parseList(data));
+
+            ctrl.updateAuctionList(
+                    AuctionParser.parseList(data)
+            );
         }
     }
 
     public static void listEmpty() {
-        HomePageController ctrl = ControllerRegistry.get(HomePageController.class);
+
+        HomePageController ctrl =
+                HomePageController.getInstance();
+
         if (ctrl != null) {
 
             ctrl.updateAuctionList(
@@ -39,7 +50,9 @@ public class AuctionHandler {
     }
 
     // ===== CREATE AUCTION =====
+
     public static void createSuccess(Stage stage) {
+
         NavigationUtils.showToast(
                 stage,
                 "Auction submitted!"
@@ -53,134 +66,241 @@ public class AuctionHandler {
     }
 
     public static void createFailed(String data) {
-        NavigationUtils.showError("Failed to create auction: " + data);
+        NavigationUtils.showError(
+                "Failed to create auction: " + data
+        );
     }
 
     // ===== JOINED AUCTIONS =====
+
     public static void joinedAuctions(String data) {
-        AuctionHistoryController ctrl = ControllerRegistry.get(AuctionHistoryController.class);
+
+        AuctionHistoryController ctrl =
+                AuctionHistoryController.getInstance();
+
         if (ctrl != null) {
-            ctrl.renderHistory("LIST_JOINED_AUCTIONS_SUCCESS|" + data);
+
+            ctrl.renderHistory(
+                    "LIST_JOINED_AUCTIONS_SUCCESS|" + data
+            );
         }
     }
 
     public static void joinedAuctionsEmpty() {
-        AuctionHistoryController ctrl = ControllerRegistry.get(AuctionHistoryController.class);
+
+        AuctionHistoryController ctrl =
+                AuctionHistoryController.getInstance();
+
         if (ctrl != null) {
-            ctrl.renderHistory("LIST_JOINED_AUCTIONS_EMPTY");
+
+            ctrl.renderHistory(
+                    "LIST_JOINED_AUCTIONS_EMPTY"
+            );
         }
     }
 
     // ===== MY AUCTIONS =====
+
     public static void myAuctions(String data) {
-        MyAuctionsController ctrl = ControllerRegistry.get(MyAuctionsController.class);
+
+        System.out.println("RAW MY AUCTIONS: " + data);
+
+        MyAuctionsController ctrl =
+                MyAuctionsController.getInstance();
+
         if (ctrl != null) {
-            ctrl.updateMyAuctions(AuctionParser.parseList(data));
+
+            ctrl.updateMyAuctions(
+                    AuctionParser.parseList(data)
+            );
         }
     }
 
     public static void myAuctionsEmpty() {
-        MyAuctionsController ctrl = ControllerRegistry.get(MyAuctionsController.class);
+
+        MyAuctionsController ctrl =
+                MyAuctionsController.getInstance();
+
         if (ctrl != null) {
-            ctrl.updateMyAuctions(java.util.List.of());
+
+            ctrl.updateMyAuctions(
+                    java.util.List.of()
+            );
         }
     }
 
     // ===== BID =====
+
     public static void bidSuccess(Stage stage) {
-        NavigationUtils.showToast(stage, "Bid placed successfully!");
-        ClientSocket socket = ClientSocket.getInstance();
-        if (socket != null) {
-            socket.sendList();
-        }
+
+        NavigationUtils.showToast(
+                stage,
+                "Bid placed!"
+        );
+
+        ClientSocket
+                .getInstance()
+                .sendList();
     }
 
-    public static void bidFailed(String data) {
-        NavigationUtils.showError("Bid failed: " + data);
+    public static void bidFailed(
+            String data
+    ) {
+
+        NavigationUtils.showError(
+                "Bid failed: " + data
+        );
     }
 
     // ===== BID HISTORY =====
+
     public static void bidHistory(String data) {
+
         ObservableList<Bid> bids =
                 FXCollections.observableArrayList(
                         BidParser.parse(data)
                 );
-        LiveAuctionController ctrl = ControllerRegistry.get(LiveAuctionController.class);
+
+        LiveAuctionController ctrl =
+                LiveAuctionController.getInstance();
+
         if (ctrl != null) {
+
             ctrl.loadBidHistory(bids);
         }
     }
 
     public static void bidHistoryEmpty() {
-        LiveAuctionController ctrl = ControllerRegistry.get(LiveAuctionController.class);
+
+        LiveAuctionController ctrl =
+                LiveAuctionController.getInstance();
+
         if (ctrl != null) {
-            ctrl.loadBidHistory(FXCollections.observableArrayList());
+
+            ctrl.loadBidHistory(
+                    FXCollections.observableArrayList()
+            );
         }
     }
 
     // ===== LIVE UPDATE =====
+
     public static void updatePrice(String raw) {
-        LiveAuctionController ctrl = ControllerRegistry.get(LiveAuctionController.class);
+
+        LiveAuctionController ctrl =
+                LiveAuctionController.getInstance();
+
         if (ctrl != null) {
+
             ctrl.handleServerMessage(raw);
         }
     }
 
     // ===== JOIN AUCTION =====
-    public static void joinSuccess(String data) {
-        LiveAuctionController ctrl = ControllerRegistry.get(LiveAuctionController.class);
+
+    public static void joinSuccess(
+            String data
+    ) {
+
+        LiveAuctionController ctrl =
+                LiveAuctionController.getInstance();
+
         if (ctrl != null) {
-            ctrl.handleServerMessage("JOIN_SUCCESS|" + data);
+
+            ctrl.handleServerMessage(
+                    "JOIN_SUCCESS|" + data
+            );
         }
     }
 
-    public static void joinFailed(String data) {
-        NavigationUtils.showError("Join failed: " + data);
+    public static void joinFailed(
+            String data
+    ) {
+
+        NavigationUtils.showError(
+                "Join failed: " + data
+        );
     }
 
     // ===== ITEMS =====
 
     public static void items(String data) {
-        ManageProductController ctrl = ControllerRegistry.get(ManageProductController.class);
+
+        ManageProductController ctrl =
+                ManageProductController.getInstance();
+
         if (ctrl != null) {
+
             ObservableList<String[]> items =
                     FXCollections.observableArrayList(
                             ItemParser.parse(data, 5)
                     );
+
             ctrl.updateProducts(items);
         }
     }
 
     public static void itemsEmpty() {
-        ManageProductController ctrl = ControllerRegistry.get(ManageProductController.class);
+
+        ManageProductController ctrl =
+                ManageProductController.getInstance();
+
         if (ctrl != null) {
-            ctrl.updateProducts(FXCollections.observableArrayList());
+
+            ctrl.updateProducts(
+                    FXCollections.observableArrayList()
+            );
         }
     }
 
     // ===== DELETE ITEM =====
+
     public static void deleteSuccess(Stage stage) {
-        NavigationUtils.showToast(stage, "Deleted successfully!");
-        ManageProductController ctrl = ControllerRegistry.get(ManageProductController.class);
+
+        NavigationUtils.showToast(
+                stage,
+                "Deleted!"
+        );
+
+        ManageProductController ctrl =
+                ManageProductController.getInstance();
+
         if (ctrl != null) {
+
             ctrl.handleReloadProducts();
         }
     }
 
-    public static void deleteFailed(String data) {
-        NavigationUtils.showError("Delete failed: " + data);
+    public static void deleteFailed(
+            String data
+    ) {
+
+        NavigationUtils.showError(
+                "Delete failed: " + data
+        );
     }
 
     // ===== UPDATE ITEM =====
+
     public static void updateSuccess(Stage stage) {
-        NavigationUtils.showToast(stage, "Updated successfully!");
-        ManageProductController ctrl = ControllerRegistry.get(ManageProductController.class);
+
+        NavigationUtils.showToast(
+                stage,
+                "Updated!"
+        );
+
+        ManageProductController ctrl =
+                ManageProductController.getInstance();
+
         if (ctrl != null) {
+
             ctrl.handleReloadProducts();
         }
     }
 
     public static void updateFailed(String data) {
-        NavigationUtils.showError("Update failed: " + data);
+        NavigationUtils.showError(
+                "Update failed: " + data
+        );
     }
 }

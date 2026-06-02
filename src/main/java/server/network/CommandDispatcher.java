@@ -93,6 +93,9 @@ public class CommandDispatcher {
             case GET_TRANSACTIONS:
                 return balanceHandler.handleGetTransactions(data);
 
+            case GET_VIRTUAL_BALANCE:
+                return balanceHandler.handleGetVirtualBalance(data);
+
             // ================= ADMIN =================
 
             case LIST_USERS:

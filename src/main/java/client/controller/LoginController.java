@@ -47,6 +47,7 @@ public class LoginController extends BaseController {
                 NavigationUtils.showError("Cannot connect to server.");
                 return;
             }
+            client.listen();
 
             passField.setOnAction(e -> handleLogin());
             loginBtn.setOnMouseEntered(e ->

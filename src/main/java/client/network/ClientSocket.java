@@ -23,6 +23,8 @@ public class ClientSocket {
     private PrintWriter out;
 
     private boolean listening = false;
+    private final java.util.Map<String, java.util.function.Consumer<String>> listeners
+            = new java.util.concurrent.ConcurrentHashMap<>();
 
     public static String currentRequest = "";
 
@@ -51,7 +53,7 @@ public class ClientSocket {
     private void connect() throws Exception {
         if (socket == null || socket.isClosed()) {
             socket =
-                    new Socket("localhost",9999);
+                    new Socket("localhost", 9999);
 
             in =
                     new BufferedReader(
@@ -88,17 +90,18 @@ public class ClientSocket {
                                 listening
                                         &&
                                         (msg = in.readLine()) != null
-                        ){
+                        ) {
                             System.out.println(
                                     "FROM SERVER: "
                                             + msg
                             );
 
                             ResponseHandler.handle(msg);
+                            notifyListeners(msg);
                         }
 
-                    } catch (Exception e){
-                        if(listening){
+                    } catch (Exception e) {
+                        if (listening) {
                             System.err.println(
                                     "Connection lost: "
                                             + e.getMessage()
@@ -121,7 +124,7 @@ public class ClientSocket {
     }
 
     // ================= SEND =================
-    public synchronized void sendMessage(String rawMessage){
+    public synchronized void sendMessage(String rawMessage) {
         try {
             connect();
             out.println(rawMessage);
@@ -131,7 +134,7 @@ public class ClientSocket {
                             + rawMessage
             );
 
-        } catch (Exception e){
+        } catch (Exception e) {
             System.err.println(
                     "Send failed: "
                             + e.getMessage()
@@ -139,11 +142,11 @@ public class ClientSocket {
         }
     }
 
-    public void sendRequest(String raw){
+    public void sendRequest(String raw) {
         sendMessage(raw);
     }
 
-    private void send(Command command, String... data){
+    private void send(Command command, String... data) {
         String msg =
                 CommandBuilder.build(
                         command,
@@ -157,7 +160,7 @@ public class ClientSocket {
     public void sendLogin(
             String username,
             String password
-    ){
+    ) {
 
         send(
                 Command.LOGIN,
@@ -172,15 +175,15 @@ public class ClientSocket {
             String em,
             String pw,
             String dob
-    ){
+    ) {
 
         send(
                 Command.REGISTER,
-                fn,un,em,pw,dob
+                fn, un, em, pw, dob
         );
     }
 
-    public void sendLogout(){
+    public void sendLogout() {
         send(Command.LOGOUT);
     }
 
@@ -190,7 +193,7 @@ public class ClientSocket {
             String username,
             String email,
             String newPassword
-    ){
+    ) {
 
         send(
                 Command.FORGOT_PASSWORD,
@@ -203,15 +206,15 @@ public class ClientSocket {
     }
 
     // AUCTION
-    public void sendList(){
+    public void sendList() {
         currentRequest = "LIST";
         send(Command.LIST);
     }
 
-    public void sendCreate(Auction auction){
+    public void sendCreate(Auction auction) {
         Item item = auction.getItem();
         String images =
-                item.getImages()!=null
+                item.getImages() != null
                         &&
                         !item.getImages().isEmpty()
 
@@ -237,35 +240,35 @@ public class ClientSocket {
         );
     }
 
-    public void sendBid(String auctionId, String amount){
+    public void sendBid(String auctionId, String amount) {
         send(Command.BID, auctionId, amount);
     }
 
-    public void sendJoin(String auctionId){
+    public void sendJoin(String auctionId) {
         send(Command.JOIN, auctionId);
     }
 
-    public void sendLeave(){
+    public void sendLeave() {
         send(Command.LEAVE);
     }
 
-    public void sendGetBidHistory(String auctionId){
+    public void sendGetBidHistory(String auctionId) {
         send(Command.GET_BID_HISTORY, auctionId);
     }
 
-    public void sendMyAuctions(){
+    public void sendMyAuctions() {
         User user = UserSession.getCurrentUser();
-        if(user == null) return;
+        if (user == null) return;
         currentRequest = "LIST_MY_AUCTIONS";
         sendMessage("LIST_MY_AUCTIONS|" + user.getUser_id());
     }
 
     // FAVOURITES
-    public void sendGetFavourite(String userId){
+    public void sendGetFavourite(String userId) {
         sendMessage("LIST_FAVOURITES|" + userId);
     }
 
-    public void sendAddFavourite(String userId, String auctionId){
+    public void sendAddFavourite(String userId, String auctionId) {
         sendMessage(
                 "ADD_FAVOURITE|"
                         + userId
@@ -277,7 +280,7 @@ public class ClientSocket {
     public void sendRemoveFavourite(
             String userId,
             String auctionId
-    ){
+    ) {
 
         sendMessage(
                 "REMOVE_FAVOURITE|"
@@ -288,7 +291,7 @@ public class ClientSocket {
     }
 
     // BALANCE
-    public void sendDeposit(String userId, BigDecimal amount){
+    public void sendDeposit(String userId, BigDecimal amount) {
         sendMessage(
                 "DEPOSIT|"
                         + userId
@@ -297,7 +300,7 @@ public class ClientSocket {
         );
     }
 
-    public void sendWithdraw(String userId, BigDecimal amount){
+    public void sendWithdraw(String userId, BigDecimal amount) {
         sendMessage(
                 "WITHDRAW|"
                         + userId
@@ -306,37 +309,58 @@ public class ClientSocket {
         );
     }
 
-    public void sendGetBalance(String userId){
+    public void sendGetBalance(String userId) {
         sendMessage("GET_BALANCE|" + userId);
     }
 
-    public void sendGetTransactions(String userId){
+    public void sendGetTransactions(String userId) {
         sendMessage("GET_TRANSACTIONS|" + userId);
     }
-    
+
     // CONNECTION
-    public void logout(){
+    public void logout() {
         send(Command.LOGOUT);
     }
 
-    public void close(){
+    public void close() {
         try {
             listening = false;
 
-            if(in!=null)
+            if (in != null)
                 in.close();
 
-            if(out!=null)
+            if (out != null)
                 out.close();
 
-            if(socket!=null && !socket.isClosed()){
+            if (socket != null && !socket.isClosed()) {
                 socket.close();
             }
 
             System.out.println("Socket closed");
 
-        } catch (Exception e){
+        } catch (Exception e) {
             System.err.println(e.getMessage());
         }
+    }
+
+
+    public void setMessageListener(java.util.function.Consumer<String> listener) {
+        listeners.put("default", listener);
+    }
+
+    public void addListener(String key, java.util.function.Consumer<String> listener) {
+        listeners.put(key, listener);
+    }
+
+    public void removeListener(String key) {
+        listeners.remove(key);
+    }
+
+    public void notifyListeners(String msg) {
+        listeners.values().forEach(l -> l.accept(msg));
+    }
+
+    public void sendGetVirtualBalance(String userId) {
+        sendMessage("GET_VIRTUAL_BALANCE|" + userId);
     }
 }

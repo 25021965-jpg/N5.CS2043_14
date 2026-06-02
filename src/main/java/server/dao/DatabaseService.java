@@ -49,6 +49,9 @@ public class DatabaseService {
                     CHECK (username NOT LIKE '% %')
                 )""");
 
+            // 🔥 THÊM CỘT VIRTUAL_BALANCE NẾU CHƯA CÓ
+            addVirtualBalanceColumnIfNotExists(stmt);
+
             // 3. Bảng Vật phẩm
             stmt.executeUpdate("""
                 CREATE TABLE IF NOT EXISTS items (
@@ -125,7 +128,6 @@ public class DatabaseService {
             String checkAdmin = "SELECT COUNT(*) FROM users WHERE role = 'ADMIN'";
             try (ResultSet rs = stmt.executeQuery(checkAdmin)) {
                 if (rs.next() && rs.getInt(1) == 0) {
-                    // Nếu chưa có admin nào thì tạo mặc định
                     String insertAdmin = """
                     INSERT INTO users (user_id, fullname, username, email, password, role, verified) 
                     VALUES ('ADM-INIT-001', 'System Admin', 'admin', 'admin@auction.com', 'admin123', 'ADMIN', TRUE)
@@ -139,8 +141,41 @@ public class DatabaseService {
 
         } catch (SQLException e) {
             System.err.println("✕ TiDB Initialization Error: " + e.getMessage());
-            System.err.println("Error: " + e.getMessage());        }
+            System.err.println("Error: " + e.getMessage());
+        }
     }
 
+    // 🔥 THÊM METHOD NÀY ĐỂ TỰ ĐỘNG THÊM CỘT VIRTUAL_BALANCE
+    private static void addVirtualBalanceColumnIfNotExists(Statement stmt) {
+        try {
+            // Kiểm tra cột virtual_balance đã tồn tại chưa
+            ResultSet rs = stmt.executeQuery(
+                    "SELECT COUNT(*) FROM information_schema.COLUMNS " +
+                            "WHERE TABLE_SCHEMA = '" + DB_NAME + "' " +
+                            "AND TABLE_NAME = 'users' " +
+                            "AND COLUMN_NAME = 'virtual_balance'"
+            );
+            rs.next();
+            boolean columnExists = rs.getInt(1) > 0;
+            rs.close();
 
+            if (!columnExists) {
+                // Thêm cột virtual_balance
+                stmt.executeUpdate(
+                        "ALTER TABLE users ADD COLUMN virtual_balance DECIMAL(15,2) DEFAULT 0"
+                );
+                System.out.println("✓ Added virtual_balance column to users table");
+
+                // Cập nhật giá trị ban đầu = balance
+                stmt.executeUpdate(
+                        "UPDATE users SET virtual_balance = balance WHERE virtual_balance IS NULL OR virtual_balance = 0"
+                );
+                System.out.println("✓ Initialized virtual_balance = balance for all users");
+            } else {
+                System.out.println("✓ virtual_balance column already exists");
+            }
+        } catch (SQLException e) {
+            System.err.println("⚠️ Could not add virtual_balance column: " + e.getMessage());
+        }
+    }
 }

@@ -42,7 +42,6 @@ public class UserDAO {
         }
     }
 
-    //  THÊM METHOD getUserById NÀY
     public static User getUserById(String userId) {
         String sql = "SELECT * FROM users WHERE user_id = ?";
         try (Connection conn = DatabaseService.getConnection();
@@ -86,10 +85,8 @@ public class UserDAO {
         try (Connection conn = DatabaseService.getConnection();
              PreparedStatement checkPs = conn.prepareStatement(checkSql)) {
             checkPs.setString(1, fullname);
-            // Fix lỗi null date tiềm ẩn
             if (dob == null || dob.isEmpty()) checkPs.setNull(2, Types.DATE);
             else checkPs.setDate(2, Date.valueOf(dob));
-
             checkPs.setString(3, username);
             checkPs.setString(4, email);
 
@@ -144,7 +141,6 @@ public class UserDAO {
                 "ON DUPLICATE KEY UPDATE fullname=?, password=?, dob=?, balance=?, verified=?, role=?";
         try (Connection conn = DatabaseService.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            // Insert params
             pstmt.setString(1, user.getUser_id());
             pstmt.setString(2, user.getFullname());
             pstmt.setString(3, user.getUsername());
@@ -155,7 +151,6 @@ public class UserDAO {
             pstmt.setBigDecimal(7, user.getBalance());
             pstmt.setBoolean(8, user.isVerified());
             pstmt.setString(9, user.getRole().name());
-            // Update params
             pstmt.setString(10, user.getFullname());
             pstmt.setString(11, user.getPassword());
             if (user.getDob() == null || user.getDob().isEmpty()) pstmt.setNull(12, Types.DATE);
@@ -174,6 +169,80 @@ public class UserDAO {
             ps.setString(1, userId);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) { e.printStackTrace(); return false; }
+    }
+
+    // ==================== VIRTUAL BALANCE (ATOMIC - AN TOÀN) ====================
+
+    public static BigDecimal getVirtualBalance(String userId) {
+        String sql = "SELECT virtual_balance FROM users WHERE user_id = ?";
+        try (Connection conn = DatabaseService.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, userId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                BigDecimal vb = rs.getBigDecimal("virtual_balance");
+                return vb != null ? vb : BigDecimal.ZERO;
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return BigDecimal.ZERO;
+    }
+
+    public static boolean updateVirtualBalance(String userId, BigDecimal amount) {
+        String sql = "UPDATE users SET virtual_balance = ? WHERE user_id = ?";
+        try (Connection conn = DatabaseService.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setBigDecimal(1, amount);
+            ps.setString(2, userId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) { e.printStackTrace(); return false; }
+    }
+
+    public static boolean initVirtualBalance(String userId, BigDecimal initialBalance) {
+        String sql = "UPDATE users SET virtual_balance = ? WHERE user_id = ? AND (virtual_balance IS NULL OR virtual_balance = 0)";
+        try (Connection conn = DatabaseService.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setBigDecimal(1, initialBalance);
+            ps.setString(2, userId);
+            int rows = ps.executeUpdate();
+            System.out.println("[UserDAO] initVirtualBalance rows: " + rows);
+            return rows > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // 🔥 ATOMIC DEDUCT - TRÁNH RACE CONDITION
+    public static boolean deductVirtualBalance(String userId, BigDecimal amount) {
+        String sql = "UPDATE users SET virtual_balance = virtual_balance - ? WHERE user_id = ? AND virtual_balance >= ?";
+        try (Connection conn = DatabaseService.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setBigDecimal(1, amount);
+            ps.setString(2, userId);
+            ps.setBigDecimal(3, amount);
+            int rows = ps.executeUpdate();
+            System.out.println("🔥 deductVirtualBalance: userId=" + userId + ", amount=" + amount + ", rows=" + rows);
+            return rows > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // 🔥 ATOMIC ADD - AN TOÀN
+    public static boolean addVirtualBalance(String userId, BigDecimal amount) {
+        String sql = "UPDATE users SET virtual_balance = virtual_balance + ? WHERE user_id = ?";
+        try (Connection conn = DatabaseService.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setBigDecimal(1, amount);
+            ps.setString(2, userId);
+            int rows = ps.executeUpdate();
+            System.out.println("[UserDAO] addVirtualBalance rows: " + rows);
+            return rows > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public void updateRole(String userId, String role) {
@@ -212,57 +281,29 @@ public class UserDAO {
         return u;
     }
 
-    public static boolean updatePassword(
-            String userId,
-            String newPassword
-    ) {
-
-        String sql =
-                "UPDATE users SET password = ? WHERE user_id = ?";
-
-        try (
-                Connection conn =
-                        DatabaseService.getConnection();
-
-                PreparedStatement ps =
-                        conn.prepareStatement(sql)
-        ) {
-
+    public static boolean updatePassword(String userId, String newPassword) {
+        String sql = "UPDATE users SET password = ? WHERE user_id = ?";
+        try (Connection conn = DatabaseService.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, newPassword);
             ps.setString(2, userId);
-
             return ps.executeUpdate() > 0;
-
         } catch (Exception e) {
             e.printStackTrace();
             return false;
         }
     }
-    public static boolean updateUserRole(
-            String userId,
-            String role
-    ) {
 
-        String sql =
-                "UPDATE users SET role = ? WHERE user_id = ?";
-
-        try (
-                Connection conn =
-                        DatabaseService.getConnection();
-
-                PreparedStatement ps =
-                        conn.prepareStatement(sql)
-        ) {
-
+    public static boolean updateUserRole(String userId, String role) {
+        String sql = "UPDATE users SET role = ? WHERE user_id = ?";
+        try (Connection conn = DatabaseService.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, role);
             ps.setString(2, userId);
-
             return ps.executeUpdate() > 0;
-
         } catch (Exception e) {
             e.printStackTrace();
+            return false;
         }
-
-        return false;
     }
 }

@@ -33,6 +33,9 @@ public class ResponseHandler {
     }
 
     private static boolean isLiveAuctionMessage(String msg) {
+        if (msg.startsWith("UPDATE_PRICE")) {
+            System.out.println("🔥 [ResponseHandler] UPDATE_PRICE detected, listener=" + (liveAuctionListener != null ? "OK" : "NULL"));
+        }
         return msg.startsWith("UPDATE_PRICE")
                 || msg.startsWith("JOIN_SUCCESS")
                 || msg.startsWith("JOIN_FAILED")
@@ -41,6 +44,7 @@ public class ResponseHandler {
                 || msg.startsWith("BID_HISTORY_EMPTY")
                 || msg.startsWith("AUCTION_ENDED")
                 || msg.startsWith("YOU_WON")
+                || msg.startsWith("VIRTUAL_BALANCE")
                 || msg.startsWith("ERROR");
     }
 }

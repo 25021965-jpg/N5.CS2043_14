@@ -21,31 +21,21 @@ public class BalanceHandler extends BaseHandler {
     // ==================== GET BALANCE ====================
 
     public String handleGetBalance(String[] data) {
-
         if (currentUser == null)
             return "ERROR|Not logged in";
 
-        String userId =
-                data.length >= 2
-                        ? data[1]
-                        : currentUser.getUser_id();
-
-        User user =
-                UserDAO.getUserById(userId);
+        String userId = data.length >= 2 ? data[1] : currentUser.getUser_id();
+        User user = UserDAO.getUserById(userId);
 
         if (user != null) {
-
-            return "BALANCE_UPDATE_SUCCESS|"
-                    + user.getBalance();
+            return "BALANCE_UPDATE_SUCCESS|" + user.getBalance();
         }
-
         return "BALANCE_UPDATE_FAILED|User not found";
     }
 
     // ==================== DEPOSIT ====================
 
     public String handleDeposit(String[] data) {
-
         if (currentUser == null)
             return "BALANCE_UPDATE_FAILED|Not logged in";
 
@@ -53,61 +43,42 @@ public class BalanceHandler extends BaseHandler {
             return "BALANCE_UPDATE_FAILED|Missing amount";
 
         String targetUserId = data[1];
-
         if (!targetUserId.equals(currentUser.getUser_id())) {
-
             return "BALANCE_UPDATE_FAILED|Cannot deposit to another user";
         }
 
         try {
-
-            BigDecimal amount =
-                    new BigDecimal(data[2]);
-
+            BigDecimal amount = new BigDecimal(data[2]);
             if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-
                 return "BALANCE_UPDATE_FAILED|Amount must be greater than 0";
             }
 
-            User user =
-                    UserDAO.getUserById(targetUserId);
-
+            User user = UserDAO.getUserById(targetUserId);
             if (user == null) {
-
                 return "BALANCE_UPDATE_FAILED|User not found";
             }
 
-            BigDecimal newBalance =
-                    user.getBalance().add(amount);
-
-            boolean saved =
-                    UserDAO.updateBalance(
-                            targetUserId,
-                            newBalance
-                    );
+            BigDecimal newBalance = user.getBalance().add(amount);
+            boolean saved = UserDAO.updateBalance(targetUserId, newBalance);
 
             if (saved) {
-
-                TransactionDAO.addTransaction(
-                        targetUserId,
-                        null,
-                        amount,
-                        "DEPOSIT",
-                        "Deposit money"
-                );
-
+                TransactionDAO.addTransaction(targetUserId, null, amount, "DEPOSIT", "Deposit money");
                 currentUser.setBalance(newBalance);
 
-                return "BALANCE_UPDATE_SUCCESS|"
-                        + newBalance;
+                // 🔥 ĐỒNG BỘ VIRTUAL BALANCE (NẾU ĐÃ TỒN TẠI)
+                BigDecimal currentVirtual = UserDAO.getVirtualBalance(targetUserId);
+                if (currentVirtual != null && currentVirtual.compareTo(BigDecimal.ZERO) > 0) {
+                    BigDecimal newVirtual = currentVirtual.add(amount);
+                    UserDAO.updateVirtualBalance(targetUserId, newVirtual);
+                    UserDAO.updateVirtualBalance(targetUserId, newBalance);
+                }
 
+                return "BALANCE_UPDATE_SUCCESS|" + newBalance;
             } else {
-
                 return "BALANCE_UPDATE_FAILED|Database error";
             }
 
         } catch (NumberFormatException e) {
-
             return "BALANCE_UPDATE_FAILED|Invalid amount";
         }
     }
@@ -115,7 +86,6 @@ public class BalanceHandler extends BaseHandler {
     // ==================== WITHDRAW ====================
 
     public String handleWithdraw(String[] data) {
-
         if (currentUser == null)
             return "BALANCE_UPDATE_FAILED|Not logged in";
 
@@ -123,66 +93,41 @@ public class BalanceHandler extends BaseHandler {
             return "BALANCE_UPDATE_FAILED|Missing amount";
 
         String targetUserId = data[1];
-
         if (!targetUserId.equals(currentUser.getUser_id())) {
-
             return "BALANCE_UPDATE_FAILED|Cannot withdraw from another user";
         }
 
         try {
-
-            BigDecimal amount =
-                    new BigDecimal(data[2]);
-
+            BigDecimal amount = new BigDecimal(data[2]);
             if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-
                 return "BALANCE_UPDATE_FAILED|Amount must be greater than 0";
             }
 
-            User user =
-                    UserDAO.getUserById(targetUserId);
-
+            User user = UserDAO.getUserById(targetUserId);
             if (user == null) {
-
                 return "BALANCE_UPDATE_FAILED|User not found";
             }
 
             if (user.getBalance().compareTo(amount) < 0) {
-
                 return "BALANCE_UPDATE_FAILED|Insufficient balance";
             }
 
-            BigDecimal newBalance =
-                    user.getBalance().subtract(amount);
-
-            boolean saved =
-                    UserDAO.updateBalance(
-                            targetUserId,
-                            newBalance
-                    );
+            BigDecimal newBalance = user.getBalance().subtract(amount);
+            boolean saved = UserDAO.updateBalance(targetUserId, newBalance);
 
             if (saved) {
-
-                TransactionDAO.addTransaction(
-                        targetUserId,
-                        null,
-                        amount,
-                        "WITHDRAW",
-                        "Withdraw money"
-                );
-
+                TransactionDAO.addTransaction(targetUserId, null, amount, "WITHDRAW", "Withdraw money");
                 currentUser.setBalance(newBalance);
 
-                return "BALANCE_UPDATE_SUCCESS|"
-                        + newBalance;
+                // 🔥 LUÔN ĐỒNG BỘ VIRTUAL BALANCE = BALANCE THẬT
+                UserDAO.updateVirtualBalance(targetUserId, newBalance);
 
+                return "BALANCE_UPDATE_SUCCESS|" + newBalance;
             } else {
-
                 return "BALANCE_UPDATE_FAILED|Database error";
             }
 
         } catch (NumberFormatException e) {
-
             return "BALANCE_UPDATE_FAILED|Invalid amount";
         }
     }
@@ -190,44 +135,50 @@ public class BalanceHandler extends BaseHandler {
     // ==================== TRANSACTIONS ====================
 
     public String handleGetTransactions(String[] data) {
-
         if (currentUser == null)
             return "ERROR|Not logged in";
 
-        String userId =
-                data.length >= 2
-                        ? data[1]
-                        : currentUser.getUser_id();
-
+        String userId = data.length >= 2 ? data[1] : currentUser.getUser_id();
         if (!userId.equals(currentUser.getUser_id())) {
-
             return "ERROR|Permission denied";
         }
 
-        List<Transaction> transactions =
-                TransactionDAO.getTransactionsByUserId(userId);
-
+        List<Transaction> transactions = TransactionDAO.getTransactionsByUserId(userId);
         if (transactions == null || transactions.isEmpty()) {
-
             return "TRANSACTIONS_LIST|";
         }
 
-        StringBuilder sb =
-                new StringBuilder("TRANSACTIONS_LIST|");
-
+        StringBuilder sb = new StringBuilder("TRANSACTIONS_LIST|");
         for (Transaction tx : transactions) {
-
             sb.append(tx.getType()).append(";")
                     .append(tx.getAmount()).append(";")
                     .append(tx.getFormattedTime()).append(";")
-                    .append(
-                            tx.getDescription() == null
-                                    ? ""
-                                    : tx.getDescription()
-                    )
+                    .append(tx.getDescription() == null ? "" : tx.getDescription())
                     .append("|");
         }
-
         return sb.toString();
+    }
+
+    // 🔥 ATOMIC ADD - AN TOÀN
+    public String handleAddVirtualBalance(String[] data) {
+        if (currentUser == null) return "ERROR|Not logged in";
+        if (data.length < 3) return "ERROR|Missing data";
+
+        String userId = data[1];
+        BigDecimal amount = new BigDecimal(data[2]);
+
+        if (!userId.equals(currentUser.getUser_id())) {
+            return "ERROR|Permission denied";
+        }
+
+        boolean success = UserDAO.addVirtualBalance(userId, amount);
+
+        if (success) {
+            BigDecimal newBalance = UserDAO.getVirtualBalance(userId);
+            System.out.println("[BalanceHandler] Added " + amount + " to user " + userId + ", new balance: " + newBalance);
+            return "VIRTUAL_BALANCE_UPDATED|" + newBalance;
+        } else {
+            return "ERROR|Failed to add virtual balance";
+        }
     }
 }

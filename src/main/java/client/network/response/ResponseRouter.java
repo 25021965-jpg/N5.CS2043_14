@@ -14,12 +14,14 @@ public class ResponseRouter {
 
         // ===== LIVE UPDATE (xử lý riêng vì không có ResponseType) =====
         if (raw.startsWith("UPDATE_PRICE")) {
+            System.out.println("🔥 [ResponseRouter] Routing UPDATE_PRICE to AuctionHandler");
             Platform.runLater(() -> AuctionHandler.updatePrice(raw));
             return;
         }
 
         // THÊM XỬ LÝ JOIN_SUCCESS
         if (raw.startsWith("JOIN_SUCCESS")) {
+            System.out.println("🔥 [ResponseRouter] Routing JOIN_SUCCESS");
             Platform.runLater(() -> AuctionHandler.joinSuccess(raw.substring("JOIN_SUCCESS|".length())));
             return;
         }
