@@ -33,14 +33,21 @@ public abstract class TiDBRollbackBase {
                 Connection.class.getClassLoader(),
                 new Class[]{Connection.class},
                 (proxy, method, args) -> {
+
                     if ("close".equals(method.getName())) {
-                        // DAO gọi close() → bỏ qua, không thực sự đóng
                         return null;
                     }
+
+                    // Chặn commit từ DAO
+                    if ("commit".equals(method.getName())) {
+                        System.out.println("[TEST] Commit blocked");
+                        return null;
+                    }
+
                     if ("isClosed".equals(method.getName())) {
-                        // Luôn báo "chưa đóng" để DAO không bỏ qua connection
                         return false;
                     }
+
                     return method.invoke(realConn, args);
                 }
         );
