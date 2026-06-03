@@ -1,15 +1,18 @@
 package client.network.response.handler;
 
 import client.controller.*;
-import client.controller.admin.ManageProductController;
+import client.controller.AdminManageProductController;
 
+import client.manager.ControllerRegistry;
 import client.network.ClientSocket;
 import client.network.response.parser.AuctionParser;
 import client.network.response.parser.BidParser;
 import client.network.response.parser.ItemParser;
 
+import client.util.AlertUtils;
 import client.util.NavigationUtils;
 
+import client.util.ToastUtils;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
@@ -20,16 +23,9 @@ import model.Bid;
 public class AuctionHandler {
 
     // ===== AUCTION LIST =====
-
     public static void list(String data) {
-
-        System.out.println("RAW LIST RESPONSE: " + data);
-
-        HomePageController ctrl =
-                HomePageController.getInstance();
-
+        UserHomePageController ctrl = ControllerRegistry.get(UserHomePageController.class);
         if (ctrl != null) {
-
             ctrl.updateAuctionList(
                     AuctionParser.parseList(data)
             );
@@ -37,12 +33,8 @@ public class AuctionHandler {
     }
 
     public static void listEmpty() {
-
-        HomePageController ctrl =
-                HomePageController.getInstance();
-
+        UserHomePageController ctrl = ControllerRegistry.get(UserHomePageController.class);
         if (ctrl != null) {
-
             ctrl.updateAuctionList(
                     java.util.List.of()
             );
@@ -52,34 +44,23 @@ public class AuctionHandler {
     // ===== CREATE AUCTION =====
 
     public static void createSuccess(Stage stage) {
-
-        NavigationUtils.showToast(
-                stage,
-                "Auction submitted!"
-        );
-
+        ToastUtils.show(stage, "Auction submitted!");
         NavigationUtils.switchScene(
                 stage,
-                "/fxml/HomePage.fxml",
+                "/fxml/userHomePage-view.fxml",
                 "Home"
         );
     }
 
     public static void createFailed(String data) {
-        NavigationUtils.showError(
-                "Failed to create auction: " + data
-        );
+        AlertUtils.error("Failed to create auction: " + data);
     }
 
     // ===== JOINED AUCTIONS =====
-
     public static void joinedAuctions(String data) {
-
-        AuctionHistoryController ctrl =
-                AuctionHistoryController.getInstance();
+        UserAuctionHistoryController ctrl = ControllerRegistry.get(UserAuctionHistoryController.class);
 
         if (ctrl != null) {
-
             ctrl.renderHistory(
                     "LIST_JOINED_AUCTIONS_SUCCESS|" + data
             );
@@ -87,10 +68,7 @@ public class AuctionHandler {
     }
 
     public static void joinedAuctionsEmpty() {
-
-        AuctionHistoryController ctrl =
-                AuctionHistoryController.getInstance();
-
+        UserAuctionHistoryController ctrl = ControllerRegistry.get(UserAuctionHistoryController.class);
         if (ctrl != null) {
 
             ctrl.renderHistory(
@@ -99,81 +77,53 @@ public class AuctionHandler {
         }
     }
 
-    // ===== MY AUCTIONS =====
+    // ===== CREATED AUCTIONS =====
 
-    public static void myAuctions(String data) {
-
-        System.out.println("RAW MY AUCTIONS: " + data);
-
-        MyAuctionsController ctrl =
-                MyAuctionsController.getInstance();
-
+    public static void CreatedAuctions(String data) {
+        System.out.println("RAW CREATED AUCTIONS: " + data);
+        UserCreatedAuctionsController ctrl = ControllerRegistry.get(UserCreatedAuctionsController.class);
         if (ctrl != null) {
-
-            ctrl.updateMyAuctions(
-                    AuctionParser.parseList(data)
-            );
+            ctrl.updateCreatedAuctions(AuctionParser.parseList(data));
         }
     }
 
-    public static void myAuctionsEmpty() {
-
-        MyAuctionsController ctrl =
-                MyAuctionsController.getInstance();
-
+    public static void CreatedAuctionsEmpty() {
+        UserCreatedAuctionsController ctrl = ControllerRegistry.get(UserCreatedAuctionsController.class);
         if (ctrl != null) {
-
-            ctrl.updateMyAuctions(
-                    java.util.List.of()
-            );
+            ctrl.updateCreatedAuctions(java.util.List.of());
         }
     }
 
     // ===== BID =====
-
     public static void bidSuccess(Stage stage) {
-
-        NavigationUtils.showToast(
-                stage,
-                "Bid placed!"
-        );
+        ToastUtils.show(stage, "Bid placed!");
 
         ClientSocket
                 .getInstance()
                 .sendList();
     }
 
-    public static void bidFailed(
-            String data
-    ) {
-
-        NavigationUtils.showError(
-                "Bid failed: " + data
-        );
+    public static void bidFailed(String data) {
+        AlertUtils.error("Bid failed: " + data);
     }
 
     // ===== BID HISTORY =====
-
     public static void bidHistory(String data) {
-
         ObservableList<Bid> bids =
                 FXCollections.observableArrayList(
                         BidParser.parse(data)
                 );
 
-        LiveAuctionController ctrl =
-                LiveAuctionController.getInstance();
-
+        UserLiveAuctionController ctrl = UserLiveAuctionController.getInstance();
         if (ctrl != null) {
-
             ctrl.loadBidHistory(bids);
         }
     }
 
     public static void bidHistoryEmpty() {
 
-        LiveAuctionController ctrl =
-                LiveAuctionController.getInstance();
+        UserLiveAuctionController ctrl =
+                UserLiveAuctionController.getInstance();
 
         if (ctrl != null) {
 
@@ -187,8 +137,8 @@ public class AuctionHandler {
 
     public static void updatePrice(String raw) {
 
-        LiveAuctionController ctrl =
-                LiveAuctionController.getInstance();
+        UserLiveAuctionController ctrl =
+                UserLiveAuctionController.getInstance();
 
         if (ctrl != null) {
 
@@ -202,8 +152,8 @@ public class AuctionHandler {
             String data
     ) {
 
-        LiveAuctionController ctrl =
-                LiveAuctionController.getInstance();
+        UserLiveAuctionController ctrl =
+                UserLiveAuctionController.getInstance();
 
         if (ctrl != null) {
 
@@ -217,7 +167,7 @@ public class AuctionHandler {
             String data
     ) {
 
-        NavigationUtils.showError(
+        AlertUtils.error(
                 "Join failed: " + data
         );
     }
@@ -226,8 +176,8 @@ public class AuctionHandler {
 
     public static void items(String data) {
 
-        ManageProductController ctrl =
-                ManageProductController.getInstance();
+        AdminManageProductController ctrl =
+                AdminManageProductController.getInstance();
 
         if (ctrl != null) {
 
@@ -242,8 +192,8 @@ public class AuctionHandler {
 
     public static void itemsEmpty() {
 
-        ManageProductController ctrl =
-                ManageProductController.getInstance();
+        AdminManageProductController ctrl =
+                AdminManageProductController.getInstance();
 
         if (ctrl != null) {
 
@@ -257,13 +207,13 @@ public class AuctionHandler {
 
     public static void deleteSuccess(Stage stage) {
 
-        NavigationUtils.showToast(
+        ToastUtils.show(
                 stage,
                 "Deleted!"
         );
 
-        ManageProductController ctrl =
-                ManageProductController.getInstance();
+        AdminManageProductController ctrl =
+                AdminManageProductController.getInstance();
 
         if (ctrl != null) {
 
@@ -275,7 +225,7 @@ public class AuctionHandler {
             String data
     ) {
 
-        NavigationUtils.showError(
+        AlertUtils.error(
                 "Delete failed: " + data
         );
     }
@@ -283,24 +233,20 @@ public class AuctionHandler {
     // ===== UPDATE ITEM =====
 
     public static void updateSuccess(Stage stage) {
-
-        NavigationUtils.showToast(
+        ToastUtils.show(
                 stage,
                 "Updated!"
         );
 
-        ManageProductController ctrl =
-                ManageProductController.getInstance();
+        AdminManageProductController ctrl =
+                AdminManageProductController.getInstance();
 
         if (ctrl != null) {
-
             ctrl.handleReloadProducts();
         }
     }
 
     public static void updateFailed(String data) {
-        NavigationUtils.showError(
-                "Update failed: " + data
-        );
+        AlertUtils.error("Update failed: " + data);
     }
 }

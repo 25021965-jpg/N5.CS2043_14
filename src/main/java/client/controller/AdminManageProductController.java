@@ -1,7 +1,8 @@
-package client.controller.admin;
+package client.controller;
 
 import client.manager.ControllerRegistry;
 import client.network.ClientSocket;
+import client.util.AlertUtils;
 import client.util.NavigationUtils;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -10,7 +11,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
 
-public class ManageProductController {
+public class AdminManageProductController {
     // String[]: [0]auctionId/itemId, [1]name, [2]seller, [3]price/category, [4]status
     private final ObservableList<String[]> productList = FXCollections.observableArrayList();
 
@@ -24,11 +25,11 @@ public class ManageProductController {
     @FXML private TableColumn<String[], String> sellerCol;
     @FXML private TableColumn<String[], String> statusCol;
     @FXML private TextField searchProductField;
-    @FXML private Button btnApprove;      // ← nút Approve trong FXML
+    @FXML private Button btnApprove;
 
-    private static ManageProductController instance;
+    private static AdminManageProductController instance;
 
-    public static ManageProductController getInstance() {
+    public static AdminManageProductController getInstance() {
         return instance;
     }
 
@@ -36,7 +37,7 @@ public class ManageProductController {
     public void initialize() {
         instance = this;
         ControllerRegistry.register(
-                ManageProductController.class,
+                AdminManageProductController.class,
                 this
         );
         productIdCol.setCellValueFactory(d -> new javafx.beans.property.SimpleStringProperty(d.getValue()[0]));
@@ -104,15 +105,14 @@ public class ManageProductController {
     // ================= APPROVE =================
     @FXML
     public void handleApprove() {
-
         String[] selected = productTable.getSelectionModel().getSelectedItem();
 
         if (selected == null) {
-            NavigationUtils.showError("Please select an auction to approve!");
+            AlertUtils.error("Please select an auction to approve!");
             return;
         }
 
-        boolean confirmed = NavigationUtils.showConfirm(
+        boolean confirmed = AlertUtils.confirm(
                 "Approve Auction",
                 "Approve this auction: " + selected[1] + "?"
         );
@@ -130,11 +130,11 @@ public class ManageProductController {
         String[] selected = productTable.getSelectionModel().getSelectedItem();
 
         if (selected == null) {
-            NavigationUtils.showError("Please select a product!");
+            AlertUtils.error("Please select a product!");
             return;
         }
 
-        boolean confirmed = NavigationUtils.showConfirm(
+        boolean confirmed = AlertUtils.confirm(
                 "Delete Product",
                 "Delete this product: " + selected[1] + "?"
         );
@@ -196,15 +196,15 @@ public class ManageProductController {
     // ================= NAVIGATION =================
     @FXML public void handleManageUsers() {
         Stage stage = NavigationUtils.getMainStage();
-        NavigationUtils.switchScene(stage, "/fxml/manageUser-view.fxml", "Admin");
+        NavigationUtils.switchScene(stage, "/fxml/adminManageUser-view.fxml", "Admin");
     }
     @FXML public void handleManageAuctions() {
         Stage stage = NavigationUtils.getMainStage();
-        NavigationUtils.switchScene(stage, "/fxml/manageAuction-view.fxml", "Manage Auctions");
+        NavigationUtils.switchScene(stage, "/fxml/adminManageAuction-view.fxml", "Manage Auctions");
     }
     @FXML public void handleAuctionHistory() {
         Stage stage = NavigationUtils.getMainStage();
-        NavigationUtils.switchScene(stage, "/fxml/auctionHAdmin-view.fxml", "Auction History");
+        NavigationUtils.switchScene(stage, "/fxml/adminAuctionHistory-view.fxml", "Auction History");
     }
     @FXML public void handleLogout() {
         if (ClientSocket.getInstance() != null) ClientSocket.getInstance().sendLogout();

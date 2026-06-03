@@ -1,12 +1,13 @@
 package client.network.response.handler;
 
-import client.controller.admin.ManageUserController;
-import client.controller.admin.AuctionHistoryAdminController;
-import client.controller.admin.ManageAuctionController;
-import client.controller.admin.ManageProductController;
+import client.controller.AdminManageUserController;
+import client.controller.AdminAuctionHistoryController;
+import client.controller.AdminManageAuctionController;
+import client.controller.AdminManageProductController;
 import client.manager.ControllerRegistry;
 import client.network.response.parser.ItemParser;
-import client.util.NavigationUtils;
+import client.util.AlertUtils;
+import client.util.ToastUtils;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.stage.Stage;
@@ -17,7 +18,6 @@ public class AdminHandler {
 
     // ================= USERS =================
     public static void users(String data) {
-
         ObservableList<User> users = FXCollections.observableArrayList();
 
         for (String token : data.split("\\|")) {
@@ -32,82 +32,60 @@ public class AdminHandler {
                 users.add(u);
             }
         }
-
-        ManageUserController ctrl =
-                ControllerRegistry.get(ManageUserController.class);
-
+        AdminManageUserController ctrl = ControllerRegistry.get(AdminManageUserController.class);
         if (ctrl != null) {
             ctrl.updateUsers(users);
         }
     }
 
     public static void usersEmpty() {
-        ManageUserController ctrl =
-                ControllerRegistry.get(ManageUserController.class);
-
+        AdminManageUserController ctrl = ControllerRegistry.get(AdminManageUserController.class);
         if (ctrl != null) {
             ctrl.updateUsers(FXCollections.observableArrayList());
         }
     }
 
     public static void deleteSuccess(Stage stage) {
-
-        NavigationUtils.showToast(stage, "User deleted!");
-
-        ManageUserController ctrl =
-                ControllerRegistry.get(ManageUserController.class);
-
+        ToastUtils.show(stage, "User deleted!");
+        AdminManageUserController ctrl = ControllerRegistry.get(AdminManageUserController.class);
         if (ctrl != null) {
             ctrl.handleReload();
         }
     }
 
-    public static void deleteFailed(String data, Stage stage) {
-
-        NavigationUtils.showError(
-                "Delete user failed: " + data
-        );
+    public static void deleteFailed(String data) {
+        AlertUtils.error("Delete user failed: " + data);
     }
 
     // ================= UPDATE USER ROLE =================
     public static void updateRoleSuccess(Stage stage) {
-
-        NavigationUtils.showToast(stage, "Role updated!");
-
-        ManageUserController ctrl =
-                ControllerRegistry.get(ManageUserController.class);
-
+        ToastUtils.show(stage, "Role updated!");
+        AdminManageUserController ctrl = ControllerRegistry.get(AdminManageUserController.class);
         if (ctrl != null) {
             ctrl.handleReload();
         }
     }
 
-    public static void updateRoleFailed(String data, Stage stage) {
-
-        NavigationUtils.showError(
-                "Update role failed: " + data
-        );
+    public static void updateRoleFailed(String data) {
+        AlertUtils.error("Update role failed: " + data);
     }
 
     // ================= MANAGE AUCTIONS =================
     public static void auctions(String data) {
-
         ObservableList<String[]> list =
                 FXCollections.observableArrayList(
                         ItemParser.parse(data, 5)
                 );
 
-        ManageAuctionController ctrl =
-                ControllerRegistry.get(ManageAuctionController.class);
+        AdminManageAuctionController ctrl =
+                ControllerRegistry.get(AdminManageAuctionController.class);
         if (ctrl != null) {
             ctrl.updateAuctions(list);
         }
     }
 
     public static void auctionsEmpty() {
-
-        ManageAuctionController ctrl =
-                ControllerRegistry.get(ManageAuctionController.class);
+        AdminManageAuctionController ctrl = ControllerRegistry.get(AdminManageAuctionController.class);
 
         if (ctrl != null) {
             ctrl.updateAuctions(
@@ -117,69 +95,46 @@ public class AdminHandler {
     }
 
     public static void auctionActionSuccess(Stage stage) {
-
-        NavigationUtils.showToast(
-                stage,
-                "Action success!"
-        );
-
-        ManageAuctionController ctrl =
-                ControllerRegistry.get(ManageAuctionController.class);
-
+        ToastUtils.show(stage, "Action success!");
+        AdminManageAuctionController ctrl = ControllerRegistry.get(AdminManageAuctionController.class);
         if (ctrl != null) {
             ctrl.handleReloadAuctions();
         }
     }
 
-    public static void stopFailed(String data, Stage stage) {
-
-        NavigationUtils.showError(
-                "Stop failed: " + data
-        );
+    public static void stopFailed(String data) {
+        AlertUtils.error("Stop failed: " + data);
     }
 
-    public static void resumeFailed(String data, Stage stage) {
-
-        NavigationUtils.showError(
-                "Resume failed: " + data
-        );
+    public static void resumeFailed(String data) {
+        AlertUtils.error("Resume failed: " + data);
     }
 
-    public static void cancelFailed(String data, Stage stage) {
-
-        NavigationUtils.showError(
-                "Cancel failed: " + data
-        );
+    public static void cancelFailed(String data) {
+        AlertUtils.error("Cancel failed: " + data);
     }
 
     // ================= PENDING AUCTIONS =================
     public static void pendingAuctions(String data) {
-
-        ObservableList<String[]> items =
-                FXCollections.observableArrayList();
-
+        ObservableList<String[]> items = FXCollections.observableArrayList();
         if (data == null || data.isEmpty()) {
             return;
         }
 
         for (String token : data.split("\\|")) {
-
-            String[] fields =
-                    token.split(";", -1);
-
+            String[] fields = token.split(";", -1);
             if (fields.length >= 5) {
                 items.add(fields);
             }
         }
-
-        if (ControllerRegistry.get(ManageProductController.class)!= null) {
-            ControllerRegistry.get(ManageProductController.class).updateProducts(items);
+        if (ControllerRegistry.get(AdminManageProductController.class)!= null) {
+            ControllerRegistry.get(AdminManageProductController.class).updateProducts(items);
         }
     }
 
     public static void pendingAuctionsEmpty() {
-        if (ControllerRegistry.get(ManageProductController.class)!= null) {
-            ControllerRegistry.get(ManageProductController.class)
+        if (ControllerRegistry.get(AdminManageProductController.class)!= null) {
+            ControllerRegistry.get(AdminManageProductController.class)
                     .updateProducts(
                             FXCollections.observableArrayList()
                     );
@@ -187,42 +142,27 @@ public class AdminHandler {
     }
 
     public static void approveSuccess(Stage stage) {
-
-        NavigationUtils.showToast(
-                stage,
-                "Auction approved successfully!"
-        );
-
-        if (ControllerRegistry.get(ManageProductController.class) != null) {
-
-            ControllerRegistry.get(ManageProductController.class)
+        ToastUtils.show(stage, "Auction approved successfully!");
+        if (ControllerRegistry.get(AdminManageProductController.class) != null) {
+            ControllerRegistry.get(AdminManageProductController.class)
                     .handleReloadProducts();
         }
     }
 
-    public static void approveFailed(String data, Stage stage) {
-
-        NavigationUtils.showError(
-                "Approve failed: " + data
-        );
+    public static void approveFailed(String data) {
+        AlertUtils.error("Approve failed: " + data);
     }
 
     // ================= AUCTION HISTORY =================
     public static void auctionHistory(String data) {
-
-        AuctionHistoryAdminController ctrl =
-                ControllerRegistry.get(AuctionHistoryAdminController.class);
-
+        AdminAuctionHistoryController ctrl = ControllerRegistry.get(AdminAuctionHistoryController.class);
         if (ctrl != null) {
             ctrl.loadHistory(data);
         }
     }
 
     public static void auctionHistoryEmpty() {
-
-        AuctionHistoryAdminController ctrl =
-                ControllerRegistry.get(AuctionHistoryAdminController.class);
-
+        AdminAuctionHistoryController ctrl = ControllerRegistry.get(AdminAuctionHistoryController.class);
         if (ctrl != null) {
             ctrl.loadHistory("");
         }

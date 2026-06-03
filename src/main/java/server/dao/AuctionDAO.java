@@ -7,8 +7,12 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class AuctionDAO {
+    private static final Logger LOGGER =
+            Logger.getLogger(AuctionDAO.class.getName());
 
     private static Auction mapAuction(ResultSet rs, Connection conn)
             throws SQLException {
@@ -208,14 +212,41 @@ public class AuctionDAO {
                 ps.setBoolean(9, false);
                 ps.setBoolean(10, false);
 
+                saveItem(conn, auction.getItem());
+                PreparedStatement ps = conn.prepareStatement(sql);
+
+                ps.setString(1, auction.getAuction_id());
+                ps.setString(2, auction.getItem().getItem_id());
+                ps.setString(3, auction.getSeller().getUser_id());
+                ps.setBigDecimal(4, auction.getStartingPrice());
+                ps.setBigDecimal(5, auction.getCurrentPrice());
+                ps.setBigDecimal(6, auction.getMinIncrement());
+                ps.setTimestamp(7, Timestamp.valueOf(auction.getStartTime()));
+                ps.setTimestamp(8, Timestamp.valueOf(auction.getEndTime()));
+                ps.setBoolean(9, false);
+                ps.setBoolean(10, false); // mặc định pending approval
                 ps.executeUpdate();
                 conn.commit();
 
+            }
+
+            catch (Exception e) {
             } catch (Exception e) {
                 conn.rollback();
                 throw e;
             }
 
+        }
+
+        catch (Exception e) {
+            System.out.println(
+                    "Save auction error: "
+                            + e.getMessage()
+            );
+
+            throw new RuntimeException(
+                    e.getMessage()
+            );
         } catch (Exception e) {
             System.out.println("Save auction error: " + e.getMessage());
             throw new RuntimeException(e.getMessage());
@@ -285,7 +316,7 @@ public class AuctionDAO {
                 auctions.add(mapAuction(rs, conn));
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Unexpected error", e);
         }
 
         return auctions;
@@ -410,6 +441,7 @@ public class AuctionDAO {
         } catch (SQLException e) {
             System.out.println("findById ERROR:");
             e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Unexpected error", e);
         }
         return null;
     }
@@ -556,7 +588,7 @@ public class AuctionDAO {
                 ps.setString(1, auctionId);
                 ps.executeUpdate();
             } catch (SQLException e) {
-                e.printStackTrace();
+                LOGGER.log(Level.SEVERE, "Unexpected error", e);
             }
         }
     }
@@ -569,7 +601,7 @@ public class AuctionDAO {
             pstmt.setString(2, auctionId);
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("✕ updateEndTime Error: " + e.getMessage());
+            LOGGER.severe("✕ updateEndTime Error: " + e.getMessage());
             return false;
         }
     }

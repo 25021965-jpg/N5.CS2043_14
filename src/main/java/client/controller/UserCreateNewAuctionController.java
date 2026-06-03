@@ -5,6 +5,8 @@ import client.manager.UserSession;
 import client.network.response.ResponseHandler;
 import client.util.CloudinaryUploader;
 import client.util.NavigationUtils;
+import client.util.AlertUtils;
+
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -32,7 +34,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class CreateAuctionController extends BaseController {
+public class UserCreateNewAuctionController extends BaseController {
 
     private static final double IMAGE_RADIUS = 20;
     private final List<File> imageFiles = new ArrayList<>();
@@ -56,6 +58,7 @@ public class CreateAuctionController extends BaseController {
     // ==================== INIT ====================
     @FXML
     public void initialize() {
+        System.out.println("Create Auction Loaded");
         updateUserRole(Role.SELLER);
         setupStage();
         setupImagePreview();
@@ -101,7 +104,7 @@ public class CreateAuctionController extends BaseController {
 
             Auction auction = createAuction(imageUrls);
             client.sendCreate(auction);
-            HomePageController home = ControllerRegistry.get(HomePageController.class);
+            UserHomePageController home = ControllerRegistry.get(UserHomePageController.class);
 
             if (home != null) {
                 home.refreshData();
@@ -110,10 +113,10 @@ public class CreateAuctionController extends BaseController {
             navigateHome();
 
         } catch (NumberFormatException e) {
-            NavigationUtils.showError("Price and time must be numeric values.");
+            AlertUtils.error("Price and time must be numeric values.");
 
         } catch (Exception e) {
-            NavigationUtils.showError("System Error: " + e.getMessage());
+            AlertUtils.error("System Error: " + e.getMessage());
         }
     }
 
@@ -125,24 +128,24 @@ public class CreateAuctionController extends BaseController {
                 || dpStartDate.getValue() == null
                 || dpEndDate.getValue() == null) {
 
-            NavigationUtils.showError("Please fill in all required fields.");
+            AlertUtils.error("Please fill in all required fields.");
             return false;
         }
 
         if (imageFiles.isEmpty()) {
-            NavigationUtils.showError("Please upload at least one image.");
+            AlertUtils.error("Please upload at least one image.");
             return false;
         }
 
         LocalDateTime start = getStartDateTime();
         LocalDateTime end = getEndDateTime();
         if (!start.isAfter(LocalDateTime.now())) {
-            NavigationUtils.showError("Start time must be in the future.");
+            AlertUtils.error("Start time must be in the future.");
             return false;
         }
 
         if (!end.isAfter(start)) {
-            NavigationUtils.showError("End time must be after start time.");
+            AlertUtils.error("End time must be after start time.");
             return false;
         }
         return true;
@@ -197,7 +200,7 @@ public class CreateAuctionController extends BaseController {
         for (File file : imageFiles) {
             String url = CloudinaryUploader.upload(file);
             if (url == null) {
-                NavigationUtils.showError(
+                AlertUtils.error(
                         "Failed to upload image: "
                                 + file.getName()
                 );
@@ -370,7 +373,7 @@ public class CreateAuctionController extends BaseController {
                 (Stage) txtName
                         .getScene()
                         .getWindow(),
-                "/fxml/HomePage.fxml",
+                "/fxml/userHomePage-view.fxml",
                 "Home Page"
         );
     }

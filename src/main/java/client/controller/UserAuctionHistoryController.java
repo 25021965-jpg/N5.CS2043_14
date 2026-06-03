@@ -3,8 +3,8 @@ package client.controller;
 import client.manager.ControllerRegistry;
 import client.network.ClientSocket;
 import client.network.response.parser.AuctionParser;
+import client.util.AlertUtils;
 import client.util.AuctionCardFactory;
-import client.util.NavigationUtils;
 import client.util.TextUtils;
 
 import javafx.application.Platform;
@@ -19,10 +19,13 @@ import model.Auction;
 import model.Category;
 import model.User;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-public class AuctionHistoryController extends BaseController implements UserDataReceiver {
+public class UserAuctionHistoryController extends BaseController implements UserDataReceiver {
+    private static final Logger LOGGER =
+            Logger.getLogger(UserAuctionHistoryController.class.getName());
 
     private static final List<String> STATUS_FILTERS = List.of(
             "All",
@@ -32,24 +35,19 @@ public class AuctionHistoryController extends BaseController implements UserData
             "Cancelled"
     );
 
-    private final List<Auction> joinedAuctions =
-            new ArrayList<>();
+    private final Map<String, Parent> cardMap = new HashMap<>();
+    private final Map<String, ItemCardController> controllerMap = new HashMap<>();
+    private final List<Auction> joinedAuctions = new ArrayList<>();
     @FXML private ScrollPane scrollPane;
     @FXML private FlowPane historyContainer;
     @FXML private ComboBox<String> statusFilterComboBox;
     @FXML private ComboBox<String> categoryFilterComboBox;
 
-    public static AuctionHistoryController instance;
-    public static AuctionHistoryController getInstance() {
-        return instance;
-    }
-
     // ==================== INIT ====================
 
     @FXML
     public void initialize() {
-        instance = this;
-        ControllerRegistry.register(AuctionHistoryController.class, this);
+        ControllerRegistry.register(UserAuctionHistoryController.class, this);
         System.out.println("AuctionHistory Loaded");
         setupStatusFilter();
         setupCategoryFilter();
@@ -94,24 +92,21 @@ public class AuctionHistoryController extends BaseController implements UserData
     // ==================== FILTER SETUP ====================
 
     private void setupStatusFilter() {
+        statusFilterComboBox.getItems().clear();
         statusFilterComboBox
                 .getItems()
                 .addAll(STATUS_FILTERS);
-
-        statusFilterComboBox
-                .setValue("All");
-
-        statusFilterComboBox
-                .setOnAction(
-                        e -> handleFilter()
-                );
+        statusFilterComboBox.setValue("All");
+        statusFilterComboBox.setOnAction(
+                e -> handleFilter()
+        );
     }
 
     private void setupCategoryFilter() {
+        categoryFilterComboBox.getItems().clear();
         categoryFilterComboBox
                 .getItems()
                 .add("All");
-
         for (Category category : Category.values()) {
             categoryFilterComboBox
                     .getItems()
@@ -121,10 +116,8 @@ public class AuctionHistoryController extends BaseController implements UserData
                             )
                     );
         }
-
         categoryFilterComboBox
                 .setValue("All");
-
         categoryFilterComboBox
                 .setOnAction(
                         e -> handleFilter()
@@ -132,40 +125,38 @@ public class AuctionHistoryController extends BaseController implements UserData
     }
 
     // ==================== RENDER ====================
-
     public void renderHistory(String response) {
+        System.out.println("Auction History Loaded");
         runUI(() -> {
-            historyContainer
-                    .getChildren()
-                    .clear();
-
+            historyContainer.getChildren().clear();
             joinedAuctions.clear();
 
             if (response == null
-                    || response.equals(
-                    "LIST_JOINED_AUCTIONS_EMPTY"
-            )) {
+                    || response.equals("LIST_JOINED_AUCTIONS_EMPTY")) {
+
                 showEmptyMessage("No joined auctions");
                 return;
             }
 
             try {
+
                 String rawData =
                         response.substring(
-                                "LIST_JOINED_AUCTIONS_SUCCESS|"
-                                        .length()
+                                "LIST_JOINED_AUCTIONS_SUCCESS|".length()
                         );
 
-                joinedAuctions.addAll(
-                        AuctionParser.parseList(
-                                rawData
-                        )
-                );
-                refreshHistory(joinedAuctions);
+                List<Auction> auctions =
+                        AuctionParser.parseList(rawData);
+
+                joinedAuctions.addAll(auctions);
+
+                refreshHistory(auctions);
 
             } catch (Exception e) {
-                e.printStackTrace();
-                NavigationUtils.showError("Failed to load auction history.");
+                LOGGER.log(Level.SEVERE, "Unexpected error", e);
+                AlertUtils.error(
+                        "Failed to load auction history."
+                );
             }
         });
     }
@@ -238,22 +229,35 @@ public class AuctionHistoryController extends BaseController implements UserData
             showEmptyMessage("No matching auctions");
             return;
         }
+        Set<String> newIds = new HashSet<>();
         for (Auction auction : auctions) {
-            Parent card = createAuctionCard(auction);
-            if (card != null) {
-                historyContainer
-                        .getChildren()
-                        .add(card);
-            }
-        }
-    }
+            String id = auction.getAuction_id();
+            newIds.add(id);
+            Parent card = cardMap.get(id);
+            ItemCardController controller = controllerMap.get(id);
+            if (card == null || controller == null) {
+                card = AuctionCardFactory.createCard(auction, client);
+                if (card == null) {
+                    continue;
+                }
+                controller = (ItemCardController)
+                                card.getProperties()
+                                        .get("controller");
 
-    // ==================== CARD ====================
-    private Parent createAuctionCard(Auction auction) {
-        return AuctionCardFactory.createCard(
-                auction,
-                client
-        );
+                if (controller == null) {
+                    continue;
+                }
+
+                card.setUserData(id);
+                cardMap.put(id, card);
+                controllerMap.put(id, controller);
+            }
+            controller.updateAuction(auction);
+            historyContainer.getChildren().add(card);
+        }
+
+        cardMap.keySet().removeIf(id -> !newIds.contains(id));
+        controllerMap.keySet().removeIf(id -> !newIds.contains(id));
     }
 
     // ==================== EMPTY ====================

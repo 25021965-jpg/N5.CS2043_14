@@ -1,7 +1,8 @@
-package client.controller.admin;
+package client.controller;
 
 import client.manager.ControllerRegistry;
 import client.network.ClientSocket;
+import client.util.AlertUtils;
 import client.util.NavigationUtils;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -12,8 +13,8 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
 import model.User;
 
-public class ManageUserController {
-    private ObservableList<User> userList = FXCollections.observableArrayList();
+public class AdminManageUserController {
+    private final ObservableList<User> userList = FXCollections.observableArrayList();
 
     @FXML private TableView<User> userTable;
     @FXML private TableColumn<User, String> userIdCol;
@@ -27,7 +28,7 @@ public class ManageUserController {
     @FXML
     public void initialize() {
         ControllerRegistry.register(
-                ManageUserController.class,
+                AdminManageUserController.class,
                 this
         );
         userIdCol.setCellValueFactory(new PropertyValueFactory<>("user_id"));
@@ -58,16 +59,18 @@ public class ManageUserController {
         if (ClientSocket.getInstance() != null) ClientSocket.getInstance().sendRequest("LIST_USERS");
     }
 
-    @FXML
-    public void handleManageUsers() {
-        // Đang ở đây rồi thì chỉ cần reload dữ liệu
-        handleReload();
-    }
+// --Commented out by Inspection START (03/06/2026 8:55 CH):
+//    @FXML
+//    public void handleManageUsers() {
+//        // Đang ở đây rồi thì chỉ cần reload dữ liệu
+//        handleReload();
+//    }
+// --Commented out by Inspection STOP (03/06/2026 8:55 CH)
 
     private User getSelectedUser(String errorMessage) {
         User selected = userTable.getSelectionModel().getSelectedItem();
         if (selected == null) {
-            NavigationUtils.showError(errorMessage);
+            AlertUtils.error(errorMessage);
             return null;
         }
         return selected;
@@ -75,17 +78,17 @@ public class ManageUserController {
 
     @FXML
     public void handleManageProducts() {
-        NavigationUtils.switchScene(getStage(), "/fxml/manageProduct-view.fxml", "Manage Products");
+        NavigationUtils.switchScene(getStage(), "/fxml/adminManageProduct-view.fxml", "Manage Products");
     }
 
     @FXML
     public void handleAuctionHistory() {
-        NavigationUtils.switchScene(getStage(), "/fxml/auctionHAdmin-view.fxml", "Auction History");
+        NavigationUtils.switchScene(getStage(), "/fxml/adminAuctionHistory-view.fxml", "Auction History");
     }
 
     @FXML
     public void handleManageAuctions() {
-        NavigationUtils.switchScene(getStage(), "/fxml/manageAuction-view.fxml", "Manage Auctions");
+        NavigationUtils.switchScene(getStage(), "/fxml/adminManageAuction-view.fxml", "Manage Auctions");
     }
 
     @FXML
@@ -100,7 +103,7 @@ public class ManageUserController {
         if (selected == null) {
             return;
         }
-        if (NavigationUtils.showConfirm(
+        if (AlertUtils.confirm(
                 "Delete User",
                 "Delete user " + selected.getUsername() + "?"
         )) {
@@ -155,10 +158,8 @@ public class ManageUserController {
 
         dialog.setResultConverter(bt -> bt == ButtonType.OK ? roleChoice.getValue() : null);
 
-        dialog.showAndWait().ifPresent(newRole -> {
-            ClientSocket.getInstance().sendRequest(
-                    "UPDATE_USER_ROLE|" + selected.getUser_id() + "|" + newRole
-            );
-        });
+        dialog.showAndWait().ifPresent(newRole -> ClientSocket.getInstance().sendRequest(
+                "UPDATE_USER_ROLE|" + selected.getUser_id() + "|" + newRole
+        ));
     }
 }

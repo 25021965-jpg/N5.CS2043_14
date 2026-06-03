@@ -1,4 +1,4 @@
-package client.controller.admin;
+package client.controller;
 
 import client.manager.ControllerRegistry;
 import client.network.ClientSocket;
@@ -11,7 +11,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
 
-public class AuctionHistoryAdminController {
+public class AdminAuctionHistoryController {
 
 
     private final ObservableList<String[]> historyList = FXCollections.observableArrayList();
@@ -29,7 +29,7 @@ public class AuctionHistoryAdminController {
     @FXML
     public void initialize() {
         ControllerRegistry.register(
-                AuctionHistoryAdminController.class,
+                AdminAuctionHistoryController.class,
                 this
         );
         auctionIdCol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue()[0]));
@@ -103,13 +103,13 @@ public class AuctionHistoryAdminController {
 
     // Navigation
     @FXML public void handleManageUsers() {
-        NavigationUtils.switchScene(getStage(), "/fxml/manageUser-view.fxml", "Admin");
+        NavigationUtils.switchScene(getStage(), "/fxml/adminManageUser-view.fxml", "Admin");
     }
     @FXML public void handleManageProducts() {
-        NavigationUtils.switchScene(getStage(), "/fxml/manageProduct-view.fxml", "Manage Products");
+        NavigationUtils.switchScene(getStage(), "/fxml/adminManageProduct-view.fxml", "Manage Products");
     }
     @FXML public void handleManageAuctions() {
-        NavigationUtils.switchScene(getStage(), "/fxml/manageAuction-view.fxml", "Manage Auctions");
+        NavigationUtils.switchScene(getStage(), "/fxml/adminManageAuction-view.fxml", "Manage Auctions");
     }
     @FXML public void handleLogout() {
         if (ClientSocket.getInstance() != null) ClientSocket.getInstance().sendLogout();

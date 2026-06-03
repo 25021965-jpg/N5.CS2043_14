@@ -1,9 +1,12 @@
 package client.controller;
 
+import client.manager.ControllerRegistry;
 import client.manager.UserSession;
 import client.network.ClientSocket;
+import client.util.AlertUtils;
 import client.util.TextUtils;
 
+import client.util.ToastUtils;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.ComboBox;
@@ -14,26 +17,18 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.application.Platform;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.scene.control.ListView;
 
 import model.User;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import static client.util.NavigationUtils.showError;
-import static client.util.NavigationUtils.showToast;
+public class UserAccountBalanceController extends BaseController implements UserDataReceiver {
+    private static final Logger LOGGER =
+            Logger.getLogger(UserAccountBalanceController.class.getName());
 
-public class AccountBalanceController
-        extends BaseController
-        implements UserDataReceiver {
-    private static AccountBalanceController instance;
-
-    public static AccountBalanceController getInstance() {
-        return instance;
-    }
     private static final List<String> FILTERS = List.of(
             "All",
             "Deposit",
@@ -53,9 +48,8 @@ public class AccountBalanceController
 
     @FXML
     public void initialize() {
-        instance = this;
+        ControllerRegistry.register(UserAccountBalanceController.class, this);
         System.out.println("Account Balance Loaded");
-
         setupFilterBox();
 
 
@@ -68,11 +62,8 @@ public class AccountBalanceController
     }
 
     private void setupFilterBox() {
-
         filterBox.getItems().addAll(FILTERS);
-
         filterBox.setValue("All");
-
         filterBox.setOnAction(e ->
                 loadTransactions()
         );
@@ -83,7 +74,7 @@ public class AccountBalanceController
     @Override
     public void setUser(User user) {
         if (user == null) {
-            showError("No user data found.");
+            AlertUtils.error("No user data found.");
             return;
         }
 
@@ -111,13 +102,11 @@ public class AccountBalanceController
     // ==================== SERVER ====================
 
     private void handleServerMessage(String msg) {
-        System.out.println("🔥 handleServerMessage: " + msg);
         if (msg == null) return;
 
         if (msg.startsWith("TRANSACTIONS_LIST")) {
-            System.out.println("🔥 TRANSACTIONS_LIST detected");
-            String data = msg.substring("TRANSACTIONS_LIST|".length());
-            System.out.println("🔥 Data: " + data);
+            System.out.println("TRANSACTIONS_LIST detected");            String data = msg.substring("TRANSACTIONS_LIST|".length());
+            System.out.println("Data: " + data);
             updateTransactionList(data);
             return;
         }
@@ -139,7 +128,7 @@ public class AccountBalanceController
 
         updateBalance();
 
-        showToast(
+        ToastUtils.show(
                 (javafx.stage.Stage) balanceLabel.getScene().getWindow(),
                 "Transaction successful!"
         );
@@ -148,25 +137,19 @@ public class AccountBalanceController
         loadTransactions();
     }
 
-    private void handleBalanceFailed(
-            String msg
-    ) {
-
-        String[] parts =
-                msg.split("\\|");
-
+    private void handleBalanceFailed(String msg) {
+        String[] parts = msg.split("\\|");
         String errorMessage =
                 parts.length > 1
                         ? parts[1]
                         : "Transaction failed.";
-
-        showError(errorMessage);
+        AlertUtils.error(errorMessage);
     }
 
     private void handleTransactionList(String msg) {
-        System.out.println("🔥 handleTransactionList received: " + msg);
+        System.out.println("handleTransactionList received: " + msg);
         String data = msg.substring("TRANSACTIONS_LIST|".length());
-        System.out.println("🔥 data after substring: '" + data + "'");
+        System.out.println("data after substring: '" + data + "'");
         updateTransactionList(data);
     }
 
@@ -225,7 +208,7 @@ public class AccountBalanceController
 
         if (input == null || input.isBlank()) {
 
-            showError(
+            AlertUtils.error(
                     action + " amount is required."
             );
 
@@ -239,26 +222,19 @@ public class AccountBalanceController
 
             if (amount.compareTo(BigDecimal.ZERO) <= 0) {
 
-                showError(
-                        action
-                                + " amount must be greater than 0."
-                );
+                AlertUtils.error(action + " amount must be greater than 0.");
 
                 return null;
             }
-
             return amount;
 
         } catch (NumberFormatException e) {
-
-            showError("Invalid amount.");
-
+            AlertUtils.error("Invalid amount.");
             return null;
         }
     }
 
     // ==================== BALANCE ====================
-
     private void updateBalance() {
         Platform.runLater(() -> {
             if (currentUser == null) return;
@@ -266,13 +242,12 @@ public class AccountBalanceController
                 currentUser.setBalance(BigDecimal.ZERO);
             }
             String formatted = TextUtils.formatCurrency(currentUser.getBalance());
-            System.out.println("🔥 Formatted balance: " + formatted);
+            System.out.println(" Formatted balance: " + formatted);
             balanceLabel.setText(formatted != null ? formatted : "0 USD");
-            System.out.println("🔥 Balance updated: " + currentUser.getBalance());
+            System.out.println(" Balance updated: " + currentUser.getBalance());
         });
         if (balanceLabel == null) {
-            System.out.println("❌ balanceLabel is NULL! Check FXML fx:id");
-            return;
+            System.out.println("balanceLabel is NULL! Check FXML fx:id");
         }
     }
 
@@ -290,7 +265,7 @@ public class AccountBalanceController
         if (currentUser == null) return;
         if (client == null) client = ClientSocket.getInstance();
 
-        // ✅ Luôn đảm bảo listener đúng
+        // Luôn đảm bảo listener đúng
         client.addListener("AccountBalance", this::handleServerMessage);
 
         System.out.println("loadTransactions: sending request for user " + currentUser.getUser_id());
@@ -301,7 +276,7 @@ public class AccountBalanceController
         Platform.runLater(() -> {
             try {
                 if (transactionContainer == null) {
-                    System.out.println("❌ transactionContainer is NULL!");
+                    System.out.println("transactionContainer is NULL!");
                     return;
                 }
 
@@ -339,7 +314,11 @@ public class AccountBalanceController
                 }
 
             } catch (Exception e) {
-                e.printStackTrace();
+                LOGGER.log(
+                        Level.SEVERE,
+                        "Failed to update transaction list",
+                        e
+                );
             }
         });
     }
@@ -349,7 +328,7 @@ public class AccountBalanceController
 
     private boolean shouldDisplay(String type) {
         String selected = filterBox.getValue();
-        System.out.println("🔥 shouldDisplay: selected=" + selected + ", type=" + type);
+        System.out.println(" shouldDisplay: selected=" + selected + ", type=" + type);
 
         if (selected == null || selected.equals("All")) {
             return true;
@@ -362,7 +341,7 @@ public class AccountBalanceController
             case "Received" -> type.equals("TRANSFER_IN");
             default -> true;
         };
-        System.out.println("🔥 shouldDisplay result: " + result);
+        System.out.println(" shouldDisplay result: " + result);
         return result;
     }
 
@@ -387,8 +366,11 @@ public class AccountBalanceController
             card.getChildren().addAll(left, spacer, amountLabel);
             return card;
         } catch (Exception e) {
-            System.out.println("Error creating transaction card: " + e.getMessage());
-            e.printStackTrace();
+            LOGGER.log(
+                    Level.SEVERE,
+                    "Failed to create transaction card",
+                    e
+            );
             return new HBox(new Label("Error loading transaction"));
         }
     }

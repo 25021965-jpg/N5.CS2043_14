@@ -9,7 +9,7 @@
         prefWidth="1100.0"
         xmlns="http://javafx.com/javafx/25"
         xmlns:fx="http://javafx.com/fxml/1"
-        fx:controller="client.controller.AccountBalanceController"
+        fx:controller="client.controller.UserAccountBalanceController"
         style="
             -fx-background-color: #F8FAFC;
             -fx-border-color: #D4AF37;
@@ -17,7 +17,7 @@
         ">
 
     <fx:include
-            source="sidebar-view.fxml"
+            source="userSidebar-view.fxml"
 
             AnchorPane.topAnchor="0.0"
             AnchorPane.bottomAnchor="0.0"
@@ -127,7 +127,6 @@
                     "/>
 
             <Button
-                    fx:id="depositBtn"
                     text="Deposit"
                     onAction="#handleDeposit"
                     VBox.vgrow="NEVER"
@@ -182,7 +181,6 @@
                     "/>
 
             <Button
-                    fx:id="withdrawBtn"
                     text="Withdraw"
                     onAction="#handleWithdraw"
                     VBox.vgrow="NEVER"

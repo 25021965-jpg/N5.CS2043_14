@@ -3,7 +3,7 @@ package client.controller;
 import client.manager.FavouriteManager;
 import client.manager.UserSession;
 
-import client.util.NavigationUtils;
+import client.util.AlertUtils;
 import client.util.TextUtils;
 
 import javafx.event.ActionEvent;
@@ -29,6 +29,7 @@ import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 
 import model.Auction;
+import model.AuctionStatus;
 import model.User;
 
 import java.io.IOException;
@@ -42,14 +43,14 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
 
-public class ItemViewController
-        extends BaseController {
+public class ItemViewController extends BaseController {
 
     private static final NumberFormat MONEY_FORMAT =
             NumberFormat.getCurrencyInstance(Locale.US);
 
     private static final DateTimeFormatter TIME_FORMAT =
             DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
+
     public StackPane imageContainer;
 
     // ==================== VARIABLES ====================
@@ -73,6 +74,7 @@ public class ItemViewController
 
     @FXML
     public void initialize() {
+        System.out.println("Item View Loaded");
         setupImageView();
     }
 
@@ -90,20 +92,23 @@ public class ItemViewController
     }
 
     // ==================== SET DATA ====================
-
     public void setAuctionData(Auction auction) {
+        System.out.println(auction);
         this.auction = auction;
         if (auction == null
                 || auction.getItem() == null) {
-
             return;
         }
+
+        currentImageIndex = 0;
+
+        imgItem.setImage(null);
 
         setupFavourite();
         setupLabels();
         setupSellerUI();
-        currentImageIndex = 0;
-        showImage(currentImageIndex);
+
+        showImage(0);
     }
 
     private void setupFavourite() {
@@ -162,24 +167,18 @@ public class ItemViewController
     }
 
     private void setupSellerUI() {
-
-        User currentUser =
-                UserSession.getCurrentUser();
-
+        User currentUser = UserSession.getCurrentUser();
         boolean isSeller =
                 currentUser != null
                         && auction.getSeller_Id() != null
                         && auction.getSeller_Id().equals(
                         currentUser.getUser_id()
                 );
-
         btnJoinAuction.setVisible(!isSeller);
-
         btnJoinAuction.setManaged(!isSeller);
     }
 
     // ==================== FAVORITE ====================
-
     private void updateFavouriteUI(boolean isFavourite) {
         if (isFavourite) {
             btnFavourite.setText("Remove from favourite");
@@ -201,21 +200,15 @@ public class ItemViewController
 
     @FXML
     private void handleAddToFavourite() {
-        User currentUser =
-                UserSession.getCurrentUser();
+        User currentUser = UserSession.getCurrentUser();
 
         if (currentUser == null) {
-
-            NavigationUtils.showError("Please login again!");
-
+            AlertUtils.error("Please login again!");
             return;
         }
 
-        if (auction == null
-                || auction.getItem() == null) {
-
-            NavigationUtils.showError("Invalid auction data!");
-
+        if (auction == null || auction.getItem() == null) {
+            AlertUtils.error("Invalid auction data!");
             return;
         }
 
@@ -227,51 +220,30 @@ public class ItemViewController
                 FavouriteManager.isFavourite(itemId);
 
         if (client == null) {
-
-            NavigationUtils.showError("Server not connected!");
-
+            AlertUtils.error("Server not connected!");
             return;
         }
 
         if (isFavourite) {
-
-            client.sendMessage(
-                    "REMOVE_FAVOURITE|" + itemId
-            );
-
+            client.sendMessage("REMOVE_FAVOURITE|" + itemId);
             FavouriteManager.removeFavourite(itemId);
-
             updateFavouriteUI(false);
 
         } else {
-
-            client.sendMessage(
-                    "ADD_FAVOURITE|" + itemId
-            );
-
+            client.sendMessage("ADD_FAVOURITE|" + itemId);
             FavouriteManager.addFavourite(itemId);
-
             updateFavouriteUI(true);
         }
     }
 
     // ==================== IMAGE ====================
-
-    private void showImage(
-            int index
-    ) {
-
+    private void showImage(int index) {
         List<String> images =
                 auction.getItem()
                         .getImages();
 
-        if (images == null
-                || images.isEmpty()) {
-
-            imgItem.setImage(
-                    getFallbackImage()
-            );
-
+        if (images == null || images.isEmpty()) {
+            imgItem.setImage(getFallbackImage());
             return;
         }
 
@@ -284,9 +256,7 @@ public class ItemViewController
         }
 
         currentImageIndex = index;
-
-        String imagePath =
-                images.get(index);
+        String imagePath = images.get(index);
 
         try {
             Image image = new Image(imagePath);
@@ -294,22 +264,13 @@ public class ItemViewController
 
 
         } catch (Exception e) {
-
-            System.out.println(
-                    "Image load failed: "
-                            + e.getMessage()
-            );
-
-            imgItem.setImage(
-                    getFallbackImage()
-            );
+            System.out.println("Image load failed: " + e.getMessage());
+            imgItem.setImage(getFallbackImage());
         }
     }
 
     private Image getFallbackImage() {
-
         try {
-
             URL url =
                     getClass().getResource(
                             "/image/no-image.png"
@@ -320,14 +281,12 @@ public class ItemViewController
                     : null;
 
         } catch (Exception e) {
-
             return null;
         }
     }
 
     @FXML
     private void showPreviousImage() {
-
         List<String> images =
                 auction.getItem()
                         .getImages();
@@ -347,77 +306,77 @@ public class ItemViewController
 
     @FXML
     private void showNextImage() {
-
-        List<String> images =
-                auction.getItem()
-                        .getImages();
-
-        if (images == null
-                || images.isEmpty()) {
-
+        List<String> images = auction.getItem().getImages();
+        if (images == null || images.isEmpty()) {
             return;
         }
-
         currentImageIndex =
                 (currentImageIndex + 1)
                         % images.size();
-
         showImage(currentImageIndex);
     }
 
     // ==================== BACK ====================
-
     @FXML
-    private void handleBack(
-            MouseEvent event
-    ) {
-
+    private void handleBack(MouseEvent event) {
         navigate(
                 getStage(event),
-                "/fxml/HomePage.fxml",
+                "/fxml/userHomePage-view.fxml",
                 "Home Page"
         );
     }
 
     // ==================== JOIN AUCTION ====================
-
     @FXML
-    private void handleJoinAuction(
-            ActionEvent event
-    ) {
-
+    private void handleJoinAuction(ActionEvent event) {
         if (auction == null) {
             return;
         }
-
-        User user =
-                UserSession.getCurrentUser();
+        User user = UserSession.getCurrentUser();
 
         if (client == null
                 || user == null) {
+            AlertUtils.error("Cannot join auction!");
+            return;
+        }
 
-            NavigationUtils.showError("Cannot join auction!");
+        if (auction.getStatus() == AuctionStatus.UPCOMING) {
+            AlertUtils.warning(
+                    "Auction Not Started",
+                    "This auction has not started yet."
+            );
+            return;
+        }
 
+        if (auction.getStatus() == AuctionStatus.CANCELLED) {
+            AlertUtils.warning(
+                    "Auction Cancelled",
+                    "This auction has been cancelled."
+            );
+            return;
+        }
+
+        if (auction.getStatus() == AuctionStatus.ENDED) {
+            AlertUtils.warning(
+                    "Auction Ended",
+                    "This auction has been ended."
+            );
             return;
         }
 
         try {
-
             FXMLLoader loader =
                     new FXMLLoader(
                             getClass().getResource(
-                                    "/fxml/liveAuction-view.fxml"
+                                    "/fxml/userLiveAuction-view.fxml"
                             )
                     );
 
             Parent root =
                     loader.load();
-
-            LiveAuctionController controller =
+            UserLiveAuctionController controller =
                     loader.getController();
-
             controller.setClient(client);
-
             controller.setUser(user);
             System.out.println("🔴 DEBUG: auction.getAuction_id() = " + auction.getAuction_id());
             System.out.println("🔴 DEBUG: auction.getSeller().getUser_id() = " + auction.getSeller().getUser_id());
@@ -457,7 +416,7 @@ public class ItemViewController
 
         } catch (IOException e) {
 
-            NavigationUtils.showError(
+            AlertUtils.error(
                     "Cannot join auction."
             );
         }

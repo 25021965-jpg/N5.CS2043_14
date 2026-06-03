@@ -11,6 +11,7 @@ import java.util.List;
 
 public class BalanceHandler extends BaseHandler {
 
+
     public BalanceHandler(User currentUser,
                           PrintWriter writer,
                           String currentAuctionId) {
@@ -65,7 +66,7 @@ public class BalanceHandler extends BaseHandler {
                 TransactionDAO.addTransaction(targetUserId, null, amount, "DEPOSIT", "Deposit money");
                 currentUser.setBalance(newBalance);
 
-                // 🔥 ĐỒNG BỘ VIRTUAL BALANCE (NẾU ĐÃ TỒN TẠI)
+                //  ĐỒNG BỘ VIRTUAL BALANCE (NẾU ĐÃ TỒN TẠI)
                 BigDecimal currentVirtual = UserDAO.getVirtualBalance(targetUserId);
                 if (currentVirtual != null && currentVirtual.compareTo(BigDecimal.ZERO) > 0) {
                     UserDAO.updateVirtualBalance(targetUserId, newBalance);
@@ -117,7 +118,7 @@ public class BalanceHandler extends BaseHandler {
                 TransactionDAO.addTransaction(targetUserId, null, amount, "WITHDRAW", "Withdraw money");
                 currentUser.setBalance(newBalance);
 
-                // 🔥 LUÔN ĐỒNG BỘ VIRTUAL BALANCE = BALANCE THẬT
+                //  LUÔN ĐỒNG BỘ VIRTUAL BALANCE = BALANCE THẬT
                 UserDAO.updateVirtualBalance(targetUserId, newBalance);
 
                 return "BALANCE_UPDATE_SUCCESS|" + newBalance;
@@ -142,7 +143,7 @@ public class BalanceHandler extends BaseHandler {
         }
 
         List<Transaction> transactions = TransactionDAO.getTransactionsByUserId(userId);
-        if (transactions == null || transactions.isEmpty()) {
+        if (transactions.isEmpty()) {
             return "TRANSACTIONS_LIST|";
         }
 
@@ -157,7 +158,7 @@ public class BalanceHandler extends BaseHandler {
         return sb.toString();
     }
 
-    // 🔥 ATOMIC ADD - AN TOÀN
+    //  ATOMIC ADD - AN TOÀN
     public String handleAddVirtualBalance(String[] data) {
         if (currentUser == null) return "ERROR|Not logged in";
         if (data.length < 3) return "ERROR|Missing data";

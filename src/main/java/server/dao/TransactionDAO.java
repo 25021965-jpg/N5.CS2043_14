@@ -6,8 +6,12 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class TransactionDAO {
+    private static final Logger LOGGER =
+            Logger.getLogger(TransactionDAO.class.getName());
 
     // ==================== THÊM GIAO DỊCH ====================
     public static boolean addTransaction(
@@ -37,8 +41,8 @@ VALUES (?, ?, ?, ?, ?, ?)
             return rows > 0;
 
         } catch (SQLException e) {
-            System.err.println("[TransactionDAO] addTransaction error: " + e.getMessage());
-            e.printStackTrace();
+            LOGGER.severe("[TransactionDAO] addTransaction error: " + e.getMessage());
+            LOGGER.log(Level.SEVERE, "Unexpected error", e);
             return false;
         }
     }
@@ -46,12 +50,13 @@ VALUES (?, ?, ?, ?, ?, ?)
     // ==================== LẤY DANH SÁCH GIAO DỊCH CỦA USER ====================
     public static List<Transaction> getTransactionsByUserId(String userId) {
         List<Transaction> transactions = new ArrayList<>();
-        String sql = "SELECT t.*, u.username AS related_username\n" +
-                "FROM transactions t\n" +
-                "LEFT JOIN users u\n" +
-                "ON t.related_user_id = u.user_id\n" +
-                "WHERE t.user_id = ?\n" +
-                "ORDER BY t.created_at DESC";
+        String sql = """
+                SELECT t.*, u.username AS related_username
+                FROM transactions t
+                LEFT JOIN users u
+                ON t.related_user_id = u.user_id
+                WHERE t.user_id = ?
+                ORDER BY t.created_at DESC""";
 
         try (Connection conn = DatabaseService.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -75,8 +80,8 @@ VALUES (?, ?, ?, ?, ?, ?)
             System.out.println("[TransactionDAO] Loaded " + transactions.size() + " transactions for user: " + userId);
 
         } catch (SQLException e) {
-            System.err.println("[TransactionDAO] getTransactions error: " + e.getMessage());
-            e.printStackTrace();
+            LOGGER.severe("[TransactionDAO] getTransactions error: " + e.getMessage());
+            LOGGER.log(Level.SEVERE, "Unexpected error", e);
         }
         return transactions;
     }

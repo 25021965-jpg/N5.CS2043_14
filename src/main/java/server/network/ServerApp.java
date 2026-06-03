@@ -6,12 +6,14 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.logging.Logger;
 
 
 public class ServerApp {
     private static final int PORT = 9999;
-
     private static final ExecutorService threadPool = Executors.newFixedThreadPool(10);
+    private static final Logger LOGGER =
+            Logger.getLogger(ServerApp.class.getName());
 
     public static void main(String[] args) {
         System.out.println("--- Auction System Server Starting ---");
@@ -21,8 +23,8 @@ public class ServerApp {
             DatabaseService.initDatabase();
             System.out.println("✓ Database initialization check completed.");
         } catch (Exception e) {
-            System.err.println("CRITICAL ERROR: Could not initialize database!");
-            System.err.println("Error: " + e.getMessage());
+            LOGGER.severe("CRITICAL ERROR: Could not initialize database!");
+            LOGGER.severe("Error: " + e.getMessage());
             return; // Dừng server nếu không thể kết nối database
         }
 
@@ -40,8 +42,8 @@ public class ServerApp {
                 threadPool.execute(clientHandler);
             }
         } catch (IOException e) {
-            System.err.println("Server Error: " + e.getMessage());
-            System.err.println("Error: " + e.getMessage());
+            LOGGER.severe("Server Error: " + e.getMessage());
+            LOGGER.severe("Error: " + e.getMessage());
         } finally {
             threadPool.shutdown();
         }

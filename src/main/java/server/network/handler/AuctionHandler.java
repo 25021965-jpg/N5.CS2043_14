@@ -11,8 +11,12 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class AuctionHandler extends BaseHandler {
+    private static final Logger LOGGER =
+            Logger.getLogger(AuctionHandler.class.getName());
 
     private static final Set<String> scheduledAuctions =
             java.util.Collections.synchronizedSet(new HashSet<>());
@@ -30,7 +34,7 @@ public class AuctionHandler extends BaseHandler {
 
         List<Auction> auctions = AuctionService.getAllAuctions();
 
-        if (auctions == null || auctions.isEmpty()) {
+        if (auctions.isEmpty()) {
             return "LIST_EMPTY";
         }
 
@@ -88,7 +92,7 @@ public class AuctionHandler extends BaseHandler {
                                 : "");
 
             } catch (Exception e) {
-                e.printStackTrace();
+                LOGGER.log(Level.SEVERE, "Unexpected error", e);
             }
         }
 
@@ -157,8 +161,8 @@ public class AuctionHandler extends BaseHandler {
                                     model.Bid winningBid = null;
                                     BigDecimal finalPrice = ended.getCurrentPrice();
 
-                                    if (bids != null && !bids.isEmpty()) {
-                                        winningBid = bids.get(0); // Bid cao nhất
+                                    if (!bids.isEmpty()) {
+                                        winningBid = bids.getFirst(); // Bid cao nhất
                                         finalPrice = winningBid.getAmount();
                                     }
 
@@ -168,6 +172,7 @@ public class AuctionHandler extends BaseHandler {
                                         User seller = ended.getSeller();
                                         String itemName = ended.getItem() != null ? ended.getItem().getName() : "item";
 
+                                        //  Lấy balance thật từ DB
                                         // Lấy thông tin từ DB
                                         User winnerFromDB = UserDAO.getUserById(winner.getUser_id());
                                         User sellerFromDB = UserDAO.getUserById(seller.getUser_id());
@@ -242,8 +247,8 @@ public class AuctionHandler extends BaseHandler {
                                     AuctionDAO.updateAuctionStatus(finalAuctionId, "ENDED");
 
                                 } catch (Exception e) {
-                                    System.err.println("[AuctionHandler] Error ending auction: " + e.getMessage());
-                                    e.printStackTrace();
+                                    LOGGER.severe("[AuctionHandler] Error ending auction: " + e.getMessage());
+                                    LOGGER.log(Level.SEVERE, "Unexpected error", e);
                                 } finally {
                                     scheduledAuctions.remove(finalAuctionId);
                                 }
@@ -374,12 +379,12 @@ public class AuctionHandler extends BaseHandler {
         return sb.toString();
     }
 
-    // ==================== MY AUCTIONS ====================
+    // ==================== CREATED AUCTIONS ====================
 
-    public String handleListMyAuctions() {
+    public String handleListCreatedAuctions() {
 
         if (currentUser == null) {
-            return "LIST_MY_AUCTIONS_EMPTY";
+            return "LIST_CREATED_AUCTIONS_EMPTY";
         }
 
         List<Auction> auctions =
@@ -388,11 +393,11 @@ public class AuctionHandler extends BaseHandler {
                 );
 
         if (auctions.isEmpty()) {
-            return "LIST_MY_AUCTIONS_EMPTY";
+            return "LIST_CREATED_AUCTIONS_EMPTY";
         }
 
         StringBuilder sb =
-                new StringBuilder("LIST_MY_AUCTIONS_SUCCESS");
+                new StringBuilder("LIST_CREATED_AUCTIONS_SUCCESS");
 
         for (Auction a : auctions) {
 
@@ -435,7 +440,7 @@ public class AuctionHandler extends BaseHandler {
                         currentUser.getUser_id()
                 );
 
-        if (auctions == null || auctions.isEmpty()) {
+        if (auctions.isEmpty()) {
             return "LIST_JOINED_AUCTIONS_EMPTY";
         }
 

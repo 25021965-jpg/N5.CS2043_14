@@ -52,11 +52,14 @@ public class BidService {
                 }
 
 
+                // KIỂM TRA VIRTUAL BALANCE (KHÔNG PHẢI BALANCE THẬT)
                 BigDecimal virtualBal = UserDAO.getVirtualBalance(bidder.getUser_id());
                 if (virtualBal == null || virtualBal.compareTo(additionalAmount) < 0) {
                     throw new InvalidBidException("Insufficient balance. Need additional: " + additionalAmount);
                 }
 
+                // TRỪ VIRTUAL BALANCE (ATOMIC)
+                boolean deducted = UserDAO.deductVirtualBalance(bidder.getUser_id(), amount);
                 boolean deducted = UserDAO.deductVirtualBalance(bidder.getUser_id(), additionalAmount);
                 if (!deducted) {
                     throw new InvalidBidException("Failed to deduct virtual balance.");
@@ -83,9 +86,7 @@ public class BidService {
                     return "ERROR|Database error during bidding";
                 }
 
-            } catch (AuctionClosedException e) {
-                return "ERROR|" + e.getMessage();
-            } catch (InvalidBidException e) {
+            } catch (AuctionClosedException | InvalidBidException e) {
                 return "ERROR|" + e.getMessage();
             }
         }
@@ -98,9 +99,9 @@ public class BidService {
 
         // Lấy winner (người có bid cao nhất)
         java.util.List<Bid> bids = BidDAO.getBidsByAuctionId(auction.getAuction_id());
-        if (bids == null || bids.isEmpty()) return;
+        if (bids.isEmpty()) return;
 
-        Bid winBid = bids.get(0);
+        Bid winBid = bids.getFirst();
         User winner = winBid.getBidder();
         if (winner == null) return;
 
@@ -111,7 +112,7 @@ public class BidService {
         User sellerFromDB = UserDAO.getUserById(seller.getUser_id());
         if (winnerFromDB == null || sellerFromDB == null) return;
 
-        // 🔥 Trừ account balance thật của winner (tiền thật)
+        // Trừ account balance thật của winner (tiền thật)
         BigDecimal winnerNewBalance = winnerFromDB.getBalance().subtract(winAmount);
         if (winnerNewBalance.compareTo(BigDecimal.ZERO) < 0) {
             System.out.println("Winner has insufficient balance!");
@@ -119,11 +120,11 @@ public class BidService {
         }
         UserDAO.updateBalance(winner.getUser_id(), winnerNewBalance);
 
-        // 🔥 Cập nhật lại virtual balance = account balance mới
+        // Cập nhật lại virtual balance = account balance mới
         UserDAO.updateVirtualBalance(winner.getUser_id(), winnerNewBalance);
         server.dao.TransactionDAO.addTransaction(winner.getUser_id(), winAmount, "WITHDRAW");
 
-        // 🔥 Cộng tiền cho seller
+        // Cộng tiền cho seller
         BigDecimal sellerNewBalance = sellerFromDB.getBalance().add(winAmount);
         UserDAO.updateBalance(seller.getUser_id(), sellerNewBalance);
         UserDAO.updateVirtualBalance(seller.getUser_id(), sellerNewBalance);

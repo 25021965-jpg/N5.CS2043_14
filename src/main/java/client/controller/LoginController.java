@@ -1,6 +1,7 @@
 package client.controller;
 
 import client.network.ClientSocket;
+import client.util.AlertUtils;
 import client.util.NavigationUtils;
 
 import javafx.application.Platform;
@@ -41,10 +42,10 @@ public class LoginController extends BaseController {
 
     @FXML
     public void initialize() {
-        LOGGER.info("LoginController initialized");
+        System.out.println("LoginController initialized");
         try {
             if (client == null) {
-                NavigationUtils.showError("Cannot connect to server.");
+                AlertUtils.error("Cannot connect to server.");
                 return;
             }
             client.listen();
@@ -103,7 +104,7 @@ public class LoginController extends BaseController {
                     e
             );
 
-            NavigationUtils.showError(
+            AlertUtils.error(
                     "Cannot connect to server: "
                             + e.getMessage()
             );
@@ -122,7 +123,7 @@ public class LoginController extends BaseController {
                 """);
 
         if (client == null) {
-            NavigationUtils.showError("Server not connected.");
+            AlertUtils.error("Server not connected.");
             return;
         }
 
@@ -130,13 +131,13 @@ public class LoginController extends BaseController {
         String password = safeTrim(passField.getText());
 
         if (username.isBlank()) {
-            NavigationUtils.showError("Please enter username.");
+            AlertUtils.error("Please enter username.");
             userField.requestFocus();
             return;
         }
 
         if (password.isBlank()) {
-            NavigationUtils.showError("Please enter password.");
+            AlertUtils.error("Please enter password.");
             passField.requestFocus();
             return;
         }

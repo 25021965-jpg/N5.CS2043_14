@@ -2,8 +2,8 @@ package client.controller;
 
 import client.network.ClientSocket;
 import client.network.response.ResponseHandler;
-import static client.util.NavigationUtils.*; // Sử dụng các hàm showInfo, showError
 
+import client.util.AlertUtils;
 import client.util.NavigationUtils;
 import client.util.TextUtils;
 import javafx.application.Platform;
@@ -15,31 +15,28 @@ import javafx.stage.Stage;
 
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.logging.Logger;
 
 public class RegisterController {
 
-    @FXML
-    private TextField fullNameField;
-    @FXML
-    private TextField usernameField;
-    @FXML
-    private TextField emailField;
-    @FXML
-    private PasswordField passwordField;
-    @FXML
-    private PasswordField verifyPasswordField;
-    @FXML
-    private DatePicker dobField;
+    @FXML private TextField fullNameField;
+    @FXML private TextField usernameField;
+    @FXML private TextField emailField;
+    @FXML private PasswordField passwordField;
+    @FXML private PasswordField verifyPasswordField;
+    @FXML private DatePicker dobField;
 
     private ClientSocket client;
-
     public void setClient(ClientSocket client) {
         this.client = client;
     }
 
+    private static final Logger LOGGER =
+            Logger.getLogger(RegisterController.class.getName());
+
     @FXML
     public void initialize() {
-
+        System.out.println("Register Loaded");
         if (client == null) {
             client = ClientSocket.getInstance();
         }
@@ -53,50 +50,52 @@ public class RegisterController {
     @FXML
     private void handleCreate() {
         if (client == null) {
-            showError("Not connected to server");
+            AlertUtils.error("Not connected to server");
             return;
         }
 
-        String fullname =
-                TextUtils.toTitleCase(
-                        fullNameField.getText()
-                );
+        String fullname = TextUtils.toTitleCase(fullNameField.getText());
         String username = usernameField.getText().trim();
         String email = emailField.getText().trim();
         String password = passwordField.getText();
         String verify = verifyPasswordField.getText();
 
         if (fullname.isEmpty()) {
-            showError("Enter full name!");
+            AlertUtils.error("Enter full name!");
             fullNameField.requestFocus();
             return;
         }
+
         if (username.isEmpty()) {
-            showError("Enter username!");
+            AlertUtils.error("Enter username!");
             usernameField.requestFocus();
             return;
         }
+
         if (email.isEmpty()) {
-            showError("Enter email!");
+            AlertUtils.error("Enter email!");
             emailField.requestFocus();
             return;
         }
+
         if (dobField.getValue() == null) {
-            showError("Choose date of birth!");
+            AlertUtils.error("Choose date of birth!");
             return;
         }
+
         if (password.isEmpty()) {
-            showError("Enter password!");
+            AlertUtils.error("Enter password!");
             passwordField.requestFocus();
             return;
         }
+
         if (password.length() < 6) {
-            showError("Password must be at least 6 characters!");
+            AlertUtils.error("Password must be at least 6 characters!");
             return;
         }
 
         if (!password.equals(verify)) {
-            showError("Passwords do not match!");
+            AlertUtils.error("Passwords do not match!");
             verifyPasswordField.clear();
             verifyPasswordField.requestFocus();
             return;
@@ -104,12 +103,10 @@ public class RegisterController {
         LocalDate dob = dobField.getValue();
         int age = Period.between(dob, LocalDate.now()).getYears();
         if (age < 18) {
-            showError("You must be at least 18 years old to register!");
+            AlertUtils.error("You must be at least 18 years old to register!");
             return;
         }
-
         String dobStr = dobField.getValue().toString();
-
         client.sendRegister(fullname, username, email, password, dobStr);
     }
 
@@ -117,11 +114,9 @@ public class RegisterController {
     private void handleBack(ActionEvent event) {
         try {
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-
             NavigationUtils.switchScene(stage, "/fxml/login-view.fxml", "Login");
-
             System.out.println("Back to Login");
         } catch (Exception e) {
-            System.err.println("Error: " + e.getMessage());        }
+            LOGGER.severe("Error: " + e.getMessage());        }
     }
 }

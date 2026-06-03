@@ -2,6 +2,7 @@ package client.controller;
 
 import client.manager.UserSession;
 import client.network.ClientSocket;
+import client.util.AlertUtils;
 import client.util.NavigationUtils;
 
 import javafx.event.ActionEvent;
@@ -14,7 +15,7 @@ import javafx.scene.control.Button;
 
 import javafx.stage.Stage;
 
-public class SidebarController {
+public class UserSidebarController {
 
     @FXML private Button infoBtn;
     @FXML private Button historyBtn;
@@ -25,37 +26,24 @@ public class SidebarController {
     @FXML private Button deleteAccountBtn;
 
     // ================= INIT =================
-
     @FXML
     public void initialize() {
+        refreshActivePage();
+    }
 
-        String currentPage =
-                NavigationUtils.getCurrentPage();
-
+    public void refreshActivePage() {
+        resetButtons();
+        String currentPage = NavigationUtils.getCurrentPage();
         if (currentPage == null) {
-            resetButtons();
             return;
         }
 
         switch (currentPage) {
-
-            case "PROFILE" ->
-                    setActive(infoBtn);
-
-            case "HISTORY" ->
-                    setActive(historyBtn);
-
-            case "MY_AUCTIONS" ->
-                    setActive(createdAuctionBtn);
-
-            case "FAVOURITE" ->
-                    setActive(favoriteBtn);
-
-            case "BALANCE" ->
-                    setActive(balanceBtn);
-
-            default ->
-                    resetButtons();
+            case "PROFILE" -> setActive(infoBtn);
+            case "HISTORY" -> setActive(historyBtn);
+            case "CREATED_AUCTIONS" -> setActive(createdAuctionBtn);
+            case "FAVOURITE" -> setActive(favoriteBtn);
+            case "BALANCE" -> setActive(balanceBtn);
         }
     }
 
@@ -92,7 +80,6 @@ public class SidebarController {
     }
 
     // ================= NAVIGATION =================
-
     @FXML
     private void handleProfile(ActionEvent event) {
         NavigationUtils.setCurrentPage("PROFILE");
@@ -115,11 +102,11 @@ public class SidebarController {
 
     @FXML
     private void handleCreatedAuction(ActionEvent event) {
-        NavigationUtils.setCurrentPage("MY_AUCTIONS");
+        NavigationUtils.setCurrentPage("CREATED_AUCTIONS");
         switchPage(
                 event,
-                "/fxml/myAuctions-view.fxml",
-                "My Auctions"
+                "/fxml/userCreatedAuctions-view.fxml",
+                "Created Auctions"
         );
     }
 
@@ -128,7 +115,7 @@ public class SidebarController {
         NavigationUtils.setCurrentPage("FAVOURITE");
         switchPage(
                 event,
-                "/fxml/Favourite-view.fxml",
+                "/fxml/userFavourite-view.fxml",
                 "Favourite"
         );
     }
@@ -138,7 +125,7 @@ public class SidebarController {
         NavigationUtils.setCurrentPage("BALANCE");
         switchPage(
                 event,
-                "/fxml/accountBalance-view.fxml",
+                "/fxml/userAccountBalance-view.fxml",
                 "Balance"
         );
     }
@@ -149,7 +136,7 @@ public class SidebarController {
         resetButtons();
         switchPage(
                 event,
-                "/fxml/HomePage.fxml",
+                "/fxml/userHomePage-view.fxml",
                 "Home"
         );
     }
@@ -158,7 +145,7 @@ public class SidebarController {
     @FXML
     private void handleLogout() {
         boolean confirmed =
-                NavigationUtils.showConfirm(
+                AlertUtils.confirm(
                         "Logout",
                         "Are you sure you want to logout?"
                 );
@@ -166,6 +153,7 @@ public class SidebarController {
         if (!confirmed) {
             return;
         }
+
         ClientSocket socket = ClientSocket.getInstance();
 
         if (socket != null) {
@@ -188,11 +176,10 @@ public class SidebarController {
     }
 
     // ================= DELETE ACCOUNT =================
-
     @FXML
     private void handleDeleteAccount() {
         boolean confirmed =
-                NavigationUtils.showConfirm(
+                AlertUtils.confirm(
                         "Delete Account",
                         "Are you sure you want to delete your account? This action cannot be undone."
                 );

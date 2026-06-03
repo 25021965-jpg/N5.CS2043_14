@@ -1,12 +1,15 @@
 package server.dao;
 
 import model.Item;
-import model.Category;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 public class ItemDAO {
+    private static final Logger LOGGER =
+            Logger.getLogger(ItemDAO.class.getName());
 
     public static List<String[]> findAllWithSeller() {
         List<String[]> result = new ArrayList<>();
@@ -36,7 +39,7 @@ public class ItemDAO {
                 });
             }
         } catch (SQLException e) {
-            System.err.println("ItemDAO.findAllWithSeller error: " + e.getMessage());
+            LOGGER.severe("ItemDAO.findAllWithSeller error: " + e.getMessage());
         }
         return result;
     }
@@ -88,7 +91,7 @@ public class ItemDAO {
             ps.setString(1, itemId);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("ItemDAO.deleteItem error: " + e.getMessage());
+            LOGGER.severe("ItemDAO.deleteItem error: " + e.getMessage());
             return false;
         }
     }
@@ -103,7 +106,7 @@ public class ItemDAO {
             ps.setString(4, itemId);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("ItemDAO.updateItem error: " + e.getMessage());
+            LOGGER.severe("ItemDAO.updateItem error: " + e.getMessage());
             return false;
         }
     }

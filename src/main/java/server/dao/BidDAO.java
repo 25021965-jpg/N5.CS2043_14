@@ -7,8 +7,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.math.BigDecimal;
 import java.util.UUID;
+import java.util.logging.Logger;
 
 public class BidDAO {
+    private static final Logger LOGGER =
+            Logger.getLogger(BidDAO.class.getName());
 
     public static boolean placeBid(String auctionId, String userId, BigDecimal amount) {
 
@@ -41,7 +44,7 @@ public class BidDAO {
                 throw e;
             }
         } catch (SQLException e) {
-            System.err.println("✕ placeBid Error: " + e.getMessage());
+            LOGGER.severe("✕ placeBid Error: " + e.getMessage());
             return false;
         }
     }
@@ -95,7 +98,7 @@ public class BidDAO {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("✕ getBidsByAuctionId Error: " + e.getMessage());
+            LOGGER.severe("✕ getBidsByAuctionId Error: " + e.getMessage());
         }
         return bids;
     }
@@ -119,6 +122,7 @@ public class BidDAO {
                 return max != null ? max : BigDecimal.ZERO;
             }
         } catch (SQLException e) {
+            LOGGER.severe("✕ getHighestBidAmount Error: " + e.getMessage());
             System.err.println("✕ getUserMaxBid Error: " + e.getMessage());
         }
         return BigDecimal.ZERO;

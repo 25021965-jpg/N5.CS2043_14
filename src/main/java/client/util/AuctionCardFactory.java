@@ -6,12 +6,17 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import model.Auction;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 public class AuctionCardFactory {
+    private static final Logger LOGGER =
+            Logger.getLogger(AuctionCardFactory.class.getName());
 
     public static Parent createCard(Auction auction, ClientSocket client) {
         try {
             FXMLLoader loader = new FXMLLoader(
-                    AuctionCardFactory.class.getResource("/fxml/itemsCard-view.fxml")
+                    AuctionCardFactory.class.getResource("/fxml/itemCard-view.fxml")
             );
 
             Parent root = loader.load();
@@ -27,7 +32,7 @@ public class AuctionCardFactory {
             return root;
 
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Unexpected error", e);
             return null;
         }
     }

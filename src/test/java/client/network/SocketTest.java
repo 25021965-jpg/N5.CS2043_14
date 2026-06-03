@@ -14,9 +14,7 @@ public class SocketTest {
     @Test
     @DisplayName("Verify Client sends data ")
     void testSendData() {
-
         final StringBuilder capturedData = new StringBuilder();
-
         OutputStream manualMockOs = new OutputStream() {
             @Override
             public void write(int b) {
@@ -38,15 +36,12 @@ public class SocketTest {
     @Test
     @DisplayName("Verify Protocol Logic")
     void testProtocolWithManualStub() {
-
         List<String> testList = new ArrayList<>();
-
         testList.add("LOGIN_SUCCESS");
 
         // Kiểm tra logic bình thường
         assertEquals(1, testList.size());
-        assertEquals("LOGIN_SUCCESS", testList.get(0));
-
+        assertEquals("LOGIN_SUCCESS", testList.getFirst());
         System.out.println(">>> Manual stub verification: OK");
     }
 }

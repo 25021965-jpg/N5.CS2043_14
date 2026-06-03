@@ -13,8 +13,11 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.net.Socket;
+import java.util.logging.Logger;
 
 public class ClientSocket {
+    private static final Logger LOGGER =
+            Logger.getLogger(ClientSocket.class.getName());
 
     private static ClientSocket instance;
 
@@ -40,7 +43,7 @@ public class ClientSocket {
                 instance = new ClientSocket();
             } catch (Exception e) {
 
-                System.err.println(
+                LOGGER.severe(
                         "Cannot connect server: "
                                 + e.getMessage()
                 );
@@ -105,7 +108,7 @@ public class ClientSocket {
 
                     } catch (Exception e) {
                         if (listening) {
-                            System.err.println(
+                            LOGGER.severe(
                                     "Connection lost: "
                                             + e.getMessage()
                             );
@@ -152,7 +155,7 @@ public class ClientSocket {
             );
 
         } catch (Exception e) {
-            System.err.println(
+            LOGGER.severe(
                     "Send failed: "
                             + e.getMessage()
             );
@@ -273,38 +276,12 @@ public class ClientSocket {
         send(Command.GET_BID_HISTORY, auctionId);
     }
 
-    public void sendMyAuctions() {
+    public void sendCreatedAuctions() {
         User user = UserSession.getCurrentUser();
         if (user == null) return;
-        currentRequest = "LIST_MY_AUCTIONS";
-        sendMessage("LIST_MY_AUCTIONS|" + user.getUser_id());
-    }
-
-    // FAVOURITES
-    public void sendGetFavourite(String userId) {
-        sendMessage("LIST_FAVOURITES|" + userId);
-    }
-
-    public void sendAddFavourite(String userId, String auctionId) {
-        sendMessage(
-                "ADD_FAVOURITE|"
-                        + userId
-                        + "|"
-                        + auctionId
-        );
-    }
-
-    public void sendRemoveFavourite(
-            String userId,
-            String auctionId
-    ) {
-
-        sendMessage(
-                "REMOVE_FAVOURITE|"
-                        + userId
-                        + "|"
-                        + auctionId
-        );
+        System.out.println("SEND CREATED AUCTIONS");
+        currentRequest = "LIST_CREATED_AUCTIONS";
+        sendMessage("LIST_CREATED_AUCTIONS|" + user.getUser_id());
     }
 
     // BALANCE
@@ -324,10 +301,6 @@ public class ClientSocket {
                         + "|"
                         + amount
         );
-    }
-
-    public void sendGetBalance(String userId) {
-        sendMessage("GET_BALANCE|" + userId);
     }
 
     public void sendGetTransactions(String userId) {
@@ -356,14 +329,10 @@ public class ClientSocket {
             System.out.println("Socket closed");
 
         } catch (Exception e) {
-            System.err.println(e.getMessage());
+            LOGGER.severe(e.getMessage());
         }
     }
 
-
-    public void setMessageListener(java.util.function.Consumer<String> listener) {
-        listeners.put("default", listener);
-    }
 
     public void addListener(String key, java.util.function.Consumer<String> listener) {
         listeners.put(key, listener);
