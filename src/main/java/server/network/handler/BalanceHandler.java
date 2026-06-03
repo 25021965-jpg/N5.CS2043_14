@@ -68,8 +68,6 @@ public class BalanceHandler extends BaseHandler {
                 // 🔥 ĐỒNG BỘ VIRTUAL BALANCE (NẾU ĐÃ TỒN TẠI)
                 BigDecimal currentVirtual = UserDAO.getVirtualBalance(targetUserId);
                 if (currentVirtual != null && currentVirtual.compareTo(BigDecimal.ZERO) > 0) {
-                    BigDecimal newVirtual = currentVirtual.add(amount);
-                    UserDAO.updateVirtualBalance(targetUserId, newVirtual);
                     UserDAO.updateVirtualBalance(targetUserId, newBalance);
                 }
 

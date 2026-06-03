@@ -522,6 +522,31 @@ public class AuctionDAO {
         return history;
     }
 
+    public static Auction findById(String auctionId) {
+        String sql = """
+        SELECT a.*, i.name AS item_name, i.description AS item_desc,
+               i.category AS item_category, i.images AS item_images,
+               i.item_id AS item_id,
+               u.user_id AS seller_id, u.username AS seller_name,
+               u.balance AS seller_balance, u.role AS seller_role
+        FROM auctions a
+        LEFT JOIN items i ON a.item_id = i.item_id
+        LEFT JOIN users u ON a.seller_id = u.user_id
+        WHERE a.auction_id = ?
+        """;
+        try (Connection conn = DatabaseService.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, auctionId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return mapAuction(rs, conn); // dùng lại hàm map đã có trong AuctionDAO
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public static List<String[]>
     findAuctionHistory() {
 
@@ -804,14 +829,18 @@ public class AuctionDAO {
     }
 
     public static void updateAuctionStatus(String auctionId, String status) {
-        String sql = "UPDATE auctions SET status = ? WHERE auction_id = ?";
-        try (Connection conn = DatabaseService.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, status);
-            ps.setString(2, auctionId);
-            ps.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
+        if ("ENDED".equals(status)) {
+            return;
+        }
+        if ("CANCELLED".equals(status)) {
+            String sql = "UPDATE auctions SET is_cancelled = TRUE WHERE auction_id = ?";
+            try (Connection conn = DatabaseService.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, auctionId);
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
     }
 
