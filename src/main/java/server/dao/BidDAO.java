@@ -52,6 +52,25 @@ public class BidDAO {
         }
     }
 
+    public static BigDecimal getHighestBidAmount(String auctionId) {
+
+        String sql = "SELECT MAX(bid_amount) FROM bids WHERE auction_id = ?";
+        try (Connection conn = DatabaseService.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, auctionId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    BigDecimal max = rs.getBigDecimal(1);
+                    return max != null ? max : BigDecimal.ZERO;
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("✕ getHighestBidAmount Error: " + e.getMessage());
+        }
+        return BigDecimal.ZERO;
+    }
+
     public static List<Bid> getBidsByAuctionId(String auctionId) {
         List<Bid> bids = new ArrayList<>();
 
@@ -59,13 +78,12 @@ public class BidDAO {
                 "FROM bids b " +
                 "JOIN users u ON b.bidder_id = u.user_id " +
                 "WHERE b.auction_id = ? " +
-                "ORDER BY b.bid_time ASC, b.bid_amount ASC";
+                "ORDER BY b.bid_amount DESC, b.bid_time ASC";
 
         try (Connection conn = DatabaseService.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, auctionId);
-
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
                     User bidder = UserFactory.create(Role.BIDDER);
@@ -89,21 +107,27 @@ public class BidDAO {
         return bids;
     }
 
-    public static BigDecimal getHighestBidAmount(String auctionId) {
-
-        String sql = "SELECT MAX(bid_amount) FROM bids WHERE auction_id = ?";
+    // ==================== LẤY SỐ TIỀN ĐÃ ĐẶT CAO NHẤT CỦA USER TRONG AUCTION ====================
+    /**
+     * Lấy số tiền đã đặt cao nhất của một user trong một auction cụ thể
+     * @param auctionId ID của phiên đấu giá
+     * @param userId ID của người dùng
+     * @return Số tiền đã đặt cao nhất, hoặc BigDecimal.ZERO nếu chưa đặt lần nào
+     */
+    public static BigDecimal getUserMaxBid(String auctionId, String userId) {
+        String sql = "SELECT MAX(bid_amount) FROM bids WHERE auction_id = ? AND bidder_id = ?";
         try (Connection conn = DatabaseService.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            pstmt.setString(1, auctionId);
-            try (ResultSet rs = pstmt.executeQuery()) {
-                if (rs.next()) {
-                    BigDecimal max = rs.getBigDecimal(1);
-                    return max != null ? max : BigDecimal.ZERO;
-                }
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, auctionId);
+            ps.setString(2, userId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                BigDecimal max = rs.getBigDecimal(1);
+                return max != null ? max : BigDecimal.ZERO;
             }
         } catch (SQLException e) {
             LOGGER.severe("✕ getHighestBidAmount Error: " + e.getMessage());
+            System.err.println("✕ getUserMaxBid Error: " + e.getMessage());
         }
         return BigDecimal.ZERO;
     }

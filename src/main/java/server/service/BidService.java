@@ -40,20 +40,30 @@ public class BidService {
                     );
                 }
 
+
+                BigDecimal previousBidAmount = BidDAO.getUserMaxBid(auction.getAuction_id(), bidder.getUser_id());
+                if (previousBidAmount == null) {
+                    previousBidAmount = BigDecimal.ZERO;
+                }
+
+
+                BigDecimal additionalAmount = amount.subtract(previousBidAmount);
+
+                if (additionalAmount.compareTo(BigDecimal.ZERO) <= 0) {
+                    throw new InvalidBidException("New bid must be higher than your previous bid");
+                }
+
+
                 // KIỂM TRA VIRTUAL BALANCE (KHÔNG PHẢI BALANCE THẬT)
                 BigDecimal virtualBal = UserDAO.getVirtualBalance(bidder.getUser_id());
-                if (virtualBal == null || virtualBal.compareTo(amount) < 0) {
-                    throw new InvalidBidException(
-                            "Insufficient balance. Your balance: " + (virtualBal != null ? virtualBal : 0)
-                    );
+                if (virtualBal == null || virtualBal.compareTo(additionalAmount) < 0) {
+                    throw new InvalidBidException("Insufficient balance. Need additional: " + additionalAmount);
                 }
 
                 // TRỪ VIRTUAL BALANCE (ATOMIC)
-                boolean deducted = UserDAO.deductVirtualBalance(bidder.getUser_id(), amount);
+                boolean deducted = UserDAO.deductVirtualBalance(bidder.getUser_id(), additionalAmount);
                 if (!deducted) {
-                    throw new InvalidBidException(
-                            "Failed to deduct virtual balance. Please try again."
-                    );
+                    throw new InvalidBidException("Failed to deduct virtual balance.");
                 }
 
                 // Lưu bid vào DB
@@ -83,7 +93,7 @@ public class BidService {
         }
     }
 
-    public static void settleAuction(Auction auction) {
+    public synchronized void settleAuction(Auction auction) {
         // Lấy bid cao nhất
         java.math.BigDecimal winAmount = BidDAO.getHighestBidAmount(auction.getAuction_id());
         if (winAmount == null || winAmount.compareTo(java.math.BigDecimal.ZERO) == 0) return;

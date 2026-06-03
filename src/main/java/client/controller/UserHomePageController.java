@@ -438,12 +438,13 @@ public class UserHomePageController extends BaseController {
 
     @FXML
     private void handleLogout(ActionEvent event) {
-        boolean confirmed =
-                AlertUtils.confirm(
-                        "Logout",
-                        "Are you sure you want to logout?"
-                );
-        if (!confirmed) {return;}
+        boolean confirmed = AlertUtils.confirm(
+                "Logout",
+                "Are you sure you want to logout?"
+        );
+        if (!confirmed) {
+            return;
+        }
         ViewCache.clear();
         UserSession.setCurrentUser(null);
         navigate(
@@ -455,11 +456,10 @@ public class UserHomePageController extends BaseController {
 
     @FXML
     private void handleDeleteAccount(ActionEvent event) {
-        boolean confirmed =
-                AlertUtils.confirm(
-                        "Danger",
-                        "Permanently delete account?"
-                );
+        boolean confirmed = AlertUtils.confirm(
+                "Danger",
+                "Permanently delete account?"
+        );
         if (!confirmed) {
             return;
         }

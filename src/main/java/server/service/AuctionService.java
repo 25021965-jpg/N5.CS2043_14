@@ -5,6 +5,9 @@ import model.Entity.Item.Item;
 import model.Entity.User.Role;
 import model.Entity.User.User;
 import server.dao.AuctionDAO;
+import server.dao.UserDAO;
+
+import java.awt.image.PixelGrabber;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -62,6 +65,7 @@ public class AuctionService {
             a.setStatus(calculateStatus(a));
         }
         return a;
+
     }
 
     private static AuctionStatus calculateStatus(Auction a) {

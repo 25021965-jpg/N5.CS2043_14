@@ -173,7 +173,6 @@ public class UserLiveAuctionController implements UserDataReceiver {
         BigDecimal floorPrice1 = new BigDecimal(floorPrice);
 
         ResponseHandler.setLiveAuctionListener(this::handleServerMessage);
-        client.addListener("LiveAuction", this::handleServerMessage);
 
         User latestUser = UserSession.getCurrentUser();
         if (latestUser != null) {
@@ -197,6 +196,7 @@ public class UserLiveAuctionController implements UserDataReceiver {
             this.virtualBalance = BigDecimal.ZERO;
             this.myPendingBid = BigDecimal.ZERO;
         }
+
         // ==================== UI SETUP ====================
         productNameLabel.setText(productName);
         productDescLabel.setText(productDesc);
@@ -224,6 +224,7 @@ public class UserLiveAuctionController implements UserDataReceiver {
 
         // ==================== JOIN SERVER ====================
         if (client != null) {
+            System.out.println("Sending JOIN for auction: " + auctionId);
             client.sendJoin(auctionId);
         }
     }
@@ -287,6 +288,15 @@ public class UserLiveAuctionController implements UserDataReceiver {
     }
 
     private void placeBid() {
+        System.out.println("DEBUG: auctionId = " + auctionId);
+        if (auctionId == null || auctionId.isEmpty()) {
+            showError("You haven't joined any auction. Please refresh.");
+            return;
+        }
+        if (auctionId == null) {
+            showError("You haven't joined any auction. Please refresh and try again.");
+            return;
+        }
         if (client == null) {
             showError("Not connected to server");
             return;
@@ -377,8 +387,7 @@ public class UserLiveAuctionController implements UserDataReceiver {
     }
 
     private void navigateToHome() {
-        ResponseHandler.setLiveAuctionListener(null); // cleanup
-        client.removeListener("LiveAuction");
+
         UserSession.setVirtualBalance(virtualBalance);
 
         if (countdownTimer != null) {
@@ -488,6 +497,8 @@ public class UserLiveAuctionController implements UserDataReceiver {
 
                 String[] parts = msg.split("\\|");
                 if (parts.length >= 4) {
+                    this.auctionId = parts[1];
+                    System.out.println("auctionId set from server: " + this.auctionId);
                     currentPrice = new BigDecimal(parts[2]);
                     stepPrice = new BigDecimal(parts[3]);
                     currentPriceLabel.setText(formatPrice(currentPrice));
@@ -526,6 +537,15 @@ public class UserLiveAuctionController implements UserDataReceiver {
                 if (client != null && auctionId != null) {
                     client.sendGetBidHistory(auctionId);
                 }
+                return;
+            }
+
+            if (msg.startsWith("JOIN_FAILED")) {
+                String[] parts = msg.split("\\|");
+                String errorMsg = parts.length > 1 ? parts[1] : "Cannot join auction";
+                showError("Cannot join auction: " + errorMsg);
+                // Quay về HomePage
+                goBackToHome();
                 return;
             }
 

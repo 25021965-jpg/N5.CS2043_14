@@ -103,7 +103,10 @@ public class ClientSocket {
                             );
 
                             ResponseHandler.handle(msg);
-                            notifyListeners(msg);
+                            // Chỉ notify listeners với message KHÔNG phải live auction
+                            if (!isNonBroadcastMessage(msg)) {
+                                notifyListeners(msg);
+                            }
                         }
 
                     } catch (Exception e) {
@@ -129,6 +132,20 @@ public class ClientSocket {
         t.start();
     }
 
+    private boolean isNonBroadcastMessage(String msg) {
+        return msg.startsWith("UPDATE_PRICE")
+                || msg.startsWith("JOIN_SUCCESS")
+                || msg.startsWith("JOIN_FAILED")
+                || msg.startsWith("BID_FAILED")
+                || msg.startsWith("BID_HISTORY_SUCCESS")
+                || msg.startsWith("BID_HISTORY_EMPTY")
+                || msg.startsWith("AUCTION_ENDED")
+                || msg.startsWith("YOU_WON")
+                || msg.startsWith("VIRTUAL_BALANCE")
+                || msg.startsWith("WINNER_BALANCE")
+                || msg.startsWith("SELLER_BALANCE")
+                || msg.startsWith("ERROR");
+    }
     // ================= SEND =================
     public synchronized void sendMessage(String rawMessage) {
         try {
