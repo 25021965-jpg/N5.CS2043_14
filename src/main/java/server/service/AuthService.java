@@ -4,6 +4,7 @@ import model.User;
 import server.dao.UserDAO;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import org.mindrot.jbcrypt.BCrypt;
 
 public class AuthService {
 
@@ -19,7 +20,8 @@ public class AuthService {
         }
 
         // 2. Gọi DAO để lưu
-        boolean success = UserDAO.register(fullname, username, email, password, dob);
+        String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt(12));
+        boolean success = UserDAO.register(fullname, username, email, hashedPassword, dob);
 
         if (success) {
             return UserDAO.findByUsernameOrEmail(username);
@@ -29,9 +31,9 @@ public class AuthService {
 
     // Login
     public static User login(String input, String password) {
-        // Kiểm tra thông tin đăng nhập qua DAO
-        if (UserDAO.login(input, password)) {
-            return UserDAO.findByUsernameOrEmail(input);
+        User user = UserDAO.findByUsernameOrEmail(input);
+        if (user != null && BCrypt.checkpw(password, user.getPassword())) {
+            return user;
         }
         return null;
     }
@@ -55,8 +57,7 @@ public class AuthService {
     }
 
     public static boolean resetPassword(String fullname, String dob, String username, String email, String newPassword) {
-        return UserDAO.resetPassword(fullname, dob, username, email, newPassword);
+        String hashedPassword = BCrypt.hashpw(newPassword, BCrypt.gensalt(12));
+        return UserDAO.resetPassword(fullname, dob, username, email, hashedPassword);
     }
-
-
 }

@@ -1,5 +1,7 @@
 package server.dao;
 
+import org.mindrot.jbcrypt.BCrypt;
+
 import java.sql.*;
 
 public class DatabaseService {
@@ -128,12 +130,22 @@ public class DatabaseService {
             String checkAdmin = "SELECT COUNT(*) FROM users WHERE role = 'ADMIN'";
             try (ResultSet rs = stmt.executeQuery(checkAdmin)) {
                 if (rs.next() && rs.getInt(1) == 0) {
-                    String insertAdmin = """
-                    INSERT INTO users (user_id, fullname, username, email, password, role, verified) 
-                    VALUES ('ADM-INIT-001', 'System Admin', 'admin', 'admin@auction.com', 'admin123', 'ADMIN', TRUE)
-                    """;
-                    stmt.executeUpdate(insertAdmin);
-                    System.out.println("✓ Created default admin account: admin/admin123");
+                    String hashedPass = BCrypt.hashpw("admin123", BCrypt.gensalt(12));
+                    String insertAdmin = "INSERT INTO users (user_id, fullname, username, email, password, role, verified) " +
+                            "VALUES (?, ?, ?, ?, ?, ?, ?)";
+
+                    try (PreparedStatement ps = conn.prepareStatement(insertAdmin)) {
+                        ps.setString(1, "ADM-INIT-001");
+                        ps.setString(2, "System Admin");
+                        ps.setString(3, "admin");
+                        ps.setString(4, "admin@auction.com");
+                        ps.setString(5, hashedPass);
+                        ps.setString(6, "ADMIN");
+                        ps.setBoolean(7, true);
+
+                        ps.executeUpdate();
+                        System.out.println("✓ Created default admin account: admin/admin123 (Hashed)");
+                    }
                 }
             }
 

@@ -2,6 +2,8 @@ package server.dao;
 
 import model.User;
 import model.Role;
+import org.mindrot.jbcrypt.BCrypt;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,18 +14,19 @@ public class UserDAO {
 
     // AUTHENTICATION
     public static boolean login(String input, String password) {
-        String sql = "SELECT 1 FROM users WHERE (username = ? OR email = ?) AND password = ?";
+        String sql = "SELECT * FROM users WHERE username = ? OR email = ?";
         try (Connection conn = DatabaseService.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, input);
             ps.setString(2, input);
-            ps.setString(3, password);
             try (ResultSet rs = ps.executeQuery()) {
-                return rs.next();
+                if (rs.next()) {
+                    String hashedPwd = rs.getString("password");
+                    return BCrypt.checkpw(password, hashedPwd);
+                }
             }
-        } catch (Exception e) {
-            return false;
-        }
+        } catch (Exception e) { e.printStackTrace(); }
+        return false;
     }
 
     // ==================== UPDATE BALANCE ====================
