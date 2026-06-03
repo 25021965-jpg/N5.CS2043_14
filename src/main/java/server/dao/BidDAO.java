@@ -46,43 +46,6 @@ public class BidDAO {
         }
     }
 
-    public static List<Bid> getBidsByAuctionId(String auctionId) {
-        List<Bid> bids = new ArrayList<>();
-
-        String sql = "SELECT b.bid_id, b.bid_amount, b.bid_time, u.user_id, u.username, u.fullname " +
-                "FROM bids b " +
-                "JOIN users u ON b.bidder_id = u.user_id " +
-                "WHERE b.auction_id = ? " +
-                "ORDER BY b.bid_time ASC, b.bid_amount ASC";
-
-        try (Connection conn = DatabaseService.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            pstmt.setString(1, auctionId);
-
-            try (ResultSet rs = pstmt.executeQuery()) {
-                while (rs.next()) {
-                    User bidder = new User();
-                    bidder.setUser_id(rs.getString("user_id")); // Đồng bộ với UserDAO
-                    bidder.setUsername(rs.getString("username"));
-                    bidder.setFullname(rs.getString("fullname"));
-
-                    Bid bid = new Bid();
-                    bid.setBidder(bidder);
-                    bid.setAmount(rs.getBigDecimal("bid_amount"));
-
-                    Timestamp ts = rs.getTimestamp("bid_time");
-                    if (ts != null) bid.setTime(ts.toLocalDateTime());
-
-                    bids.add(bid);
-                }
-            }
-        } catch (SQLException e) {
-            System.err.println("✕ getBidsByAuctionId Error: " + e.getMessage());
-        }
-        return bids;
-    }
-
     public static BigDecimal getHighestBidAmount(String auctionId) {
 
         String sql = "SELECT MAX(bid_amount) FROM bids WHERE auction_id = ?";
@@ -98,6 +61,65 @@ public class BidDAO {
             }
         } catch (SQLException e) {
             System.err.println("✕ getHighestBidAmount Error: " + e.getMessage());
+        }
+        return BigDecimal.ZERO;
+    }
+
+    public static List<Bid> getBidsByAuctionId(String auctionId) {
+        List<Bid> bids = new ArrayList<>();
+        // ĐÃ SỬA: ORDER BY DESC để giá cao nhất luôn nằm ở vị trí index 0
+        String sql = "SELECT b.bid_id, b.bid_amount, b.bid_time, u.user_id, u.username, u.fullname " +
+                "FROM bids b " +
+                "JOIN users u ON b.bidder_id = u.user_id " +
+                "WHERE b.auction_id = ? " +
+                "ORDER BY b.bid_amount DESC, b.bid_time ASC";
+
+        try (Connection conn = DatabaseService.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, auctionId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    User bidder = new User();
+                    bidder.setUser_id(rs.getString("user_id"));
+                    bidder.setUsername(rs.getString("username"));
+                    bidder.setFullname(rs.getString("fullname"));
+
+                    Bid bid = new Bid();
+                    bid.setBidder(bidder);
+                    bid.setAmount(rs.getBigDecimal("bid_amount"));
+                    Timestamp ts = rs.getTimestamp("bid_time");
+                    if (ts != null) bid.setTime(ts.toLocalDateTime());
+
+                    bids.add(bid);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("✕ getBidsByAuctionId Error: " + e.getMessage());
+        }
+        return bids;
+    }
+
+    // ==================== LẤY SỐ TIỀN ĐÃ ĐẶT CAO NHẤT CỦA USER TRONG AUCTION ====================
+    /**
+     * Lấy số tiền đã đặt cao nhất của một user trong một auction cụ thể
+     * @param auctionId ID của phiên đấu giá
+     * @param userId ID của người dùng
+     * @return Số tiền đã đặt cao nhất, hoặc BigDecimal.ZERO nếu chưa đặt lần nào
+     */
+    public static BigDecimal getUserMaxBid(String auctionId, String userId) {
+        String sql = "SELECT MAX(bid_amount) FROM bids WHERE auction_id = ? AND bidder_id = ?";
+        try (Connection conn = DatabaseService.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, auctionId);
+            ps.setString(2, userId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                BigDecimal max = rs.getBigDecimal(1);
+                return max != null ? max : BigDecimal.ZERO;
+            }
+        } catch (SQLException e) {
+            System.err.println("✕ getUserMaxBid Error: " + e.getMessage());
         }
         return BigDecimal.ZERO;
     }

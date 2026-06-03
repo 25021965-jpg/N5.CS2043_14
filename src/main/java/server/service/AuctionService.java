@@ -3,6 +3,8 @@ package server.service;
 import model.*;
 import server.dao.AuctionDAO;
 import server.dao.UserDAO;
+
+import java.awt.image.PixelGrabber;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
@@ -61,6 +63,7 @@ public class AuctionService {
             a.setStatus(calculateStatus(a));
         }
         return a;
+        
     }
 
     private static AuctionStatus calculateStatus(Auction a) {

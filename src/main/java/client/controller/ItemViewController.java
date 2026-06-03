@@ -419,7 +419,8 @@ public class ItemViewController
             controller.setClient(client);
 
             controller.setUser(user);
-
+            System.out.println("🔴 DEBUG: auction.getAuction_id() = " + auction.getAuction_id());
+            System.out.println("🔴 DEBUG: auction.getSeller().getUser_id() = " + auction.getSeller().getUser_id());
             controller.setAuctionData(
                     auction.getAuction_id(),
                     auction.getItem().getName(),

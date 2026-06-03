@@ -65,8 +65,7 @@ public class AuctionDAO {
             LocalDateTime end
     ) {
 
-        LocalDateTime now =
-                LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now();
 
         if (cancelled)
             return AuctionStatus.CANCELLED;
@@ -74,16 +73,10 @@ public class AuctionDAO {
         if (!approved)
             return AuctionStatus.PENDING_APPROVAL;
 
-        if (
-                start != null &&
-                        now.isBefore(start)
-        )
+        if (start != null && now.isBefore(start))
             return AuctionStatus.UPCOMING;
 
-        if (
-                end != null &&
-                        now.isAfter(end)
-        )
+        if (end != null && now.isAfter(end))
             return AuctionStatus.ENDED;
 
         return AuctionStatus.ACTIVE;
@@ -98,7 +91,8 @@ public class AuctionDAO {
                 i.description AS item_desc,
                 i.category,
                 u.username AS seller_name,
-                u.fullname AS seller_fullname
+                u.fullname AS seller_fullname,
+                u.user_id AS seller_id
                 FROM auctions a
                 LEFT JOIN items i ON a.item_id = i.item_id
                 LEFT JOIN users u ON a.seller_id = u.user_id
@@ -106,11 +100,9 @@ public class AuctionDAO {
                 AND a.is_cancelled = FALSE
                 """;
 
-        try (
-                Connection conn = DatabaseService.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sql);
-                ResultSet rs = ps.executeQuery()
-        ) {
+        try (Connection conn = DatabaseService.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
 
             while (rs.next())
                 auctions.add(mapAuction(rs, conn));
@@ -131,7 +123,8 @@ public class AuctionDAO {
                 i.description AS item_desc,
                 i.category,
                 u.username AS seller_name,
-                u.fullname AS seller_fullname
+                u.fullname AS seller_fullname,
+                u.user_id AS seller_id
                 FROM auctions a
                 LEFT JOIN items i ON a.item_id = i.item_id
                 LEFT JOIN users u ON a.seller_id = u.user_id
@@ -139,11 +132,9 @@ public class AuctionDAO {
                 AND a.is_cancelled = FALSE
                 """;
 
-        try (
-                Connection conn = DatabaseService.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sql);
-                ResultSet rs = ps.executeQuery()
-        ) {
+        try (Connection conn = DatabaseService.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
 
             while (rs.next())
                 auctions.add(mapAuction(rs, conn));
@@ -163,13 +154,10 @@ public class AuctionDAO {
                 WHERE auction_id = ?
                 """;
 
-        try (
-                Connection conn = DatabaseService.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sql)
-        ) {
+        try (Connection conn = DatabaseService.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, auctionId);
-
             return ps.executeUpdate() > 0;
 
         } catch (SQLException e) {
@@ -179,14 +167,10 @@ public class AuctionDAO {
 
     public static void save(Auction auction) {
 
-        if (
-                auction == null ||
-                        auction.getItem() == null ||
-                        auction.getSeller() == null
-        ) return;
+        if (auction == null || auction.getItem() == null || auction.getSeller() == null)
+            return;
 
-        String sql =
-                """
+        String sql = """
                 INSERT INTO auctions
                 (
                     auction_id,
@@ -203,102 +187,38 @@ public class AuctionDAO {
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """;
 
-        try (
-                Connection conn =
-                        DatabaseService.getConnection()
-        ) {
+        try (Connection conn = DatabaseService.getConnection()) {
 
             conn.setAutoCommit(false);
 
             try {
 
-                saveItem(
-                        conn,
-                        auction.getItem()
-                );
+                saveItem(conn, auction.getItem());
 
-                PreparedStatement ps =
-                        conn.prepareStatement(sql);
+                PreparedStatement ps = conn.prepareStatement(sql);
 
-                ps.setString(
-                        1,
-                        auction.getAuction_id()
-                );
-
-                ps.setString(
-                        2,
-                        auction.getItem().getItem_id()
-                );
-
-                ps.setString(
-                        3,
-                        auction.getSeller().getUser_id()
-                );
-
-                ps.setBigDecimal(
-                        4,
-                        auction.getStartingPrice()
-                );
-
-                ps.setBigDecimal(
-                        5,
-                        auction.getCurrentPrice()
-                );
-
-                ps.setBigDecimal(
-                        6,
-                        auction.getMinIncrement()
-                );
-
-                ps.setTimestamp(
-                        7,
-                        Timestamp.valueOf(
-                                auction.getStartTime()
-                        )
-                );
-
-                ps.setTimestamp(
-                        8,
-                        Timestamp.valueOf(
-                                auction.getEndTime()
-                        )
-                );
-
-                ps.setBoolean(
-                        9,
-                        false
-                );
-
-                ps.setBoolean(
-                        10,
-                        false
-                ); // mặc định pending approval
+                ps.setString(1, auction.getAuction_id());
+                ps.setString(2, auction.getItem().getItem_id());
+                ps.setString(3, auction.getSeller().getUser_id());
+                ps.setBigDecimal(4, auction.getStartingPrice());
+                ps.setBigDecimal(5, auction.getCurrentPrice());
+                ps.setBigDecimal(6, auction.getMinIncrement());
+                ps.setTimestamp(7, Timestamp.valueOf(auction.getStartTime()));
+                ps.setTimestamp(8, Timestamp.valueOf(auction.getEndTime()));
+                ps.setBoolean(9, false);
+                ps.setBoolean(10, false);
 
                 ps.executeUpdate();
-
                 conn.commit();
 
-            }
-
-            catch (Exception e) {
-
+            } catch (Exception e) {
                 conn.rollback();
-
                 throw e;
             }
 
-        }
-
-        catch (Exception e) {
-
-            System.out.println(
-                    "Save auction error: "
-                            + e.getMessage()
-            );
-
-            throw new RuntimeException(
-                    e.getMessage()
-            );
+        } catch (Exception e) {
+            System.out.println("Save auction error: " + e.getMessage());
+            throw new RuntimeException(e.getMessage());
         }
     }
 
@@ -311,7 +231,8 @@ public class AuctionDAO {
                 i.description AS item_desc,
                 i.category,
                 u.username AS seller_name,
-                u.fullname AS seller_fullname
+                u.fullname AS seller_fullname,
+                u.user_id AS seller_id
                 FROM auctions a
                 LEFT JOIN items i ON a.item_id = i.item_id
                 LEFT JOIN users u ON a.seller_id = u.user_id
@@ -319,13 +240,10 @@ public class AuctionDAO {
                 ORDER BY a.start_time DESC
                 """;
 
-        try (
-                Connection conn = DatabaseService.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sql)
-        ) {
+        try (Connection conn = DatabaseService.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, sellerId);
-
             ResultSet rs = ps.executeQuery();
 
             while (rs.next())
@@ -347,7 +265,8 @@ public class AuctionDAO {
                 i.description AS item_desc,
                 i.category,
                 u.username AS seller_name,
-                u.fullname AS seller_fullname
+                u.fullname AS seller_fullname,
+                u.user_id AS seller_id
                 FROM bids b
                 JOIN auctions a ON b.auction_id = a.auction_id
                 LEFT JOIN items i ON a.item_id = i.item_id
@@ -356,13 +275,10 @@ public class AuctionDAO {
                 ORDER BY a.start_time DESC
                 """;
 
-        try (
-                Connection conn = DatabaseService.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sql)
-        ) {
+        try (Connection conn = DatabaseService.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, userId);
-
             ResultSet rs = ps.executeQuery();
 
             while (rs.next())
@@ -383,10 +299,8 @@ public class AuctionDAO {
                 WHERE auction_id = ?
                 """;
 
-        try (
-                Connection conn = DatabaseService.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sql)
-        ) {
+        try (Connection conn = DatabaseService.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, id);
             ps.executeUpdate();
@@ -404,13 +318,10 @@ public class AuctionDAO {
                 WHERE auction_id = ?
                 """;
 
-        try (
-                Connection conn = DatabaseService.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sql)
-        ) {
+        try (Connection conn = DatabaseService.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, id);
-
             return ps.executeUpdate() > 0;
 
         } catch (SQLException e) {
@@ -426,13 +337,10 @@ public class AuctionDAO {
                 WHERE auction_id = ?
                 """;
 
-        try (
-                Connection conn = DatabaseService.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sql)
-        ) {
+        try (Connection conn = DatabaseService.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, id);
-
             return ps.executeUpdate() > 0;
 
         } catch (SQLException e) {
@@ -440,306 +348,142 @@ public class AuctionDAO {
         }
     }
 
-    public static List<Bid> getBidHistory(
-            String auctionId
-    ) {
+    public static List<Bid> getBidHistory(String auctionId) {
 
-        List<Bid> history =
-                new ArrayList<>();
+        List<Bid> history = new ArrayList<>();
 
-        String sql =
-                """
-                SELECT
-                b.bid_amount,
-                b.bid_time,
-                u.username
-    
+        String sql = """
+                SELECT b.bid_amount, b.bid_time, u.username
                 FROM bids b
-    
-                JOIN users u
-                ON b.bidder_id = u.user_id
-    
+                JOIN users u ON b.bidder_id = u.user_id
                 WHERE b.auction_id = ?
-    
                 ORDER BY b.bid_amount ASC
                 """;
 
-        try (
+        try (Connection conn = DatabaseService.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
 
-                Connection conn =
-                        DatabaseService.getConnection();
-
-                PreparedStatement ps =
-                        conn.prepareStatement(sql)
-
-        ) {
-
-            ps.setString(
-                    1,
-                    auctionId
-            );
-
-            ResultSet rs =
-                    ps.executeQuery();
+            ps.setString(1, auctionId);
+            ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
-
-                Bid bid =
-                        new Bid();
-
-                bid.setAmount(
-                        rs.getBigDecimal(
-                                "bid_amount"
-                        )
-                );
-
-                bid.setTime(
-                        rs.getTimestamp(
-                                "bid_time"
-                        ).toLocalDateTime()
-                );
-
-                bid.setUsername(
-                        rs.getString(
-                                "username"
-                        )
-                );
-
-                history.add(
-                        bid
-                );
+                Bid bid = new Bid();
+                bid.setAmount(rs.getBigDecimal("bid_amount"));
+                bid.setTime(rs.getTimestamp("bid_time").toLocalDateTime());
+                bid.setUsername(rs.getString("username"));
+                history.add(bid);
             }
 
-        }
-
-        catch (SQLException e) {
-
-            System.out.println(
-                    e.getMessage()
-            );
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
         }
 
         return history;
     }
 
     public static Auction findById(String auctionId) {
+        System.out.println("🔍 [DEBUG] findById searching for: '" + auctionId + "'");
+
         String sql = """
-        SELECT a.*, i.name AS item_name, i.description AS item_desc,
-               i.category AS item_category, i.images AS item_images,
-               i.item_id AS item_id,
-               u.user_id AS seller_id, u.username AS seller_name,
-               u.balance AS seller_balance, u.role AS seller_role
-        FROM auctions a
-        LEFT JOIN items i ON a.item_id = i.item_id
-        LEFT JOIN users u ON a.seller_id = u.user_id
-        WHERE a.auction_id = ?
-        """;
+                SELECT a.*, i.name AS item_name, i.description AS item_desc,
+                       i.category,
+                       i.item_id AS item_id,
+                       u.user_id AS seller_id, u.username AS seller_name,
+                       u.fullname AS seller_fullname,
+                       u.balance AS seller_balance, u.role AS seller_role
+                FROM auctions a
+                LEFT JOIN items i ON a.item_id = i.item_id
+                LEFT JOIN users u ON a.seller_id = u.user_id
+                WHERE a.auction_id = ?
+                """;
+
         try (Connection conn = DatabaseService.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, auctionId);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
-                return mapAuction(rs, conn); // dùng lại hàm map đã có trong AuctionDAO
+                System.out.println("✅ [DEBUG] Found auction: " + auctionId);
+                return mapAuction(rs, conn);
+            } else {
+                System.out.println("❌ [DEBUG] No auction found for: " + auctionId);
             }
         } catch (SQLException e) {
+            System.out.println("findById ERROR:");
             e.printStackTrace();
         }
         return null;
     }
 
-    public static List<String[]>
-    findAuctionHistory() {
+    public static List<String[]> findAuctionHistory() {
 
-        List<String[]> result =
-                new ArrayList<>();
+        List<String[]> result = new ArrayList<>();
 
-        String sql =
-                """
-                SELECT
-                a.auction_id,
-    
-                i.name AS item_name,
-    
-                a.current_price,
-    
-                a.end_time,
-    
-                a.is_cancelled
-    
+        String sql = """
+                SELECT a.auction_id, i.name AS item_name,
+                       a.current_price, a.end_time, a.is_cancelled
                 FROM auctions a
-    
-                LEFT JOIN items i
-                ON a.item_id = i.item_id
-    
-                WHERE
-                a.is_cancelled = TRUE
-    
-                OR NOW() > a.end_time
+                LEFT JOIN items i ON a.item_id = i.item_id
+                WHERE a.is_cancelled = TRUE OR NOW() > a.end_time
                 """;
 
-        try (
-
-                Connection conn =
-                        DatabaseService.getConnection();
-
-                PreparedStatement ps =
-                        conn.prepareStatement(sql);
-
-                ResultSet rs =
-                        ps.executeQuery()
-
-        ) {
+        try (Connection conn = DatabaseService.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
-
-                String status =
-                        rs.getBoolean(
-                                "is_cancelled"
-                        )
-
-                                ? "CANCELLED"
-
-                                : "ENDED";
-
-                result.add(
-
-                        new String[] {
-
-                                rs.getString(
-                                        "auction_id"
-                                ),
-
-                                rs.getString(
-                                        "item_name"
-                                ),
-
-                                rs.getBigDecimal(
-                                        "current_price"
-                                ).toPlainString(),
-
-                                rs.getTimestamp(
-                                        "end_time"
-                                ).toString(),
-
-                                status
-                        }
-                );
+                String status = rs.getBoolean("is_cancelled") ? "CANCELLED" : "ENDED";
+                result.add(new String[]{
+                        rs.getString("auction_id"),
+                        rs.getString("item_name"),
+                        rs.getBigDecimal("current_price").toPlainString(),
+                        rs.getTimestamp("end_time").toString(),
+                        status
+                });
             }
 
-        }
-
-        catch (SQLException e) {
-
-            System.out.println(
-                    e.getMessage()
-            );
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
         }
 
         return result;
     }
 
-    public static List<String[]>
-    findAllAsStrings() {
+    public static List<String[]> findAllAsStrings() {
 
-        List<String[]> result =
-                new ArrayList<>();
+        List<String[]> result = new ArrayList<>();
 
-        String sql =
-                """
-                SELECT
-    
-                a.auction_id,
-    
-                i.name item_name,
-    
-                u.username seller,
-    
-                a.current_price,
-    
-                a.is_approved,
-    
-                a.is_cancelled,
-    
-                a.start_time,
-    
-                a.end_time
-    
+        String sql = """
+                SELECT a.auction_id, i.name AS item_name, u.username AS seller,
+                       a.current_price, a.is_approved, a.is_cancelled,
+                       a.start_time, a.end_time
                 FROM auctions a
-    
-                LEFT JOIN items i
-                ON a.item_id=i.item_id
-    
-                LEFT JOIN users u
-                ON a.seller_id=u.user_id
+                LEFT JOIN items i ON a.item_id = i.item_id
+                LEFT JOIN users u ON a.seller_id = u.user_id
                 """;
 
-        try (
-
-                Connection conn =
-                        DatabaseService.getConnection();
-
-                PreparedStatement ps =
-                        conn.prepareStatement(sql);
-
-                ResultSet rs =
-                        ps.executeQuery()
-
-        ) {
+        try (Connection conn = DatabaseService.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
-
-                AuctionStatus status =
-                        calculateStatus(
-
-                                rs.getBoolean(
-                                        "is_cancelled"
-                                ),
-
-                                rs.getBoolean(
-                                        "is_approved"
-                                ),
-
-                                rs.getTimestamp(
-                                        "start_time"
-                                ).toLocalDateTime(),
-
-                                rs.getTimestamp(
-                                        "end_time"
-                                ).toLocalDateTime()
-                        );
-
-                result.add(
-
-                        new String[] {
-
-                                rs.getString(
-                                        "auction_id"
-                                ),
-
-                                rs.getString(
-                                        "item_name"
-                                ),
-
-                                rs.getString(
-                                        "seller"
-                                ),
-
-                                rs.getBigDecimal(
-                                        "current_price"
-                                ).toPlainString(),
-
-                                status.name()
-                        }
+                AuctionStatus status = calculateStatus(
+                        rs.getBoolean("is_cancelled"),
+                        rs.getBoolean("is_approved"),
+                        rs.getTimestamp("start_time") != null ? rs.getTimestamp("start_time").toLocalDateTime() : null,
+                        rs.getTimestamp("end_time") != null ? rs.getTimestamp("end_time").toLocalDateTime() : null
                 );
+
+                result.add(new String[]{
+                        rs.getString("auction_id"),
+                        rs.getString("item_name"),
+                        rs.getString("seller"),
+                        rs.getBigDecimal("current_price").toPlainString(),
+                        status.name()
+                });
             }
 
-        }
-
-        catch (SQLException e) {
-
-            System.out.println(
-                    e.getMessage()
-            );
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
         }
 
         return result;
@@ -749,78 +493,51 @@ public class AuctionDAO {
 
         if (item == null) return;
 
-        String sql = """
-                INSERT IGNORE INTO items
-                (item_id,name,description,category)
-                VALUES (?,?,?,?)
-                """;
+        String sql = "INSERT IGNORE INTO items (item_id, name, description, category) VALUES (?, ?, ?, ?)";
 
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-
             ps.setString(1, item.getItem_id());
             ps.setString(2, item.getName());
             ps.setString(3, item.getDescription());
             ps.setString(4, item.getCategory().name());
-
             ps.executeUpdate();
 
-            if (item.getImages() != null)
-                for (String url : item.getImages())
+            if (item.getImages() != null) {
+                for (String url : item.getImages()) {
                     saveItemImage(conn, item.getItem_id(), url);
-
+                }
+            }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
     }
 
-    private static void saveItemImage(
-            Connection conn,
-            String itemId,
-            String url
-    ) {
+    private static void saveItemImage(Connection conn, String itemId, String url) {
 
-        String sql = """
-                INSERT IGNORE INTO item_images
-                (image_id,item_id,image_url)
-                VALUES (?,?,?)
-                """;
+        String sql = "INSERT IGNORE INTO item_images (image_id, item_id, image_url) VALUES (?, ?, ?)";
 
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-
             ps.setString(1, UUID.randomUUID().toString());
             ps.setString(2, itemId);
             ps.setString(3, url);
-
             ps.executeUpdate();
-
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
     }
 
-    private static List<String> getItemImages(
-            Connection conn,
-            String itemId
-    ) {
+    private static List<String> getItemImages(Connection conn, String itemId) {
 
         List<String> images = new ArrayList<>();
 
-        String sql = """
-                SELECT image_url
-                FROM item_images
-                WHERE item_id = ?
-                ORDER BY created_at ASC
-                """;
+        String sql = "SELECT image_url FROM item_images WHERE item_id = ? ORDER BY created_at ASC";
 
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-
             ps.setString(1, itemId);
-
             ResultSet rs = ps.executeQuery();
-
-            while (rs.next())
+            while (rs.next()) {
                 images.add(rs.getString("image_url"));
-
+            }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
@@ -850,8 +567,7 @@ public class AuctionDAO {
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setTimestamp(1, Timestamp.valueOf(newEndTime));
             pstmt.setString(2, auctionId);
-            int rows = pstmt.executeUpdate();
-            return rows > 0;
+            return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
             System.err.println("✕ updateEndTime Error: " + e.getMessage());
             return false;
