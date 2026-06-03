@@ -24,6 +24,7 @@ public class Auction implements Serializable {
 
     private boolean is_cancelled;
     private boolean is_approved;
+    private boolean is_ended;
 
     private List<Bid> bids = new ArrayList<>();
 
@@ -43,6 +44,9 @@ public class Auction implements Serializable {
 
         if (!is_approved)
             return AuctionStatus.PENDING_APPROVAL;
+
+        if (is_ended)
+            return AuctionStatus.ENDED;
 
         LocalDateTime now =
                 LocalDateTime.now();
@@ -68,6 +72,7 @@ public class Auction implements Serializable {
     public void setStatus(AuctionStatus status) {
         is_cancelled = status == AuctionStatus.CANCELLED;
         is_approved = status != AuctionStatus.PENDING_APPROVAL;
+        is_ended     = status == AuctionStatus.ENDED;
     }
 
 

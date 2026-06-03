@@ -55,17 +55,12 @@ public class AuctionService {
     }
 
     public static Auction getAuctionById(String id) {
-
-        List<Auction> all = AuctionDAO.findAll();
-        if (all == null) return null;
-
-        for (Auction a : all) {
-            if (a.getAuction_id().equals(id)) {
-                a.setStatus(calculateStatus(a));
-                return a;
-            }
+        //  Query thẳng theo ID thay vì load tất cả
+        Auction a = AuctionDAO.findById(id);
+        if (a != null) {
+            a.setStatus(calculateStatus(a));
         }
-        return null;
+        return a;
     }
 
     private static AuctionStatus calculateStatus(Auction a) {

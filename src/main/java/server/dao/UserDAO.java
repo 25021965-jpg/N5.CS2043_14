@@ -17,7 +17,7 @@ public class UserDAO {
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, input);
             ps.setString(2, input);
-            ps.setString(3, password);
+            ps.setString(3, hashPassword(password));
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next();
             }
@@ -67,7 +67,7 @@ public class UserDAO {
             ps.setString(2, fullname);
             ps.setString(3, username);
             ps.setString(4, email);
-            ps.setString(5, password);
+            ps.setString(5, hashPassword(password));
 
             if (dob == null || dob.isEmpty()) ps.setNull(6, Types.DATE);
             else ps.setDate(6, Date.valueOf(dob));
@@ -95,7 +95,7 @@ public class UserDAO {
             }
 
             try (PreparedStatement updatePs = conn.prepareStatement(updateSql)) {
-                updatePs.setString(1, newPassword);
+                updatePs.setString(1, hashPassword(newPassword));
                 updatePs.setString(2, email);
                 return updatePs.executeUpdate() > 0;
             }
@@ -304,6 +304,21 @@ public class UserDAO {
         } catch (Exception e) {
             e.printStackTrace();
             return false;
+        }
+    }
+
+    public static String hashPassword(String password) {
+        try {
+            java.security.MessageDigest md =
+                    java.security.MessageDigest.getInstance("SHA-256");
+            byte[] hash = md.digest(password.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            StringBuilder sb = new StringBuilder();
+            for (byte b : hash) {
+                sb.append(String.format("%02x", b));
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            return password; // fallback
         }
     }
 }

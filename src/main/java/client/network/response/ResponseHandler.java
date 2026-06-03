@@ -45,6 +45,8 @@ public class ResponseHandler {
                 || msg.startsWith("AUCTION_ENDED")
                 || msg.startsWith("YOU_WON")
                 || msg.startsWith("VIRTUAL_BALANCE")
+                || msg.startsWith("WINNER_BALANCE")
+                || msg.startsWith("SELLER_BALANCE")
                 || msg.startsWith("ERROR");
     }
 }

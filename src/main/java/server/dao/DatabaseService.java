@@ -116,7 +116,7 @@ public class DatabaseService {
                     transaction_id CHAR(36) PRIMARY KEY,
                     user_id CHAR(36) NOT NULL,
                     amount DECIMAL(15,2) NOT NULL,
-                    type ENUM('DEPOSIT', 'WITHDRAW', 'TRANSFER_IN', 'TRANSFER_OUT') NOT NULL,
+                    type ENUM('DEPOSIT', 'WITHDRAW', 'TRANSFER_IN', 'TRANSFER_OUT', 'WIN_BID', 'SOLD') NOT NULL,
                     related_user_id CHAR(36),
                     description VARCHAR(255),
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -128,10 +128,9 @@ public class DatabaseService {
             String checkAdmin = "SELECT COUNT(*) FROM users WHERE role = 'ADMIN'";
             try (ResultSet rs = stmt.executeQuery(checkAdmin)) {
                 if (rs.next() && rs.getInt(1) == 0) {
-                    String insertAdmin = """
-                    INSERT INTO users (user_id, fullname, username, email, password, role, verified) 
-                    VALUES ('ADM-INIT-001', 'System Admin', 'admin', 'admin@auction.com', 'admin123', 'ADMIN', TRUE)
-                    """;
+                    String insertAdmin = "INSERT INTO users (user_id, fullname, username, email, password, role, verified) " +
+                            "VALUES ('ADM-INIT-001', 'System Admin', 'admin', 'admin@auction.com', '" +
+                            UserDAO.hashPassword("admin123") + "', 'ADMIN', TRUE)";
                     stmt.executeUpdate(insertAdmin);
                     System.out.println("✓ Created default admin account: admin/admin123");
                 }

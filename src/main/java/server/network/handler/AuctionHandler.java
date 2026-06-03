@@ -38,13 +38,10 @@ public class AuctionHandler extends BaseHandler {
 
         for (Auction a : auctions) {
 
-            if (!a.isApproved())
+            if (a == null || !a.isApproved())
                 continue;
 
             try {
-
-                if (a == null)
-                    continue;
 
                 Item item = a.getItem();
 
@@ -170,31 +167,22 @@ public class AuctionHandler extends BaseHandler {
                                         User sellerFromDB = UserDAO.getUserById(seller.getUser_id());
                                         if (winnerFromDB == null || sellerFromDB == null) return;
 
-                                        // 🔥 Trừ account balance thật của winner
-                                        BigDecimal winnerNewBalance = winnerFromDB.getBalance().subtract(finalPrice);
-                                        if (winnerNewBalance.compareTo(BigDecimal.ZERO) < 0) {
-                                            System.out.println("❌ Winner insufficient balance!");
-                                            return;
-                                        }
-                                        boolean winnerUpdated = UserDAO.updateBalance(winner.getUser_id(), winnerNewBalance);
+                                        BigDecimal winnerVirtual = UserDAO.getVirtualBalance(winner.getUser_id());
+                                        if (winnerVirtual == null) winnerVirtual = BigDecimal.ZERO;
+                                        boolean winnerUpdated = UserDAO.updateBalance(winner.getUser_id(), winnerVirtual);
 
-
-                                        UserDAO.updateVirtualBalance(winner.getUser_id(), winnerNewBalance);
-
-
+                                        // Seller: cộng tiền thắng bid vào balance
                                         BigDecimal sellerNewBalance = sellerFromDB.getBalance().add(finalPrice);
                                         boolean sellerUpdated = UserDAO.updateBalance(seller.getUser_id(), sellerNewBalance);
-
-
                                         UserDAO.updateVirtualBalance(seller.getUser_id(), sellerNewBalance);
 
                                         if (winnerUpdated) {
                                             RoomManager.broadcastToRoomAll(finalAuctionId,
-                                                    "BALANCE_SUCCESS|" + winnerNewBalance + "|" + winner.getUser_id());
+                                                    "WINNER_BALANCE|" + winnerVirtual + "|" + winner.getUser_id());
                                         }
                                         if (sellerUpdated) {
                                             RoomManager.broadcastToRoomAll(finalAuctionId,
-                                                    "BALANCE_SUCCESS|" + sellerNewBalance + "|" + seller.getUser_id());
+                                                    "SELLER_BALANCE|" + sellerNewBalance + "|" + seller.getUser_id());
                                         }
 
                                         // Ghi transaction cho winner
@@ -221,8 +209,9 @@ public class AuctionHandler extends BaseHandler {
                                             System.out.println("[AuctionHandler] Seller " + seller.getUsername() + " received: " + finalPrice);
                                         }
 
-                                        // Broadcast YOU_WON cho winner
-                                        RoomManager.broadcastToRoomAll(finalAuctionId, "YOU_WON|" + finalPrice);
+                                        //  Thêm tên winner vào broadcast
+                                        RoomManager.broadcastToRoomAll(finalAuctionId,
+                                                "YOU_WON|" + finalPrice + "|" + winner.getUsername());
                                     }
 
                                     // Broadcast AUCTION_ENDED cho tất cả

@@ -170,6 +170,9 @@ public class LiveAuctionController implements UserDataReceiver {
         this.stepPrice = new BigDecimal(stepPrice);
         this.floorPrice = new BigDecimal(floorPrice);
 
+        ResponseHandler.setLiveAuctionListener(this::handleServerMessage);
+        client.addListener("LiveAuction", this::handleServerMessage);
+
         User latestUser = UserSession.getCurrentUser();
         if (latestUser != null) {
             this.currentUser = latestUser;
@@ -372,6 +375,8 @@ public class LiveAuctionController implements UserDataReceiver {
     }
 
     private void navigateToHome() {
+        ResponseHandler.setLiveAuctionListener(null); // cleanup
+        client.removeListener("LiveAuction");
         UserSession.setVirtualBalance(virtualBalance);
 
         if (countdownTimer != null) {
@@ -627,6 +632,26 @@ public class LiveAuctionController implements UserDataReceiver {
                 placeBidBtn.setDisable(true);
                 addStepBtn.setDisable(true);
                 maxBidBtn.setDisable(true);
+                return;
+            }
+
+            // ==================== CẬP NHẬT BALANCE SAU KHI KẾT THÚC ====================
+            if (msg.startsWith("WINNER_BALANCE") || msg.startsWith("SELLER_BALANCE")) {
+                String[] parts = msg.split("\\|");
+                if (parts.length >= 3) {
+                    BigDecimal newBalance = new BigDecimal(parts[1]);
+                    String userId = parts[2];
+
+                    // Chỉ cập nhật nếu đúng là user hiện tại
+                    if (currentUser != null && currentUser.getUser_id().equals(userId)) {
+                        currentUser.setBalance(newBalance);
+                        UserSession.setCurrentUser(currentUser);
+                        UserSession.setVirtualBalance(newBalance);
+                        this.virtualBalance = newBalance;
+                        updateBalanceDisplay();
+                        System.out.println("[LiveAuction] Balance updated after settle: " + newBalance);
+                    }
+                }
                 return;
             }
 
