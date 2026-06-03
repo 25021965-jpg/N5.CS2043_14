@@ -196,7 +196,6 @@ public class AuctionDAO {
             conn.setAutoCommit(false);
 
             try {
-
                 saveItem(conn, auction.getItem());
 
                 PreparedStatement ps = conn.prepareStatement(sql);
@@ -212,41 +211,14 @@ public class AuctionDAO {
                 ps.setBoolean(9, false);
                 ps.setBoolean(10, false);
 
-                saveItem(conn, auction.getItem());
-                PreparedStatement ps = conn.prepareStatement(sql);
-
-                ps.setString(1, auction.getAuction_id());
-                ps.setString(2, auction.getItem().getItem_id());
-                ps.setString(3, auction.getSeller().getUser_id());
-                ps.setBigDecimal(4, auction.getStartingPrice());
-                ps.setBigDecimal(5, auction.getCurrentPrice());
-                ps.setBigDecimal(6, auction.getMinIncrement());
-                ps.setTimestamp(7, Timestamp.valueOf(auction.getStartTime()));
-                ps.setTimestamp(8, Timestamp.valueOf(auction.getEndTime()));
-                ps.setBoolean(9, false);
-                ps.setBoolean(10, false); // mặc định pending approval
                 ps.executeUpdate();
                 conn.commit();
 
-            }
-
-            catch (Exception e) {
             } catch (Exception e) {
                 conn.rollback();
                 throw e;
             }
 
-        }
-
-        catch (Exception e) {
-            System.out.println(
-                    "Save auction error: "
-                            + e.getMessage()
-            );
-
-            throw new RuntimeException(
-                    e.getMessage()
-            );
         } catch (Exception e) {
             System.out.println("Save auction error: " + e.getMessage());
             throw new RuntimeException(e.getMessage());

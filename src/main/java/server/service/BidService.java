@@ -59,7 +59,6 @@ public class BidService {
                 }
 
                 // TRỪ VIRTUAL BALANCE (ATOMIC)
-                boolean deducted = UserDAO.deductVirtualBalance(bidder.getUser_id(), amount);
                 boolean deducted = UserDAO.deductVirtualBalance(bidder.getUser_id(), additionalAmount);
                 if (!deducted) {
                     throw new InvalidBidException("Failed to deduct virtual balance.");
