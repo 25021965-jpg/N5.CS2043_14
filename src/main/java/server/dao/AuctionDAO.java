@@ -1,10 +1,9 @@
 package server.dao;
 
 import model.*;
-import model.Entity.Item.Item;
-import model.Entity.User.User;
-import model.Factory.ItemFactory;
-import model.Factory.UserFactory;
+import model.Entity.Item.*;
+import model.Entity.User.*;
+import model.Factory.*;
 
 import java.sql.*;
 import java.time.LocalDateTime;
@@ -36,7 +35,7 @@ public class AuctionDAO {
         if (start != null) auction.setStartTime(start.toLocalDateTime());
         if (end != null) auction.setEndTime(end.toLocalDateTime());
 
-        User seller = UserFactory.createFromRole(rs.getString("seller_role"));
+        User seller = new Bidder();
         seller.setUser_id(rs.getString("seller_id"));
         seller.setUsername(rs.getString("seller_name"));
         seller.setFullname(rs.getString("seller_fullname"));
