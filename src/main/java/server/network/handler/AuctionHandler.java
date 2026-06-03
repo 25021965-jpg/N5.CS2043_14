@@ -1,6 +1,8 @@
 package server.network.handler;
 
 import model.*;
+import model.Entity.Item.Item;
+import model.Entity.User.User;
 import server.dao.*;
 import server.manager.RoomManager;
 import server.service.AuctionService;

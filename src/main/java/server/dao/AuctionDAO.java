@@ -1,6 +1,10 @@
 package server.dao;
 
 import model.*;
+import model.Entity.Item.Item;
+import model.Entity.User.User;
+import model.Factory.ItemFactory;
+import model.Factory.UserFactory;
 
 import java.sql.*;
 import java.time.LocalDateTime;
@@ -32,28 +36,17 @@ public class AuctionDAO {
         if (start != null) auction.setStartTime(start.toLocalDateTime());
         if (end != null) auction.setEndTime(end.toLocalDateTime());
 
-        User seller = new User();
+        User seller = UserFactory.createFromRole(rs.getString("seller_role"));
         seller.setUser_id(rs.getString("seller_id"));
         seller.setUsername(rs.getString("seller_name"));
         seller.setFullname(rs.getString("seller_fullname"));
         auction.setSeller(seller);
 
-        Item item = new Item();
+        String category = rs.getString("category");
+        Item item = ItemFactory.createFromCategory(category);
         item.setItem_id(rs.getString("item_id"));
         item.setName(rs.getString("item_name"));
         item.setDescription(rs.getString("item_desc"));
-
-        String category = rs.getString("category");
-
-        if (category != null) {
-            try {
-                item.setCategory(Category.valueOf(category.toUpperCase()));
-            } catch (IllegalArgumentException e) {
-                item.setCategory(Category.OTHER);
-            }
-        } else {
-            item.setCategory(Category.OTHER);
-        }
 
         item.setImages(getItemImages(conn, item.getItem_id()));
 
@@ -101,8 +94,10 @@ public class AuctionDAO {
                 SELECT a.*, i.name AS item_name,
                 i.description AS item_desc,
                 i.category,
+                u.user_id AS seller_id,
                 u.username AS seller_name,
-                u.fullname AS seller_fullname
+                u.fullname AS seller_fullname,
+                u.role AS seller_role
                 FROM auctions a
                 LEFT JOIN items i ON a.item_id = i.item_id
                 LEFT JOIN users u ON a.seller_id = u.user_id
@@ -134,8 +129,10 @@ public class AuctionDAO {
                 SELECT a.*, i.name AS item_name,
                 i.description AS item_desc,
                 i.category,
+                u.user_id AS seller_id,
                 u.username AS seller_name,
-                u.fullname AS seller_fullname
+                u.fullname AS seller_fullname,
+                u.role AS seller_role
                 FROM auctions a
                 LEFT JOIN items i ON a.item_id = i.item_id
                 LEFT JOIN users u ON a.seller_id = u.user_id
@@ -260,8 +257,10 @@ public class AuctionDAO {
                 SELECT a.*, i.name AS item_name,
                 i.description AS item_desc,
                 i.category,
+                u.user_id AS seller_id,
                 u.username AS seller_name,
-                u.fullname AS seller_fullname
+                u.fullname AS seller_fullname,
+                u.role AS seller_role
                 FROM auctions a
                 LEFT JOIN items i ON a.item_id = i.item_id
                 LEFT JOIN users u ON a.seller_id = u.user_id
@@ -296,8 +295,10 @@ public class AuctionDAO {
                 SELECT DISTINCT a.*, i.name AS item_name,
                 i.description AS item_desc,
                 i.category,
+                u.user_id AS seller_id,
                 u.username AS seller_name,
-                u.fullname AS seller_fullname
+                u.fullname AS seller_fullname,
+                u.role AS seller_role
                 FROM bids b
                 JOIN auctions a ON b.auction_id = a.auction_id
                 LEFT JOIN items i ON a.item_id = i.item_id
@@ -403,14 +404,14 @@ public class AuctionDAO {
                 b.bid_amount,
                 b.bid_time,
                 u.username
-    
+
                 FROM bids b
-    
+
                 JOIN users u
                 ON b.bidder_id = u.user_id
-    
+
                 WHERE b.auction_id = ?
-    
+
                 ORDER BY b.bid_amount ASC
                 """;
 
@@ -475,9 +476,10 @@ public class AuctionDAO {
     public static Auction findById(String auctionId) {
         String sql = """
         SELECT a.*, i.name AS item_name, i.description AS item_desc,
-               i.category AS item_category, i.images AS item_images,
+               i.category,
                i.item_id AS item_id,
                u.user_id AS seller_id, u.username AS seller_name,
+               u.fullname AS seller_fullname,
                u.balance AS seller_balance, u.role AS seller_role
         FROM auctions a
         LEFT JOIN items i ON a.item_id = i.item_id
@@ -489,7 +491,7 @@ public class AuctionDAO {
             ps.setString(1, auctionId);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
-                return mapAuction(rs, conn); // dùng lại hàm map đã có trong AuctionDAO
+                return mapAuction(rs, conn);
             }
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Unexpected error", e);
@@ -507,23 +509,23 @@ public class AuctionDAO {
                 """
                 SELECT
                 a.auction_id,
-    
+
                 i.name AS item_name,
-    
+
                 a.current_price,
-    
+
                 a.end_time,
-    
+
                 a.is_cancelled
-    
+
                 FROM auctions a
-    
+
                 LEFT JOIN items i
                 ON a.item_id = i.item_id
-    
+
                 WHERE
                 a.is_cancelled = TRUE
-    
+
                 OR NOW() > a.end_time
                 """;
 
@@ -597,28 +599,28 @@ public class AuctionDAO {
         String sql =
                 """
                 SELECT
-    
+
                 a.auction_id,
-    
+
                 i.name item_name,
-    
+
                 u.username seller,
-    
+
                 a.current_price,
-    
+
                 a.is_approved,
-    
+
                 a.is_cancelled,
-    
+
                 a.start_time,
-    
+
                 a.end_time
-    
+
                 FROM auctions a
-    
+
                 LEFT JOIN items i
                 ON a.item_id=i.item_id
-    
+
                 LEFT JOIN users u
                 ON a.seller_id=u.user_id
                 """;

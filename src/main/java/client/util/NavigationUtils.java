@@ -11,7 +11,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-import model.User;
+import model.Entity.User.User;
 
 import java.io.IOException;
 import java.net.URL;
@@ -112,6 +112,7 @@ public class NavigationUtils {
         }
     }
 
+    @SuppressWarnings("unchecked")
     public static <T> T switchSceneAndGetController(
             Stage stage,
             String fxmlPath,

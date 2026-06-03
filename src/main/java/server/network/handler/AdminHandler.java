@@ -1,6 +1,8 @@
 package server.network.handler;
 
 import model.*;
+import model.Entity.User.Role;
+import model.Entity.User.User;
 import server.dao.*;
 
 import java.io.PrintWriter;

@@ -21,11 +21,10 @@ import javafx.scene.shape.Rectangle;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
-import model.Auction;
-import model.Category;
-import model.Item;
-import model.Role;
-import model.User;
+import model.*;
+import model.Entity.Item.*;
+import model.Entity.User.*;
+import model.Factory.*;
 
 import java.io.File;
 import java.math.BigDecimal;
@@ -179,7 +178,7 @@ public class UserCreateNewAuctionController extends BaseController {
     }
 
     private Item createItem(List<String> imageUrls) {
-        Item item = new Item();
+        Item item = ItemFactory.create(parseCategory());
         item.setItem_id(
                 "ITM"
                         + UUID.randomUUID()

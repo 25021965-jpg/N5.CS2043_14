@@ -1,6 +1,6 @@
 package server.network.handler;
 
-import model.User;
+import model.Entity.User.User;
 import server.dao.UserDAO;
 
 import java.io.PrintWriter;

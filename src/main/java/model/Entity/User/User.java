@@ -1,10 +1,12 @@
-package model;
+package model.Entity.User;
+
+import model.Entity.Entity;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
-public class User {
+public abstract class User extends Entity {
     private String user_id;
     private String username;
     private String password;
@@ -19,6 +21,18 @@ public class User {
 
     public User() {}
 
+    // Entity (abstract)
+
+    @Override
+    public String getId() {
+        return user_id;
+    }
+
+    @Override
+    public String getSummary() {
+        return "[" + getRole() + "] " + username;
+    }
+
     // Getter và Setter cho Role
     public Role getRole() {
         return role;
@@ -32,6 +46,9 @@ public class User {
     public boolean hasRole(Role requiredRole) {
         return this.role == requiredRole || this.role == Role.ADMIN;
     }
+
+
+    public abstract String getDefaultAction();
 
     // Getter/setter khác
     public String getUser_id() { return user_id; }

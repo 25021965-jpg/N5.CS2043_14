@@ -1,9 +1,13 @@
 package server.dao;
 
 import model.*;
+import model.Entity.Item.Category;
+import model.Entity.Item.Electronics;
+import model.Entity.Item.Item;
+import model.Entity.User.Seller;
+import model.Entity.User.User;
 import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
-import java.sql.ResultSet;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -80,12 +84,12 @@ class AuctionDAOTest extends TiDBRollbackBase {
     void testSave_WithImages() throws Exception {
         insertUser("seller-save", "ssave", "ssave@mail.com", "pass", "SELLER", 0);
 
-        // Tạo item kèm ảnh để phủ nhánh saveItemImage
-        Item item = new Item();
+        Item item = new Electronics();
         item.setItem_id("item-save");
         item.setName("Laptop");
         item.setCategory(Category.ELECTRONICS);
         item.setDescription("Desc");
+
         List<String> imgs = new ArrayList<>();
         imgs.add("url1");
         imgs.add("url2");
@@ -94,9 +98,11 @@ class AuctionDAOTest extends TiDBRollbackBase {
         Auction a = new Auction();
         a.setAuction_id("auc-save");
         a.setItem(item);
-        User seller = new User();
+
+        User seller = new Seller();
         seller.setUser_id("seller-save");
         a.setSeller(seller);
+
         a.setStartingPrice(new BigDecimal("1000"));
         a.setCurrentPrice(new BigDecimal("1000"));
         a.setMinIncrement(new BigDecimal("50"));
@@ -105,7 +111,6 @@ class AuctionDAOTest extends TiDBRollbackBase {
 
         assertDoesNotThrow(() -> AuctionDAO.save(a));
 
-        // Xác nhận ảnh được lưu và đọc lại đúng
         List<Auction> check = AuctionDAO.findBySeller("seller-save");
         assertEquals(2, check.get(0).getItem().getImages().size());
     }

@@ -10,8 +10,8 @@ import client.util.NavigationUtils;
 import client.util.ToastUtils;
 import javafx.application.Platform;
 import javafx.stage.Stage;
-import model.Role;
-import model.User;
+import model.Entity.User.Role;
+import model.Entity.User.User;
 
 public class AuthHandler {
 

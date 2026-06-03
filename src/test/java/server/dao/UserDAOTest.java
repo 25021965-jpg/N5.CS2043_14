@@ -1,7 +1,8 @@
 package server.dao;
 
-import model.Role;
-import model.User;
+import model.Entity.User.Bidder;
+import model.Entity.User.Role;
+import model.Entity.User.User;
 import org.junit.jupiter.api.Test;
 import org.mindrot.jbcrypt.BCrypt;
 import java.math.BigDecimal;
@@ -69,13 +70,13 @@ class UserDAOTest extends TiDBRollbackBase {
         User u1 = UserDAO.findByUsernameOrEmail(uId1);
         assertNotNull(u1);
 
-        User userObj = new User();
+        User userObj = new Bidder();
         String uId2 = generateId("usave");
         userObj.setUser_id(uId2);
         userObj.setFullname("Save Logic");
         userObj.setUsername("save_" + uId2);
         userObj.setEmail(uId2 + "@save.com");
-        userObj.setPassword(hash("123")); // Phải hash
+        userObj.setPassword(hash("123"));
         userObj.setRole(Role.BIDDER);
         userObj.setBalance(BigDecimal.ZERO);
         userObj.setDob("");

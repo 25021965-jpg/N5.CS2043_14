@@ -17,8 +17,8 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import model.Bid;
-import model.User;
+import model.*;
+import model.Entity.User.User;
 
 import java.math.BigDecimal;
 import java.net.URL;

@@ -11,8 +11,9 @@ import client.util.ToastUtils;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.stage.Stage;
-import model.Role;
-import model.User;
+import model.Entity.User.Role;
+import model.Entity.User.User;
+import model.Factory.UserFactory;
 
 public class AdminHandler {
 
@@ -24,7 +25,7 @@ public class AdminHandler {
             String[] f = token.split(";", -1);
 
             if (f.length >= 4) {
-                User u = new User();
+                User u = UserFactory.createFromRole(f[3]);
                 u.setUser_id(f[0]);
                 u.setUsername(f[1]);
                 u.setEmail(f[2]);

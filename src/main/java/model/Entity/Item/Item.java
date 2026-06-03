@@ -1,9 +1,11 @@
-package model;
+package model.Entity.Item;
+
+import model.Entity.Entity;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class Item {
+public abstract class Item extends Entity {
 
     private String item_id;
     private String name;
@@ -19,6 +21,22 @@ public class Item {
         this.name = name;
         this.category = category;
     }
+
+    // Entity (abstract)
+
+    @Override
+    public String getId() {
+        return item_id;
+    }
+
+    @Override
+    public String getSummary() {
+        return "[" + getCategory() + "] " + name;
+    }
+
+    public abstract String getItemDetails();
+
+    // Getters / Setters
 
     public String getItem_id() {
         return item_id;

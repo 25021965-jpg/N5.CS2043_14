@@ -1,7 +1,8 @@
 package server.network.handler;
 
-import model.*;
-import server.dao.UserDAO;
+import model.Entity.Item.Item;
+import model.Factory.ItemFactory;
+import model.Entity.User.User;
 import server.manager.RoomManager;
 import server.service.AuctionService;
 import server.service.AuthService;
@@ -123,17 +124,10 @@ public class AuthHandler extends BaseHandler {
             if (currentUser == null)
                 return "ERROR|Unauthorized";
 
-            Item item = new Item();
-
+            Item item = ItemFactory.createFromCategory(data[5]);
             item.setItem_id(data[2]);
             item.setName(data[3]);
             item.setDescription(data[4]);
-
-            item.setCategory(
-                    Category.valueOf(
-                            data[5].toUpperCase()
-                    )
-            );
 
             List<String> imageList =
                     new ArrayList<>();

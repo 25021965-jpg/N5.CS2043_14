@@ -1,4 +1,4 @@
-package model;
+package model.Entity.User;
 
 public enum Role {
     ADMIN,

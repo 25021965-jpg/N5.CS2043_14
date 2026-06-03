@@ -1,6 +1,6 @@
 package server.dao;
 
-import model.Item;
+import model.Entity.Item.Item;
 
 import java.sql.*;
 import java.util.ArrayList;

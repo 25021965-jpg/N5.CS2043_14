@@ -1,7 +1,8 @@
 package server.service;
 
-import model.Role;
-import model.User;
+import model.Entity.User.Bidder;
+import model.Entity.User.Role;
+import model.Entity.User.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -17,7 +18,7 @@ class AuthServiceTest {
     }
 
     private User makeUser(String id, String username) {
-        User u = new User();
+        User u = new Bidder();
         u.setUser_id(id);
         u.setUsername(username);
         u.setRole(Role.BIDDER);

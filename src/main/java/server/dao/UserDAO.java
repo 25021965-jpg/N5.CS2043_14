@@ -1,7 +1,7 @@
 package server.dao;
 
-import model.User;
-import model.Role;
+import model.Entity.User.User;
+import model.Factory.UserFactory;
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.sql.*;
@@ -264,7 +264,7 @@ public class UserDAO {
 
     // Helper
     private static User map(ResultSet rs) throws SQLException {
-        User u = new User();
+        User u = UserFactory.createFromRole(rs.getString("role"));
         u.setUser_id(rs.getString("user_id"));
         u.setFullname(rs.getString("fullname"));
         u.setUsername(rs.getString("username"));
@@ -275,16 +275,6 @@ public class UserDAO {
         u.setBalance(rs.getBigDecimal("balance"));
         u.setVerified(rs.getBoolean("verified"));
 
-        String roleStr = rs.getString("role");
-        if (roleStr != null) {
-            try {
-                u.setRole(Role.valueOf(roleStr.toUpperCase()));
-            } catch (Exception e) {
-                u.setRole(Role.BIDDER);
-            }
-        } else {
-            u.setRole(Role.BIDDER);
-        }
         return u;
     }
 

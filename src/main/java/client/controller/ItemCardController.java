@@ -20,7 +20,7 @@ import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 
 import model.Auction;
-import model.Item;
+import model.Entity.Item.Item;
 
 import java.io.File;
 

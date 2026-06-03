@@ -5,8 +5,8 @@ import client.network.response.ResponseHandler;
 import common.Command;
 import common.CommandBuilder;
 import model.Auction;
-import model.Item;
-import model.User;
+import model.Entity.Item.Item;
+import model.Entity.User.User;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -19,7 +19,7 @@ public class ClientSocket {
     private static final Logger LOGGER =
             Logger.getLogger(ClientSocket.class.getName());
 
-    private static ClientSocket instance;
+    private static volatile ClientSocket instance;
 
     private Socket socket;
     private BufferedReader in;
@@ -39,15 +39,18 @@ public class ClientSocket {
 
     public static ClientSocket getInstance() {
         if (instance == null) {
-            try {
-                instance = new ClientSocket();
-            } catch (Exception e) {
-
-                LOGGER.severe(
-                        "Cannot connect server: "
-                                + e.getMessage()
-                );
-                return null;
+            synchronized (ClientSocket.class) {
+                if (instance == null) {
+                    try {
+                        instance = new ClientSocket();
+                    } catch (Exception e) {
+                        LOGGER.severe(
+                                "Cannot connect server: "
+                                        + e.getMessage()
+                        );
+                        return null;
+                    }
+                }
             }
         }
         return instance;
@@ -105,7 +108,7 @@ public class ClientSocket {
 
                     } catch (Exception e) {
                         if (listening) {
-                            LOGGER.severe(
+                            System.err.println(
                                     "Connection lost: "
                                             + e.getMessage()
                             );

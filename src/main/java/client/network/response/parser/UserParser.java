@@ -1,7 +1,8 @@
 package client.network.response.parser;
 
-import model.Role;
-import model.User;
+import model.Entity.User.Role;
+import model.Entity.User.User;
+import model.Factory.UserFactory;
 
 import java.math.BigDecimal;
 import java.util.logging.Level;
@@ -18,7 +19,13 @@ public class UserParser {
 
             if (p.length < 4) return null;
 
-            User u = new User();
+            Role role = Role.BIDDER;
+
+            if (p.length > 5 && !p[5].isEmpty()) {
+                role = Role.valueOf(p[5].trim());
+            }
+
+            User u = UserFactory.create(role);
 
             u.setUser_id(p[0]);
             u.setFullname(p[1]);

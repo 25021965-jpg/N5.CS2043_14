@@ -1,7 +1,9 @@
 package server.dao;
 
-import model.Item;
-import model.Category;
+import model.Entity.Item.Electronics;
+import model.Entity.Item.Item;
+import model.Entity.Item.Category;
+import model.Entity.Item.Other;
 import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +17,7 @@ class ItemDAOTest extends TiDBRollbackBase {
         String iId = generateId("itm");
 
         // Tạo item với category null → nhánh fallback "OTHER" trong saveItem
-        Item item = new Item();
+        Item item = new Other();
         item.setItem_id(iId);
         item.setName("Test Item");
         item.setDescription("Test Desc");
@@ -56,7 +58,7 @@ class ItemDAOTest extends TiDBRollbackBase {
     void testItemEdgeCases() {
         // Truyền null hoặc item không có id → return sớm, không throw
         assertDoesNotThrow(() -> ItemDAO.saveItem(conn, null));
-        assertDoesNotThrow(() -> ItemDAO.saveItem(conn, new Item()));
+        assertDoesNotThrow(() -> ItemDAO.saveItem(conn, new Other()));
 
         // ID không tồn tại → trả về false
         assertFalse(ItemDAO.deleteItem("non-existent-xyz"));
@@ -68,7 +70,7 @@ class ItemDAOTest extends TiDBRollbackBase {
         String iId = generateId("itm2");
 
         // Tạo item với category hợp lệ và images = null → bỏ qua vòng lặp images
-        Item item = new Item();
+        Item item = new Electronics();
         item.setItem_id(iId);
         item.setName("Watch");
         item.setDescription("Desc");

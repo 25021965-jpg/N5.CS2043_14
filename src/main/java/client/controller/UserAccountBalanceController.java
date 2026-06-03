@@ -18,7 +18,9 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.application.Platform;
 
-import model.User;
+import model.*;
+import model.Entity.Item.*;
+import model.Entity.User.*;
 
 import java.math.BigDecimal;
 import java.util.List;

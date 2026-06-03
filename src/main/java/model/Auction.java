@@ -1,5 +1,8 @@
 package model;
 
+import model.Entity.Item.Item;
+import model.Entity.User.User;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

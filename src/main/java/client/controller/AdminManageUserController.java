@@ -11,7 +11,9 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
-import model.User;
+import model.*;
+import model.Entity.Item.*;
+import model.Entity.User.*;
 
 public class AdminManageUserController {
     private final ObservableList<User> userList = FXCollections.observableArrayList();

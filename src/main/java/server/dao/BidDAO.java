@@ -1,7 +1,10 @@
 package server.dao;
 
 import model.Bid;
-import model.User;
+import model.Entity.User.Role;
+import model.Entity.User.User;
+import model.Factory.UserFactory;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -65,7 +68,7 @@ public class BidDAO {
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
-                    User bidder = new User();
+                    User bidder = UserFactory.create(Role.BIDDER);
                     bidder.setUser_id(rs.getString("user_id")); // Đồng bộ với UserDAO
                     bidder.setUsername(rs.getString("username"));
                     bidder.setFullname(rs.getString("fullname"));

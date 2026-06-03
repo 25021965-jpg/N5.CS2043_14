@@ -1,6 +1,10 @@
 package server.service;
 
 import model.*;
+import model.Entity.User.Bidder;
+import model.Entity.User.Role;
+import model.Entity.User.Seller;
+import model.Entity.User.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
@@ -24,7 +28,7 @@ class BidServiceTest {
     @BeforeEach
     void setUp() {
 
-        bidder = new User();
+        bidder = new Bidder();
         bidder.setUser_id("user-1");
         bidder.setUsername("alice");
         bidder.setRole(Role.BIDDER);
@@ -39,7 +43,7 @@ class BidServiceTest {
         auction.setCurrentPrice(new BigDecimal("500"));
         auction.setMinIncrement(new BigDecimal("50"));
 
-        User seller = new User();
+        User seller = new Seller();
         seller.setUser_id("seller-1");
         seller.setUsername("seller");
 
@@ -424,7 +428,7 @@ class BidServiceTest {
 
         auction.setSeller(null);
 
-        User winner = new User();
+        User winner = new Seller();
         winner.setUser_id("winner");
 
         Bid bid = new Bid();
@@ -449,7 +453,7 @@ class BidServiceTest {
     @Test
     void settleAuction_userNotFound_returns() {
 
-        User winner = new User();
+        User winner = new Bidder();
         winner.setUser_id("winner");
 
         Bid bid = new Bid();
@@ -480,16 +484,16 @@ class BidServiceTest {
     @Test
     void settleAuction_insufficientBalance_returns() {
 
-        User winner = new User();
+        User winner = new Bidder();
         winner.setUser_id("winner");
 
         Bid bid = new Bid();
         bid.setBidder(winner);
 
-        User winnerDb = new User();
+        User winnerDb = new Bidder();
         winnerDb.setBalance(new BigDecimal("100"));
 
-        User sellerDb = new User();
+        User sellerDb = new Seller();
         sellerDb.setBalance(new BigDecimal("1000"));
 
         try (MockedStatic<BidDAO> bidDao =

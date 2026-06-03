@@ -11,7 +11,9 @@ import javafx.fxml.FXML;
 
 import javafx.scene.control.*;
 
-import model.User;
+import model.*;
+import model.Entity.Item.*;
+import model.Entity.User.*;
 import server.dao.UserDAO;
 
 public class UserProfileController implements UserDataReceiver {

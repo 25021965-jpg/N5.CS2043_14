@@ -10,7 +10,7 @@ import javafx.scene.control.Control;
 import javafx.scene.control.MenuItem;
 import javafx.stage.Stage;
 
-import model.User;
+import model.Entity.User.User;
 
 public abstract class BaseController
         implements UserDataReceiver {

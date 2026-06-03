@@ -1,6 +1,6 @@
 package client.manager;
 
-import model.User;
+import model.Entity.User.User;
 
 import java.math.BigDecimal;
 

@@ -1,7 +1,7 @@
 package server.network.handler;
 
 import model.Transaction;
-import model.User;
+import model.Entity.User.User;
 import server.dao.TransactionDAO;
 import server.dao.UserDAO;
 

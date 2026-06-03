@@ -30,7 +30,7 @@ import javafx.stage.Stage;
 
 import model.Auction;
 import model.AuctionStatus;
-import model.User;
+import model.Entity.User.User;
 
 import java.io.IOException;
 

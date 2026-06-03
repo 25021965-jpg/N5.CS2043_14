@@ -1,7 +1,9 @@
 package client.network.response.parser;
 
-import client.network.response.*;
 import model.*;
+import model.Entity.Item.Category;
+import model.Entity.User.Role;
+import model.Entity.User.User;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;

@@ -1,6 +1,6 @@
 package server.service;
 
-import model.User;
+import model.Entity.User.User;
 import server.dao.UserDAO;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;

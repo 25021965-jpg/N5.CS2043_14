@@ -15,9 +15,9 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.FlowPane;
 
-import model.Auction;
-import model.Category;
-import model.User;
+import model.*;
+import model.Entity.Item.*;
+import model.Entity.User.*;
 
 import java.util.*;
 import java.util.logging.Level;

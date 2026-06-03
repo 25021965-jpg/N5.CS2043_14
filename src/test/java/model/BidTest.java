@@ -1,5 +1,7 @@
 package model;
 
+import model.Entity.User.Bidder;
+import model.Entity.User.User;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -14,7 +16,7 @@ class BidTest {
 
     @Test
     void constructor_withUser_setsUsernameFromUser() {
-        User user = new User();
+        User user = new Bidder();
         user.setUsername("alice");
         Bid bid = new Bid(user, new BigDecimal("500"));
         assertEquals("alice", bid.getUsername());

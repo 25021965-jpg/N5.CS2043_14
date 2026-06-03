@@ -1,6 +1,9 @@
 package server.service;
 
 import model.*;
+import model.Entity.Item.Item;
+import model.Entity.User.Role;
+import model.Entity.User.User;
 import server.dao.AuctionDAO;
 
 import java.math.BigDecimal;

@@ -1,6 +1,8 @@
 package server.service;
 
 import model.*;
+import model.Entity.User.Role;
+import model.Entity.User.User;
 import server.dao.AuctionDAO;
 import server.dao.BidDAO;
 import server.dao.UserDAO;

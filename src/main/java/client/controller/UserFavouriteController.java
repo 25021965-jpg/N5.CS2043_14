@@ -19,7 +19,7 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.FlowPane;
 
 import model.Auction;
-import model.Category;
+import model.Entity.Item.Category;
 
 import java.util.*;
 

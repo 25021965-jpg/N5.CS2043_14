@@ -1,7 +1,7 @@
 package server.network;
 
 import common.Command;
-import model.User;
+import model.Entity.User.User;
 import server.manager.RoomManager;
 import server.network.handler.*;
 

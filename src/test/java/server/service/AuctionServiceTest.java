@@ -1,6 +1,10 @@
 package server.service;
 
-import model.*;
+import model.Entity.Item.Electronics;
+import model.Entity.Item.Item;
+import model.Entity.User.Role;
+import model.Entity.User.Seller;
+import model.Entity.User.User;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -10,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class AuctionServiceTest {
 
     private User makeSeller() {
-        User u = new User();
+        User u = new Seller();
         u.setUser_id("seller-1");
         u.setUsername("seller");
         u.setRole(Role.SELLER);
@@ -18,7 +22,7 @@ class AuctionServiceTest {
     }
 
     private Item makeItem() {
-        Item item = new Item();
+        Item item = new Electronics();
         item.setItem_id("item-1");
         item.setName("Watch");
         return item;

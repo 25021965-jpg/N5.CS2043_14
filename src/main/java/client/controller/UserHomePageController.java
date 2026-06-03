@@ -23,9 +23,9 @@ import javafx.scene.layout.GridPane;
 
 import javafx.stage.Stage;
 
-import model.Auction;
-import model.Category;
-import model.User;
+import model.Entity.User.*;
+import model.Entity.Item.*;
+import model.*;
 
 import java.util.*;
 

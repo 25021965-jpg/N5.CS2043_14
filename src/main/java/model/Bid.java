@@ -1,5 +1,7 @@
 package model;
 
+import model.Entity.User.User;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
