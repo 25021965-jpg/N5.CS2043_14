@@ -1,10 +1,11 @@
 package client.network.response.handler;
 
-import client.controller.AccountBalanceController;
-import client.controller.LiveAuctionController;
+import client.controller.UserAccountBalanceController;
+import client.controller.UserLiveAuctionController;
 import client.manager.ControllerRegistry;
-import client.util.NavigationUtils;
+import client.util.AlertUtils;
 
+import client.util.ToastUtils;
 import javafx.stage.Stage;
 
 import java.math.BigDecimal;
@@ -20,21 +21,21 @@ public class BalanceHandler {
         try {
             BigDecimal newBalance = parseBalance(raw);
             updateBalanceControllers(newBalance);
-            NavigationUtils.showInfo(stage, "Balance updated!");
+            ToastUtils.show(stage,"Balance updated!");
 
         } catch (Exception e) {
-            NavigationUtils.showError("Invalid balance data.");
+            AlertUtils.error("Invalid balance data.");
         }
     }
 
     // ==================== FAILED ====================
     public static void failed(String data) {
-        NavigationUtils.showError("Balance update failed: " + data);
+        AlertUtils.error("Balance update failed: " + data);
     }
 
     // ==================== TRANSACTIONS ====================
     public static void transactions(String data) {
-        AccountBalanceController controller = ControllerRegistry.get(AccountBalanceController.class);
+        UserAccountBalanceController controller = ControllerRegistry.get(UserAccountBalanceController.class);
         if (controller != null) {
             controller.updateTransactionList(data);
         }
@@ -48,13 +49,13 @@ public class BalanceHandler {
 
     // ==================== UPDATE UI ====================
     private static void updateBalanceControllers(BigDecimal balance) {
-        AccountBalanceController accountController = ControllerRegistry.get(AccountBalanceController.class);
+        UserAccountBalanceController accountController = ControllerRegistry.get(UserAccountBalanceController.class);
         if (accountController != null) {
             accountController.updateBalanceFromServer(balance);
         }
-        LiveAuctionController liveAuctionController = ControllerRegistry.get(LiveAuctionController.class);
-        if (liveAuctionController != null) {
-            liveAuctionController.updateBalance(balance);
+        UserLiveAuctionController userLiveAuctionController = ControllerRegistry.get(UserLiveAuctionController.class);
+        if (userLiveAuctionController != null) {
+            userLiveAuctionController.updateBalance(balance);
         }
     }
 }

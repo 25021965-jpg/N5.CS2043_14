@@ -6,6 +6,7 @@ import client.manager.UserSession;
 import client.manager.ViewCache;
 import client.network.ClientSocket;
 import client.network.response.ResponseHandler;
+import client.util.AlertUtils;
 import client.util.AuctionCardFactory;
 import client.util.NavigationUtils;
 
@@ -28,13 +29,7 @@ import model.User;
 
 import java.util.*;
 
-public class HomePageController extends BaseController {
-
-    private static HomePageController instance;
-
-    public static HomePageController getInstance() {
-        return instance;
-    }
+public class UserHomePageController extends BaseController {
 
     public List<Auction> getAuctionList() {
         return auctionList;
@@ -61,9 +56,10 @@ public class HomePageController extends BaseController {
     // ==================== INIT ====================
     @FXML
     public void initialize() {
-        instance=this;
+        System.out.println("Home Page Loaded");
+        ControllerRegistry.register(UserHomePageController.class, this);
         ControllerRegistry.register(
-                HomePageController.class,
+                UserHomePageController.class,
                 this
         );        Platform.runLater(() -> {
             if (itemGrid != null && itemGrid.getScene() != null) {
@@ -94,9 +90,6 @@ public class HomePageController extends BaseController {
 
         if (user != null) {
             client.sendList();
-            client.sendGetFavourite(
-                    user.getUser_id()
-            );
         }
     }
 
@@ -254,12 +247,6 @@ public class HomePageController extends BaseController {
     }
 
     @FXML
-    private void showCancelled() {
-        selectedStatus = "CANCELLED";
-        applyFilters();
-    }
-
-    @FXML
     private void showUpcoming() {
         selectedStatus = "UPCOMING";
         applyFilters();
@@ -394,7 +381,7 @@ public class HomePageController extends BaseController {
     private void handleCreateAuction(ActionEvent event) {
         navigate(
                 getStage(event),
-                "/fxml/createAuction-view.fxml",
+                "/fxml/userCreateNewAuction-view.fxml",
                 "Create Auction"
         );
     }
@@ -420,12 +407,12 @@ public class HomePageController extends BaseController {
     }
 
     @FXML
-    private void openYourAuctions(ActionEvent event) {
-        NavigationUtils.setCurrentPage("MY_AUCTIONS");
+    private void openCreatedAuctions(ActionEvent event) {
+        NavigationUtils.setCurrentPage("CREATED_AUCTIONS");
         navigate(
                 getStage(event),
-                "/fxml/myAuctions-view.fxml",
-                "My Auctions"
+                "/fxml/userCreatedAuctions-view.fxml",
+                "Created Auctions"
         );
     }
 
@@ -434,7 +421,7 @@ public class HomePageController extends BaseController {
         NavigationUtils.setCurrentPage("FAVOURITE");
         navigate(
                 getStage(event),
-                "/fxml/Favourite-view.fxml",
+                "/fxml/userFavourite-view.fxml",
                 "Favourite"
         );
     }
@@ -444,7 +431,7 @@ public class HomePageController extends BaseController {
         NavigationUtils.setCurrentPage("BALANCE");
         navigate(
                 getStage(event),
-                "/fxml/accountBalance-view.fxml",
+                "/fxml/userAccountBalance-view.fxml",
                 "Account Balance"
         );
     }
@@ -452,7 +439,7 @@ public class HomePageController extends BaseController {
     @FXML
     private void handleLogout(ActionEvent event) {
         boolean confirmed =
-                NavigationUtils.showConfirm(
+                AlertUtils.confirm(
                         "Logout",
                         "Are you sure you want to logout?"
                 );
@@ -469,7 +456,7 @@ public class HomePageController extends BaseController {
     @FXML
     private void handleDeleteAccount(ActionEvent event) {
         boolean confirmed =
-                NavigationUtils.showConfirm(
+                AlertUtils.confirm(
                         "Danger",
                         "Permanently delete account?"
                 );
@@ -509,8 +496,5 @@ public class HomePageController extends BaseController {
             return;
         }
         client.sendList();
-        client.sendGetFavourite(
-                user.getUser_id()
-        );
     }
 }

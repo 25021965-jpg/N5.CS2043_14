@@ -30,7 +30,7 @@ public enum Command {
     LIST_FAVOURITES,
 
     // ================= USER AUCTION MANAGEMENT =================
-    LIST_MY_AUCTIONS,
+    LIST_CREATED_AUCTIONS,
     LIST_JOINED_AUCTIONS,
 
     // ================= ADMIN USER =================
@@ -61,7 +61,7 @@ public enum Command {
             return Command.valueOf(value.trim().toUpperCase());
 
         } catch (Exception e) {
-            System.err.println("✕ Unknown Command: " + value);
+            System.err.println("Unknown Command: " + value);
 
             return null;
         }

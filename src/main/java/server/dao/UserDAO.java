@@ -9,8 +9,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.math.BigDecimal;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class UserDAO {
+    private static final Logger LOGGER =
+            Logger.getLogger(UserDAO.class.getName());
 
     // AUTHENTICATION
     public static boolean login(String input, String password) {
@@ -25,7 +29,7 @@ public class UserDAO {
                     return BCrypt.checkpw(password, hashedPwd);
                 }
             }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { LOGGER.log(Level.SEVERE, "Unexpected error", e); }
         return false;
     }
 
@@ -40,7 +44,7 @@ public class UserDAO {
             System.out.println("[UserDAO] updateBalance rows: " + rows);
             return rows > 0;
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Unexpected error", e);
             return false;
         }
     }
@@ -56,7 +60,7 @@ public class UserDAO {
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Unexpected error", e);
         }
         return null;
     }
@@ -77,7 +81,7 @@ public class UserDAO {
 
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Unexpected error", e);
             return false;
         }
     }
@@ -103,7 +107,7 @@ public class UserDAO {
                 return updatePs.executeUpdate() > 0;
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Unexpected error", e);
             return false;
         }
     }
@@ -119,7 +123,7 @@ public class UserDAO {
                 users.add(map(rs));
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Unexpected error", e);
         }
         return users;
     }
@@ -133,7 +137,7 @@ public class UserDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return map(rs);
             }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { LOGGER.log(Level.SEVERE, "Unexpected error", e); }
         return null;
     }
 
@@ -162,7 +166,7 @@ public class UserDAO {
             pstmt.setBoolean(14, user.isVerified());
             pstmt.setString(15, user.getRole().name());
             pstmt.executeUpdate();
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) { LOGGER.log(Level.SEVERE, "Unexpected error", e); }
     }
 
     public static boolean deleteUser(String userId) {
@@ -171,7 +175,7 @@ public class UserDAO {
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, userId);
             return ps.executeUpdate() > 0;
-        } catch (SQLException e) { e.printStackTrace(); return false; }
+        } catch (SQLException e) { LOGGER.log(Level.SEVERE, "Unexpected error", e); return false; }
     }
 
     // ==================== VIRTUAL BALANCE (ATOMIC - AN TOÀN) ====================
@@ -186,7 +190,7 @@ public class UserDAO {
                 BigDecimal vb = rs.getBigDecimal("virtual_balance");
                 return vb != null ? vb : BigDecimal.ZERO;
             }
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) { LOGGER.log(Level.SEVERE, "Unexpected error", e); }
         return BigDecimal.ZERO;
     }
 
@@ -197,7 +201,7 @@ public class UserDAO {
             ps.setBigDecimal(1, amount);
             ps.setString(2, userId);
             return ps.executeUpdate() > 0;
-        } catch (SQLException e) { e.printStackTrace(); return false; }
+        } catch (SQLException e) { LOGGER.log(Level.SEVERE, "Unexpected error", e); return false; }
     }
 
     public static boolean initVirtualBalance(String userId, BigDecimal initialBalance) {
@@ -210,12 +214,12 @@ public class UserDAO {
             System.out.println("[UserDAO] initVirtualBalance rows: " + rows);
             return rows > 0;
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Unexpected error", e);
             return false;
         }
     }
 
-    // 🔥 ATOMIC DEDUCT - TRÁNH RACE CONDITION
+    //  ATOMIC DEDUCT - TRÁNH RACE CONDITION
     public static boolean deductVirtualBalance(String userId, BigDecimal amount) {
         String sql = "UPDATE users SET virtual_balance = virtual_balance - ? WHERE user_id = ? AND virtual_balance >= ?";
         try (Connection conn = DatabaseService.getConnection();
@@ -224,15 +228,15 @@ public class UserDAO {
             ps.setString(2, userId);
             ps.setBigDecimal(3, amount);
             int rows = ps.executeUpdate();
-            System.out.println("🔥 deductVirtualBalance: userId=" + userId + ", amount=" + amount + ", rows=" + rows);
+            System.out.println(" deductVirtualBalance: userId=" + userId + ", amount=" + amount + ", rows=" + rows);
             return rows > 0;
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Unexpected error", e);
             return false;
         }
     }
 
-    // 🔥 ATOMIC ADD - AN TOÀN
+    //  ATOMIC ADD - AN TOÀN
     public static boolean addVirtualBalance(String userId, BigDecimal amount) {
         String sql = "UPDATE users SET virtual_balance = virtual_balance + ? WHERE user_id = ?";
         try (Connection conn = DatabaseService.getConnection();
@@ -243,7 +247,7 @@ public class UserDAO {
             System.out.println("[UserDAO] addVirtualBalance rows: " + rows);
             return rows > 0;
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Unexpected error", e);
             return false;
         }
     }
@@ -255,7 +259,7 @@ public class UserDAO {
             ps.setString(1, role.toUpperCase());
             ps.setString(2, userId);
             ps.executeUpdate();
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { LOGGER.log(Level.SEVERE, "Unexpected error", e); }
     }
 
     // Helper
@@ -292,7 +296,7 @@ public class UserDAO {
             ps.setString(2, userId);
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Unexpected error", e);
             return false;
         }
     }
@@ -305,7 +309,7 @@ public class UserDAO {
             ps.setString(2, userId);
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Unexpected error", e);
             return false;
         }
     }

@@ -13,7 +13,7 @@
         xmlns="http://javafx.com/javafx/25"
         xmlns:fx="http://javafx.com/fxml/1"
 
-        fx:controller="client.controller.MyAuctionsController"
+        fx:controller="client.controller.UserCreatedAuctionsController"
 
         style="
             -fx-background-color: #F8FAFC;
@@ -22,7 +22,7 @@
         ">
 
     <fx:include
-            source="sidebar-view.fxml"
+            source="userSidebar-view.fxml"
 
             AnchorPane.topAnchor="0.0"
             AnchorPane.bottomAnchor="0.0"
@@ -33,7 +33,7 @@
             AnchorPane.topAnchor="30.0"
             AnchorPane.leftAnchor="280.0"
 
-            text="My Auctions"
+            text="Created Auctions"
 
             style="
                 -fx-font-size: 32px;
@@ -101,7 +101,7 @@
             fx:id="scrollPane"
             AnchorPane.topAnchor="155.0"
             AnchorPane.leftAnchor="280.0"
-            AnchorPane.rightAnchor="10.0"
+            AnchorPane.rightAnchor="0"
             AnchorPane.bottomAnchor="10.0"
 
             fitToWidth="true"

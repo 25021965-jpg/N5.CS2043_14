@@ -65,7 +65,6 @@ public class ItemCardController {
     // ==================== INITIALIZE ====================
     @FXML
     public void initialize() {
-
         setupImageView();
     }
 
@@ -126,46 +125,27 @@ public class ItemCardController {
         }
     }
     // ==================== SETTERS ====================
-
     public void setClient(ClientSocket client) {
         this.client = client;
     }
 
-    public void setRoot() {
-    }
-
-
     // ==================== LOAD DATA ====================
-
     public void setData(Auction auction) {
         this.auction = auction;
-
-        if (auction == null
-                || auction.getItem() == null) {
-
+        if (auction == null || auction.getItem() == null) {
             return;
         }
 
-        Item item =
-                auction.getItem();
-
+        Item item = auction.getItem();
         setupName(item);
-
         setupCategory(item);
-
         setupStatus();
-
         setupPrices();
-
         setupEndTime();
-
         loadImage(item);
     }
 
-    private void setupName(
-            Item item
-    ) {
-
+    private void setupName(Item item) {
         lblName.setText(
                 TextUtils.safeText(
                         item.getName()
@@ -173,30 +153,21 @@ public class ItemCardController {
         );
     }
 
-    private void setupCategory(
-            Item item
-    ) {
+    private void setupCategory(Item item) {
 
         String categoryText =
                 item.getCategory() != null
-
                         ? TextUtils.formatCategory(
                         item.getCategory().name()
                 )
-
                         : "Category: —";
-
         lblCategory.setText(categoryText);
     }
 
     private void setupStatus() {
-
         if (auction.getStatus() == null) {
-
             lblStatus.setText("Status: —");
-
             lblStatus.setStyle(DEFAULT_STATUS_STYLE);
-
             return;
         }
 
@@ -219,28 +190,16 @@ public class ItemCardController {
         );
     }
 
-    private String getStatusStyle(
-            String status
-    ) {
-
+    private String getStatusStyle(String status) {
         return switch (status) {
-
-            case "ACTIVE" ->
-                    "-fx-text-fill:#7CFC00;";
-
-            case "ENDED" ->
-                    "-fx-text-fill:#ff4d4d;";
-
-            case "PENDING_APPROVAL" ->
-                    "-fx-text-fill:#facc15;";
-
-            default ->
-                    DEFAULT_STATUS_STYLE;
+            case "ACTIVE" -> "-fx-text-fill:#7CFC00;";
+            case "ENDED" -> "-fx-text-fill:#ff4d4d;";
+            case "PENDING_APPROVAL" -> "-fx-text-fill:#facc15;";
+            default -> DEFAULT_STATUS_STYLE;
         };
     }
 
     private void setupPrices() {
-
         lblCurrentPrice.setText(
                 TextUtils.withLabel(
                         "Current Price",
@@ -261,13 +220,8 @@ public class ItemCardController {
     }
 
     private void setupEndTime() {
-
         if (auction.getEndTime() == null) {
-
-            lblEndTime.setText(
-                    "End at: —"
-            );
-
+            lblEndTime.setText("End at: —");
             return;
         }
 
@@ -279,41 +233,26 @@ public class ItemCardController {
     }
 
     public void updateAuction(Auction auction) {
-        this.auction = auction;
-
-        setupPrices();
-        setupStatus();
-        setupEndTime();
+        setData(auction);
     }
 
     // ==================== IMAGE ====================
-
-    private void loadImage(
-            Item item
-    ) {
-
+    private void loadImage(Item item) {
         if (item.getImages() == null
                 || item.getImages().isEmpty()) {
 
-            imgProduct.setImage(
-                    getFallbackImage()
-            );
-
+            imgProduct.setImage(getFallbackImage());
             return;
         }
 
         try {
-
             String imagePath =
                     item.getImages()
                             .getFirst();
 
             Image image = IMAGE_CACHE.get(imagePath);
-
             if (image == null) {
-
                 image = createImage(imagePath);
-
                 IMAGE_CACHE.put(
                         imagePath,
                         image
@@ -321,11 +260,8 @@ public class ItemCardController {
             }
 
             Image finalImage = image;
-
             image.progressProperty().addListener((obs, oldVal, newVal) -> {
-
                 if (newVal.doubleValue() >= 1.0) {
-
                     applyCoverCrop(finalImage);
                 }
             });
@@ -333,15 +269,8 @@ public class ItemCardController {
             imgProduct.setImage(image);
 
         } catch (Exception e) {
-
-            System.out.println(
-                    "Image error: "
-                            + e.getMessage()
-            );
-
-            imgProduct.setImage(
-                    getFallbackImage()
-            );
+            System.out.println("Image error: " + e.getMessage());
+            imgProduct.setImage(getFallbackImage());
         }
 
     }
@@ -379,7 +308,6 @@ public class ItemCardController {
     }
 
     private Image getFallbackImage() {
-
         URL url =
                 getClass().getResource(
                         "/image/no-image.png"
@@ -387,9 +315,7 @@ public class ItemCardController {
 
         if (url == null) {
 
-            System.out.println(
-                    "Missing fallback image"
-            );
+            System.out.println("Missing fallback image");
 
             return null;
         }
@@ -412,7 +338,7 @@ public class ItemCardController {
         ItemViewController controller =
                 NavigationUtils.switchSceneAndGetController(
                         stage,
-                        "/fxml/items-view.fxml",
+                        "/fxml/item-view.fxml",
                         "Item Detail"
                 );
 

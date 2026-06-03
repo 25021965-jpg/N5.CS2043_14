@@ -15,40 +15,27 @@ import javafx.scene.control.*;
 import javafx.scene.layout.FlowPane;
 
 import model.Auction;
-import model.User;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
-public class MyAuctionsController implements UserDataReceiver{
+public class UserCreatedAuctionsController extends BaseController implements UserDataReceiver{
 
     @FXML private ComboBox<String> statusFilterComboBox;
     @FXML private ComboBox<String> categoryFilterComboBox;
     @FXML private FlowPane itemGrid;
     @FXML private ScrollPane scrollPane;
 
-    private final List<Auction> myAuctions = new ArrayList<>();
-
-    private static MyAuctionsController instance;
-
-    public static MyAuctionsController getInstance() {
-        return instance;
-    }
-
-
-    public void setClient(ClientSocket client) {}
-    public void setUser(User user) {}
+    private final List<Auction> CreatedAuctions = new ArrayList<>();
+    private final Map<String, Parent> cardMap = new HashMap<>();
+    private final Map<String, ItemCardController> controllerMap = new HashMap<>();
 
     @FXML
     public void initialize() {
-        instance = this;
-        ControllerRegistry.register(MyAuctionsController.class, this);
-        System.out.println("MyAuctions Loaded");
+        ControllerRegistry.register(UserCreatedAuctionsController.class, this);
+        System.out.println("Created Auctions Loaded");
 
         setupStatusFilter();
         setupCategoryFilter();
-
-        ClientSocket.getInstance().sendMyAuctions();
 
         Platform.runLater(() -> {
             itemGrid.setPrefWrapLength(
@@ -62,6 +49,15 @@ public class MyAuctionsController implements UserDataReceiver{
                             )
             );
         });
+    }
+
+    @Override
+    public void setClient(ClientSocket client) {
+        super.setClient(client);
+
+        if (client != null) {
+            reloadCreatedAuctions();
+        }
     }
 
     private void setupStatusFilter() {
@@ -107,18 +103,11 @@ public class MyAuctionsController implements UserDataReceiver{
     }
 
     private void filterAuctions() {
-
-        String selectedStatus =
-                statusFilterComboBox.getValue();
-
-        String selectedCategory =
-                categoryFilterComboBox.getValue();
-
+        String selectedStatus = statusFilterComboBox.getValue();
+        String selectedCategory = categoryFilterComboBox.getValue();
         List<Auction> filtered =
-                myAuctions.stream()
-
+                CreatedAuctions.stream()
                         .filter(auction -> {
-
                             boolean statusMatch =
                                     selectedStatus == null
                                             || selectedStatus.equalsIgnoreCase("All")
@@ -137,46 +126,61 @@ public class MyAuctionsController implements UserDataReceiver{
 
                             return statusMatch && categoryMatch;
                         })
-
                         .toList();
-
         refreshGrid(filtered);
     }
 
-    public void updateMyAuctions(
-            List<Auction> auctions
-    ) {
+    public void updateCreatedAuctions(List<Auction> auctions) {
+        runUI(() -> {
+            CreatedAuctions.clear();
+            CreatedAuctions.addAll(auctions);
 
-        myAuctions.clear();
-        myAuctions.addAll(auctions);
-
-        refreshGrid(myAuctions);
+            refreshGrid(CreatedAuctions);
+        });
     }
 
-    private void refreshGrid(
-            List<Auction> list
-    ) {
-
+    private void refreshGrid(List<Auction> list) {
         itemGrid.getChildren().clear();
-
+        Set<String> newIds = new HashSet<>();
         for (Auction auction : list) {
+            String id = auction.getAuction_id();
+            newIds.add(id);
+            Parent card = cardMap.get(id);
+            ItemCardController controller = controllerMap.get(id);
+            if (card == null || controller == null) {
+                card =
+                        AuctionCardFactory.createCard(
+                                auction,
+                                ClientSocket.getInstance()
+                        );
 
-            Parent card =
-                    AuctionCardFactory.createCard(
-                            auction,
-                            ClientSocket.getInstance()
-                    );
+                if (card == null) {
+                    continue;
+                }
 
-            if (card != null) {
+                controller =
+                        (ItemCardController)
+                                card.getProperties()
+                                        .get("controller");
 
-                itemGrid.getChildren().add(
-                        card
-                );
+                if (controller == null) {
+                    continue;
+                }
+
+                cardMap.put(id, card);
+                controllerMap.put(id, controller);
             }
+            controller.updateAuction(auction);
+            itemGrid.getChildren().add(card);
         }
+
+        cardMap.keySet().removeIf(id -> !newIds.contains(id));
+        controllerMap.keySet().removeIf(id -> !newIds.contains(id));
     }
 
-    public void reloadMyAuctions() {
-        ClientSocket.getInstance().sendMyAuctions();
+    public void reloadCreatedAuctions() {
+        if (client != null) {
+            client.sendCreatedAuctions();
+        }
     }
 }

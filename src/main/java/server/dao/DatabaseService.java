@@ -3,8 +3,13 @@ package server.dao;
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.sql.*;
+import java.util.logging.Logger;
 
 public class DatabaseService {
+
+    private static final Logger LOGGER =
+            Logger.getLogger(DatabaseService.class.getName());
+
     // Đọc thông tin từ Environment Variables để bảo mật
     private static final String HOST = System.getenv("TIDB_HOST");
     private static final String USER = System.getenv("TIDB_USER");
@@ -51,7 +56,7 @@ public class DatabaseService {
                     CHECK (username NOT LIKE '% %')
                 )""");
 
-            // 🔥 THÊM CỘT VIRTUAL_BALANCE NẾU CHƯA CÓ
+            //  THÊM CỘT VIRTUAL_BALANCE NẾU CHƯA CÓ
             addVirtualBalanceColumnIfNotExists(stmt);
 
             // 3. Bảng Vật phẩm
@@ -152,12 +157,12 @@ public class DatabaseService {
             System.out.println("✓ TiDB Cloud: Database and tables initialized successfully");
 
         } catch (SQLException e) {
-            System.err.println("✕ TiDB Initialization Error: " + e.getMessage());
-            System.err.println("Error: " + e.getMessage());
+            LOGGER.severe("✕ TiDB Initialization Error: " + e.getMessage());
+            LOGGER.severe("Error: " + e.getMessage());
         }
     }
 
-    // 🔥 THÊM METHOD NÀY ĐỂ TỰ ĐỘNG THÊM CỘT VIRTUAL_BALANCE
+    //  THÊM METHOD NÀY ĐỂ TỰ ĐỘNG THÊM CỘT VIRTUAL_BALANCE
     private static void addVirtualBalanceColumnIfNotExists(Statement stmt) {
         try {
             // Kiểm tra cột virtual_balance đã tồn tại chưa
@@ -187,7 +192,7 @@ public class DatabaseService {
                 System.out.println("✓ virtual_balance column already exists");
             }
         } catch (SQLException e) {
-            System.err.println("⚠️ Could not add virtual_balance column: " + e.getMessage());
+            LOGGER.severe("⚠️ Could not add virtual_balance column: " + e.getMessage());
         }
     }
 }

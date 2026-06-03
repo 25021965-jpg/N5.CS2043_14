@@ -1,7 +1,8 @@
-package client.controller.admin;
+package client.controller;
 
 import client.manager.ControllerRegistry;
 import client.network.ClientSocket;
+import client.util.AlertUtils;
 import client.util.NavigationUtils;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
@@ -11,7 +12,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
 
-public class ManageAuctionController {
+public class AdminManageAuctionController {
 
     private final ObservableList<String[]> auctionList = FXCollections.observableArrayList();
 
@@ -26,7 +27,7 @@ public class ManageAuctionController {
 
     @FXML
     public void initialize() {
-        ControllerRegistry.register(ManageAuctionController.class, this);
+        ControllerRegistry.register(AdminManageAuctionController.class, this);
         auctionIdCol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue()[0]));
         auctionItemCol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue()[1]));
         sellerCol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue()[2]));
@@ -58,7 +59,7 @@ public class ManageAuctionController {
     private String[] getSelectedAuction(String errorMessage) {
         String[] selected = auctionTable.getSelectionModel().getSelectedItem();
         if (selected == null) {
-            NavigationUtils.showError(errorMessage);
+            AlertUtils.error(errorMessage);
             return null;
         }
         return selected;
@@ -80,11 +81,11 @@ public class ManageAuctionController {
         if (selected == null) return;
         if ("ENDED".equals(selected[4])
                 || "CANCELLED".equals(selected[4])) {
-            NavigationUtils.showError("This auction has ended or been cancelled.");
+            AlertUtils.error("This auction has ended or been cancelled.");
             return;
         }
 
-        if (NavigationUtils.showConfirm(
+        if (AlertUtils.confirm(
                 "Stop Auction",
                 "Stop this auction: " + selected[1] + "?"
         )) {
@@ -97,11 +98,11 @@ public class ManageAuctionController {
         String[] selected = getSelectedAuction("Please select an auction to resume!");
         if (selected == null) return;
         if (!"CANCELLED".equals(selected[4])) {
-            NavigationUtils.showError("Only stopped auctions can be resumed!");
+            AlertUtils.error("Only stopped auctions can be resumed!");
             return;
         }
 
-        if (NavigationUtils.showConfirm(
+        if (AlertUtils.confirm(
                 "Resume Auction",
                 "Resume this auction: " + selected[1] + "?"
         )) {
@@ -113,7 +114,7 @@ public class ManageAuctionController {
     private void handleCancelAuction() {
         String[] selected = getSelectedAuction("Please select an auction to cancel!");
         if (selected == null) return;
-        if (NavigationUtils.showConfirm(
+        if (AlertUtils.confirm(
                 "Cancel Auction",
                 "Cancel this auction: "
                         + selected[1]
@@ -141,13 +142,13 @@ public class ManageAuctionController {
 
     // Navigation
     @FXML public void handleManageUsers() {
-        NavigationUtils.switchScene(getStage(), "/fxml/manageUser-view.fxml", "Admin");
+        NavigationUtils.switchScene(getStage(), "/fxml/adminManageUser-view.fxml", "Admin");
     }
     @FXML public void handleManageProducts() {
-        NavigationUtils.switchScene(getStage(), "/fxml/manageProduct-view.fxml", "Manage Products");
+        NavigationUtils.switchScene(getStage(), "/fxml/adminManageProduct-view.fxml", "Manage Products");
     }
     @FXML public void handleAuctionHistory() {
-        NavigationUtils.switchScene(getStage(), "/fxml/auctionHAdmin-view.fxml", "Auction History");
+        NavigationUtils.switchScene(getStage(), "/fxml/adminAuctionHistory-view.fxml", "Auction History");
     }
     @FXML public void handleLogout() {
         if (ClientSocket.getInstance() != null) ClientSocket.getInstance().sendLogout();

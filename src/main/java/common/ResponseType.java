@@ -46,8 +46,8 @@ public enum ResponseType {
     REMOVE_FAVOURITE_FAILED,
 
     // ================= USER AUCTION HISTORY =================
-    LIST_MY_AUCTIONS_SUCCESS,
-    LIST_MY_AUCTIONS_EMPTY,
+    LIST_CREATED_AUCTIONS_SUCCESS,
+    LIST_CREATED_AUCTIONS_EMPTY,
 
     LIST_JOINED_AUCTIONS_SUCCESS,
     LIST_JOINED_AUCTIONS_EMPTY,
@@ -115,7 +115,7 @@ public enum ResponseType {
             return ResponseType.valueOf(key);
 
         } catch (Exception e) {
-            System.err.println("✕ Unknown Response Type: " + msg);
+            System.err.println("Unknown Response Type: " + msg);
 
             return null;
         }

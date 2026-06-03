@@ -6,7 +6,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<BorderPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="850.0" prefWidth="1100.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controller.HomePageController">
+<BorderPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="850.0" prefWidth="1100.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controller.UserHomePageController">
 
     <!-- TOP BAR -->
     <top>
@@ -60,8 +60,8 @@
                     <!-- HISTORY -->
                     <MenuItem mnemonicParsing="false" onAction="#openHistory" text="Auction History" />
 
-                    <!-- YOUR AUCTIONS -->
-                    <MenuItem mnemonicParsing="false" onAction="#openYourAuctions" text="My Auctions" />
+                    <!-- CREATED AUCTIONS -->
+                    <MenuItem mnemonicParsing="false" onAction="#openCreatedAuctions" text="Created Auctions" />
 
                     <!-- FAVOURITE -->
                     <MenuItem mnemonicParsing="false" onAction="#openFavourite" text="Favourite" />

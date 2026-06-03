@@ -2,8 +2,11 @@ package client.controller;
 
 import client.manager.UserSession;
 import client.network.ClientSocket;
+import client.util.AlertUtils;
+import client.util.NavigationUtils;
 import client.util.TextUtils;
 
+import client.util.ToastUtils;
 import javafx.fxml.FXML;
 
 import javafx.scene.control.*;
@@ -11,7 +14,7 @@ import javafx.scene.control.*;
 import model.User;
 import server.dao.UserDAO;
 
-public class ProfileController implements UserDataReceiver {
+public class UserProfileController implements UserDataReceiver {
 
     @FXML private Label fullNameLabel;
     @FXML private Label usernameLabel;
@@ -31,6 +34,7 @@ public class ProfileController implements UserDataReceiver {
 
     @FXML
     public void initialize() {
+        System.out.println("Profile Loaded");
         setupPasswordToggle(
                 oldPasswordField,
                 oldPasswordTextField,
@@ -63,23 +67,10 @@ public class ProfileController implements UserDataReceiver {
         if (user == null) {
             return;
         }
-        fullNameLabel.setText(
-                TextUtils.toTitleCase(
-                        user.getFullname()
-                )
-        );
-
-        usernameLabel.setText(
-                user.getUsername()
-        );
-
-        emailLabel.setText(
-                user.getEmail()
-        );
-
-        dobLabel.setText(
-                user.getDob()
-        );
+        fullNameLabel.setText(TextUtils.toTitleCase(user.getFullname()));
+        usernameLabel.setText(user.getUsername());
+        emailLabel.setText(user.getEmail());
+        dobLabel.setText(user.getDob());
     }
 
     private void setupPasswordToggle(
@@ -87,7 +78,6 @@ public class ProfileController implements UserDataReceiver {
             TextField textField,
             Button button
     ) {
-
         button.setOnAction(e -> {
             boolean showingText = textField.isVisible();
             if (showingText) {
@@ -107,7 +97,7 @@ public class ProfileController implements UserDataReceiver {
     @FXML
     private void resetPassword() {
         if (currentUser == null) {
-            showError("No user data!");
+            AlertUtils.error("No user data!");
             return;
         }
 
@@ -139,17 +129,17 @@ public class ProfileController implements UserDataReceiver {
                         dbUser.getPassword()
                 )) {
 
-            showError("Old password incorrect!");
+            AlertUtils.error("Old password incorrect!");
             return;
         }
 
         if (newPass.length() < 6) {
-            showError("Password must be at least 6 chars!");
+            AlertUtils.error("Password must be at least 6 chars!");
             return;
         }
 
         if (!newPass.equals(verifyPass)) {
-            showError("Confirm password mismatch!");
+            AlertUtils.error("Confirm password mismatch!");
             return;
         }
 
@@ -162,11 +152,14 @@ public class ProfileController implements UserDataReceiver {
         if (updated) {
             currentUser.setPassword(newPass);
             UserSession.setCurrentUser(currentUser);
-            showInfo();
+            ToastUtils.show(
+                    NavigationUtils.getCurrentStage(),
+                    "Password changed successfully!"
+            );
             clearPasswordFields();
 
         } else {
-            showError("Update password failed!");
+            AlertUtils.error("Update password failed!");
         }
     }
 
@@ -191,28 +184,4 @@ public class ProfileController implements UserDataReceiver {
         verifyNewPasswordTextField.clear();
     }
 
-    private void showInfo() {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setHeaderText(null);
-        alert.setContentText("Password changed successfully!");
-        alert.showAndWait();
-    }
-
-    private void showError(
-            String message
-    ) {
-
-        Alert alert =
-                new Alert(
-                        Alert.AlertType.ERROR
-                );
-
-        alert.setHeaderText(null);
-
-        alert.setContentText(
-                message
-        );
-
-        alert.showAndWait();
-    }
 }

@@ -19,9 +19,7 @@ public class FavouriteHandler extends BaseHandler {
     }
 
     // ==================== ADD FAVOURITE ====================
-
     public String handleAddFavourite(String[] data) {
-
         if (currentUser == null)
             return "ADD_FAVOURITE_FAILED|Not logged in";
 
@@ -35,7 +33,7 @@ public class FavouriteHandler extends BaseHandler {
                         currentUser.getUser_id(),
                         itemId
                 );
-
+        System.out.println("ADD_FAVOURITE DAO RESULT = " + ok);
         return ok
                 ? "ADD_FAVOURITE_SUCCESS"
                 : "ADD_FAVOURITE_FAILED";
@@ -67,7 +65,6 @@ public class FavouriteHandler extends BaseHandler {
     // ==================== LIST FAVOURITES ====================
 
     public String handleListFavourites() {
-
         if (currentUser == null)
             return "FAVOURITES_FAILED|Not logged in";
 

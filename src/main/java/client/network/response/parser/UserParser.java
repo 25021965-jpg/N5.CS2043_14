@@ -4,11 +4,14 @@ import model.Role;
 import model.User;
 
 import java.math.BigDecimal;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class UserParser {
+    private static final Logger LOGGER =
+            Logger.getLogger(UserParser.class.getName());
 
     public static User parse(String data) {
-
         try {
 
             String[] p = data.split("\\|", -1);
@@ -40,8 +43,7 @@ public class UserParser {
             return u;
 
         } catch (Exception e) {
-
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Unexpected error", e);
             return null;
         }
     }

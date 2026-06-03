@@ -29,11 +29,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.logging.Logger;
 
-public class LiveAuctionController implements UserDataReceiver {
+public class UserLiveAuctionController implements UserDataReceiver {
+    private static final Logger LOGGER =
+            Logger.getLogger(UserLiveAuctionController.class.getName());
 
     // ==================== FXML COMPONENTS ====================
-
     @FXML private Label currentTimeLabel;
     @FXML private ImageView productImageView;
     @FXML private Label productNameLabel;
@@ -72,7 +74,6 @@ public class LiveAuctionController implements UserDataReceiver {
     private String auctionId;
     private BigDecimal currentPrice;
     private BigDecimal stepPrice;
-    private BigDecimal floorPrice;
     private boolean isAuctionEnded = false;
 
     // Balance ảo
@@ -93,9 +94,9 @@ public class LiveAuctionController implements UserDataReceiver {
     private static String globalWinnerName = null;
     private static String globalWinnerTime = null;
 
-    private static LiveAuctionController instance;
+    private static UserLiveAuctionController instance;
 
-    public static LiveAuctionController getInstance() {
+    public static UserLiveAuctionController getInstance() {
         return instance;
     }
 
@@ -103,8 +104,9 @@ public class LiveAuctionController implements UserDataReceiver {
 
     @FXML
     public void initialize() {
+        System.out.println("Live Auction Loaded");
         instance = this;
-        ControllerRegistry.register(LiveAuctionController.class, this);
+        ControllerRegistry.register(UserLiveAuctionController.class, this);
 
         timeColumn.setCellValueFactory(new PropertyValueFactory<>("timeString"));
         bidderColumn.setCellValueFactory(new PropertyValueFactory<>("username"));
@@ -168,7 +170,7 @@ public class LiveAuctionController implements UserDataReceiver {
         this.auctionId = auctionId;
         this.currentPrice = new BigDecimal(currentPrice);
         this.stepPrice = new BigDecimal(stepPrice);
-        this.floorPrice = new BigDecimal(floorPrice);
+        BigDecimal floorPrice1 = new BigDecimal(floorPrice);
 
         ResponseHandler.setLiveAuctionListener(this::handleServerMessage);
         client.addListener("LiveAuction", this::handleServerMessage);
@@ -200,7 +202,7 @@ public class LiveAuctionController implements UserDataReceiver {
         productDescLabel.setText(productDesc);
         currentPriceLabel.setText(formatPrice(this.currentPrice));
         stepPriceLabel.setText(formatPrice(this.stepPrice));
-        floorPriceLabel.setText(formatPrice(this.floorPrice));
+        floorPriceLabel.setText(formatPrice(floorPrice1));
 
         updateBalanceDisplay();
 
@@ -385,7 +387,7 @@ public class LiveAuctionController implements UserDataReceiver {
 
         NavigationUtils.switchScene(
                 (Stage) backHomeBtn.getScene().getWindow(),
-                "/fxml/HomePage.fxml",
+                "/fxml/userHomePage-view.fxml",
                 "Auction System",
                 client,
                 currentUser
@@ -411,7 +413,7 @@ public class LiveAuctionController implements UserDataReceiver {
 
                     boolean isDuplicate = false;
                     if (!bidHistoryList.isEmpty()) {
-                        Bid lastBid = bidHistoryList.get(0);
+                        Bid lastBid = bidHistoryList.getFirst();
                         if (lastBid.getTimeString().equals(bidTime)
                                 && lastBid.getUsername().equals(bidder)
                                 && lastBid.getAmount().compareTo(new BigDecimal(newPrice)) == 0) {
@@ -451,7 +453,7 @@ public class LiveAuctionController implements UserDataReceiver {
                         bid.setAmount(currentPrice);
                         bid.setAmountString(String.format("%,.0f", currentPrice) + " USD");
                         bid.setStatus("LEADING");
-                        bidHistoryList.add(0, bid);
+                        bidHistoryList.addFirst(bid);
 
                         for (int i = 1; i < bidHistoryList.size(); i++) {
                             bidHistoryList.get(i).setStatus("OUTBID");
@@ -557,7 +559,7 @@ public class LiveAuctionController implements UserDataReceiver {
                     }
 
                     if (!bidHistoryList.isEmpty()) {
-                        Bid topBid = bidHistoryList.get(0);
+                        Bid topBid = bidHistoryList.getFirst();
                         if (topBid.getUsername() != null && !topBid.getUsername().isEmpty()) {
                             currentWinnerLabel.setText(topBid.getUsername());
                             winnerTimeLabel.setText(topBid.getTimeString());
@@ -625,7 +627,7 @@ public class LiveAuctionController implements UserDataReceiver {
                     } else {
                         showInfo("🏆 " + winnerName + " won the auction for " + formatPrice(finalPrice));
                     }
-                } else if (parts.length >= 2) {
+                } else if (parts.length == 2) {
                     BigDecimal finalPrice = new BigDecimal(parts[1]);
                     showInfo("Auction ended! Winning price: " + formatPrice(finalPrice));
                 }
@@ -725,7 +727,7 @@ public class LiveAuctionController implements UserDataReceiver {
                     history.add(bid);
                 }
             } catch (Exception e) {
-                System.err.println("Parse bid history error: " + e.getMessage());
+                LOGGER.severe("Parse bid history error: " + e.getMessage());
             }
         }
         return history;
@@ -744,7 +746,7 @@ public class LiveAuctionController implements UserDataReceiver {
         double priceInMillions = price.doubleValue() / 1_000_000;
         chartSeries.getData().add(new XYChart.Data<>(String.valueOf(index), priceInMillions));
         if (chartSeries.getData().size() > 20) {
-            chartSeries.getData().remove(0);
+            chartSeries.getData().removeFirst();
         }
     }
 
@@ -785,7 +787,7 @@ public class LiveAuctionController implements UserDataReceiver {
             }, 0, 1000);
         } catch (Exception e) {
             countdownLabel.setText("--:--:--");
-            System.err.println("Cannot parse end time: " + endTimeStr);
+            LOGGER.severe("Cannot parse end time: " + endTimeStr);
         }
     }
 
@@ -861,7 +863,7 @@ public class LiveAuctionController implements UserDataReceiver {
     private void showAntiSnipeNotification() {
         Label notice = new Label("Time extended by 1 minute due to a new bid!");
         notice.setStyle("-fx-background-color: #ff9800; -fx-text-fill: white; -fx-padding: 8 16; -fx-background-radius: 6; -fx-font-weight: bold;");
-        centerPanel.getChildren().add(0, notice);
+        centerPanel.getChildren().addFirst(notice);
 
         new Timer(true).schedule(new TimerTask() {
             @Override

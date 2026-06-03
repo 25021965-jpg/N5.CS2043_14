@@ -11,6 +11,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.Properties;
 import java.util.UUID;
+import java.util.logging.Logger;
 
 public abstract class TiDBRollbackBase {
 
@@ -21,6 +22,8 @@ public abstract class TiDBRollbackBase {
     protected Connection conn;
 
     private MockedStatic<DatabaseService> dbMock;
+    private static final Logger LOGGER =
+            Logger.getLogger(TiDBRollbackBase.class.getName());
 
     @BeforeEach
     void openTransaction() throws Exception {
@@ -34,18 +37,19 @@ public abstract class TiDBRollbackBase {
                 new Class[]{Connection.class},
                 (proxy, method, args) -> {
 
-                    if ("close".equals(method.getName())) {
-                        return null;
-                    }
-
-                    // Chặn commit từ DAO
-                    if ("commit".equals(method.getName())) {
-                        System.out.println("[TEST] Commit blocked");
-                        return null;
-                    }
-
-                    if ("isClosed".equals(method.getName())) {
-                        return false;
+                    switch (method.getName()) {
+                        case "close" -> {
+                            return null;
+                        }
+                        
+                        // Chặn commit từ DAO
+                        case "commit" -> {
+                            System.out.println("[TEST] Commit blocked");
+                            return null;
+                        }
+                        case "isClosed" -> {
+                            return false;
+                        }
                     }
 
                     return method.invoke(realConn, args);
@@ -71,7 +75,7 @@ public abstract class TiDBRollbackBase {
                 realConn.close();
             }
         } catch (Exception e) {
-            System.err.println("[TiDBRollbackBase] Rollback failed: " + e.getMessage());
+            LOGGER.severe("[TiDBRollbackBase] Rollback failed: " + e.getMessage());
         }
     }
 
@@ -142,8 +146,12 @@ public abstract class TiDBRollbackBase {
                     .getClassLoader()
                     .getResourceAsStream("db-test.properties")) {
                 if (is == null) throw new IllegalStateException(
-                        "Missing TIDB_HOST env var and src/test/resources/db-test.properties not found.\n" +
-                                "Create the file with:\n  tidb.host=...\n  tidb.user=...\n  tidb.pass=...");
+                        """
+                                Missing TIDB_HOST env var and src/test/resources/db-test.properties not found.
+                                Create the file with:
+                                  tidb.host=...
+                                  tidb.user=...
+                                  tidb.pass=...""");
                 props.load(is);
             }
             host = props.getProperty("tidb.host");

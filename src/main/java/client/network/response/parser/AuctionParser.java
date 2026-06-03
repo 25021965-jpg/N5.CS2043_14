@@ -5,33 +5,28 @@ import model.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class AuctionParser {
 
+    private static final Logger LOGGER =
+            Logger.getLogger(AuctionParser.class.getName());
+
     public static List<Auction> parseList(String data) {
-
         List<Auction> list = new ArrayList<>();
-
         if (data == null || data.isBlank()) {
             return list;
         }
-
         for (String token : data.split("\\|")) {
-
             try {
-
                 String[] p = token.split(";", -1);
-
                 if (p.length < 12) {
                     continue;
                 }
-
                 Auction auction = new Auction();
-
                 auction.setAuction_id(p[0]);
-
                 Item item = new Item();
-
                 item.setItem_id(p[1]);
                 item.setName(p[2]);
                 item.setDescription(p[9]);
@@ -47,90 +42,60 @@ public class AuctionParser {
                 }
 
                 // ================= IMAGES =================
-
                 List<String> images = new ArrayList<>();
-
                 if (!p[5].isBlank()
                         && !p[5].equalsIgnoreCase("NO_IMAGE")) {
-
                     for (String image : p[5].split(",")) {
-
                         String trimmed = image.trim();
-
                         if (!trimmed.isEmpty()) {
                             images.add(trimmed);
                         }
                     }
                 }
-
                 item.setImages(images);
-
                 auction.setItem(item);
 
                 // ================= PRICE =================
-
-                auction.setCurrentPrice(
-                        new BigDecimal(p[3])
-                );
-
-                auction.setMinIncrement(
-                        new BigDecimal(p[4])
-                );
+                auction.setCurrentPrice(new BigDecimal(p[3]));
+                auction.setMinIncrement(new BigDecimal(p[4]));
 
                 // ================= TIME =================
-
-                auction.setStartTime(
-                        LocalDateTime.parse(p[6])
-                );
-
-                auction.setEndTime(
-                        LocalDateTime.parse(p[7])
-                );
+                auction.setStartTime(LocalDateTime.parse(p[6]));
+                auction.setEndTime(LocalDateTime.parse(p[7]));
 
                 // ================= STATUS =================
-
                 String statusRaw =
                         p[10]
                                 .trim()
                                 .toUpperCase(Locale.ROOT);
 
                 try {
-
-                    auction.setStatus(
-                            AuctionStatus.valueOf(statusRaw)
-                    );
+                    auction.setStatus(AuctionStatus.valueOf(statusRaw));
 
                 } catch (Exception e) {
-
-                    System.out.println(
-                            "BAD STATUS: " + statusRaw
+                    LOGGER.warning(
+                            "Unknown auction status: " + statusRaw
                     );
-
-                    auction.setStatus(
-                            AuctionStatus.PENDING_APPROVAL
+                    auction.setStatus(AuctionStatus.PENDING_APPROVAL
                     );
                 }
 
                 // ================= SELLER =================
-
+                String sellerId = p[11];
+                auction.setSeller_Id(sellerId);
                 User seller = new User();
-
-                seller.setUser_id(p[11]);
-
+                seller.setUser_id(sellerId);
                 auction.setSeller(seller);
-
                 list.add(auction);
 
             } catch (Exception e) {
-
-                System.out.println(
-                        "PARSE ERROR: " + token
+                LOGGER.log(
+                        Level.SEVERE,
+                        "Failed to parse auction token: " + token,
+                        e
                 );
-
-                e.printStackTrace();
             }
         }
-
         return list;
     }
 }

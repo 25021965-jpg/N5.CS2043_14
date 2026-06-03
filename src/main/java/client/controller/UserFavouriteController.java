@@ -3,8 +3,12 @@ package client.controller;
 import client.manager.ControllerRegistry;
 import client.network.ClientSocket;
 import client.network.response.parser.AuctionParser;
+import client.util.AlertUtils;
 import client.util.AuctionCardFactory;
 import client.util.TextUtils;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -19,9 +23,7 @@ import model.Category;
 
 import java.util.*;
 
-import static client.util.NavigationUtils.showError;
-
-public class FavouriteController extends BaseController implements UserDataReceiver {
+public class UserFavouriteController extends BaseController implements UserDataReceiver {
 
     private static final List<String> STATUS_FILTERS = List.of(
             "All", "Active", "Upcoming", "Ended", "Cancelled"
@@ -36,13 +38,18 @@ public class FavouriteController extends BaseController implements UserDataRecei
     private final List<Auction> originalAuctions = new ArrayList<>();
     private final Map<String, Parent> cardMap = new HashMap<>();
     private final Map<String, ItemCardController> controllerMap = new HashMap<>();
+    private static final Logger LOGGER =
+            Logger.getLogger(
+                    UserFavouriteController.class.getName()
+            );
 
     @FXML
     public void initialize() {
-        ControllerRegistry.register(FavouriteController.class, this);
-
+        System.out.println("Favourite Loaded");
+        ControllerRegistry.register(UserFavouriteController.class, this);
         setupStatusFilter();
         setupCategoryFilter();
+
 
         Platform.runLater(() -> {
             favouriteListContainer.setPrefWrapLength(
@@ -63,21 +70,6 @@ public class FavouriteController extends BaseController implements UserDataRecei
         loadFavourites();
     }
 
-    private void handleMessage(String msg) {
-
-        if (msg.startsWith("LIST_FAVOURITES_SUCCESS")
-                || msg.equals("LIST_FAVOURITES_EMPTY")) {
-            renderFavourite(msg);
-        }
-
-        if (msg.startsWith("REMOVE_FAVOURITE_SUCCESS")) {
-            loadFavourites(); // sync lại toàn bộ
-        }
-        if (msg.startsWith("ADD_FAVOURITE_SUCCESS")) {
-            loadFavourites();
-        }
-    }
-
     // ==================== LOAD ====================
     public void loadFavourites() {
         if (client != null) {
@@ -86,40 +78,42 @@ public class FavouriteController extends BaseController implements UserDataRecei
     }
 
     // ==================== RENDER ====================
-    public void renderFavourite(String response) {
+    public void renderFavourite(String data) {
+
         runUI(() -> {
+
             favouriteListContainer.getChildren().clear();
             originalAuctions.clear();
             cardMap.clear();
             controllerMap.clear();
 
-            if (response == null || response.equals("LIST_FAVOURITES_EMPTY")) {
-                favouriteListContainer.getChildren().add(new Label("No favourite items"));
+            if (data == null || data.isBlank()) {
+                favouriteListContainer.getChildren()
+                        .add(new Label("No favourite items"));
                 return;
             }
 
             try {
-                String raw = response.substring("LIST_FAVOURITES_SUCCESS|".length());
-                List<Auction> list = AuctionParser.parseList(raw);
+                List<Auction> list = AuctionParser.parseList(data);
                 originalAuctions.addAll(list);
                 refreshFavouriteList(list);
 
             } catch (Exception e) {
-                e.printStackTrace();
-                showError("Failed to load favourites.");
+                LOGGER.log(
+                        Level.SEVERE,
+                        "Failed to load favourites",
+                        e
+                );
+                AlertUtils.error("Failed to load favourites.");
             }
         });
     }
 
     // ==================== CORE RENDER ====================
     private void refreshFavouriteList(List<Auction> auctions) {
-
         favouriteListContainer.getChildren().clear();
-
         Set<String> newIds = new HashSet<>();
-
         for (Auction auction : auctions) {
-
             String id = auction.getAuction_id();
             newIds.add(id);
 
@@ -127,7 +121,6 @@ public class FavouriteController extends BaseController implements UserDataRecei
             ItemCardController controller = controllerMap.get(id);
 
             if (card == null || controller == null) {
-
                 card = AuctionCardFactory.createCard(auction, client);
 
                 if (card == null) {

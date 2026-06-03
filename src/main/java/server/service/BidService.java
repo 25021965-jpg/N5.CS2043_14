@@ -75,9 +75,7 @@ public class BidService {
                     return "ERROR|Database error during bidding";
                 }
 
-            } catch (AuctionClosedException e) {
-                return "ERROR|" + e.getMessage();
-            } catch (InvalidBidException e) {
+            } catch (AuctionClosedException | InvalidBidException e) {
                 return "ERROR|" + e.getMessage();
             }
         }
@@ -90,9 +88,9 @@ public class BidService {
 
         // Lấy winner (người có bid cao nhất)
         java.util.List<Bid> bids = BidDAO.getBidsByAuctionId(auction.getAuction_id());
-        if (bids == null || bids.isEmpty()) return;
+        if (bids.isEmpty()) return;
 
-        Bid winBid = bids.get(0);
+        Bid winBid = bids.getFirst();
         User winner = winBid.getBidder();
         if (winner == null) return;
 

@@ -26,119 +26,56 @@ public class CommandDispatcher {
 
     public String dispatch(Command cmd, String[] data) {
 
-        switch (cmd) {
+        return switch (cmd) {
 
             // ================= AUTH =================
 
-            case LOGIN:
-                return authHandler.handleLogin(data);
-
-            case REGISTER:
-                return authHandler.handleRegister(data);
-
-            case FORGOT_PASSWORD:
-                return authHandler.handleForgotPassword(data);
-
-            case LOGOUT:
-                return authHandler.handleLogout();
+            case LOGIN -> authHandler.handleLogin(data);
+            case REGISTER -> authHandler.handleRegister(data);
+            case FORGOT_PASSWORD -> authHandler.handleForgotPassword(data);
+            case LOGOUT -> authHandler.handleLogout();
 
             // ================= AUCTION =================
 
-            case CREATE:
-                return authHandler.handleCreate(data);
-
-            case LIST:
-                return auctionHandler.handleList();
-
-            case JOIN:
-                return auctionHandler.handleJoin(data);
-
-            case LEAVE:
-                return auctionHandler.handleLeave();
-
-            case BID:
-                return auctionHandler.handleBid(data);
-
-            case GET_BID_HISTORY:
-                return auctionHandler.handleGetBidHistory(data);
-
-            case LIST_MY_AUCTIONS:
-                return auctionHandler.handleListMyAuctions();
-
-            case LIST_JOINED_AUCTIONS:
-                return auctionHandler.handleListJoinedAuctions();
+            case CREATE -> authHandler.handleCreate(data);
+            case LIST -> auctionHandler.handleList();
+            case JOIN -> auctionHandler.handleJoin(data);
+            case LEAVE -> auctionHandler.handleLeave();
+            case BID -> auctionHandler.handleBid(data);
+            case GET_BID_HISTORY -> auctionHandler.handleGetBidHistory(data);
+            case LIST_CREATED_AUCTIONS -> auctionHandler.handleListCreatedAuctions();
+            case LIST_JOINED_AUCTIONS -> auctionHandler.handleListJoinedAuctions();
 
             // ================= FAVOURITE =================
 
-            case ADD_FAVOURITE:
-                return favouriteHandler.handleAddFavourite(data);
-
-            case REMOVE_FAVOURITE:
-                return favouriteHandler.handleRemoveFavourite(data);
-
-            case LIST_FAVOURITES:
-                return favouriteHandler.handleListFavourites();
+            case ADD_FAVOURITE -> favouriteHandler.handleAddFavourite(data);
+            case REMOVE_FAVOURITE -> favouriteHandler.handleRemoveFavourite(data);
+            case LIST_FAVOURITES -> favouriteHandler.handleListFavourites();
 
             // ================= BALANCE =================
 
-            case GET_BALANCE:
-                return balanceHandler.handleGetBalance(data);
-
-            case DEPOSIT:
-                return balanceHandler.handleDeposit(data);
-
-            case WITHDRAW:
-                return balanceHandler.handleWithdraw(data);
-
-            case GET_TRANSACTIONS:
-                return balanceHandler.handleGetTransactions(data);
-
-            case GET_VIRTUAL_BALANCE:
-                return balanceHandler.handleGetVirtualBalance(data);
+            case GET_BALANCE -> balanceHandler.handleGetBalance(data);
+            case DEPOSIT -> balanceHandler.handleDeposit(data);
+            case WITHDRAW -> balanceHandler.handleWithdraw(data);
+            case GET_TRANSACTIONS -> balanceHandler.handleGetTransactions(data);
+            case GET_VIRTUAL_BALANCE -> balanceHandler.handleGetVirtualBalance(data);
 
             // ================= ADMIN =================
 
-            case LIST_USERS:
-                return adminHandler.handleListUsers();
-
-            case DELETE_USER:
-                return adminHandler.handleDeleteUser(data);
-
-            case UPDATE_USER_ROLE:
-                return adminHandler.handleUpdateUserRole(data);
-
-            case LIST_ITEMS:
-                return adminHandler.handleListItems();
-
-            case DELETE_ITEM:
-                return adminHandler.handleDeleteItem(data);
-
-            case UPDATE_ITEM:
-                return adminHandler.handleUpdateItem(data);
-
-            case LIST_AUCTION_HISTORY:
-                return adminHandler.handleListAuctionHistory();
-
-            case LIST_ALL_AUCTIONS:
-                return adminHandler.handleListAllAuctions();
-
-            case STOP_AUCTION:
-                return adminHandler.handleStopAuction(data);
-
-            case RESUME_AUCTION:
-                return adminHandler.handleResumeAuction(data);
-
-            case CANCEL_AUCTION:
-                return adminHandler.handleCancelAuction(data);
-
-            case APPROVE_AUCTION:
-                return adminHandler.handleApproveAuction(data);
-
-            case LIST_PENDING_AUCTIONS:
-                return adminHandler.handleListPendingAuctions();
-
-            default:
-                return "ERROR|Unsupported command";
-        }
+            case LIST_USERS -> adminHandler.handleListUsers();
+            case DELETE_USER -> adminHandler.handleDeleteUser(data);
+            case UPDATE_USER_ROLE -> adminHandler.handleUpdateUserRole(data);
+            case LIST_ITEMS -> adminHandler.handleListItems();
+            case DELETE_ITEM -> adminHandler.handleDeleteItem(data);
+            case UPDATE_ITEM -> adminHandler.handleUpdateItem(data);
+            case LIST_AUCTION_HISTORY -> adminHandler.handleListAuctionHistory();
+            case LIST_ALL_AUCTIONS -> adminHandler.handleListAllAuctions();
+            case STOP_AUCTION -> adminHandler.handleStopAuction(data);
+            case RESUME_AUCTION -> adminHandler.handleResumeAuction(data);
+            case CANCEL_AUCTION -> adminHandler.handleCancelAuction(data);
+            case APPROVE_AUCTION -> adminHandler.handleApproveAuction(data);
+            case LIST_PENDING_AUCTIONS -> adminHandler.handleListPendingAuctions();
+            default -> "ERROR|Unsupported command";
+        };
     }
 }

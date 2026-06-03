@@ -3,9 +3,11 @@ package client.util;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.security.MessageDigest;
 import java.util.HexFormat;
+import java.util.logging.Logger;
 
 public class CloudinaryUploader {
 
@@ -13,6 +15,8 @@ public class CloudinaryUploader {
     private static final String API_KEY     = System.getenv("CLOUDINARY_KEY");
     private static final String API_SECRET  = System.getenv("CLOUDINARY_SECRET");
     private static final String FOLDER      = "auction-items";
+    private static final Logger LOGGER =
+            Logger.getLogger(CloudinaryUploader.class.getName());
 
     private static String getUploadUrl() {
         return "https://api.cloudinary.com/v1_1/" + CLOUD_NAME + "/image/upload";
@@ -61,14 +65,14 @@ public class CloudinaryUploader {
                 conn.disconnect();
 
                 if (status != 200) {
-                    System.err.println("Cloudinary upload failed (" + status + "): " + body);
+                    LOGGER.severe("Cloudinary upload failed (" + status + "): " + body);
                     return null;
                 }
-                return extractJsonValue(body, "secure_url");
+                return extractJsonValue(body);
             }
 
         } catch (Exception e) {
-            System.err.println("CloudinaryUploader error: " + e.getMessage());
+            LOGGER.severe("CloudinaryUploader error: " + e.getMessage());
             return null;
         }
     }
@@ -81,12 +85,12 @@ public class CloudinaryUploader {
 
     private static String sha1Hex(String input) throws Exception {
         MessageDigest md = MessageDigest.getInstance("SHA-1");
-        byte[] bytes = md.digest(input.getBytes("UTF-8"));
+        byte[] bytes = md.digest(input.getBytes(StandardCharsets.UTF_8));
         return HexFormat.of().formatHex(bytes);
     }
 
-    private static String extractJsonValue(String json, String key) {
-        String search = "\"" + key + "\":\"";
+    private static String extractJsonValue(String json) {
+        String search = "\"" + "secure_url" + "\":\"";
         int start = json.indexOf(search);
         if (start == -1) return null;
         start += search.length();

@@ -1,9 +1,9 @@
 package client.network.response;
 
-import client.controller.LiveAuctionController;
+import client.controller.UserLiveAuctionController;
 import client.manager.ControllerRegistry;
 import client.network.response.handler.*;
-import client.util.NavigationUtils;
+import client.util.AlertUtils;
 import common.ResponseType;
 import javafx.application.Platform;
 import javafx.stage.Stage;
@@ -14,33 +14,33 @@ public class ResponseRouter {
 
         // ===== LIVE UPDATE (xử lý riêng vì không có ResponseType) =====
         if (raw.startsWith("UPDATE_PRICE")) {
-            System.out.println("🔥 [ResponseRouter] Routing UPDATE_PRICE to AuctionHandler");
+            System.out.println(" [ResponseRouter] Routing UPDATE_PRICE to AuctionHandler");
             Platform.runLater(() -> AuctionHandler.updatePrice(raw));
             return;
         }
 
         // THÊM XỬ LÝ JOIN_SUCCESS
         if (raw.startsWith("JOIN_SUCCESS")) {
-            System.out.println("🔥 [ResponseRouter] Routing JOIN_SUCCESS");
+            System.out.println(" [ResponseRouter] Routing JOIN_SUCCESS");
             Platform.runLater(() -> AuctionHandler.joinSuccess(raw.substring("JOIN_SUCCESS|".length())));
             return;
         }
 
         // THÊM XỬ LÝ YOU_WON
         if (raw.startsWith("YOU_WON")) {
-            Platform.runLater(() -> ControllerRegistry.get(LiveAuctionController.class).handleServerMessage(raw));
+            Platform.runLater(() -> ControllerRegistry.get(UserLiveAuctionController.class).handleServerMessage(raw));
             return;
         }
 
         // THÊM XỬ LÝ AUCTION_ENDED
         if (raw.startsWith("AUCTION_ENDED")) {
-            Platform.runLater(() -> ControllerRegistry.get(LiveAuctionController.class).handleServerMessage(raw));
+            Platform.runLater(() -> ControllerRegistry.get(UserLiveAuctionController.class).handleServerMessage(raw));
             return;
         }
 
         // THÊM XỬ LÝ TIME_EXTENDED  ← thêm vào đây
         if (raw.startsWith("TIME_EXTENDED")) {
-            Platform.runLater(() -> ControllerRegistry.get(LiveAuctionController.class).handleServerMessage(raw));
+            Platform.runLater(() -> ControllerRegistry.get(UserLiveAuctionController.class).handleServerMessage(raw));
             return;
         }
 
@@ -132,11 +132,11 @@ public class ResponseRouter {
             case BID_FAILED ->
                     AuctionHandler.bidFailed(data);
 
-            case LIST_MY_AUCTIONS_SUCCESS ->
-                    AuctionHandler.myAuctions(data);
+            case LIST_CREATED_AUCTIONS_SUCCESS ->
+                    AuctionHandler.CreatedAuctions(data);
 
-            case LIST_MY_AUCTIONS_EMPTY ->
-                    AuctionHandler.myAuctionsEmpty();
+            case LIST_CREATED_AUCTIONS_EMPTY ->
+                    AuctionHandler.CreatedAuctionsEmpty();
 
             case LIST_JOINED_AUCTIONS_SUCCESS ->
                     AuctionHandler.joinedAuctions(data);
@@ -146,7 +146,6 @@ public class ResponseRouter {
 
 
             // ===== FAVOURITE =====
-
             case LIST_FAVOURITES_SUCCESS ->
                     FavouriteHandler.load(data);
 
@@ -214,13 +213,13 @@ public class ResponseRouter {
                     AdminHandler.deleteSuccess(stage);
 
             case DELETE_USER_FAILED ->
-                    AdminHandler.deleteFailed(data, stage);
+                    AdminHandler.deleteFailed(data);
 
             case UPDATE_USER_ROLE_SUCCESS ->
                     AdminHandler.updateRoleSuccess(stage);
 
             case UPDATE_USER_ROLE_FAILED ->
-                    AdminHandler.updateRoleFailed(data, stage);
+                    AdminHandler.updateRoleFailed(data);
 
 
             // ===== ADMIN AUCTION =====
@@ -247,7 +246,7 @@ public class ResponseRouter {
                     AdminHandler.approveSuccess(stage);
 
             case APPROVE_AUCTION_FAILED ->
-                    AdminHandler.approveFailed(data, stage);
+                    AdminHandler.approveFailed(data);
 
             case STOP_AUCTION_SUCCESS,
                  RESUME_AUCTION_SUCCESS,
@@ -255,31 +254,24 @@ public class ResponseRouter {
                     AdminHandler.auctionActionSuccess(stage);
 
             case STOP_AUCTION_FAILED ->
-                    AdminHandler.stopFailed(data, stage);
+                    AdminHandler.stopFailed(data);
 
             case RESUME_AUCTION_FAILED ->
-                    AdminHandler.resumeFailed(data, stage);
+                    AdminHandler.resumeFailed(data);
 
             case CANCEL_AUCTION_FAILED ->
-                    AdminHandler.cancelFailed(data, stage);
+                    AdminHandler.cancelFailed(data);
 
 
             // ===== SYSTEM =====
 
             case ERROR ->
-                    NavigationUtils.showError(
-                            "System Error: " + data
-                    );
+                    AlertUtils.error("System Error: " + data);
 
             case DISCONNECTED ->
-                    NavigationUtils.showError(
-                            "Connection Lost"
-                    );
-
+                    AlertUtils.error("Connection Lost");
             default ->
-                    System.out.println(
-                            "Unhandled Response: " + type
-                    );
+                    System.out.println("Unhandled Response: " + type);
         }
     }
 }

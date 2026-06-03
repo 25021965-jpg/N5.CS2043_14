@@ -2,13 +2,11 @@ package server.service;
 
 import model.*;
 import server.dao.AuctionDAO;
-import server.dao.UserDAO;
+
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 import java.time.LocalDateTime;
-
-import static server.dao.AuctionDAO.calculateStatus;
 
 public class AuctionService {
 

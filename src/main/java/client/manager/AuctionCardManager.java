@@ -8,8 +8,11 @@ import model.Auction;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 public class AuctionCardManager {
+    private static final Logger LOGGER =
+            Logger.getLogger(AuctionCardManager.class.getName());
 
     // ==================== CACHE (NODE + CONTROLLER SAFE) ====================
     private static final Map<String, Parent> CARD_CACHE = new HashMap<>();
@@ -55,7 +58,7 @@ public class AuctionCardManager {
                 (ItemCardController) newCard.getProperties().get("controller");
 
         if (controller == null) {
-            System.err.println("Missing controller for auction: " + id);
+            LOGGER.severe("Missing controller for auction: " + id);
             return newCard;
         }
 

@@ -4,6 +4,7 @@ import model.User;
 import server.dao.UserDAO;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+
 import org.mindrot.jbcrypt.BCrypt;
 
 public class AuthService {

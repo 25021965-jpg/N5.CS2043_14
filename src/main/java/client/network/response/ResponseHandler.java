@@ -12,13 +12,11 @@ public class ResponseHandler {
     public static void setMainStage(Stage stage) {
         mainStage = stage;
     }
-
     public static void setLiveAuctionListener(Consumer<String> listener) {
         liveAuctionListener = listener;
     }
 
     public static void handle(String rawMessage) {
-
         if (rawMessage == null || rawMessage.isBlank()) return;
 
         // ===== FAST PATH LIVE AUCTION =====
@@ -28,13 +26,12 @@ public class ResponseHandler {
             }
             return;
         }
-
         ResponseRouter.route(rawMessage, mainStage);
     }
 
     private static boolean isLiveAuctionMessage(String msg) {
         if (msg.startsWith("UPDATE_PRICE")) {
-            System.out.println("🔥 [ResponseHandler] UPDATE_PRICE detected, listener=" + (liveAuctionListener != null ? "OK" : "NULL"));
+            System.out.println(" [ResponseHandler] UPDATE_PRICE detected, listener=" + (liveAuctionListener != null ? "OK" : "NULL"));
         }
         return msg.startsWith("UPDATE_PRICE")
                 || msg.startsWith("JOIN_SUCCESS")

@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ClientHandler implements Runnable {
 
@@ -20,6 +22,9 @@ public class ClientHandler implements Runnable {
 
     private User currentUser;
     private String currentAuctionId;
+
+    private static final Logger LOGGER =
+            Logger.getLogger(ClientHandler.class.getName());
 
     public ClientHandler(Socket socket) {
         this.socket = socket;
@@ -121,7 +126,7 @@ public class ClientHandler implements Runnable {
         } catch (IllegalArgumentException e) {
             return "ERROR|Invalid command";
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Unexpected error", e);
             return "ERROR|" + e.getMessage();
         }
     }
@@ -144,7 +149,7 @@ public class ClientHandler implements Runnable {
                 socket.close();
 
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Unexpected error", e);
         }
     }
 }
