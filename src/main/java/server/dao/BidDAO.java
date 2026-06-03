@@ -131,4 +131,14 @@ public class BidDAO {
         }
         return BigDecimal.ZERO;
     }
+    public static Bid getHighestBid(String auctionId) {
+
+        List<Bid> bids = getBidsByAuctionId(auctionId);
+
+        if (bids == null || bids.isEmpty()) {
+            return null;
+        }
+
+        return bids.get(0);
+    }
 }

@@ -352,4 +352,11 @@ public class ClientSocket {
     public void sendGetVirtualBalance(String userId) {
         sendMessage("GET_VIRTUAL_BALANCE|" + userId);
     }
+
+    public void sendSetAutoBid(String auctionId, String maxAmount) {
+        send(Command.SET_AUTO_BID, auctionId, maxAmount);
+    }
+    public void sendCancelAutoBid(String auctionId) {
+        send(Command.CANCEL_AUTO_BID, auctionId);
+    }
 }

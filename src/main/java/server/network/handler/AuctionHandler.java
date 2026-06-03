@@ -478,4 +478,13 @@ public class AuctionHandler extends BaseHandler {
 
         return sb.toString();
     }
+    public String handleSetAutoBid(String[] data) {
+        BidHandler bidHandler = new BidHandler(currentUser, writer, currentAuctionId);
+        return bidHandler.setAutoBid(data);
+    }
+
+    public String handleCancelAutoBid(String[] data) {
+        BidHandler bidHandler = new BidHandler(currentUser, writer, currentAuctionId);
+        return bidHandler.cancelAutoBid(data);
+    }
 }

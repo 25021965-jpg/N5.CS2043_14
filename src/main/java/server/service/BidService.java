@@ -17,7 +17,12 @@ public class BidService {
     public static final int ANTI_SNIPE_EXTEND_SECONDS = 60;
     public static final int ANTI_SNIPE_MAX_EXTENDS = 5;
 
-    public static String placeBid(User bidder, Auction auction, BigDecimal amount) {
+    public static String placeBid(
+            User bidder,
+            Auction auction,
+            BigDecimal amount,
+            boolean isAutoBid
+    ) {
         synchronized (auction) {
             try {
                 // Kiểm tra quyền
@@ -71,6 +76,11 @@ public class BidService {
 
                 if (success) {
                     auction.setCurrentPrice(amount);
+
+                    AutoBidService.onNewBid(
+                            auction,
+                            bidder.getUser_id()
+                    );
 
                     // Kiểm tra anti-snipe
                     LocalDateTime newEndTime = checkAntiSnipe(auction);
@@ -164,5 +174,17 @@ public class BidService {
 
         System.out.println("Not in window, no extend");
         return null;
+    }
+    public static String placeBid(
+            User bidder,
+            Auction auction,
+            BigDecimal amount
+    ) {
+        return placeBid(
+                bidder,
+                auction,
+                amount,
+                false
+        );
     }
 }

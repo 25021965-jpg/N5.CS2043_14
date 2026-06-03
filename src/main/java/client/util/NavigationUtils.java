@@ -3,7 +3,6 @@ package client.util;
 import client.controller.UserDataReceiver;
 
 import client.manager.UserSession;
-import client.manager.ViewCache;
 import client.network.ClientSocket;
 
 import javafx.fxml.FXMLLoader;
@@ -87,23 +86,14 @@ public class NavigationUtils {
             User user
     ) {
         try {
-            Parent root = ViewCache.get(fxmlPath);
-            if (root == null) {
-                FXMLLoader loader = loadFXML(fxmlPath);
-                root = loader.load();
-                Object controller = loader.getController();
-                root.getProperties().put("controller", controller);
-                injectUserData(controller, client, user);
-                ViewCache.put(fxmlPath, root);
+            FXMLLoader loader = loadFXML(fxmlPath);
 
-            } else {
-                Object controller =
-                        root.getProperties()
-                                .get("controller");
+            Parent root = loader.load();
 
-                injectUserData(controller, client, user
-                );
-            }
+            Object controller = loader.getController();
+
+            injectUserData(controller, client, user);
+
             applyStage(stage, root, title);
 
         } catch (IOException e) {
@@ -118,24 +108,16 @@ public class NavigationUtils {
             String fxmlPath,
             String title
     ) {
-
         try {
-            Parent root = ViewCache.get(fxmlPath);
-            Object controller;
-            if (root == null) {
-                FXMLLoader loader = loadFXML(fxmlPath);
-                root = loader.load();
-                controller = loader.getController();
-                root.getProperties().put("controller", controller);
-                ViewCache.put(
-                        fxmlPath,
-                        root
-                );
-            } else {
-                controller = root.getProperties().get("controller");
-            }
+            FXMLLoader loader = loadFXML(fxmlPath);
+
+            Parent root = loader.load();
+
+            T controller = loader.getController();
+
             applyStage(stage, root, title);
-            return (T) controller;
+
+            return controller;
 
         } catch (IOException e) {
             throw new RuntimeException(e);

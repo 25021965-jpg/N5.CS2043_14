@@ -1,5 +1,6 @@
 package client.controller;
 
+import client.manager.AutoBidManager;
 import client.manager.ControllerRegistry;
 import client.network.ClientSocket;
 import client.network.response.ResponseHandler;
@@ -66,6 +67,9 @@ public class UserLiveAuctionController implements UserDataReceiver {
     @FXML private VBox centerPanel;
     @FXML private VBox chartContainer;
     @FXML private VBox historyContainer;
+    @FXML private TextField autoBidMaxField;
+    @FXML private Button autoBidToggleBtn;
+    @FXML private Label autoBidStatusLabel;
 
     // ==================== INSTANCE VARIABLES ====================
 
@@ -75,6 +79,8 @@ public class UserLiveAuctionController implements UserDataReceiver {
     private BigDecimal currentPrice;
     private BigDecimal stepPrice;
     private boolean isAuctionEnded = false;
+    private boolean autoBidActive = false;
+
 
     // Balance ảo
     private BigDecimal virtualBalance;
@@ -93,6 +99,9 @@ public class UserLiveAuctionController implements UserDataReceiver {
     private static BigDecimal globalCurrentPrice = BigDecimal.ZERO;
     private static String globalWinnerName = null;
     private static String globalWinnerTime = null;
+    private static String globalUserId = null;
+    private static String globalAuctionId = null;
+
 
     private static UserLiveAuctionController instance;
 
@@ -126,6 +135,7 @@ public class UserLiveAuctionController implements UserDataReceiver {
         backHomeBtn.setOnAction(e -> goBackToHome());
         leaveBtn.setOnAction(e -> leaveAndGoBack());
         refreshBtn.setOnAction(e -> refreshBidHistory());
+        autoBidToggleBtn.setOnAction(e -> toggleAutoBid());
 
         startClock();
         ResponseHandler.setLiveAuctionListener(this::handleServerMessage);
@@ -166,6 +176,18 @@ public class UserLiveAuctionController implements UserDataReceiver {
     public void setAuctionData(String auctionId, String productName, String productDesc,
                                String currentPrice, String stepPrice, String floorPrice,
                                String endTime, String imageUrl) {
+
+        // Reset static nếu là auction khác hoặc user khác
+        if (!auctionId.equals(globalAuctionId)
+                || (currentUser != null && !currentUser.getUser_id().equals(globalUserId))) {
+            globalBidHistory = new ArrayList<>();
+            globalBidCounter = 0;
+            globalCurrentPrice = BigDecimal.ZERO;
+            globalWinnerName = null;
+            globalWinnerTime = null;
+            globalAuctionId = auctionId;
+            globalUserId = currentUser != null ? currentUser.getUser_id() : null;
+        }
 
         this.auctionId = auctionId;
         this.currentPrice = new BigDecimal(currentPrice);
@@ -221,6 +243,20 @@ public class UserLiveAuctionController implements UserDataReceiver {
 
         // ==================== COUNTDOWN ====================
         startCountdown(endTime);
+
+        // Restore auto-bid state
+        if (UserSession.isAutoBidActive()
+                && auctionId.equals(UserSession.getAutoBidAuctionId())
+                && currentUser != null
+                && currentUser.getUser_id().equals(UserSession.getAutoBidUserId())) {
+            autoBidActive = true;
+            BigDecimal savedMax = UserSession.getAutoBidMax();
+            autoBidToggleBtn.setText("Cancel Auto-Bid");
+            autoBidToggleBtn.setStyle("-fx-background-color: #f44336; -fx-text-fill: white;");
+            autoBidStatusLabel.setText("✅ Auto-bid active | Max: " + formatPrice(savedMax));
+            autoBidMaxField.setDisable(true);
+            autoBidMaxField.setText(savedMax.toPlainString());
+        }
 
         // ==================== JOIN SERVER ====================
         if (client != null) {
@@ -409,7 +445,24 @@ public class UserLiveAuctionController implements UserDataReceiver {
         Platform.runLater(() -> {
             System.out.println("[LiveAuction] Received: " + msg);
 
+            // ==================== AUTO-BID RESPONSES ====================
+            if (msg.startsWith("AUTO_BID_MAX_REACHED")) {
+                autoBidActive = false;
+                AutoBidManager.disable();
+                Platform.runLater(() -> {
+                    autoBidToggleBtn.setText("Enable Auto-Bid");
+                    autoBidToggleBtn.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white;");
+                    autoBidStatusLabel.setText("⚠️ Max price reached. Auto-bid stopped.");
+                    autoBidMaxField.setDisable(false);
+                    showInfo("Auto-bid has reached your maximum price and was stopped.");
+                });
+                return;
+            }
 
+            if (msg.startsWith("AUTO_BID_CANCELLED")) {
+                Platform.runLater(() -> autoBidStatusLabel.setText("Auto-bid cancelled by server."));
+                return;
+            }
 
             // ==================== UPDATE PRICE ====================
             if (msg.startsWith("UPDATE_PRICE")) {
@@ -891,5 +944,50 @@ public class UserLiveAuctionController implements UserDataReceiver {
                 Platform.runLater(() -> centerPanel.getChildren().remove(notice));
             }
         }, 5000);
+    }
+    private void toggleAutoBid() {
+        if (!autoBidActive) {
+            // Bật auto-bid
+            String maxText = autoBidMaxField.getText().trim().replace(",", "").replace("USD", "").trim();
+            if (maxText.isEmpty()) {
+                showWarning("Please enter max amount for auto-bid");
+                return;
+            }
+            BigDecimal maxAmount;
+            try {
+                maxAmount = new BigDecimal(maxText);
+            } catch (NumberFormatException e) {
+                showWarning("Invalid max amount format");
+                return;
+            }
+            BigDecimal minRequired = currentPrice.add(stepPrice);
+            if (maxAmount.compareTo(minRequired) < 0) {
+                showWarning("Max amount must be at least " + formatPrice(minRequired));
+                return;
+            }
+
+            client.sendSetAutoBid(auctionId, maxText);
+            AutoBidManager.enable(auctionId, maxAmount);
+            autoBidActive = true;
+            UserSession.setAutoBid(auctionId, maxAmount);
+
+
+            autoBidToggleBtn.setText("Cancel Auto-Bid");
+            autoBidToggleBtn.setStyle("-fx-background-color: #f44336; -fx-text-fill: white;");
+            autoBidStatusLabel.setText("✅ Auto-bid active | Max: " + formatPrice(maxAmount));
+            autoBidMaxField.setDisable(true);
+
+        } else {
+            // Tắt auto-bid
+            client.sendCancelAutoBid(auctionId);
+            AutoBidManager.disable();
+            autoBidActive = false;
+            UserSession.clearAutoBid();
+
+            autoBidToggleBtn.setText("Enable Auto-Bid");
+            autoBidToggleBtn.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white;");
+            autoBidStatusLabel.setText("Auto-bid cancelled.");
+            autoBidMaxField.setDisable(false);
+        }
     }
 }

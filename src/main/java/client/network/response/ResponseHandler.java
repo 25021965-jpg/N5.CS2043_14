@@ -43,6 +43,9 @@ public class ResponseHandler {
                 || msg.startsWith("YOU_WON")
                 || msg.startsWith("VIRTUAL_BALANCE")
                 || msg.startsWith("WINNER_BALANCE")
-                || msg.startsWith("SELLER_BALANCE");
+                || msg.startsWith("SELLER_BALANCE")
+                || msg.startsWith("AUTO_BID_SET")
+                || msg.startsWith("AUTO_BID_CANCELLED")
+                || msg.startsWith("AUTO_BID_MAX_REACHED");
     }
 }

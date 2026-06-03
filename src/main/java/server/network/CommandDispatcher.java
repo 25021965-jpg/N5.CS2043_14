@@ -45,6 +45,8 @@ public class CommandDispatcher {
             case GET_BID_HISTORY -> auctionHandler.handleGetBidHistory(data);
             case LIST_CREATED_AUCTIONS -> auctionHandler.handleListCreatedAuctions();
             case LIST_JOINED_AUCTIONS -> auctionHandler.handleListJoinedAuctions();
+            case SET_AUTO_BID -> auctionHandler.handleSetAutoBid(data);
+            case CANCEL_AUTO_BID -> auctionHandler.handleCancelAutoBid(data);
 
             // ================= FAVOURITE =================
 

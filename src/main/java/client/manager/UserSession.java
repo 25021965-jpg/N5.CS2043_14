@@ -8,6 +8,11 @@ public class UserSession {
     private static User currentUser;
     private static BigDecimal virtualBalance;
     private static BigDecimal pendingBid;
+    private static boolean autoBidActive = false;
+    private static BigDecimal autoBidMax = null;
+    private static String autoBidAuctionId = null;
+    private static String autoBidUserId = null;
+
 
     public static User getCurrentUser() {
         return currentUser;
@@ -30,4 +35,25 @@ public class UserSession {
     public static void setPendingBid(BigDecimal bid) {
         pendingBid = bid;
     }
+
+    public static void setAutoBid(String auctionId, BigDecimal max) {
+        autoBidActive = true;
+        autoBidAuctionId = auctionId;
+        autoBidMax = max;
+        autoBidUserId = (currentUser != null) ? currentUser.getUser_id() : null;
+
+    }
+    public static void clearAutoBid() {
+        autoBidActive = false;
+        autoBidAuctionId = null;
+        autoBidMax = null;
+        autoBidUserId = null;
+
+    }
+    public static boolean isAutoBidActive() { return autoBidActive; }
+    public static BigDecimal getAutoBidMax() { return autoBidMax; }
+    public static String getAutoBidAuctionId() { return autoBidAuctionId; }
+    public static String getAutoBidUserId() { return autoBidUserId; }
+
+
 }

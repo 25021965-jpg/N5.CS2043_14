@@ -50,7 +50,11 @@ public enum Command {
     RESUME_AUCTION,
     CANCEL_AUCTION,
     APPROVE_AUCTION,
-    LIST_PENDING_AUCTIONS;
+    LIST_PENDING_AUCTIONS,
+
+    // ================= AUTO BID =================
+    SET_AUTO_BID,
+    CANCEL_AUTO_BID;
 
     public static Command from(String value) {
         if (value == null || value.isBlank()) {

@@ -99,8 +99,12 @@ public enum ResponseType {
     APPROVE_AUCTION_SUCCESS,
     APPROVE_AUCTION_FAILED,
 
-    TIME_EXTENDED;
+    TIME_EXTENDED,
 
+    // ================= AUTO BID =================
+    AUTO_BID_SET,
+    AUTO_BID_CANCELLED,
+    AUTO_BID_MAX_REACHED;
     public static ResponseType from(String msg) {
         if (msg == null || msg.isBlank()) {
             return null;
