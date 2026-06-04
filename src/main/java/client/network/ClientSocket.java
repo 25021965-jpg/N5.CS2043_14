@@ -13,9 +13,18 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.net.Socket;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import java.util.logging.Logger;
 
 public class ClientSocket {
+
+    // ================= CONFIG =================
+    private static final String HOST = "26.175.50.93";
+    // private static final String HOST = "localhost";
+    private static final int PORT = 9999;
+
     private static final Logger LOGGER =
             Logger.getLogger(ClientSocket.class.getName());
 
@@ -26,13 +35,13 @@ public class ClientSocket {
     private PrintWriter out;
 
     private boolean listening = false;
-    private final java.util.Map<String, java.util.function.Consumer<String>> listeners
-            = new java.util.concurrent.ConcurrentHashMap<>();
+
+    private final Map<String, Consumer<String>> listeners =
+            new ConcurrentHashMap<>();
 
     public static String currentRequest = "";
 
-    // ================= CONSTRUCTOR =================
-
+    // ================= SINGLETON =================
     private ClientSocket() throws Exception {
         connect();
     }
@@ -44,10 +53,7 @@ public class ClientSocket {
                     try {
                         instance = new ClientSocket();
                     } catch (Exception e) {
-                        LOGGER.severe(
-                                "Cannot connect server: "
-                                        + e.getMessage()
-                        );
+                        LOGGER.severe("Cannot connect server: " + e.getMessage());
                         return null;
                     }
                 }
@@ -56,77 +62,56 @@ public class ClientSocket {
         return instance;
     }
 
+    // ================= CONNECT =================
     private void connect() throws Exception {
         if (socket == null || socket.isClosed()) {
-            socket =
-                    new Socket("localhost", 9999);
 
-            in =
-                    new BufferedReader(
-                            new InputStreamReader(
-                                    socket.getInputStream()
-                            )
-                    );
+            socket = new Socket(HOST, PORT);
 
-            out =
-                    new PrintWriter(
-                            socket.getOutputStream(),
-                            true
-                    );
-
-            System.out.println(
-                    "Connected to localhost:9999"
+            in = new BufferedReader(
+                    new InputStreamReader(socket.getInputStream())
             );
+
+            out = new PrintWriter(socket.getOutputStream(), true);
+
+            System.out.println("Connected to " + HOST + ":" + PORT);
         }
     }
 
     // ================= LISTEN =================
-
     public void listen() {
-
         if (listening) return;
 
         listening = true;
 
-        Thread t =
-                new Thread(() -> {
-                    try {
-                        String msg;
-                        while (
-                                listening
-                                        &&
-                                        (msg = in.readLine()) != null
-                        ) {
-                            System.out.println(
-                                    "FROM SERVER: "
-                                            + msg
-                            );ResponseHandler.handle(msg);
-                            // Chỉ notify listeners với message KHÔNG phải live auction
-                            if (!isNonBroadcastMessage(msg)) {
-                                notifyListeners(msg);
-                            }
-                        }
+        Thread t = new Thread(() -> {
+            try {
+                String msg;
 
-                    } catch (Exception e) {
-                        if (listening) {
-                            System.err.println(
-                                    "Connection lost: "
-                                            + e.getMessage()
-                            );
-                            ResponseHandler.handle(
-                                    "DISCONNECTED"
-                            );
-                        }
+                while (listening && (msg = in.readLine()) != null) {
 
-                    } finally {
-                        listening = false;
-                        close();
+                    System.out.println("FROM SERVER: " + msg);
+
+                    ResponseHandler.handle(msg);
+
+                    if (!isNonBroadcastMessage(msg)) {
+                        notifyListeners(msg);
                     }
+                }
 
-                });
+            } catch (Exception e) {
+                if (listening) {
+                    System.err.println("Connection lost: " + e.getMessage());
+                    ResponseHandler.handle("DISCONNECTED");
+                }
+
+            } finally {
+                listening = false;
+                close();
+            }
+        });
 
         t.setDaemon(true);
-
         t.start();
     }
 
@@ -148,22 +133,18 @@ public class ClientSocket {
                 || msg.startsWith("AUTO_BID_MAX_REACHED")
                 || msg.startsWith("ERROR");
     }
-    // ================= SEND =================
+
+    // ================= SEND CORE =================
     public synchronized void sendMessage(String rawMessage) {
         try {
             connect();
             out.println(rawMessage);
             out.flush();
-            System.out.println(
-                    "REQUEST: "
-                            + rawMessage
-            );
+
+            System.out.println("REQUEST: " + rawMessage);
 
         } catch (Exception e) {
-            LOGGER.severe(
-                    "Send failed: "
-                            + e.getMessage()
-            );
+            LOGGER.severe("Send failed: " + e.getMessage());
         }
     }
 
@@ -172,39 +153,16 @@ public class ClientSocket {
     }
 
     private void send(Command command, String... data) {
-        String msg =
-                CommandBuilder.build(
-                        command,
-                        data
-                );
-        sendMessage(msg);
+        sendMessage(CommandBuilder.build(command, data));
     }
 
-
-    // AUTH
-    public void sendLogin(
-            String username,
-            String password
-    ) {
-
-        send(
-                Command.LOGIN,
-                username.trim(),
-                password.trim()
-        );
+    // ================= AUTH =================
+    public void sendLogin(String username, String password) {
+        send(Command.LOGIN, username.trim(), password.trim());
     }
 
-    public void sendRegister(
-            String fn,
-            String un,
-            String em,
-            String pw,String dob
-    ) {
-
-        send(
-                Command.REGISTER,
-                fn, un, em, pw, dob
-        );
+    public void sendRegister(String fn, String un, String em, String pw, String dob) {
+        send(Command.REGISTER, fn, un, em, pw, dob);
     }
 
     public void sendLogout() {
@@ -218,18 +176,10 @@ public class ClientSocket {
             String email,
             String newPassword
     ) {
-
-        send(
-                Command.FORGOT_PASSWORD,
-                fullName,
-                dob,
-                username,
-                email,
-                newPassword
-        );
+        send(Command.FORGOT_PASSWORD, fullName, dob, username, email, newPassword);
     }
 
-    // AUCTION
+    // ================= AUCTION =================
     public void sendList() {
         currentRequest = "LIST";
         send(Command.LIST);
@@ -237,17 +187,10 @@ public class ClientSocket {
 
     public void sendCreate(Auction auction) {
         Item item = auction.getItem();
-        String images =
-                item.getImages() != null
-                        &&
-                        !item.getImages().isEmpty()
 
-                        ? String.join(
-                        ",",
-                        item.getImages()
-                )
-
-                        : "NO_IMAGE";
+        String images = (item.getImages() != null && !item.getImages().isEmpty())
+                ? String.join(",", item.getImages())
+                : "NO_IMAGE";
 
         send(
                 Command.CREATE,
@@ -283,54 +226,62 @@ public class ClientSocket {
     public void sendCreatedAuctions() {
         User user = UserSession.getCurrentUser();
         if (user == null) return;
-        System.out.println("SEND CREATED AUCTIONS");
+
         currentRequest = "LIST_CREATED_AUCTIONS";
         sendMessage("LIST_CREATED_AUCTIONS|" + user.getUser_id());
     }
 
-    // BALANCE
+    // ================= BALANCE =================
     public void sendDeposit(String userId, BigDecimal amount) {
-        sendMessage(
-                "DEPOSIT|"
-                        + userId
-                        + "|"
-                        + amount
-        );
+        sendMessage("DEPOSIT|" + userId + "|" + amount);
     }
 
     public void sendWithdraw(String userId, BigDecimal amount) {
-        sendMessage(
-                "WITHDRAW|"
-                        + userId
-                        + "|"
-                        + amount
-        );
+        sendMessage("WITHDRAW|" + userId + "|" + amount);
     }
 
     public void sendGetTransactions(String userId) {
         sendMessage("GET_TRANSACTIONS|" + userId);
     }
 
+    public void sendGetVirtualBalance(String userId) {
+        sendMessage("GET_VIRTUAL_BALANCE|" + userId);
+    }
+
     public void sendPayAuction(String auctionId) {
         sendMessage("PAY_AUCTION|" + auctionId);
     }
 
+    // ================= AUTO BID =================
+    public void sendSetAutoBid(String auctionId, String maxAmount) {
+        send(Command.SET_AUTO_BID, auctionId, maxAmount);
+    }
+
+    public void sendCancelAutoBid(String auctionId) {
+        send(Command.CANCEL_AUTO_BID, auctionId);
+    }
+
+    // ================= ACCOUNT =================
     public void sendDeleteAccount(String userId) {
         sendMessage("DELETE_ACCOUNT|" + userId);
     }
 
-    // CONNECTION
-    public void logout() {
-        send(Command.LOGOUT);
+    // ================= LISTENERS =================
+    public void addListener(String key, Consumer<String> listener) {
+        listeners.put(key, listener);
     }
 
+    public void notifyListeners(String msg) {
+        listeners.values().forEach(l -> l.accept(msg));
+    }
+
+    // ================= CLOSE =================
     public void close() {
         try {
-            listening = false;if (in != null)
-                in.close();
+            listening = false;
 
-            if (out != null)
-                out.close();
+            if (in != null) in.close();
+            if (out != null) out.close();
 
             if (socket != null && !socket.isClosed()) {
                 socket.close();
@@ -343,27 +294,8 @@ public class ClientSocket {
         }
     }
 
-
-    public void addListener(String key, java.util.function.Consumer<String> listener) {
-        listeners.put(key, listener);
-    }
-
-    public void removeListener(String key) {
-        listeners.remove(key);
-    }
-
-    public void notifyListeners(String msg) {
-        listeners.values().forEach(l -> l.accept(msg));
-    }
-
-    public void sendGetVirtualBalance(String userId) {
-        sendMessage("GET_VIRTUAL_BALANCE|" + userId);
-    }
-
-    public void sendSetAutoBid(String auctionId, String maxAmount) {
-        send(Command.SET_AUTO_BID, auctionId, maxAmount);
-    }
-    public void sendCancelAutoBid(String auctionId) {
-        send(Command.CANCEL_AUTO_BID, auctionId);
+    // ================= LOGOUT WRAPPER =================
+    public void logout() {
+        send(Command.LOGOUT);
     }
 }
