@@ -116,7 +116,7 @@ public class BidService {
         }
     }
 
-    public synchronized void settleAuction(Auction auction) {
+    public static synchronized void settleAuction(Auction auction) {
         // Lấy bid cao nhất
         java.math.BigDecimal winAmount = BidDAO.getHighestBidAmount(auction.getAuction_id());
         if (winAmount == null || winAmount.compareTo(java.math.BigDecimal.ZERO) == 0) return;

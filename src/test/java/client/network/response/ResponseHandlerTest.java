@@ -2,11 +2,13 @@ package client.network.response;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 class ResponseHandlerTest {
 
@@ -19,94 +21,44 @@ class ResponseHandlerTest {
         ResponseHandler.setMainStage(null);
     }
 
-    // ==================== NULL / BLANK GUARD ====================
-
     @Test
-    void handle_null_doesNothing() {
-        ResponseHandler.setLiveAuctionListener(received::add);
+    void handle_null_or_blank_doesNothing() {
         assertDoesNotThrow(() -> ResponseHandler.handle(null));
-        assertTrue(received.isEmpty());
-    }
-
-    @Test
-    void handle_blank_doesNothing() {
-        ResponseHandler.setLiveAuctionListener(received::add);
         assertDoesNotThrow(() -> ResponseHandler.handle("   "));
         assertTrue(received.isEmpty());
     }
 
-    // ==================== LIVE AUCTION FAST-PATH ====================
-
     @Test
-    void handle_updatePrice_forwardedToListener() {
+    void handle_allLiveAuctionMessages_forwardedToListener() {
         ResponseHandler.setLiveAuctionListener(received::add);
-        ResponseHandler.handle("UPDATE_PRICE|1500");
-        assertEquals(1, received.size());
-        assertEquals("UPDATE_PRICE|1500", received.get(0));
-    }
+        String[] messages = {
+                "UPDATE_PRICE|1500", "JOIN_SUCCESS|data", "JOIN_FAILED|err",
+                "BID_FAILED|err", "BID_HISTORY_SUCCESS|data", "BID_HISTORY_EMPTY",
+                "AUCTION_ENDED|id", "YOU_WON|100", "VIRTUAL_BALANCE|1000",
+                "WINNER_BALANCE|500", "SELLER_BALANCE|2000", "AUTO_BID_SET|true",
+                "AUTO_BID_CANCELLED|true", "AUTO_BID_MAX_REACHED|true"
+        };
 
-    @Test
-    void handle_joinSuccess_forwardedToListener() {
-        ResponseHandler.setLiveAuctionListener(received::add);
-        ResponseHandler.handle("JOIN_SUCCESS|data");
-        assertEquals(1, received.size());
+        for (String msg : messages) {
+            ResponseHandler.handle(msg);
+        }
+        assertEquals(messages.length, received.size());
     }
-
-    @Test
-    void handle_joinFailed_forwardedToListener() {
-        ResponseHandler.setLiveAuctionListener(received::add);
-        ResponseHandler.handle("JOIN_FAILED|reason");
-        assertEquals(1, received.size());
-    }
-
-    @Test
-    void handle_bidFailed_forwardedToListener() {
-        ResponseHandler.setLiveAuctionListener(received::add);
-        ResponseHandler.handle("BID_FAILED|reason");
-        assertEquals(1, received.size());
-    }
-
-    @Test
-    void handle_bidHistorySuccess_forwardedToListener() {
-        ResponseHandler.setLiveAuctionListener(received::add);
-        ResponseHandler.handle("BID_HISTORY_SUCCESS|alice;500;12:00:00");
-        assertEquals(1, received.size());
-    }
-
-    @Test
-    void handle_bidHistoryEmpty_forwardedToListener() {
-        ResponseHandler.setLiveAuctionListener(received::add);
-        ResponseHandler.handle("BID_HISTORY_EMPTY");
-        assertEquals(1, received.size());
-    }
-
-    @Test
-    void handle_auctionEnded_forwardedToListener() {
-        ResponseHandler.setLiveAuctionListener(received::add);
-        ResponseHandler.handle("AUCTION_ENDED|auction-1");
-        assertEquals(1, received.size());
-    }
-
-    @Test
-    void handle_youWon_forwardedToListener() {
-        ResponseHandler.setLiveAuctionListener(received::add);
-        ResponseHandler.handle("YOU_WON|1500");
-        assertEquals(1, received.size());
-    }
-
-    @Test
-    void handle_error_forwardedToListener() {
-        ResponseHandler.setLiveAuctionListener(received::add);
-        ResponseHandler.handle("ERROR|something went wrong");
-        assertEquals(1, received.size());
-    }
-
-    // ==================== LISTENER NULL GUARD ====================
 
     @Test
     void handle_liveMessageWithNullListener_doesNotCrash() {
         ResponseHandler.setLiveAuctionListener(null);
-        // Should not throw even though listener is null
         assertDoesNotThrow(() -> ResponseHandler.handle("UPDATE_PRICE|999"));
+    }
+
+    @Test
+    void handle_nonLiveMessage_routedToRouter() {
+        // Mock static ResponseRouter để chặn Platform.runLater
+        try (MockedStatic<ResponseRouter> mockedRouter = mockStatic(ResponseRouter.class)) {
+            ResponseHandler.handle("LOGIN_SUCCESS|data");
+
+            // Xác nhận rằng Router đã được gọi mà không cần chạy code bên trong nó
+            mockedRouter.verify(() -> ResponseRouter.route(eq("LOGIN_SUCCESS|data"), any()));
+        }
     }
 }

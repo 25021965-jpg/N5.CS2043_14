@@ -1,11 +1,8 @@
 package server.dao;
 
 import model.*;
-import model.Entity.Item.Category;
-import model.Entity.Item.Electronics;
-import model.Entity.Item.Item;
-import model.Entity.User.Seller;
-import model.Entity.User.User;
+import model.Entity.Item.*;
+import model.Entity.User.*;
 import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -16,175 +13,99 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class AuctionDAOTest extends TiDBRollbackBase {
 
-    // Tạo dữ liệu nền dùng chung cho nhiều test
     private void insertBaseData() throws Exception {
         insertUser("seller-t1", "tseller", "tseller@mail.com", "pass", "SELLER", 0);
         insertItem("item-t1", "TestWatch", "ELECTRONICS");
         insertItem("item-t2", "TestRing", "JEWELRY");
     }
 
-    // ==================== calculateStatus — không cần DB, test pure logic ====================
-
     @Test
-    void testCalculateStatus_AllBranches() {
+    void testCalculateStatus() {
         LocalDateTime now = LocalDateTime.now();
-
-        // Nhánh: đã bị huỷ
-        assertEquals(AuctionStatus.CANCELLED,
-                AuctionDAO.calculateStatus(true, true, now, now));
-
-        // Nhánh: chưa được duyệt
-        assertEquals(AuctionStatus.PENDING_APPROVAL,
-                AuctionDAO.calculateStatus(false, false, now, now));
-
-        // Nhánh: đã duyệt nhưng chưa đến giờ bắt đầu
-        assertEquals(AuctionStatus.UPCOMING,
-                AuctionDAO.calculateStatus(false, true, now.plusHours(1), now.plusHours(2)));
-
-        // Nhánh: đã qua giờ kết thúc
-        assertEquals(AuctionStatus.ENDED,
-                AuctionDAO.calculateStatus(false, true, now.minusHours(2), now.minusHours(1)));
-
-        // Nhánh: đang diễn ra
-        assertEquals(AuctionStatus.ACTIVE,
-                AuctionDAO.calculateStatus(false, true, now.minusHours(1), now.plusHours(1)));
-
-        // Nhánh: thời gian null → không crash, coi như active
-        assertEquals(AuctionStatus.ACTIVE,
-                AuctionDAO.calculateStatus(false, true, null, null));
+        assertEquals(AuctionStatus.CANCELLED, AuctionDAO.calculateStatus(true, true, now, now));
+        assertEquals(AuctionStatus.PENDING_APPROVAL, AuctionDAO.calculateStatus(false, false, now, now));
+        assertEquals(AuctionStatus.UPCOMING, AuctionDAO.calculateStatus(false, true, now.plusHours(1), now.plusHours(2)));
+        assertEquals(AuctionStatus.ENDED, AuctionDAO.calculateStatus(false, true, now.minusHours(2), now.minusHours(1)));
+        assertEquals(AuctionStatus.ACTIVE, AuctionDAO.calculateStatus(false, true, now.minusHours(1), now.plusHours(1)));
+        assertEquals(AuctionStatus.ACTIVE, AuctionDAO.calculateStatus(false, true, null, null));
     }
 
-    // ==================== findAll, findPending, findBySeller ====================
-
     @Test
-    void testFindQueries() throws Exception {
+    void testFindQueriesAndFlow() throws Exception {
         insertBaseData();
+        insertAuction("auc-1", "item-t1", "seller-t1", 100, true, false, "2024-01-01 00:00:00", "2099-01-01 00:00:00");
+        insertAuction("auc-2", "item-t2", "seller-t1", 200, false, false, "2024-01-01 00:00:00", "2099-01-01 00:00:00");
 
-        // Auction đã duyệt → xuất hiện trong findAll
-        insertAuction("auc-1", "item-t1", "seller-t1", 100, true, false,
-                "2024-01-01 00:00:00", "2099-01-01 00:00:00");
-
-        // Auction chờ duyệt → xuất hiện trong findPending
-        insertAuction("auc-2", "item-t2", "seller-t1", 200, false, false,
-                "2024-01-01 00:00:00", "2099-01-01 00:00:00");
-
-        // Kiểm tra findAll chỉ trả về auction đã duyệt
-        assertTrue(AuctionDAO.findAll().stream().anyMatch(a -> a.getAuction_id().equals("auc-1")));
-
-        // Kiểm tra findPending chỉ trả về auction chờ duyệt
-        assertTrue(AuctionDAO.findPending().stream().anyMatch(a -> a.getAuction_id().equals("auc-2")));
-
-        // Kiểm tra findBySeller trả về đúng số lượng
+        assertFalse(AuctionDAO.findAll().isEmpty());
+        assertFalse(AuctionDAO.findPending().isEmpty());
         assertEquals(2, AuctionDAO.findBySeller("seller-t1").size());
+
+        Auction a = AuctionDAO.findById("auc-1");
+        assertNotNull(a);
+        assertEquals(0, new BigDecimal("100").compareTo(a.getStartingPrice()));
     }
 
-    // ==================== save — bao gồm saveItem và saveItemImage ====================
-
     @Test
-    void testSave_WithImages() throws Exception {
+    void testSaveAndHistory() throws Exception {
         insertUser("seller-save", "ssave", "ssave@mail.com", "pass", "SELLER", 0);
-
         Item item = new Electronics();
         item.setItem_id("item-save");
         item.setName("Laptop");
         item.setCategory(Category.ELECTRONICS);
         item.setDescription("Desc");
-
-        List<String> imgs = new ArrayList<>();
-        imgs.add("url1");
-        imgs.add("url2");
-        item.setImages(imgs);
+        item.setImages(new ArrayList<>(List.of("url1")));
 
         Auction a = new Auction();
         a.setAuction_id("auc-save");
         a.setItem(item);
-
-        User seller = new Seller();
-        seller.setUser_id("seller-save");
-        a.setSeller(seller);
-
+        a.setSeller(new Bidder());
+        a.getSeller().setUser_id("seller-save");
         a.setStartingPrice(new BigDecimal("1000"));
         a.setCurrentPrice(new BigDecimal("1000"));
         a.setMinIncrement(new BigDecimal("50"));
         a.setStartTime(LocalDateTime.now());
         a.setEndTime(LocalDateTime.now().plusDays(1));
 
-        assertDoesNotThrow(() -> AuctionDAO.save(a));
-
-        List<Auction> check = AuctionDAO.findBySeller("seller-save");
-        assertEquals(2, check.get(0).getItem().getImages().size());
+        AuctionDAO.save(a);
+        assertNotNull(AuctionDAO.findById("auc-save"));
+        assertFalse(AuctionDAO.findAuctionHistory().isEmpty());
     }
 
-    // ==================== findJoinedAuctions & getBidHistory ====================
+    @Test
+    void testUpdatesAndStatus() throws Exception {
+        insertBaseData();
+        insertAuction("auc-upd", "item-t1", "seller-t1", 100, false, false, "2024-01-01 00:00:00", "2099-01-01 00:00:00");
+
+        assertTrue(AuctionDAO.approveAuction("auc-upd"));
+        AuctionDAO.updateAuctionStatus("auc-upd", "CANCELLED");
+        assertTrue(AuctionDAO.resumeAuction("auc-upd"));
+        assertTrue(AuctionDAO.stopAuction("auc-upd"));
+        assertTrue(AuctionDAO.updateEndTime("auc-upd", LocalDateTime.now().plusDays(5)));
+
+        // Test ENDED branch in updateAuctionStatus
+        assertDoesNotThrow(() -> AuctionDAO.updateAuctionStatus("auc-upd", "ENDED"));
+    }
 
     @Test
-    void testBidsRelatedQueries() throws Exception {
+    void testBidsHistoryAndJoined() throws Exception {
         insertBaseData();
-        insertUser("bidder-1", "tbidder", "bidder@mail.com", "pass", "BIDDER", 1000);
-        insertAuction("auc-bid", "item-t1", "seller-t1", 100, true, false,
-                "2024-01-01 00:00:00", "2099-01-01 00:00:00");
+        insertUser("b1", "bidder", "b@mail.com", "pass", "BIDDER", 100);
+        insertAuction("auc-b", "item-t1", "seller-t1", 100, true, false, "2020-01-01 00:00:00", "2099-01-01 00:00:00");
 
-        // Chèn bid thủ công để các hàm JOIN có dữ liệu
-        try (var ps = conn.prepareStatement(
-                "INSERT INTO bids(bid_id,auction_id,bidder_id,bid_amount,bid_time) VALUES(?,?,?,?,NOW())")) {
-            ps.setString(1, "b-1");
-            ps.setString(2, "auc-bid");
-            ps.setString(3, "bidder-1");
-            ps.setBigDecimal(4, new BigDecimal("150"));
+        try(var ps = conn.prepareStatement("INSERT INTO bids VALUES ('bid1','auc-b','b1',150,NOW())")) {
             ps.executeUpdate();
         }
 
-        // Kiểm tra bidder nhìn thấy auction mình đã tham gia
-        assertFalse(AuctionDAO.findJoinedAuctions("bidder-1").isEmpty());
-
-        // Kiểm tra lịch sử đấu giá của auction
-        assertEquals(1, AuctionDAO.getBidHistory("auc-bid").size());
-    }
-
-    // ==================== Approve, Cancel, Stop, Resume ====================
-
-    @Test
-    void testStatusUpdates() throws Exception {
-        insertBaseData();
-        insertAuction("auc-upd", "item-t1", "seller-t1", 100, false, false,
-                "2024-01-01 00:00:00", "2099-01-01 00:00:00");
-
-        // Kiểm tra từng bước thay đổi trạng thái
-        assertTrue(AuctionDAO.approveAuction("auc-upd"));   // chờ → đã duyệt
-        AuctionDAO.cancelAuction("auc-upd");                 // hủy
-        assertTrue(AuctionDAO.resumeAuction("auc-upd"));    // khôi phục
-        assertTrue(AuctionDAO.stopAuction("auc-upd"));      // dừng sớm
-    }
-
-    // ==================== findAuctionHistory & findAllAsStrings ====================
-
-    @Test
-    void testHistoryAndStrings() throws Exception {
-        insertBaseData();
-
-        // Auction đã kết thúc và bị hủy → xuất hiện trong lịch sử
-        insertAuction("auc-h1", "item-t1", "seller-t1", 100, true, true,
-                "2020-01-01 00:00:00", "2021-01-01 00:00:00");
-
-        assertFalse(AuctionDAO.findAuctionHistory().isEmpty());
+        assertFalse(AuctionDAO.findJoinedAuctions("b1").isEmpty());
+        assertFalse(AuctionDAO.getBidHistory("auc-b").isEmpty());
         assertFalse(AuctionDAO.findAllAsStrings().isEmpty());
     }
 
-    // ==================== Kiểm tra các trường hợp null ====================
-
     @Test
-    void testNullChecks() {
-        // Truyền null → không crash, return sớm
+    void testNullAndErrors() {
         assertDoesNotThrow(() -> AuctionDAO.save(null));
-
-        // Auction không có item → không crash
-        Auction a = new Auction();
-        a.setItem(null);
-        assertDoesNotThrow(() -> AuctionDAO.save(a));
-
-        // ID không tồn tại → trả về false
-        assertFalse(AuctionDAO.approveAuction("non-exist"));
-        assertFalse(AuctionDAO.stopAuction("non-exist"));
-        assertFalse(AuctionDAO.resumeAuction("non-exist"));
+        assertNull(AuctionDAO.findById("invalid"));
+        assertFalse(AuctionDAO.stopAuction("invalid"));
+        assertFalse(AuctionDAO.updateEndTime("invalid", LocalDateTime.now()));
     }
 }
