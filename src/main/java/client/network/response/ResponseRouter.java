@@ -22,7 +22,14 @@ public class ResponseRouter {
             Platform.runLater(() -> AuctionHandler.updatePrice(raw));
             return;
         }
-
+        if (raw.startsWith("VIRTUAL_BALANCE")) {
+            System.out.println(" [ResponseRouter] Routing VIRTUAL_BALANCE");
+            String[] parts = raw.split("\\|");
+            if (parts.length >= 2) {
+                Platform.runLater(() -> BalanceHandler.virtualBalanceUpdated(parts[1]));
+            }
+            return;
+        }
         // THÊM XỬ LÝ JOIN_SUCCESS
         if (raw.startsWith("JOIN_SUCCESS")) {
             System.out.println(" [ResponseRouter] Routing JOIN_SUCCESS");

@@ -487,7 +487,7 @@ public class AuctionHandler extends BaseHandler {
             RoomManager.broadcastToRoomAll(auctionId,
                     "SELLER_BALANCE|" + newSellerReal + "|" + seller.getUser_id());
             RoomManager.broadcastToRoomAll(auctionId,
-                    "YOU_WON|" + auctionId + "|" + finalPrice + "|" + winner.getUsername());
+                    "YOU_WON|" + auctionId + "|" + winner.getUsername());
 
             // Refund virtual balance to losers
             Set<String> refunded = new HashSet<>();

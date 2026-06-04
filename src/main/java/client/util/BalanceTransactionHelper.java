@@ -52,17 +52,16 @@ public final class BalanceTransactionHelper {
         return card;
     }
 
-    private static Label createTitleLabel(
-            String type,
-            String desc
-    ) {
+    private static Label createTitleLabel(String type, String desc) {
         String titleText;
 
         switch (type) {
             case "DEPOSIT" -> titleText = "Deposit Successful";
             case "WITHDRAW" -> titleText = "Withdraw Successful";
-            case "TRANSFER_OUT", "WIN_BID" -> titleText = "Paid to " + desc;
-            case "TRANSFER_IN", "SOLD" -> titleText = "Received from " + desc;
+            case "WIN_BID" -> titleText = "Won Auction - Payment";
+            case "SOLD" -> titleText = "Sold Item - Received";
+            case "TRANSFER_OUT" -> titleText = "Paid to " + desc;
+            case "TRANSFER_IN" -> titleText = "Received from " + desc;
             default -> titleText = type;
         }
 

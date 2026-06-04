@@ -671,29 +671,26 @@ if (LiveAuctionHistoryHelper.isDuplicateBid(bidHistoryList, bidTime, bidderUsern
     @Override
     public void onYouWon(String msg) {
         String[] parts = msg.split("\\|");
-        if (parts.length >= 4) {
-            String auctionId = parts[1];
-            BigDecimal finalPrice = new BigDecimal(parts[2]);
-            String winnerName = parts[3];
-            if (currentUser != null && currentUser.getUsername().equals(winnerName)) {
-                showInfo("CONGRATULATIONS! You won the auction for " + formatPrice(finalPrice));
-                AuctionStateManager.setPayment(auctionId, PaymentStatus.PAID);
-            } else {
-                showInfo("🏆 " + winnerName + " won the auction for " + formatPrice(finalPrice));
-            }
-        } else if (parts.length == 3) {
+
+        // Format đúng: YOU_WON|finalPrice|winnerName
+        if (parts.length >= 3) {
             BigDecimal finalPrice = new BigDecimal(parts[1]);
             String winnerName = parts[2];
+
             if (currentUser != null && currentUser.getUsername().equals(winnerName)) {
-                showInfo("CONGRATULATIONS! You won the auction for " + formatPrice(finalPrice));
-                AuctionStateManager.setPayment(auctionId, PaymentStatus.PAID);
+                showInfo("🎉 CONGRATULATIONS! You won the auction for " + formatPrice(finalPrice));
+                if (auctionId != null) {
+                    AuctionStateManager.setPayment(auctionId, PaymentStatus.PAID);
+                }
             } else {
                 showInfo("🏆 " + winnerName + " won the auction for " + formatPrice(finalPrice));
             }
-        } else if (parts.length == 2) {
+        } else if (parts.length >= 2) {
+            // Fallback: chỉ có finalPrice
             BigDecimal finalPrice = new BigDecimal(parts[1]);
             showInfo("Auction ended! Winning price: " + formatPrice(finalPrice));
         }
+
         placeBidBtn.setDisable(true);
         addStepBtn.setDisable(true);
         maxBidBtn.setDisable(true);

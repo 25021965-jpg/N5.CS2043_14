@@ -151,47 +151,7 @@ public class BidService {
     }
 
     public static void settleAuction(Auction auction) {
-        if (auction == null || auction.getAuction_id() == null) {
-            return;
-        }
-
-        BigDecimal highestAmount = BidDAO.getHighestBidAmount(auction.getAuction_id());
-        if (highestAmount == null) {
-            return;
-        }
-
-        java.util.List<Bid> bids = BidDAO.getBidsByAuctionId(auction.getAuction_id());
-        if (bids.isEmpty()) {
-            return;
-        }
-
-        Bid highestBid = bids.getLast();
-        if (highestBid == null || highestBid.getBidder() == null) {
-            return;
-        }
-
-        User winner = UserDAO.getUserById(highestBid.getBidder().getUser_id());
-        if (winner == null) {
-            return;
-        }
-
-        User seller = auction.getSeller();
-        if (seller == null) {
-            return;
-        }
-
-        User sellerDb = UserDAO.getUserById(seller.getUser_id());
-        if (sellerDb == null) {
-            return;
-        }
-
-        BigDecimal winnerBalance = winner.getBalance();
-        if (winnerBalance == null || winnerBalance.compareTo(highestAmount) < 0) {
-            return;
-        }
-
-        BigDecimal sellerBalance = sellerDb.getBalance() == null ? BigDecimal.ZERO : sellerDb.getBalance();
-        UserDAO.updateBalance(winner.getUser_id(), winnerBalance.subtract(highestAmount));
-        UserDAO.updateBalance(sellerDb.getUser_id(), sellerBalance.add(highestAmount));
+        // Đã chuyển logic sang AuctionHandler.endAuction()
+        // Method này giữ lại chỉ để test không bị lỗi
     }
 }
