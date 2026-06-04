@@ -18,7 +18,7 @@ public class BidHandler extends BaseHandler {
         super(currentUser, writer, currentAuctionId);
     }
 
-    
+
     public String setAutoBid(String[] data) {
         try {
             // Giao thức: SET_AUTO_BID|auctionId|maxAmount
