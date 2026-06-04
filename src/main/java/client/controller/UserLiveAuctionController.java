@@ -5,10 +5,7 @@ import client.manager.AutoBidManager;
 import client.manager.ControllerRegistry;
 import client.network.ClientSocket;
 import client.network.response.ResponseHandler;
-import client.service.LiveAuctionMessageHandler;
 import client.manager.UserSession;
-import client.util.LiveAuctionBalanceHelper;
-import client.util.LiveAuctionHistoryHelper;
 import client.util.NavigationUtils;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -33,11 +30,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.logging.Logger;
 
-public class UserLiveAuctionController implements UserDataReceiver, LiveAuctionMessageHandler.LiveAuctionMessageListener {
+public class UserLiveAuctionController implements UserDataReceiver {
     private static final Logger LOGGER =
             Logger.getLogger(UserLiveAuctionController.class.getName());
-
-    private final LiveAuctionMessageHandler liveAuctionMessageHandler = new LiveAuctionMessageHandler(this);
     public static String getGlobalAuctionId() { return globalAuctionId; }
     public static String getGlobalWinnerName() { return globalWinnerName; }
 
@@ -101,6 +96,7 @@ public class UserLiveAuctionController implements UserDataReceiver, LiveAuctionM
 
     private static List<Bid> globalBidHistory = new ArrayList<>();
     private static int globalBidCounter = 0;
+    private static BigDecimal globalCurrentPrice = BigDecimal.ZERO;
     private static String globalWinnerName = null;
     private static String globalWinnerTime = null;
     private static String globalUserId = null;
@@ -127,7 +123,7 @@ public class UserLiveAuctionController implements UserDataReceiver, LiveAuctionM
         statusColumn.setCellValueFactory(new PropertyValueFactory<>("status"));
 
         bidHistoryList = FXCollections.observableArrayList();
-        LiveAuctionHistoryHelper.initializeHistoryTable(bidHistoryTable, bidHistoryList);
+        bidHistoryTable.setItems(bidHistoryList);
 
         chartSeries = new XYChart.Series<>();
         chartSeries.setName("Price History");
@@ -186,6 +182,7 @@ public class UserLiveAuctionController implements UserDataReceiver, LiveAuctionM
                 || (currentUser != null && !currentUser.getUser_id().equals(globalUserId))) {
             globalBidHistory = new ArrayList<>();
             globalBidCounter = 0;
+            globalCurrentPrice = BigDecimal.ZERO;
             globalWinnerName = null;
             globalWinnerTime = null;
             globalAuctionId = auctionId;
@@ -278,8 +275,8 @@ public class UserLiveAuctionController implements UserDataReceiver, LiveAuctionM
             maxBidLabel.setText("Max possible bid: " + formatPrice(virtualBalance));
         }
         if (balanceProgressBar != null && virtualBalance != null) {
-            double progress = LiveAuctionBalanceHelper.calculateProgress(virtualBalance);
-            balanceProgressBar.setProgress(progress);
+            double progress = virtualBalance.doubleValue() / 1_000_000_000.0;
+            balanceProgressBar.setProgress(Math.min(progress, 1.0));
         }
     }
 
@@ -334,31 +331,41 @@ public class UserLiveAuctionController implements UserDataReceiver, LiveAuctionM
             showError("You haven't joined any auction. Please refresh.");
             return;
         }
-
+        if (auctionId == null) {
+            showError("You haven't joined any auction. Please refresh and try again.");
+            return;
+        }
         if (client == null) {
             showError("Not connected to server");
             return;
         }
 
-        String amountText = bidAmountField.getText();
-        if (amountText == null || amountText.trim().isEmpty()) {
+        String amountText = bidAmountField.getText().trim()
+                .replace("USD", "")
+                .replace(",", "")
+                .trim();
+
+        if (amountText.isEmpty()) {
             showWarning("Please enter bid amount");
             return;
         }
 
-        BigDecimal bidAmount = LiveAuctionBalanceHelper.parseBidAmount(amountText);
-        if (bidAmount == null) {
+        BigDecimal bidAmount;
+        try {
+            bidAmount = new BigDecimal(amountText);
+        } catch (NumberFormatException e) {
             showWarning("Invalid amount format");
             return;
         }
 
         BigDecimal minRequired = currentPrice.add(stepPrice);
-        if (!LiveAuctionBalanceHelper.isValidBidAmount(bidAmount, minRequired, virtualBalance)) {
-            if (bidAmount.compareTo(minRequired) < 0) {
-                showWarning("Minimum bid is " + formatPrice(minRequired));
-            } else {
-                showWarning("Insufficient balance! Available: " + formatPrice(virtualBalance));
-            }
+        if (bidAmount.compareTo(minRequired) < 0) {
+            showWarning("Minimum bid is " + formatPrice(minRequired));
+            return;
+        }
+
+        if (virtualBalance != null && bidAmount.compareTo(virtualBalance) > 0) {
+            showWarning("Insufficient balance! Available: " + formatPrice(virtualBalance));
             return;
         }
 
@@ -437,310 +444,400 @@ public class UserLiveAuctionController implements UserDataReceiver, LiveAuctionM
     // ==================== SERVER MESSAGES ====================
 
     public void handleServerMessage(String msg) {
-        if (msg == null) {
-            return;
-        }
-
         Platform.runLater(() -> {
             System.out.println("[LiveAuction] Received: " + msg);
-            liveAuctionMessageHandler.handleMessage(msg);
-        });
-    }
 
-    @Override
-    public void onAutoBidMaxReached() {
-        autoBidActive = false;
-        AutoBidManager.disable();
-        autoBidToggleBtn.setText("Enable Auto-Bid");
-        autoBidToggleBtn.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white;");
-        autoBidStatusLabel.setText("⚠️ Max price reached. Auto-bid stopped.");
-        autoBidMaxField.setDisable(false);
-        showInfo("Auto-bid has reached your maximum price and was stopped.");
-    }
+            String[] p = msg.split("\\|");
 
-    @Override
-    public void onAutoBidCancelled() {
-        autoBidStatusLabel.setText("Auto-bid cancelled by server.");
-    }
-
-    @Override
-    public void onUpdatePrice(String msg) {
-        String[] parts = msg.split("\\|");
-        if (parts.length < 5) {
-            return;
-        }
-
-        String newPrice = parts[2];
-        String bidderUsername = parts[3];
-        String bidTime = parts[4];
-        String winnerId = parts.length >= 6 ? parts[5] : null;
-
-        System.out.println("winnerId = " + winnerId);
-        if (currentUser != null) {
-            System.out.println("myUserId = " + currentUser.getUser_id());
-            System.out.println("myUsername = " + currentUser.getUsername());
-        }
-
-        ParticipationStatus currentStatus = AuctionStateManager.getParticipation(auctionId);
-        System.out.println(
-                "UPDATE_PRICE -> auction=" + auctionId
-                        + " winnerId=" + winnerId
-                        + " currentStatus=" + currentStatus
-        );
-
-        if (currentUser != null && winnerId != null) {
-            if (winnerId.equals(currentUser.getUser_id())) {
-                AuctionStateManager.setParticipation(auctionId, ParticipationStatus.LEADING);
-            } else if (currentStatus == ParticipationStatus.JOINED
-                    || currentStatus == ParticipationStatus.LEADING
-                    || currentStatus == ParticipationStatus.OUTBID) {
-                AuctionStateManager.setParticipation(auctionId, ParticipationStatus.OUTBID);
+            // ==================== AUTO-BID RESPONSES ====================
+            if (msg.startsWith("AUTO_BID_MAX_REACHED")) {
+                autoBidActive = false;
+                AutoBidManager.disable();
+                autoBidToggleBtn.setText("Enable Auto-Bid");
+                autoBidToggleBtn.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white;");
+                autoBidStatusLabel.setText("⚠️ Max price reached. Auto-bid stopped.");
+                autoBidMaxField.setDisable(false);
+                showInfo("Auto-bid has reached your maximum price and was stopped.");
+                return;
             }
-        }
 
-        BigDecimal incomingPrice = new BigDecimal(newPrice);
-        boolean isDuplicate = false;
-if (LiveAuctionHistoryHelper.isDuplicateBid(bidHistoryList, bidTime, bidderUsername, incomingPrice)) {
-            isDuplicate = true;
-            System.out.println("Duplicate bid ignored: " + bidTime);
-        }
+            if (msg.startsWith("AUTO_BID_CANCELLED")) {
+                Platform.runLater(() -> autoBidStatusLabel.setText("Auto-bid cancelled by server."));
+                return;
+            }
 
-        if (myPendingBid != null && myPendingBid.compareTo(BigDecimal.ZERO) > 0
-                && winnerId != null && currentUser != null
-                && !winnerId.equals(currentUser.getUser_id())) {
-            refundVirtualBalance();
-        }
+            // ==================== UPDATE PRICE ====================
+            if (msg.startsWith("UPDATE_PRICE")) {
 
-        if (currentUser != null && bidderUsername.equals(currentUser.getUsername())) {
-            if (pendingBidAmount != null && pendingBidAmount.compareTo(BigDecimal.ZERO) > 0) {
-                deductVirtualBalance(pendingBidAmount);
+                String[] parts = msg.split("\\|");
+
+                if (parts.length >= 5) {
+
+                    String newPrice = parts[2];
+                    String bidderUsername = parts[3];
+                    String bidTime = parts[4];
+                    String winnerId = parts.length >= 6 ? parts[5] : null;
+
+                    System.out.println("winnerId = " + winnerId);
+
+                    if (currentUser != null) {
+                        System.out.println("myUserId = " + currentUser.getUser_id());
+                        System.out.println("myUsername = " + currentUser.getUsername());
+                    }
+
+                    ParticipationStatus currentStatus =
+                            AuctionStateManager.getParticipation(auctionId);
+
+                    System.out.println(
+                            "UPDATE_PRICE -> auction="
+                                    + auctionId
+                                    + " winnerId="
+                                    + winnerId
+                                    + " currentStatus="
+                                    + AuctionStateManager.getParticipation(auctionId)
+                    );
+
+
+                    if (currentUser != null && winnerId != null) {
+
+                        if (winnerId.equals(currentUser.getUser_id())) {
+
+                            AuctionStateManager.setParticipation(
+                                    auctionId,
+                                    ParticipationStatus.LEADING
+                            );
+
+                        } else if (
+                                currentStatus == ParticipationStatus.JOINED
+                                        || currentStatus == ParticipationStatus.LEADING
+                                        || currentStatus == ParticipationStatus.OUTBID
+                        ) {
+
+                            AuctionStateManager.setParticipation(
+                                    auctionId,
+                                    ParticipationStatus.OUTBID
+                            );
+                        }
+                    }
+
+                    BigDecimal incomingPrice = new BigDecimal(newPrice);
+
+                    boolean isDuplicate = false;
+                    if (!bidHistoryList.isEmpty()) {
+                        Bid lastBid = bidHistoryList.getFirst();
+                        if (lastBid.getTimeString().equals(bidTime)
+                                && lastBid.getUsername().equals(bidderUsername)
+                                && lastBid.getAmount().compareTo(incomingPrice) == 0) {
+                            isDuplicate = true;
+                            System.out.println("Duplicate bid ignored: " + bidTime);
+                        }
+                    }
+
+                    // Refund pending if someone else is now the winner
+                    if (myPendingBid != null && myPendingBid.compareTo(BigDecimal.ZERO) > 0
+                            && winnerId != null && currentUser != null
+                            && !winnerId.equals(currentUser.getUser_id())) {
+                        refundVirtualBalance();
+                    }
+
+                    // If this update is from the current user, consume the pending amount
+                    if (currentUser != null && bidderUsername.equals(currentUser.getUsername())) {
+                        if (pendingBidAmount != null && pendingBidAmount.compareTo(BigDecimal.ZERO) > 0) {
+                            deductVirtualBalance(pendingBidAmount);
+                            pendingBidAmount = null;
+                        }
+                    }
+
+                    boolean isHigher = currentPrice == null || incomingPrice.compareTo(currentPrice) > 0;
+
+                    if (!isDuplicate) {
+                        // Add chart point for chronological history
+                        addChartData(bidCounter++, incomingPrice);
+
+                        Bid bid = new Bid();
+                        bid.setTimeString(bidTime);
+                        bid.setUsername(bidderUsername);
+                        bid.setAmount(incomingPrice);
+                        bid.setAmountString(String.format("%,.2f", incomingPrice) + " USD");
+
+                        if (isHigher) {
+                            // New leading bid
+                            bid.setStatus("LEADING");
+
+                            currentPrice = incomingPrice;
+                            currentPriceLabel.setText(formatPrice(currentPrice));
+                            stepPriceLabel.setText(formatPrice(stepPrice));
+                            currentWinnerLabel.setText(bidderUsername);
+                            winnerTimeLabel.setText(bidTime);
+
+                            globalWinnerName = bidderUsername;
+                            globalWinnerTime = bidTime;
+
+                            bidHistoryList.addFirst(bid);
+
+                            for (int i = 1; i < bidHistoryList.size(); i++) {
+                                bidHistoryList.get(i).setStatus("OUTBID");
+                            }
+
+                            globalCurrentPrice = currentPrice;
+                        } else {
+                            // Outbid / older lower-priced bid - still record it
+                            bid.setStatus("OUTBID");
+                            bidHistoryList.addFirst(bid);
+
+                            // Ensure top remains marked LEADING
+                            if (!bidHistoryList.isEmpty()) {
+                                bidHistoryList.get(0).setStatus("LEADING");
+                                for (int i = 1; i < bidHistoryList.size(); i++) {
+                                    bidHistoryList.get(i).setStatus("OUTBID");
+                                }
+                            }
+                        }
+
+                        bidHistoryTable.refresh();
+
+                        globalBidHistory = new ArrayList<>(bidHistoryList);
+                        globalBidCounter = bidCounter;
+
+                        System.out.println("Saved to static - Total bids: " + globalBidHistory.size());
+                    }
+                }
+                return;
+            }
+
+            // ==================== VIRTUAL BALANCE ====================
+            if (msg.startsWith("VIRTUAL_BALANCE")) {
+                String[] parts = msg.split("\\|");
+                if (parts.length >= 2) {
+                    BigDecimal vb = new BigDecimal(parts[1]);
+                    this.virtualBalance = vb;
+                    UserSession.setVirtualBalance(vb);
+                    updateBalanceDisplay();
+                    System.out.println("[LiveAuction] Virtual balance loaded from DB: " + vb);
+                }
+                return;
+            }
+
+            // ==================== JOIN THÀNH CÔNG ====================
+            if (msg.startsWith("JOIN_SUCCESS")) {
+                System.out.println("Successfully joined auction: " + auctionId);
+
+                String[] parts = msg.split("\\|");
+                if (parts.length >= 4) {
+                    this.auctionId = parts[1];
+                    System.out.println("auctionId set from server: " + this.auctionId);
+                    currentPrice = new BigDecimal(parts[2]);
+                    stepPrice = new BigDecimal(parts[3]);
+                    currentPriceLabel.setText(formatPrice(currentPrice));
+                    stepPriceLabel.setText(formatPrice(stepPrice));
+
+                    if (parts.length >= 5) {
+                        startCountdown(parts[4]);
+                    }
+
+                    if (!globalBidHistory.isEmpty()) {
+                        bidHistoryList.clear();
+                        bidHistoryList.addAll(globalBidHistory);
+                        bidCounter = globalBidCounter;
+
+                        chartSeries.getData().clear();
+                        List<Bid> reversedForChart = new ArrayList<>(bidHistoryList);
+                        java.util.Collections.reverse(reversedForChart);
+                        for (int i = 0; i < reversedForChart.size(); i++) {
+                            double priceInMillions = reversedForChart.get(i).getAmount().doubleValue() / 1_000_000;
+                            chartSeries.getData().add(new XYChart.Data<>(String.valueOf(i), priceInMillions));
+                        }
+
+                        bidHistoryTable.refresh();
+                        System.out.println("Restored " + bidHistoryList.size() + " bids from static");
+                    } else {
+                        System.out.println("No cached history, waiting for server...");
+                    }
+
+                    if (globalWinnerName != null) {
+                        currentWinnerLabel.setText(globalWinnerName);
+                        winnerTimeLabel.setText(globalWinnerTime);
+                        System.out.println("Restored winner: " + globalWinnerName + " at " + globalWinnerTime);
+                    }
+                }
+
+                if (client != null && auctionId != null) {
+                    client.sendGetBidHistory(auctionId);
+                }
+                return;
+            }
+
+            if (msg.startsWith("JOIN_FAILED")) {
+                String[] parts = msg.split("\\|");
+                String errorMsg = parts.length > 1 ? parts[1] : "Cannot join auction";
+                showError("Cannot join auction: " + errorMsg);
+                // Quay về HomePage
+                goBackToHome();
+                return;
+            }
+
+            // ==================== LỊCH SỬ GIÁ TỪ SERVER ====================
+            if (msg.startsWith("BID_HISTORY_SUCCESS")) {
+                String data = msg.substring("BID_HISTORY_SUCCESS|".length());
+                List<Bid> history = parseBidHistory(data);
+
+                if (!history.isEmpty()) {
+                    bidHistoryList.clear();
+
+                    for (Bid bid : history) {
+                        if (bid.getAmountString() == null || bid.getAmountString().isEmpty()) {
+                            bid.setAmountString(String.format("%,.0f", bid.getAmount()) + " USD");
+                        }
+                        bidHistoryList.add(bid);
+                    }
+
+                    bidHistoryList.sort((a, b) -> b.getAmount().compareTo(a.getAmount()));
+
+                    chartSeries.getData().clear();
+                    bidCounter = 0;
+                    List<Bid> chartOrder = new ArrayList<>(bidHistoryList);
+                    Collections.reverse(chartOrder);
+                    for (Bid bid : chartOrder) {
+                        addChartData(bidCounter++, bid.getAmount());
+                    }
+
+                    for (int i = 0; i < bidHistoryList.size(); i++) {
+                        bidHistoryList.get(i).setStatus(i == 0 ? "LEADING" : "OUTBID");
+                    }
+
+                    if (!bidHistoryList.isEmpty()) {
+                        Bid topBid = bidHistoryList.getFirst();
+                        if (topBid.getUsername() != null && !topBid.getUsername().isEmpty()) {
+                            currentWinnerLabel.setText(topBid.getUsername());
+                            winnerTimeLabel.setText(topBid.getTimeString());
+                            globalWinnerName = topBid.getUsername();
+                            globalWinnerTime = topBid.getTimeString();
+                        }
+                    }
+
+                    bidHistoryTable.refresh();
+
+                    globalBidHistory = new ArrayList<>(bidHistoryList);
+                    globalBidCounter = bidCounter;
+
+                    System.out.println("Total bids after server sync: " + bidHistoryList.size());
+                }
+                return;
+            }
+
+            if (msg.startsWith("BID_HISTORY_EMPTY")) {
+                System.out.println("Server returned empty bid history (keeping existing)");
+                return;
+            }
+
+            // ==================== BID THẤT BẠI ====================
+            if (msg.startsWith("BID_FAILED")) {
                 pendingBidAmount = null;
+                String errorMsg = msg.length() > 11 ? msg.substring(11) : "Bid failed";
+                showError("❌ " + errorMsg);
+                return;
             }
-        }
 
-        boolean isHigher = currentPrice == null || incomingPrice.compareTo(currentPrice) > 0;
-        if (isDuplicate) {
-            return;
-        }
-
-        bidCounter = LiveAuctionHistoryHelper.addChartData(bidCounter, chartSeries, incomingPrice);
-        Bid bid = new Bid();
-        bid.setTimeString(bidTime);
-        bid.setUsername(bidderUsername);
-        bid.setAmount(incomingPrice);
-        bid.setAmountString(String.format("%,.2f", incomingPrice) + " USD");
-
-        if (isHigher) {
-            bid.setStatus("LEADING");
-            currentPrice = incomingPrice;
-            currentPriceLabel.setText(formatPrice(currentPrice));
-            stepPriceLabel.setText(formatPrice(stepPrice));
-            currentWinnerLabel.setText(bidderUsername);
-            winnerTimeLabel.setText(bidTime);
-            globalWinnerName = bidderUsername;
-            globalWinnerTime = bidTime;
-            bidHistoryList.addFirst(bid);
-            for (int i = 1; i < bidHistoryList.size(); i++) {
-                bidHistoryList.get(i).setStatus("OUTBID");
-            }
-        } else {
-            bid.setStatus("OUTBID");
-            bidHistoryList.addFirst(bid);
-            if (!bidHistoryList.isEmpty()) {
-                bidHistoryList.getFirst().setStatus("LEADING");
-                for (int i = 1; i < bidHistoryList.size(); i++) {
-                    bidHistoryList.get(i).setStatus("OUTBID");
+            // ==================== TIME EXTENDED ====================
+            if (msg.startsWith("TIME_EXTENDED")) {
+                String[] parts = msg.split("\\|");
+                if (parts.length >= 3) {
+                    startCountdown(parts[2]);
+                    showAntiSnipeNotification();
+                    System.out.println("[LiveAuction] Time extended to: " + parts[2]);
                 }
+                return;
             }
-        }
 
-        bidHistoryTable.refresh();
-        globalBidHistory = new ArrayList<>(bidHistoryList);
-        globalBidCounter = bidCounter;
-        System.out.println("Saved to static - Total bids: " + globalBidHistory.size());
-    }
-
-    @Override
-    public void onVirtualBalance(String msg) {
-        String[] parts = msg.split("\\|");
-        if (parts.length < 2) {
-            return;
-        }
-        BigDecimal vb = new BigDecimal(parts[1]);
-        this.virtualBalance = vb;
-        UserSession.setVirtualBalance(vb);
-        updateBalanceDisplay();
-        System.out.println("[LiveAuction] Virtual balance loaded from DB: " + vb);
-    }
-
-    @Override
-    public void onJoinSuccess(String msg) {
-        System.out.println("Successfully joined auction: " + auctionId);
-
-        String[] parts = msg.split("\\|");
-        if (parts.length < 4) {
-            return;
-        }
-
-        this.auctionId = parts[1];
-        System.out.println("auctionId set from server: " + this.auctionId);
-        currentPrice = new BigDecimal(parts[2]);
-        stepPrice = new BigDecimal(parts[3]);
-        currentPriceLabel.setText(formatPrice(currentPrice));
-        stepPriceLabel.setText(formatPrice(stepPrice));
-
-        if (parts.length >= 5) {
-            startCountdown(parts[4]);
-        }
-
-        restoreCachedBidHistory();
-        if (globalWinnerName != null) {
-            currentWinnerLabel.setText(globalWinnerName);
-            winnerTimeLabel.setText(globalWinnerTime);
-            System.out.println("Restored winner: " + globalWinnerName + " at " + globalWinnerTime);
-        }
-
-        if (client != null && auctionId != null) {
-            client.sendGetBidHistory(auctionId);
-        }
-    }
-
-    @Override
-    public void onJoinFailed(String msg) {
-        String[] parts = msg.split("\\|");
-        String errorMsg = parts.length > 1 ? parts[1] : "Cannot join auction";
-        showError("Cannot join auction: " + errorMsg);
-        goBackToHome();
-    }
-
-    @Override
-    public void onBidHistorySuccess(String msg) {
-        String data = msg.substring("BID_HISTORY_SUCCESS|".length());
-        List<Bid> history = parseBidHistory(data);
-        if (history.isEmpty()) {
-            return;
-        }
-        loadBidHistory(history);
-        globalBidHistory = new ArrayList<>(bidHistoryList);
-        globalBidCounter = bidCounter;
-        System.out.println("Total bids after server sync: " + bidHistoryList.size());
-    }
-
-    @Override
-    public void onBidHistoryEmpty() {
-        System.out.println("Server returned empty bid history (keeping existing)");
-    }
-
-    @Override
-    public void onBidFailed(String msg) {
-        pendingBidAmount = null;
-        String errorMsg = msg.length() > 11 ? msg.substring(11) : "Bid failed";
-        showError("❌ " + errorMsg);
-    }
-
-    @Override
-    public void onTimeExtended(String msg) {
-        String[] parts = msg.split("\\|");
-        if (parts.length >= 3) {
-            startCountdown(parts[2]);
-            showAntiSnipeNotification();
-            System.out.println("[LiveAuction] Time extended to: " + parts[2]);
-        }
-    }
-
-    @Override
-    public void onAuctionEnded() {
-        isAuctionEnded = true;
-        countdownLabel.setText("00:00:00");
-        if (countdownTimer != null) {
-            countdownTimer.cancel();
-        }
-        placeBidBtn.setDisable(true);
-        addStepBtn.setDisable(true);
-        maxBidBtn.setDisable(true);
-        showInfo("Auction has ended!");
-        if (currentUser != null
-                && globalWinnerName != null
-                && globalWinnerName.equals(currentUser.getUsername())) {
-            AuctionStateManager.setParticipation(auctionId, ParticipationStatus.WON);
-        } else {
-            AuctionStateManager.setParticipation(auctionId, ParticipationStatus.LOST);
-        }
-    }
-
-    @Override
-    public void onYouWon(String msg) {
-        String[] parts = msg.split("\\|");
-
-        // Format đúng: YOU_WON|finalPrice|winnerName
-        if (parts.length >= 3) {
-            BigDecimal finalPrice = new BigDecimal(parts[1]);
-            String winnerName = parts[2];
-
-            if (currentUser != null && currentUser.getUsername().equals(winnerName)) {
-                showInfo("🎉 CONGRATULATIONS! You won the auction for " + formatPrice(finalPrice));
-                if (auctionId != null) {
-                    AuctionStateManager.setPayment(auctionId, PaymentStatus.PAID);
+            // ==================== AUCTION KẾT THÚC ====================
+            if (msg.startsWith("AUCTION_ENDED")) {
+                isAuctionEnded = true;
+                countdownLabel.setText("00:00:00");
+                if (countdownTimer != null) {
+                    countdownTimer.cancel();
                 }
-            } else {
-                showInfo("🏆 " + winnerName + " won the auction for " + formatPrice(finalPrice));
+                placeBidBtn.setDisable(true);
+                addStepBtn.setDisable(true);
+                maxBidBtn.setDisable(true);
+                showInfo("Auction has ended!");
+                if (currentUser != null
+                        && globalWinnerName != null
+                        && globalWinnerName.equals(currentUser.getUsername())) {
+
+                    AuctionStateManager.setParticipation(
+                            auctionId,
+                            ParticipationStatus.WON
+                    );
+
+                } else {
+
+                    AuctionStateManager.setParticipation(
+                            auctionId,
+                            ParticipationStatus.LOST
+                    );
+                }
+                return;
             }
-        } else if (parts.length >= 2) {
-            // Fallback: chỉ có finalPrice
-            BigDecimal finalPrice = new BigDecimal(parts[1]);
-            showInfo("Auction ended! Winning price: " + formatPrice(finalPrice));
-        }
 
-        placeBidBtn.setDisable(true);
-        addStepBtn.setDisable(true);
-        maxBidBtn.setDisable(true);
-    }
+            // ==================== THẮNG CUỘC ====================
+            if (msg.startsWith("YOU_WON")) {
+                String[] parts = msg.split("\\|");
+                if (parts.length >= 4) {
+                    String auctionId = parts[1];
+                    BigDecimal finalPrice = new BigDecimal(parts[2]);
+                    String winnerName = parts[3];
+                    if (currentUser != null && currentUser.getUsername().equals(winnerName)) {
+                        showInfo("CONGRATULATIONS! You won the auction for " + formatPrice(finalPrice));
+                        AuctionStateManager.setPayment(auctionId, PaymentStatus.PAID);
+                    } else {
+                        showInfo("🏆 " + winnerName + " won the auction for " + formatPrice(finalPrice));
+                    }
+                } else if (parts.length == 3) {
+                    BigDecimal finalPrice = new BigDecimal(parts[1]);
+                    String winnerName = parts[2];
+                    if (currentUser != null && currentUser.getUsername().equals(winnerName)) {
+                        showInfo("CONGRATULATIONS! You won the auction for " + formatPrice(finalPrice));
+                        AuctionStateManager.setPayment(auctionId, PaymentStatus.PAID);
+                    } else {
+                        showInfo("🏆 " + winnerName + " won the auction for " + formatPrice(finalPrice));
+                    }
+                } else if (parts.length == 2) {
+                    BigDecimal finalPrice = new BigDecimal(parts[1]);
+                    showInfo("Auction ended! Winning price: " + formatPrice(finalPrice));
+                }
+                placeBidBtn.setDisable(true);
+                addStepBtn.setDisable(true);
+                maxBidBtn.setDisable(true);
+                return;
+            }
 
-    @Override
-    public void onSettlementBalance(String msg) {
-        String[] parts = msg.split("\\|");
-        if (parts.length < 3) {
-            return;
-        }
+            // ==================== CẬP NHẬT BALANCE SAU KHI KẾT THÚC ====================
+            if (msg.startsWith("WINNER_BALANCE") || msg.startsWith("SELLER_BALANCE")) {
+                String[] parts = msg.split("\\|");
+                if (parts.length >= 3) {
+                    BigDecimal newBalance = new BigDecimal(parts[1]);
+                    String userId = parts[2];
 
-        BigDecimal newBalance = new BigDecimal(parts[1]);
-        String userId = parts[2];
-        if (currentUser != null && currentUser.getUser_id().equals(userId)) {
-            currentUser.setBalance(newBalance);
-            UserSession.setCurrentUser(currentUser);
-            UserSession.setVirtualBalance(newBalance);
-            this.virtualBalance = newBalance;
-            updateBalanceDisplay();
-            System.out.println("[LiveAuction] Balance updated after settle: " + newBalance);
-        }
-    }
+                    // Chỉ cập nhật nếu đúng là user hiện tại
+                    if (currentUser != null && currentUser.getUser_id().equals(userId)) {
+                        currentUser.setBalance(newBalance);
+                        UserSession.setCurrentUser(currentUser);
+                        UserSession.setVirtualBalance(newBalance);
+                        this.virtualBalance = newBalance;
+                        updateBalanceDisplay();
+                        System.out.println("[LiveAuction] Balance updated after settle: " + newBalance);
+                    }
+                }
+                return;
+            }
 
-    @Override
-    public void onError(String errorMessage) {
-        if (errorMessage != null && !errorMessage.isBlank()) {
-            showError(errorMessage);
-        }
-    }
-
-    @Override
-    public void onDisconnected() {
-        showError("Disconnected from server!");
-    }
-
-    private void restoreCachedBidHistory() {
-        if (globalBidHistory.isEmpty()) {
-            System.out.println("No cached history, waiting for server...");
-            return;
-        }
-
-        bidCounter = LiveAuctionHistoryHelper.restoreCachedHistory(
-                globalBidHistory,
-                globalBidCounter,
-                bidHistoryList,
-                chartSeries,
-                bidHistoryTable
-        );
-        System.out.println("Restored " + bidHistoryList.size() + " bids from static");
+            // ==================== ERROR / DISCONNECT ====================
+            if (msg.startsWith("ERROR")) {
+                showError("Server error: " + msg);
+            } else if (msg.startsWith("DISCONNECTED")) {
+                showError("Disconnected from server!");
+            }
+        });
     }
 
     // ==================== BID HISTORY ====================
@@ -753,35 +850,75 @@ if (LiveAuctionHistoryHelper.isDuplicateBid(bidHistoryList, bidTime, bidderUsern
             }
 
             System.out.println("Loading " + history.size() + " bids from server");
-            LiveAuctionHistoryHelper.loadBidHistory(history, bidHistoryList, chartSeries, bidHistoryTable);
-            bidCounter = bidHistoryList.size();
 
-            if (!bidHistoryList.isEmpty()) {
-                Bid topBid = bidHistoryList.getFirst();
-                if (topBid.getUsername() != null && !topBid.getUsername().isEmpty()) {
-                    currentWinnerLabel.setText(topBid.getUsername());
-                    winnerTimeLabel.setText(topBid.getTimeString());
-                    globalWinnerName = topBid.getUsername();
-                    globalWinnerTime = topBid.getTimeString();
+            bidHistoryList.clear();
+
+            for (Bid bid : history) {
+                if (bid.getAmountString() == null || bid.getAmountString().isEmpty()) {
+                    bid.setAmountString(String.format("%,.0f", bid.getAmount()) + " USD");
                 }
+                bidHistoryList.add(bid);
+            }
 
-                if (currentUser != null) {
-                    if (topBid.getUsername().equals(currentUser.getUsername())) {
-                        AuctionStateManager.setParticipation(auctionId, ParticipationStatus.LEADING);
-                    } else if (bidHistoryList.stream().anyMatch(b -> b.getUsername().equals(currentUser.getUsername()))) {
+            bidHistoryList.sort((a, b) -> b.getAmount().compareTo(a.getAmount()));
+
+            chartSeries.getData().clear();
+            bidCounter = 0;
+            List<Bid> chartOrder = new ArrayList<>(bidHistoryList);
+            Collections.reverse(chartOrder);
+            for (Bid bid : chartOrder) {
+                addChartData(bidCounter++, bid.getAmount());
+            }
+
+            for (int i = 0; i < bidHistoryList.size(); i++) {
+                bidHistoryList.get(i).setStatus(i == 0 ? "LEADING" : "OUTBID");
+            }
+
+            // Cuối loadBidHistory, sau vòng for set status:
+            if (!bidHistoryList.isEmpty() && currentUser != null) {
+                Bid top = bidHistoryList.get(0);
+                if (top.getUsername().equals(currentUser.getUsername())) {
+                    AuctionStateManager.setParticipation(auctionId, ParticipationStatus.LEADING);
+                } else {
+                    boolean userHasBid = bidHistoryList.stream()
+                            .anyMatch(b -> b.getUsername().equals(currentUser.getUsername()));
+                    if (userHasBid) {
                         AuctionStateManager.setParticipation(auctionId, ParticipationStatus.OUTBID);
                     }
                 }
             }
 
+            bidHistoryTable.refresh();
+
             globalBidHistory = new ArrayList<>(bidHistoryList);
             globalBidCounter = bidCounter;
+
             System.out.println("Total bids: " + bidHistoryList.size());
         });
     }
 
     private List<Bid> parseBidHistory(String data) {
-        return LiveAuctionHistoryHelper.parseBidHistory(data);
+        List<Bid> history = new ArrayList<>();
+        if (data == null || data.isEmpty()) return history;
+
+        String[] bidTokens = data.split("\\|");
+        for (String token : bidTokens) {
+            try {
+                String[] parts = token.split(";");
+                if (parts.length >= 3) {
+                    Bid bid = new Bid();
+                    bid.setUsername(parts[0]);
+                    BigDecimal amount = new BigDecimal(parts[1]);
+                    bid.setAmount(amount);
+                    bid.setAmountString(String.format("%,.2f", amount) + " USD");
+                    bid.setTimeString(parts[2]);
+                    history.add(bid);
+                }
+            } catch (Exception e) {
+                LOGGER.severe("Parse bid history error: " + e.getMessage());
+            }
+        }
+        return history;
     }
 
     private void refreshBidHistory() {
@@ -793,6 +930,13 @@ if (LiveAuctionHistoryHelper.isDuplicateBid(bidHistoryList, bidTime, bidderUsern
 
     // ==================== CHART ====================
 
+    private void addChartData(int index, BigDecimal price) {
+        double priceInMillions = price.doubleValue() / 1_000_000;
+        chartSeries.getData().add(new XYChart.Data<>(String.valueOf(index), priceInMillions));
+        if (chartSeries.getData().size() > 20) {
+            chartSeries.getData().removeFirst();
+        }
+    }
 
     // ==================== COUNTDOWN ====================
 
@@ -1006,6 +1150,7 @@ if (LiveAuctionHistoryHelper.isDuplicateBid(bidHistoryList, bidTime, bidderUsern
     public static void resetGlobalState() {
         globalBidHistory.clear();
         globalBidCounter = 0;
+        globalCurrentPrice = BigDecimal.ZERO;
         globalWinnerName = null;
         globalWinnerTime = null;
         globalUserId = null;

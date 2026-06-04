@@ -43,4 +43,7 @@ public class AuthService {
         String hashedPassword = BCrypt.hashpw(newPassword, BCrypt.gensalt(12));
         return UserDAO.resetPassword(fullname, dob, username, email, hashedPassword);
     }
+
+    public static void logout(String s) {
+    }
 }

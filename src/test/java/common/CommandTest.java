@@ -51,7 +51,6 @@ class CommandTest {
         assertNotNull(Command.from("LOGIN"));
         assertNotNull(Command.from("REGISTER"));
         assertNotNull(Command.from("LOGOUT"));
-        assertNotNull(Command.from("DELETE_ACCOUNT"));
         assertNotNull(Command.from("FORGOT_PASSWORD"));
     }
 

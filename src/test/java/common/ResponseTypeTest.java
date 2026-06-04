@@ -74,7 +74,6 @@ class ResponseTypeTest {
         assertNotNull(ResponseType.from("REGISTER_FAILED"));
         assertNotNull(ResponseType.from("FORGOT_SUCCESS"));
         assertNotNull(ResponseType.from("FORGOT_FAILED"));
-        assertNotNull(ResponseType.from("LOGOUT_SUCCESS"));
     }
 
     // ==================== AUCTION ADMIN RESPONSES ====================

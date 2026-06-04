@@ -149,9 +149,4 @@ public class BidService {
                 false
         );
     }
-
-    public static void settleAuction(Auction auction) {
-        // Đã chuyển logic sang AuctionHandler.endAuction()
-        // Method này giữ lại chỉ để test không bị lỗi
-    }
 }

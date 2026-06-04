@@ -4,7 +4,6 @@ import client.manager.*;
 import client.network.ClientSocket;
 import client.network.response.ResponseHandler;
 import client.util.AlertUtils;
-import client.util.AuctionListHelper;
 import client.util.AuctionCardFactory;
 import client.util.NavigationUtils;
 import client.util.ToastUtils;
@@ -44,6 +43,7 @@ public class UserHomePageController extends BaseController {
     @FXML private GridPane itemGrid;
     @FXML private TextField txtSearch;
     @FXML private Button btnAll;
+    @FXML private Button btnReload;
     @FXML private Button btnAccessories;
     @FXML private Button btnCollectibles;
     @FXML private Button btnElectronics;
@@ -116,7 +116,7 @@ public class UserHomePageController extends BaseController {
             );
             return;
         }
-        if (AuctionListHelper.isSameData(auctionList, auctions)) {
+        if (isSameData(auctionList, auctions)) {
             return;
         }
 
@@ -124,6 +124,40 @@ public class UserHomePageController extends BaseController {
         auctionList.addAll(auctions);
         applyFilters();
         loadExtraDataOnce();
+    }
+
+    private boolean isSameData(
+            List<Auction> oldList,
+            List<Auction> newList
+    ) {
+
+        if (oldList.size() != newList.size()) {
+            return false;
+        }
+
+        for (int i = 0; i < newList.size(); i++) {
+            Auction oldAuction = oldList.get(i);
+            Auction newAuction = newList.get(i);
+            if (!Objects.equals(
+                    oldAuction.getAuction_id(),
+                    newAuction.getAuction_id()
+            )) {
+                return false;
+            }
+
+            if (!Objects.equals(
+                    oldAuction.getCurrentPrice(),
+                    newAuction.getCurrentPrice()
+            )) {
+                return false;
+            }
+
+            if (oldAuction.getStatus()
+                    != newAuction.getStatus()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     // ==================== FILTER ====================
@@ -232,14 +266,82 @@ public class UserHomePageController extends BaseController {
     }
 
     private void applyFilters() {
-        String keyword = safeTrim(txtSearch.getText()).toLowerCase();
-        List<Auction> filtered = AuctionListHelper.filterAuctions(
-                auctionList,
-                keyword,
-                selectedCategory,
-                selectedStatus
-        );
+        String keyword =
+                txtSearch.getText()
+                        .trim()
+                        .toLowerCase();
+
+        List<Auction> filtered =
+                auctionList.stream()
+                        .filter(auction -> matchesSearch(auction, keyword))
+                        .filter(this::matchesCategory)
+                        .filter(this::matchesStatus)
+                        .sorted(this::compareAuctions)
+                        .toList();
         refreshGrid(filtered);
+    }
+
+    private boolean matchesSearch(Auction auction, String keyword) {
+        if (auction == null
+                || auction.getItem() == null
+                || auction.getItem().getName() == null) {
+
+            return false;
+        }
+
+        return keyword.isEmpty()
+                || auction.getItem()
+                .getName()
+                .toLowerCase()
+                .contains(keyword);
+    }
+
+    private int compareAuctions(Auction a1, Auction a2) {
+        boolean fav1 =
+                FavouriteManager.isFavourite(
+                        a1.getItem().getItem_id()
+                );
+
+        boolean fav2 =
+                FavouriteManager.isFavourite(
+                        a2.getItem().getItem_id()
+                );
+
+        if (fav1 != fav2) {
+            return fav1 ? -1 : 1;
+        }
+
+        int priority1 = getPriority(a1);
+        int priority2 = getPriority(a2);
+
+        return Integer.compare(priority1, priority2);
+    }
+
+    private int getPriority(Auction auction) {
+        return switch (auction.getStatus()) {
+            case ACTIVE -> 0;
+            case UPCOMING -> 1;
+            default -> 2;
+        };
+    }
+
+    private boolean matchesCategory(Auction auction) {
+        return selectedCategory == null
+                || auction.getItem()
+                .getCategory()
+                == selectedCategory;
+    }
+
+    private boolean matchesStatus(Auction auction) {
+        return selectedStatus == null
+                || (
+                auction.getStatus() != null
+                        && auction.getStatus()
+                        .name()
+                        .equalsIgnoreCase(
+                                selectedStatus
+                        )
+        );
     }
 
     // ==================== GRID ====================
