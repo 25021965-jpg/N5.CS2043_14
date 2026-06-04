@@ -524,32 +524,27 @@ public class UserLiveAuctionController implements UserDataReceiver {
                         }
                     }
 
+                    BigDecimal incomingPrice = new BigDecimal(newPrice);
+
                     boolean isDuplicate = false;
                     if (!bidHistoryList.isEmpty()) {
                         Bid lastBid = bidHistoryList.getFirst();
                         if (lastBid.getTimeString().equals(bidTime)
                                 && lastBid.getUsername().equals(bidderUsername)
-                                && lastBid.getAmount().compareTo(new BigDecimal(newPrice)) == 0) {
+                                && lastBid.getAmount().compareTo(incomingPrice) == 0) {
                             isDuplicate = true;
                             System.out.println("Duplicate bid ignored: " + bidTime);
                         }
                     }
 
-                    currentPrice = new BigDecimal(newPrice);
-                    currentPriceLabel.setText(formatPrice(currentPrice));
-                    stepPriceLabel.setText(formatPrice(stepPrice));
-                    currentWinnerLabel.setText(bidderUsername);
-                    winnerTimeLabel.setText(bidTime);
-
-                    globalWinnerName = bidderUsername;
-                    globalWinnerTime = bidTime;
-
+                    // Refund pending if someone else is now the winner
                     if (myPendingBid != null && myPendingBid.compareTo(BigDecimal.ZERO) > 0
                             && winnerId != null && currentUser != null
                             && !winnerId.equals(currentUser.getUser_id())) {
                         refundVirtualBalance();
                     }
 
+                    // If this update is from the current user, consume the pending amount
                     if (currentUser != null && bidderUsername.equals(currentUser.getUsername())) {
                         if (pendingBidAmount != null && pendingBidAmount.compareTo(BigDecimal.ZERO) > 0) {
                             deductVirtualBalance(pendingBidAmount);
@@ -557,25 +552,56 @@ public class UserLiveAuctionController implements UserDataReceiver {
                         }
                     }
 
+                    boolean isHigher = currentPrice == null || incomingPrice.compareTo(currentPrice) > 0;
+
                     if (!isDuplicate) {
-                        addChartData(bidCounter++, currentPrice);
+                        // Add chart point for chronological history
+                        addChartData(bidCounter++, incomingPrice);
 
                         Bid bid = new Bid();
                         bid.setTimeString(bidTime);
                         bid.setUsername(bidderUsername);
-                        bid.setAmount(currentPrice);
-                        bid.setAmountString(String.format("%,.2f", currentPrice) + " USD");
-                        bid.setStatus("LEADING");
-                        bidHistoryList.addFirst(bid);
+                        bid.setAmount(incomingPrice);
+                        bid.setAmountString(String.format("%,.2f", incomingPrice) + " USD");
 
-                        for (int i = 1; i < bidHistoryList.size(); i++) {
-                            bidHistoryList.get(i).setStatus("OUTBID");
+                        if (isHigher) {
+                            // New leading bid
+                            bid.setStatus("LEADING");
+
+                            currentPrice = incomingPrice;
+                            currentPriceLabel.setText(formatPrice(currentPrice));
+                            stepPriceLabel.setText(formatPrice(stepPrice));
+                            currentWinnerLabel.setText(bidderUsername);
+                            winnerTimeLabel.setText(bidTime);
+
+                            globalWinnerName = bidderUsername;
+                            globalWinnerTime = bidTime;
+
+                            bidHistoryList.addFirst(bid);
+
+                            for (int i = 1; i < bidHistoryList.size(); i++) {
+                                bidHistoryList.get(i).setStatus("OUTBID");
+                            }
+
+                            globalCurrentPrice = currentPrice;
+                        } else {
+                            // Outbid / older lower-priced bid - still record it
+                            bid.setStatus("OUTBID");
+                            bidHistoryList.addFirst(bid);
+
+                            // Ensure top remains marked LEADING
+                            if (!bidHistoryList.isEmpty()) {
+                                bidHistoryList.get(0).setStatus("LEADING");
+                                for (int i = 1; i < bidHistoryList.size(); i++) {
+                                    bidHistoryList.get(i).setStatus("OUTBID");
+                                }
+                            }
                         }
+
                         bidHistoryTable.refresh();
 
                         globalBidHistory = new ArrayList<>(bidHistoryList);
                         globalBidCounter = bidCounter;
-                        globalCurrentPrice = currentPrice;
 
                         System.out.println("Saved to static - Total bids: " + globalBidHistory.size());
                     }
@@ -780,11 +806,22 @@ public class UserLiveAuctionController implements UserDataReceiver {
             // ==================== THẮNG CUỘC ====================
             if (msg.startsWith("YOU_WON")) {
                 String[] parts = msg.split("\\|");
-                if (parts.length >= 3) {
+                if (parts.length >= 4) {
+                    String auctionId = parts[1];
+                    BigDecimal finalPrice = new BigDecimal(parts[2]);
+                    String winnerName = parts[3];
+                    if (currentUser != null && currentUser.getUsername().equals(winnerName)) {
+                        showInfo("CONGRATULATIONS! You won the auction for " + formatPrice(finalPrice));
+                        AuctionStateManager.setPayment(auctionId, PaymentStatus.PAID);
+                    } else {
+                        showInfo("🏆 " + winnerName + " won the auction for " + formatPrice(finalPrice));
+                    }
+                } else if (parts.length == 3) {
                     BigDecimal finalPrice = new BigDecimal(parts[1]);
                     String winnerName = parts[2];
                     if (currentUser != null && currentUser.getUsername().equals(winnerName)) {
                         showInfo("CONGRATULATIONS! You won the auction for " + formatPrice(finalPrice));
+                        AuctionStateManager.setPayment(auctionId, PaymentStatus.PAID);
                     } else {
                         showInfo("🏆 " + winnerName + " won the auction for " + formatPrice(finalPrice));
                     }

@@ -31,6 +31,7 @@
 
             <Button mnemonicParsing="false" onAction="#handleSearch" prefHeight="42.0" prefWidth="47.0" style="-fx-background-color: #d4af37;" text="🔎" />
 
+            <Button fx:id="btnReload" mnemonicParsing="false" onAction="#handleReload" prefHeight="42.0" prefWidth="90.0" style="-fx-background-color: #d4af37; -fx-text-fill: black;" text="Reload" />
             <Region HBox.hgrow="ALWAYS" />
 
             <Button mnemonicParsing="false" onAction="#handleCreateAuction" prefHeight="45.0" prefWidth="170.0" style="-fx-background-color: #d4af37;" text="Create Auction">

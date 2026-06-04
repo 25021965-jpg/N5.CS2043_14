@@ -311,6 +311,10 @@ public class ClientSocket {
         sendMessage("GET_TRANSACTIONS|" + userId);
     }
 
+    public void sendPayAuction(String auctionId) {
+        sendMessage("PAY_AUCTION|" + auctionId);
+    }
+
     // CONNECTION
     public void logout() {
         send(Command.LOGOUT);

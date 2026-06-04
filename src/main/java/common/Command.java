@@ -25,6 +25,9 @@ public enum Command {
     DEPOSIT,
     WITHDRAW,
 
+    // PAYMENT
+    PAY_AUCTION,
+
     // ================= USER FAVOURITE =================
     ADD_FAVOURITE,
     REMOVE_FAVOURITE,

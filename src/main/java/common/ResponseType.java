@@ -104,6 +104,10 @@ public enum ResponseType {
 
     AUCTION_DETAIL,
 
+    // PAYMENT
+    PAY_AUCTION_SUCCESS,
+    PAY_AUCTION_FAILED,
+
     TIME_EXTENDED,
 
     // ================= AUTO BID =================

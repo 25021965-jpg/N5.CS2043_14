@@ -263,7 +263,7 @@ public class UserAccountBalanceController extends BaseController implements User
 
     // ==================== TRANSACTIONS ====================
 
-    private void loadTransactions() {
+    public void loadTransactions() {
         if (currentUser == null) return;
         if (client == null) client = ClientSocket.getInstance();
 
@@ -339,8 +339,8 @@ public class UserAccountBalanceController extends BaseController implements User
         boolean result = switch (selected) {
             case "Deposit" -> type.equals("DEPOSIT");
             case "Withdraw" -> type.equals("WITHDRAW");
-            case "Paid" -> type.equals("TRANSFER_OUT");
-            case "Received" -> type.equals("TRANSFER_IN");
+            case "Paid" -> type.equals("TRANSFER_OUT") || type.equals("WIN_BID");
+            case "Received" -> type.equals("TRANSFER_IN") || type.equals("SOLD");
             default -> true;
         };
         System.out.println(" shouldDisplay result: " + result);
@@ -383,37 +383,31 @@ public class UserAccountBalanceController extends BaseController implements User
             String type,
             String desc
     ) {
+        String titleText;
 
-        String titleText =
-                switch (type) {
+        switch (type) {
+            case "DEPOSIT":
+            titleText = "Deposit Successful";
+            break;
+            case "WITHDRAW":
+            titleText = "Withdraw Successful";
+            break;
+            case "TRANSFER_OUT":
+            case "WIN_BID":
+            titleText = "Paid to " + desc;
+            break;
+            case "TRANSFER_IN":
+            case "SOLD":
+            titleText = "Received from " + desc;
+            break;
+            default:
+            titleText = type;
+        }
 
-                    case "DEPOSIT" ->
-                            "Deposit Successfully";
-
-                    case "WITHDRAW" ->
-                            "Withdraw Successfully";
-
-                    case "WIN_BID" -> "Won Auction - Payment";
-
-                    case "SOLD" -> "Sold Item - Received";
-
-                    case "TRANSFER_OUT" ->
-                            "Paid to " + desc;
-
-                    case "TRANSFER_IN" ->
-                            "Received from " + desc;
-
-                    default -> type;
-                };
-
-        Label label =
-                new Label(titleText);
-
-        label.setStyle("""
-                -fx-font-size:16px;
-                -fx-font-weight:bold;
-                -fx-text-fill:#0F172A;
-                """);
+        Label label = new Label(titleText);
+        label.setStyle(
+            "-fx-font-size:16px; -fx-font-weight:bold; -fx-text-fill:#0F172A;"
+        );
 
         return label;
     }
@@ -437,14 +431,19 @@ public class UserAccountBalanceController extends BaseController implements User
             String type,
             String amount
     ) {
+        boolean positive = "DEPOSIT".equals(type) || "TRANSFER_IN".equals(type) || "SOLD".equals(type);
 
-        // SOLD là cộng tiền (xanh), WIN_BID là trừ tiền (đỏ)
-        boolean positive = type.equals("DEPOSIT") || type.equals("SOLD");
+        String formatted = amount;
+        try {
+            java.math.BigDecimal v = new java.math.BigDecimal(amount);
+            String f = TextUtils.formatCurrency(v);
+            if (f != null && !f.isBlank()) formatted = f;
+        } catch (Exception ignored) {}
 
-        Label label = new Label((positive ? "+ " : "- ") + amount + " USD");
+        Label label = new Label((positive ? "+ " : "- ") + formatted);
         label.setStyle(positive
-                ? "-fx-text-fill:#16A34A; -fx-font-size:18px; -fx-font-weight:bold;"
-                : "-fx-text-fill:#EF4444; -fx-font-size:18px; -fx-font-weight:bold;");
+            ? "-fx-text-fill:#16A34A; -fx-font-size:18px; -fx-font-weight:bold;"
+            : "-fx-text-fill:#EF4444; -fx-font-size:18px; -fx-font-weight:bold;");
         return label;
     }
 }

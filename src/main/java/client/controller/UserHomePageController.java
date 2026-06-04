@@ -6,6 +6,7 @@ import client.network.response.ResponseHandler;
 import client.util.AlertUtils;
 import client.util.AuctionCardFactory;
 import client.util.NavigationUtils;
+import client.util.ToastUtils;
 
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -42,6 +43,7 @@ public class UserHomePageController extends BaseController {
     @FXML private GridPane itemGrid;
     @FXML private TextField txtSearch;
     @FXML private Button btnAll;
+    @FXML private Button btnReload;
     @FXML private Button btnAccessories;
     @FXML private Button btnCollectibles;
     @FXML private Button btnElectronics;
@@ -512,5 +514,21 @@ public class UserHomePageController extends BaseController {
             return;
         }
         client.sendList();
+    }
+
+    @FXML
+    private void handleReload() {
+        refreshData();
+        ToastUtils.show(NavigationUtils.getMainStage(), "Reloading auctions...");
+    }
+
+    public void updateCardPrice(String auctionId, String newPrice) {
+        if (auctionId == null || newPrice == null) return;
+        Parent card = cardCache.get(auctionId);
+        if (card == null) return;
+        Object controllerObj = card.getProperties().get("controller");
+        if (controllerObj instanceof client.controller.ItemCardController ic) {
+            ic.updateCurrentPrice(newPrice);
+        }
     }
 }

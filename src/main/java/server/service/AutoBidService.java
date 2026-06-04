@@ -33,8 +33,16 @@ public class AutoBidService {
             return "ERROR|Max amount must be at least " + minRequired;
         }
 
-        if (user.getBalance().compareTo(maxAmount) < 0) {
-            return "ERROR|Insufficient balance for auto-bid max amount";
+        // Auction must be active to set auto-bid
+        if (auction.getStatus() != model.AuctionStatus.ACTIVE) {
+            return "ERROR|Cannot enable auto-bid: auction is not active";
+        }
+
+        // Check virtual balance (not wallet balance) because bidding uses virtual balance
+        java.math.BigDecimal virtual = server.dao.UserDAO.getVirtualBalance(user.getUser_id());
+        if (virtual == null) virtual = java.math.BigDecimal.ZERO;
+        if (virtual.compareTo(maxAmount) < 0) {
+            return "ERROR|Insufficient virtual balance for auto-bid max amount";
         }
 
         String key =

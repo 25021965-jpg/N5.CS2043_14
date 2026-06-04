@@ -236,6 +236,21 @@ public class ItemCardController {
         setData(auction);
     }
 
+        public void updateCurrentPrice(String newPriceStr) {
+                try {
+                        java.math.BigDecimal p = new java.math.BigDecimal(newPriceStr);
+                        lblCurrentPrice.setText(
+                                        TextUtils.withLabel(
+                                                        "Current Price",
+                                                        MONEY_FORMAT.format(p)
+                                        )
+                        );
+                } catch (Exception e) {
+                        // fallback: set raw
+                        lblCurrentPrice.setText(TextUtils.withLabel("Current Price", newPriceStr));
+                }
+        }
+
     // ==================== IMAGE ====================
     private void loadImage(Item item) {
         if (item.getImages() == null

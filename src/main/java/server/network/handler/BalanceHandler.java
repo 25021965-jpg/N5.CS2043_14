@@ -1,9 +1,14 @@
 package server.network.handler;
 
 import model.Transaction;
+import model.Bid;
+import model.Auction;
 import model.Entity.User.User;
 import server.dao.TransactionDAO;
 import server.dao.UserDAO;
+import server.dao.BidDAO;
+import server.manager.RoomManager;
+import server.service.AuctionService;
 
 import java.io.PrintWriter;
 import java.math.BigDecimal;
@@ -184,5 +189,71 @@ public class BalanceHandler extends BaseHandler {
         } else {
             return "ERROR|Failed to add virtual balance";
         }
+    }
+
+    // ==================== PAY AUCTION (TRANSFER) ====================
+    public String handlePayAuction(String[] data) {
+        if (currentUser == null) return "PAY_AUCTION_FAILED|Not logged in";
+        if (data.length < 2) return "PAY_AUCTION_FAILED|Missing auction id";
+
+        String auctionId = data[1];
+
+        // Find highest bid
+        Bid highest = server.dao.BidDAO.getHighestBid(auctionId);
+        if (highest == null || highest.getBidder() == null) {
+            return "PAY_AUCTION_FAILED|No winner for this auction";
+        }
+
+        String winnerId = highest.getBidder().getUser_id();
+        if (!winnerId.equals(currentUser.getUser_id())) {
+            return "PAY_AUCTION_FAILED|You are not the winner";
+        }
+
+        BigDecimal amount = highest.getAmount();
+
+        // Get auction to find seller
+        Auction auction = AuctionService.getAuctionById(auctionId);
+        if (auction == null || auction.getSeller() == null) {
+            return "PAY_AUCTION_FAILED|Auction or seller not found";
+        }
+
+        String sellerId = auction.getSeller().getUser_id();
+
+        // Load users
+        User winner = UserDAO.getUserById(winnerId);
+        User seller = UserDAO.getUserById(sellerId);
+
+        if (winner == null || seller == null) {
+            return "PAY_AUCTION_FAILED|User(s) not found";
+        }
+
+        if (winner.getBalance().compareTo(amount) < 0) {
+            return "PAY_AUCTION_FAILED|Insufficient balance";
+        }
+
+        // Deduct winner
+        BigDecimal newWinner = winner.getBalance().subtract(amount);
+        boolean wSaved = UserDAO.updateBalance(winnerId, newWinner);
+        if (!wSaved) return "PAY_AUCTION_FAILED|DB error (winner)";
+
+        // Credit seller
+        BigDecimal newSeller = seller.getBalance().add(amount);
+        boolean sSaved = UserDAO.updateBalance(sellerId, newSeller);
+        if (!sSaved) {
+            // try rollback winner update (best-effort)
+            UserDAO.updateBalance(winnerId, winner.getBalance());
+            return "PAY_AUCTION_FAILED|DB error (seller)";
+        }
+
+        // Create transactions
+        TransactionDAO.addTransaction(winnerId, sellerId, amount, "TRANSFER_OUT", seller.getUsername());
+        TransactionDAO.addTransaction(sellerId, winnerId, amount, "TRANSFER_IN", winner.getUsername());
+
+        // Notify room members about new balances (if auction room exists)
+        RoomManager.broadcastToRoomAll(auctionId, "WINNER_BALANCE|" + newWinner + "|" + winnerId);
+        RoomManager.broadcastToRoomAll(auctionId, "SELLER_BALANCE|" + newSeller + "|" + sellerId);
+
+        // Return success to requester
+        return "PAY_AUCTION_SUCCESS|" + auctionId + "|" + newWinner;
     }
 }

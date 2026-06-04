@@ -24,7 +24,6 @@ import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 
 import model.*;
-import server.service.AuctionService;
 
 import model.Entity.User.User;
 import model.Entity.User.Role;
@@ -33,8 +32,13 @@ import java.io.IOException;
 import java.net.URL;
 import java.text.NumberFormat;
 import java.time.format.DateTimeFormatter;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
+import javafx.animation.Animation;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.util.Duration;
 
 public class ItemViewController extends BaseController
         implements AuctionStateListener  {
@@ -66,6 +70,7 @@ public class ItemViewController extends BaseController
 
     private Auction auction;
     private int currentImageIndex = 0;
+    private Timeline startWatcher;
 
     @FXML
     public void initialize() {
@@ -111,6 +116,7 @@ public class ItemViewController extends BaseController
         setupJoinButton();   // style only if visible
 
         updateStatusBadge();
+        scheduleStartWatcher();
         showImage(0);
     }
 
@@ -135,6 +141,40 @@ public class ItemViewController extends BaseController
                     this
             );
         }
+        if (startWatcher != null) {
+            startWatcher.stop();
+            startWatcher = null;
+        }
+    }
+
+    private void scheduleStartWatcher() {
+        if (startWatcher != null) {
+            startWatcher.stop();
+            startWatcher = null;
+        }
+
+        if (auction == null || auction.getStartTime() == null) return;
+
+        // If already started, nothing to schedule
+        if (!auction.getStartTime().isAfter(LocalDateTime.now())) return;
+
+        startWatcher = new Timeline(new KeyFrame(Duration.seconds(1), e -> {
+            if (auction.getStartTime() != null && !auction.getStartTime().isAfter(LocalDateTime.now())) {
+                // start time arrived -> refresh UI and stop watcher
+                setupJoinButton();
+                updateStatusBadge();
+                if (startWatcher != null) {
+                    startWatcher.stop();
+                    startWatcher = null;
+                }
+            } else {
+                // still not started; ensure button remains disabled
+                setupJoinButton();
+            }
+        }));
+
+        startWatcher.setCycleCount(Animation.INDEFINITE);
+        startWatcher.play();
     }
 
     // ==================== LABELS ====================
@@ -240,8 +280,7 @@ public class ItemViewController extends BaseController
             lblPaymentStatus.setVisible(true);
             lblPaymentStatus.setManaged(true);
 
-            if (AuctionStateManager.getPayment(auction.getAuction_id()) == PaymentStatus.PAID)
-            {
+            if (AuctionStateManager.getPayment(auction.getAuction_id()) == PaymentStatus.PAID) {
                 lblPaymentStatus.setText("Payment Status: Paid");
                 lblPaymentStatus.setStyle("-fx-text-fill:#43a047;");
             } else {
@@ -278,6 +317,18 @@ public class ItemViewController extends BaseController
     private void setupJoinButton() {
         if (!btnJoinAuction.isVisible()) return;
 
+        // Disable (gray-out) if auction hasn't started yet
+        if (auction.getStartTime() != null && auction.getStartTime().isAfter(LocalDateTime.now())) {
+            btnJoinAuction.setDisable(true);
+            btnJoinAuction.setVisible(true);
+            btnJoinAuction.setManaged(true);
+            btnJoinAuction.setText("Not started");
+            btnJoinAuction.setStyle("-fx-background-color: #9ca3af; -fx-text-fill: white;");
+            return;
+        } else {
+            btnJoinAuction.setDisable(false);
+        }
+
         // Ẩn nút nếu auction đã kết thúc
         if (auction.getStatus() == AuctionStatus.ENDED
                 || auction.getStatus() == AuctionStatus.CANCELLED) {
@@ -289,8 +340,14 @@ public class ItemViewController extends BaseController
         boolean joined = AuctionStateManager.isJoined(auction.getAuction_id());
 
         if (joined) {
-            btnJoinAuction.setText("CONTINUE BIDDING");
-            btnJoinAuction.setStyle("-fx-background-color: #43a047; -fx-text-fill: white;");
+            ParticipationStatus status = AuctionStateManager.getParticipation(auction.getAuction_id());
+            if (status == ParticipationStatus.WON) {
+                btnJoinAuction.setVisible(false);
+                btnJoinAuction.setManaged(false);
+            } else {
+                btnJoinAuction.setText("CONTINUE BIDDING");
+                btnJoinAuction.setStyle("-fx-background-color: #43a047; -fx-text-fill: white;");
+            }
         } else {
             btnJoinAuction.setText("JOIN AUCTION");
             btnJoinAuction.setStyle("-fx-background-color: #d4af37; -fx-text-fill: black;");
@@ -411,8 +468,22 @@ public class ItemViewController extends BaseController
         User user = UserSession.getCurrentUser();
         if (user == null || client == null) return;
 
-        if (auction.getStatus() == AuctionStatus.ENDED) {
-            AlertUtils.warning("Ended", "Auction ended");
+        ParticipationStatus status = AuctionStateManager.getParticipation(auction.getAuction_id());
+        // If user won, treat button as Pay
+        if (status == ParticipationStatus.WON) {
+            boolean confirmed = AlertUtils.confirm(
+                    "Pay",
+                    "Pay " + auction.getCurrentPrice() + " for " + auction.getItem().getName() + "?"
+            );
+            if (confirmed) {
+                client.sendPayAuction(auction.getAuction_id());
+            }
+            return;
+        }
+
+        // Prevent joining if auction hasn't started yet
+        if (auction.getStartTime() != null && auction.getStartTime().isAfter(LocalDateTime.now())) {
+            AlertUtils.error("This auction has not started yet.");
             return;
         }
 

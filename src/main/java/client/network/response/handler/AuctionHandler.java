@@ -161,6 +161,19 @@ public class AuctionHandler {
         if (ctrl != null) {
             ctrl.handleServerMessage(raw);
         }
+
+        // Also update homepage card if present
+        try {
+            String[] parts = raw.split("\\|");
+            if (parts.length >= 3) {
+                String auctionId = parts[1];
+                String newPrice = parts[2];
+                UserHomePageController home = ControllerRegistry.get(UserHomePageController.class);
+                if (home != null) {
+                    home.updateCardPrice(auctionId, newPrice);
+                }
+            }
+        } catch (Exception ignored) {}
     }
 
     // ===== JOIN AUCTION =====
