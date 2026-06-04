@@ -1,0 +1,51 @@
+package server.network.handler;
+
+import model.Auction;
+import server.service.AuctionService;
+import server.service.AutoBidService;
+import model.Entity.User.User;
+
+import java.io.PrintWriter;
+import java.math.BigDecimal;
+
+public class BidHandler extends BaseHandler {
+
+    public BidHandler(
+            User currentUser,
+            PrintWriter writer,
+            String currentAuctionId
+    ) {
+        super(currentUser, writer, currentAuctionId);
+    }
+
+    
+    public String setAutoBid(String[] data) {
+        try {
+            // Giao thức: SET_AUTO_BID|auctionId|maxAmount
+            String auctionId = data[1];
+            BigDecimal maxAmount = new BigDecimal(data[2]);
+
+            Auction auction = AuctionService.getAuctionById(auctionId);
+            if (auction == null) return "ERROR|Auction not found";
+
+            if (auction.getSeller() != null
+                    && auction.getSeller().getUser_id().equals(currentUser.getUser_id())) {
+                return "ERROR|You cannot auto-bid on your own auction!";
+            }
+
+            return AutoBidService.setAutoBid(currentUser, auction, maxAmount);
+
+        } catch (Exception e) {
+            return "ERROR|" + e.getMessage();
+        }
+    }
+
+    public String cancelAutoBid(String[] data) {
+        try {
+            String auctionId = data[1];
+            return AutoBidService.cancelAutoBid(auctionId, currentUser.getUser_id());
+        } catch (Exception e) {
+            return "ERROR|" + e.getMessage();
+        }
+    }
+}
