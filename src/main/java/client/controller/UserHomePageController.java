@@ -478,6 +478,11 @@ public class UserHomePageController extends BaseController {
         if (!confirmed) {
             return;
         }
+        ClientSocket socket = ClientSocket.getInstance();
+        if (socket != null && UserSession.getCurrentUser() != null) {
+            socket.sendDeleteAccount(UserSession.getCurrentUser().getUser_id());
+        }
+
         navigate(
                 getStage(event),
                 "/fxml/login-view.fxml",

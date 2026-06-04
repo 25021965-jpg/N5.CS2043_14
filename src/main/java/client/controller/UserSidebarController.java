@@ -197,11 +197,11 @@ public class UserSidebarController {
             return;
         }
 
-        /*
-            TODO:
-            - delete account from database
-            - send delete request to server
-         */
+        ClientSocket socket = ClientSocket.getInstance();
+
+        if (socket != null && UserSession.getCurrentUser() != null) {
+            socket.sendDeleteAccount(UserSession.getCurrentUser().getUser_id());
+        }
 
         UserSession.setCurrentUser(null);
         NavigationUtils.setCurrentPage(null);

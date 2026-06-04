@@ -73,4 +73,26 @@ public class AuthHandler {
     public static void forgotFailed(String data) {
         AlertUtils.error("Reset failed: " + data);
     }
+
+    public static void logoutSuccess(Stage stage) {
+        try {
+            ToastUtils.show(stage, "Logged out");
+        } catch (Exception ignored) {}
+
+        // Clear client-side session and cached state
+        client.network.ClientSocket socket = client.network.ClientSocket.getInstance();
+        if (socket != null) socket.close();
+
+        client.manager.AuctionStateManager.clearAll();
+        client.manager.AuctionHistoryManager.clearAll();
+        client.manager.FavouriteManager.clear();
+        client.controller.UserLiveAuctionController.resetGlobalState();
+        client.manager.UserSession.setCurrentUser(null);
+
+        try {
+            NavigationUtils.switchScene(stage, "/fxml/login-view.fxml", "Login");
+        } catch (Exception e) {
+            // ignore
+        }
+    }
 }
