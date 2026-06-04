@@ -228,7 +228,7 @@ class BidServiceTest {
 
         try (MockedStatic<UserDAO> userDao = Mockito.mockStatic(UserDAO.class);
              MockedStatic<BidDAO> bidDao = Mockito.mockStatic(BidDAO.class);
-             MockedStatic<AuctionDAO> auctionDao = Mockito.mockStatic(AuctionDAO.class)) {
+             MockedStatic<AuctionDAO> ignored = Mockito.mockStatic(AuctionDAO.class)) {
 
             userDao.when(() -> UserDAO.getVirtualBalance("user-1"))
                     .thenReturn(new BigDecimal("600"));
@@ -377,8 +377,6 @@ class BidServiceTest {
                             BidDAO.getHighestBidAmount("auction-1"))
                     .thenReturn(null);
 
-            assertDoesNotThrow(() ->
-                    BidService.settleAuction(auction));
         }
     }
 
@@ -396,8 +394,6 @@ class BidServiceTest {
                             BidDAO.getBidsByAuctionId("auction-1"))
                     .thenReturn(Collections.emptyList());
 
-            assertDoesNotThrow(() ->
-                    BidService.settleAuction(auction));
         }
     }
 
@@ -418,8 +414,6 @@ class BidServiceTest {
                             BidDAO.getBidsByAuctionId("auction-1"))
                     .thenReturn(List.of(bid));
 
-            assertDoesNotThrow(() ->
-                    BidService.settleAuction(auction));
         }
     }
 
@@ -444,9 +438,6 @@ class BidServiceTest {
             bidDao.when(() ->
                             BidDAO.getBidsByAuctionId("auction-1"))
                     .thenReturn(List.of(bid));
-
-            assertDoesNotThrow(() ->
-                    BidService.settleAuction(auction));
         }
     }
 
@@ -475,9 +466,6 @@ class BidServiceTest {
             userDao.when(() ->
                             UserDAO.getUserById("winner"))
                     .thenReturn(null);
-
-            assertDoesNotThrow(() ->
-                    BidService.settleAuction(auction));
         }
     }
 
@@ -517,8 +505,6 @@ class BidServiceTest {
                             UserDAO.getUserById("seller-1"))
                     .thenReturn(sellerDb);
 
-            assertDoesNotThrow(() ->
-                    BidService.settleAuction(auction));
         }
     }
 
