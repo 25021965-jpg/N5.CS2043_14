@@ -203,7 +203,7 @@ public class AuctionHandler extends BaseHandler {
                                                 seller.getUser_id(),
                                                 finalPrice,
                                                 "WIN_BID",
-                                                "Won auction: " + itemName
+                                                "Won auction: " + itemName + " from " + seller.getUsername()
                                         );
                                         System.out.println("[AuctionHandler] Winner " + winner.getUsername() +
                                                 " real balance deducted: " + finalPrice +
@@ -226,7 +226,7 @@ public class AuctionHandler extends BaseHandler {
                                                 winner.getUser_id(),
                                                 finalPrice,
                                                 "SOLD",
-                                                "Sold item: " + itemName
+                                                "Sold item: " + itemName+ " to " + winner.getUsername()
                                         );
                                         System.out.println("[AuctionHandler] Seller " + seller.getUsername() +
                                                 " received: " + finalPrice +

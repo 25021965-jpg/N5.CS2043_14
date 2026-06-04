@@ -1,5 +1,7 @@
 package server.dao;
 
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.sql.*;
@@ -7,41 +9,57 @@ import java.util.logging.Logger;
 
 public class DatabaseService {
 
-    private static final Logger LOGGER =
-            Logger.getLogger(DatabaseService.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(DatabaseService.class.getName());
+    private static HikariDataSource dataSource;
 
-    // Đọc thông tin từ Environment Variables để bảo mật
     private static final String HOST = System.getenv("TIDB_HOST");
     private static final String USER = System.getenv("TIDB_USER");
     private static final String PASS = System.getenv("TIDB_PASS");
     private static final String DB_NAME = "auction_system";
 
-    private static final String URL =
-            "jdbc:mysql://" + HOST + ":4000/" + DB_NAME +
-                    "?sslMode=REQUIRED&useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC";
-
-    public static Connection getConnection() throws SQLException {
+    static {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            return DriverManager.getConnection(URL, USER, PASS);
+            initConnectionPool();
+            initDatabase();
         } catch (ClassNotFoundException e) {
-            throw new SQLException("MySQL Driver not found!", e);
+            LOGGER.severe("MySQL Driver not found: " + e.getMessage());
         }
     }
 
-    public static void initDatabase() {
+    private static void initConnectionPool() {
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl("jdbc:mysql://" + HOST + ":4000/" + DB_NAME +
+                "?sslMode=REQUIRED&useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC");
+        config.setUsername(USER);
+        config.setPassword(PASS);
+        config.setDriverClassName("com.mysql.cj.jdbc.Driver");
+        config.setMaximumPoolSize(20);
+        config.setMinimumIdle(5);
+        config.setConnectionTimeout(30000);
+        config.setIdleTimeout(600000);
+        config.setMaxLifetime(1800000);
 
-        String serverURL =
-                "jdbc:mysql://" + HOST + ":4000/test?sslMode=REQUIRED";
+        dataSource = new HikariDataSource(config);
+        System.out.println("✓ HikariCP Connection Pool initialized");
+    }
+
+    public static Connection getConnection() throws SQLException {
+        if (dataSource == null) {
+            throw new SQLException("Connection pool not initialized!");
+        }
+        return dataSource.getConnection();
+    }
+
+    public static void initDatabase() {
+        String serverURL = "jdbc:mysql://" + HOST + ":4000/test?sslMode=REQUIRED";
 
         try (Connection conn = DriverManager.getConnection(serverURL, USER, PASS);
              Statement stmt = conn.createStatement()) {
 
-            // 1. Khởi tạo Database
             stmt.executeUpdate("CREATE DATABASE IF NOT EXISTS " + DB_NAME);
             stmt.executeUpdate("USE " + DB_NAME);
 
-            // 2. Bảng Người dùng
             stmt.executeUpdate("""
                 CREATE TABLE IF NOT EXISTS users (
                     user_id CHAR(36) PRIMARY KEY,
@@ -52,14 +70,11 @@ public class DatabaseService {
                     dob DATE,
                     balance DECIMAL(15,2) DEFAULT 0,
                     role ENUM('BIDDER', 'SELLER', 'ADMIN') DEFAULT 'SELLER',
-                    verified BOOLEAN DEFAULT TRUE,
-                    CHECK (username NOT LIKE '% %')
+                    verified BOOLEAN DEFAULT TRUE
                 )""");
 
-            //  THÊM CỘT VIRTUAL_BALANCE NẾU CHƯA CÓ
             addVirtualBalanceColumnIfNotExists(stmt);
 
-            // 3. Bảng Vật phẩm
             stmt.executeUpdate("""
                 CREATE TABLE IF NOT EXISTS items (
                     item_id CHAR(36) PRIMARY KEY,
@@ -68,17 +83,15 @@ public class DatabaseService {
                     category VARCHAR(50)
                 )""");
 
-            // 4. Bảng Hình ảnh Vật phẩm
             stmt.executeUpdate("""
                 CREATE TABLE IF NOT EXISTS item_images (
                     image_id CHAR(36) PRIMARY KEY,
                     item_id CHAR(36) NOT NULL,
                     image_url TEXT NOT NULL,
-                    created_at TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP(6), 
+                    created_at TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP(6),
                     FOREIGN KEY(item_id) REFERENCES items(item_id) ON DELETE CASCADE
                 )""");
 
-            // 5. Bảng Phiên đấu giá
             stmt.executeUpdate("""
                 CREATE TABLE IF NOT EXISTS auctions (
                     auction_id CHAR(36) PRIMARY KEY,
@@ -95,7 +108,6 @@ public class DatabaseService {
                     FOREIGN KEY(seller_id) REFERENCES users(user_id) ON DELETE CASCADE
                 )""");
 
-            // 6. Bảng Lượt đấu giá
             stmt.executeUpdate("""
                 CREATE TABLE IF NOT EXISTS bids (
                     bid_id CHAR(36) PRIMARY KEY,
@@ -107,7 +119,6 @@ public class DatabaseService {
                     FOREIGN KEY(bidder_id) REFERENCES users(user_id) ON DELETE CASCADE
                 )""");
 
-            // 7. Bảng Yêu thích
             stmt.executeUpdate("""
                 CREATE TABLE IF NOT EXISTS favourites (
                     user_id CHAR(36),
@@ -117,13 +128,12 @@ public class DatabaseService {
                     FOREIGN KEY(item_id) REFERENCES items(item_id) ON DELETE CASCADE
                 )""");
 
-            // 8. Bảng Giao dịch
             stmt.executeUpdate("""
                 CREATE TABLE IF NOT EXISTS transactions (
                     transaction_id CHAR(36) PRIMARY KEY,
                     user_id CHAR(36) NOT NULL,
                     amount DECIMAL(15,2) NOT NULL,
-                    type ENUM('DEPOSIT', 'WITHDRAW', 'TRANSFER_IN', 'TRANSFER_OUT') NOT NULL,
+                    type ENUM('DEPOSIT', 'WITHDRAW', 'WIN_BID', 'SOLD') NOT NULL,
                     related_user_id CHAR(36),
                     description VARCHAR(255),
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -131,14 +141,11 @@ public class DatabaseService {
                     FOREIGN KEY(related_user_id) REFERENCES users(user_id) ON DELETE SET NULL
                 )""");
 
-            // 9. Thêm tài khoản Admin
             String checkAdmin = "SELECT COUNT(*) FROM users WHERE role = 'ADMIN'";
             try (ResultSet rs = stmt.executeQuery(checkAdmin)) {
                 if (rs.next() && rs.getInt(1) == 0) {
                     String hashedPass = BCrypt.hashpw("admin123", BCrypt.gensalt(12));
-                    String insertAdmin = "INSERT INTO users (user_id, fullname, username, email, password, role, verified) " +
-                            "VALUES (?, ?, ?, ?, ?, ?, ?)";
-
+                    String insertAdmin = "INSERT INTO users (user_id, fullname, username, email, password, role, verified) VALUES (?, ?, ?, ?, ?, ?, ?)";
                     try (PreparedStatement ps = conn.prepareStatement(insertAdmin)) {
                         ps.setString(1, "ADM-INIT-001");
                         ps.setString(2, "System Admin");
@@ -147,9 +154,8 @@ public class DatabaseService {
                         ps.setString(5, hashedPass);
                         ps.setString(6, "ADMIN");
                         ps.setBoolean(7, true);
-
                         ps.executeUpdate();
-                        System.out.println("✓ Created default admin account: admin/admin123 (Hashed)");
+                        System.out.println("✓ Created default admin account: admin/admin123");
                     }
                 }
             }
@@ -158,14 +164,11 @@ public class DatabaseService {
 
         } catch (SQLException e) {
             LOGGER.severe("✕ TiDB Initialization Error: " + e.getMessage());
-            LOGGER.severe("Error: " + e.getMessage());
         }
     }
 
-    //  THÊM METHOD NÀY ĐỂ TỰ ĐỘNG THÊM CỘT VIRTUAL_BALANCE
     private static void addVirtualBalanceColumnIfNotExists(Statement stmt) {
         try {
-            // Kiểm tra cột virtual_balance đã tồn tại chưa
             ResultSet rs = stmt.executeQuery(
                     "SELECT COUNT(*) FROM information_schema.COLUMNS " +
                             "WHERE TABLE_SCHEMA = '" + DB_NAME + "' " +
@@ -177,22 +180,20 @@ public class DatabaseService {
             rs.close();
 
             if (!columnExists) {
-                // Thêm cột virtual_balance
-                stmt.executeUpdate(
-                        "ALTER TABLE users ADD COLUMN virtual_balance DECIMAL(15,2) DEFAULT 0"
-                );
-                System.out.println("✓ Added virtual_balance column to users table");
-
-                // Cập nhật giá trị ban đầu = balance
-                stmt.executeUpdate(
-                        "UPDATE users SET virtual_balance = balance WHERE virtual_balance IS NULL OR virtual_balance = 0"
-                );
-                System.out.println("✓ Initialized virtual_balance = balance for all users");
-            } else {
-                System.out.println("✓ virtual_balance column already exists");
+                stmt.executeUpdate("ALTER TABLE users ADD COLUMN virtual_balance DECIMAL(15,2) DEFAULT 0");
+                System.out.println("✓ Added virtual_balance column");
+                stmt.executeUpdate("UPDATE users SET virtual_balance = balance");
+                System.out.println("✓ Initialized virtual_balance = balance");
             }
         } catch (SQLException e) {
-            LOGGER.severe("⚠️ Could not add virtual_balance column: " + e.getMessage());
+            LOGGER.severe("Could not add virtual_balance: " + e.getMessage());
+        }
+    }
+
+    public static void closePool() {
+        if (dataSource != null && !dataSource.isClosed()) {
+            dataSource.close();
+            System.out.println("✓ Connection pool closed");
         }
     }
 }

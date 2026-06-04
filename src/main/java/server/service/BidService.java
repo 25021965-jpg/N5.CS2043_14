@@ -103,47 +103,6 @@ public class BidService {
         }
     }
 
-    public static synchronized void settleAuction(Auction auction) {
-        // Lấy bid cao nhất
-        java.math.BigDecimal winAmount = BidDAO.getHighestBidAmount(auction.getAuction_id());
-        if (winAmount == null || winAmount.compareTo(java.math.BigDecimal.ZERO) == 0) return;
-
-        // Lấy winner (người có bid cao nhất)
-        java.util.List<Bid> bids = BidDAO.getBidsByAuctionId(auction.getAuction_id());
-        if (bids.isEmpty()) return;
-
-        Bid winBid = bids.getFirst();
-        User winner = winBid.getBidder();
-        if (winner == null) return;
-
-        User seller = auction.getSeller();
-        if (seller == null) return;
-
-        User winnerFromDB = UserDAO.getUserById(winner.getUser_id());
-        User sellerFromDB = UserDAO.getUserById(seller.getUser_id());
-        if (winnerFromDB == null || sellerFromDB == null) return;
-
-        // Trừ account balance thật của winner (tiền thật)
-        BigDecimal winnerNewBalance = winnerFromDB.getBalance().subtract(winAmount);
-        if (winnerNewBalance.compareTo(BigDecimal.ZERO) < 0) {
-            System.out.println("Winner has insufficient balance!");
-            return;
-        }
-        UserDAO.updateBalance(winner.getUser_id(), winnerNewBalance);
-
-        // Cập nhật lại virtual balance = account balance mới
-        UserDAO.updateVirtualBalance(winner.getUser_id(), winnerNewBalance);
-        server.dao.TransactionDAO.addTransaction(winner.getUser_id(), winAmount, "WITHDRAW");
-
-        // Cộng tiền cho seller
-        BigDecimal sellerNewBalance = sellerFromDB.getBalance().add(winAmount);
-        UserDAO.updateBalance(seller.getUser_id(), sellerNewBalance);
-        UserDAO.updateVirtualBalance(seller.getUser_id(), sellerNewBalance);
-        server.dao.TransactionDAO.addTransaction(seller.getUser_id(), winAmount, "DEPOSIT");
-
-        System.out.println("Settled: " + winner.getUsername()
-                + " paid " + winAmount + " to " + seller.getUsername());
-    }
 
     public static LocalDateTime checkAntiSnipe(Auction auction) {
         LocalDateTime now = LocalDateTime.now();
