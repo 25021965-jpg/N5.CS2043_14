@@ -21,8 +21,8 @@
 
 **Yêu cầu cài đặt:**
 
-- Java JDK 21 trở lên ([tải tại đây](https://adoptium.net/))
-- Apache Maven 3.8+ ([tải tại đây](https://maven.apache.org/download.cgi))
+- Java JDK 21 trở lên [tải tại đây](https://adoptium.net/)
+- Apache Maven 3.8+ [tải tại đây](https://maven.apache.org/download.cgi)
 - Tài khoản TiDB Cloud (hoặc instance MySQL/TiDB tự host)
 - Tài khoản Cloudinary (để upload ảnh sản phẩm)
 
@@ -265,8 +265,8 @@ Có thể mở **nhiều cửa sổ Client** đồng thời để kiểm thử �
 
 | Tài nguyên | Link |
 |---|---|
-| 📄 Báo cáo PDF |([PDF](https://drive.google.com/file/d/1leS7vCn9OS9lQ_eiMxi_8PTG-98CVV6x/view?usp=drive_link))
-| 🎬 Video demo |([Video](https://docs.google.com/videos/d/1qPXQ2ZzdNhWElzpjfuAcX_yHlvpYwT6w9sZbpVDRJjg/edit?scene=id.g59002b2b_0_2#scene=id.g59002b2b_0_2)
+| 📄 Báo cáo PDF |[PDF](https://drive.google.com/file/d/1leS7vCn9OS9lQ_eiMxi_8PTG-98CVV6x/view?usp=drive_link)
+| 🎬 Video demo |[Video](https://docs.google.com/videos/d/1qPXQ2ZzdNhWElzpjfuAcX_yHlvpYwT6w9sZbpVDRJjg/edit?scene=id.g59002b2b_0_2#scene=id.g59002b2b_0_2)
 
 ---
 
