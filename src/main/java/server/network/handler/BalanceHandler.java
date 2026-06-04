@@ -59,20 +59,21 @@ public class BalanceHandler extends BaseHandler {
                 return "BALANCE_UPDATE_FAILED|User not found";
             }
 
+            // Cộng account balance
             BigDecimal newBalance = user.getBalance().add(amount);
             boolean saved = UserDAO.updateBalance(targetUserId, newBalance);
 
             if (saved) {
+                // Cộng virtual balance cùng số tiền
+                UserDAO.addVirtualBalance(targetUserId, amount);
+
                 TransactionDAO.addTransaction(targetUserId, null, amount, "DEPOSIT", "Deposit money");
                 currentUser.setBalance(newBalance);
 
-                //  ĐỒNG BỘ VIRTUAL BALANCE (NẾU ĐÃ TỒN TẠI)
-                BigDecimal currentVirtual = UserDAO.getVirtualBalance(targetUserId);
-                if (currentVirtual != null && currentVirtual.compareTo(BigDecimal.ZERO) > 0) {
-                    UserDAO.updateVirtualBalance(targetUserId, newBalance);
-                }
+                // Lấy virtual balance mới để trả về
+                BigDecimal newVirtual = UserDAO.getVirtualBalance(targetUserId);
 
-                return "BALANCE_UPDATE_SUCCESS|" + newBalance;
+                return "BALANCE_UPDATE_SUCCESS|" + newBalance + "|" + newVirtual;
             } else {
                 return "BALANCE_UPDATE_FAILED|Database error";
             }
@@ -111,17 +112,21 @@ public class BalanceHandler extends BaseHandler {
                 return "BALANCE_UPDATE_FAILED|Insufficient balance";
             }
 
+            // Trừ account balance
             BigDecimal newBalance = user.getBalance().subtract(amount);
             boolean saved = UserDAO.updateBalance(targetUserId, newBalance);
 
             if (saved) {
+                // Trừ virtual balance cùng số tiền
+                UserDAO.deductVirtualBalance(targetUserId, amount);
+
                 TransactionDAO.addTransaction(targetUserId, null, amount, "WITHDRAW", "Withdraw money");
                 currentUser.setBalance(newBalance);
 
-                //  LUÔN ĐỒNG BỘ VIRTUAL BALANCE = BALANCE THẬT
-                UserDAO.updateVirtualBalance(targetUserId, newBalance);
+                // Lấy virtual balance mới để trả về
+                BigDecimal newVirtual = UserDAO.getVirtualBalance(targetUserId);
 
-                return "BALANCE_UPDATE_SUCCESS|" + newBalance;
+                return "BALANCE_UPDATE_SUCCESS|" + newBalance + "|" + newVirtual;
             } else {
                 return "BALANCE_UPDATE_FAILED|Database error";
             }

@@ -176,6 +176,45 @@ public class AuctionHandler extends BaseHandler {
                                     finalPrice, "WIN_BID", "Won auction: " + itemName);
                             RoomManager.broadcastToRoomAll(finalAuctionId,
                                     "WINNER_BALANCE|" + newWinnerReal + "|" + winner.getUser_id());
+                                        // ==================== XỬ LÝ WINNER ====================
+                                        // Virtual balance của winner đã bị trừ dần trong quá trình bid
+                                        // Bây giờ trừ REAL balance của winner (tiền thật)
+                                        BigDecimal winnerRealBalance = winnerFromDB.getBalance();
+                                        BigDecimal newWinnerRealBalance = winnerRealBalance.subtract(finalPrice);
+
+                                        if (newWinnerRealBalance.compareTo(BigDecimal.ZERO) < 0) {
+                                            System.out.println("[AuctionHandler] Winner doesn't have enough real balance!");
+                                            return;
+                                        }
+
+                                        // Cập nhật real balance
+                                        UserDAO.updateBalance(winner.getUser_id(), newWinnerRealBalance);
+
+                                        // Cập nhật virtual balance = real balance mới (vì tiền đã trừ thật)
+                                        UserDAO.updateVirtualBalance(winner.getUser_id(), newWinnerRealBalance);
+
+                                        // Ghi transaction cho winner
+                                        TransactionDAO.addTransaction(
+                                                winner.getUser_id(),
+                                                seller.getUser_id(),
+                                                finalPrice,
+                                                "WIN_BID",
+                                                "Won auction: " + itemName + " from " + seller.getUsername()
+                                        );
+                                        System.out.println("[AuctionHandler] Winner " + winner.getUsername() +
+                                                " real balance deducted: " + finalPrice +
+                                                ", new real balance: " + newWinnerRealBalance);
+
+                                        // Broadcast cập nhật balance cho winner
+                                        RoomManager.broadcastToRoomAll(finalAuctionId,
+                                                "WINNER_BALANCE|" + newWinnerRealBalance + "|" + winner.getUser_id());
+
+                                        // ==================== XỬ LÝ SELLER ====================
+                                        // Seller: cộng tiền thắng bid vào real balance
+                                        BigDecimal sellerRealBalance = sellerFromDB.getBalance();
+                                        BigDecimal newSellerBalance = sellerRealBalance.add(finalPrice);
+                                        UserDAO.updateBalance(seller.getUser_id(), newSellerBalance);
+                                        UserDAO.updateVirtualBalance(seller.getUser_id(), newSellerBalance);
 
                             // Cộng tiền seller
                             BigDecimal newSellerReal = sellerFromDB.getBalance().add(finalPrice);
@@ -204,6 +243,26 @@ public class AuctionHandler extends BaseHandler {
                             }
                             // =====================================================
                         }
+                                        // Ghi transaction cho seller
+                                        TransactionDAO.addTransaction(
+                                                seller.getUser_id(),
+                                                winner.getUser_id(),
+                                                finalPrice,
+                                                "SOLD",
+                                                "Sold item: " + itemName+ " to " + winner.getUsername()
+                                        );
+                                        System.out.println("[AuctionHandler] Seller " + seller.getUsername() +
+                                                " received: " + finalPrice +
+                                                ", new balance: " + newSellerBalance);
+
+                                        // Broadcast cập nhật balance cho seller
+                                        RoomManager.broadcastToRoomAll(finalAuctionId,
+                                                "SELLER_BALANCE|" + newSellerBalance + "|" + seller.getUser_id());
+
+                                        // Broadcast kết quả thắng cuộc
+                                        RoomManager.broadcastToRoomAll(finalAuctionId,
+                                                "YOU_WON|" + finalPrice + "|" + winner.getUsername());
+                                    }
 
                         RoomManager.broadcastToRoomAll(finalAuctionId, "AUCTION_ENDED");
                         ended.setStatus(AuctionStatus.ENDED);

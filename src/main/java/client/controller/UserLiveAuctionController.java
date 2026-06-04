@@ -298,13 +298,15 @@ public class UserLiveAuctionController implements UserDataReceiver {
 
     private void refundVirtualBalance() {
         if (virtualBalance != null && myPendingBid != null && myPendingBid.compareTo(BigDecimal.ZERO) > 0) {
-            virtualBalance = virtualBalance.add(myPendingBid);
+            BigDecimal refundAmount = myPendingBid;
+            virtualBalance = virtualBalance.add(refundAmount);
             myPendingBid = BigDecimal.ZERO;
             UserSession.setVirtualBalance(virtualBalance);
             UserSession.setPendingBid(BigDecimal.ZERO);
 
             updateBalanceDisplay();
-            showToast("You were outbid! Money returned.");
+            showOutbidNotification();
+            showToast("Refunded: " + formatPrice(refundAmount));
         }
     }
 
@@ -897,27 +899,48 @@ public class UserLiveAuctionController implements UserDataReceiver {
     }
 
     private void showToast(String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Info");
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+        Platform.runLater(() -> {
+            Label toast = new Label(message);
+            toast.setStyle("-fx-background-color: #333333; -fx-text-fill: white; " +
+                    "-fx-padding: 10 20; -fx-background-radius: 8; -fx-font-size: 14;");
+            centerPanel.getChildren().add(toast);
+            new Timer(true).schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    Platform.runLater(() -> centerPanel.getChildren().remove(toast));
+                }
+            }, 1000);
+        });
     }
 
     private void showInfo(String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Info");
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+        Platform.runLater(() -> {
+            Label info = new Label("ℹ️ " + message);
+            info.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white; " +
+                    "-fx-padding: 10 20; -fx-background-radius: 8; -fx-font-size: 14;");
+            centerPanel.getChildren().add(info);
+            new Timer(true).schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    Platform.runLater(() -> centerPanel.getChildren().remove(info));
+                }
+            }, 2000);
+        });
     }
 
     private void showError(String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Error");
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+        Platform.runLater(() -> {
+            Label error = new Label("❌ " + message);
+            error.setStyle("-fx-background-color: #f44336; -fx-text-fill: white; " +
+                    "-fx-padding: 10 20; -fx-background-radius: 8; -fx-font-size: 14;");
+            centerPanel.getChildren().add(error);
+            new Timer(true).schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    Platform.runLater(() -> centerPanel.getChildren().remove(error));
+                }
+            }, 2000);
+        });
     }
 
     private void showWarning(String message) {
@@ -989,5 +1012,20 @@ public class UserLiveAuctionController implements UserDataReceiver {
             autoBidStatusLabel.setText("Auto-bid cancelled.");
             autoBidMaxField.setDisable(false);
         }
+    }
+    private void showOutbidNotification() {
+        Platform.runLater(() -> {
+            Label notification = new Label(" YOU HAVE BEEN OUTBID! ⚠");
+            notification.setStyle("-fx-background-color: #ff9800; -fx-text-fill: white; " +
+                    "-fx-padding: 12 24; -fx-background-radius: 10; -fx-font-size: 16; " +
+                    "-fx-font-weight: bold;");
+            centerPanel.getChildren().addFirst(notification);
+            new Timer(true).schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    Platform.runLater(() -> centerPanel.getChildren().remove(notification));
+                }
+            }, 1000);
+        });
     }
 }
