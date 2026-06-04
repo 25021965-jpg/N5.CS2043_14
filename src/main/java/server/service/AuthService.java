@@ -39,24 +39,6 @@ public class AuthService {
         return null;
     }
 
-    // --- Quản lý Session tập trung ---
-
-    public static void addSession(String sessionId, User user) {
-        sessions.put(sessionId, user);
-    }
-
-    public static User getUser(String sessionId) {
-        return sessions.get(sessionId);
-    }
-
-    public static void logout(String sessionId) {
-        sessions.remove(sessionId);
-    }
-
-    public static List<User> getAllUsersFromDB() {
-        return UserDAO.findAll();
-    }
-
     public static boolean resetPassword(String fullname, String dob, String username, String email, String newPassword) {
         String hashedPassword = BCrypt.hashpw(newPassword, BCrypt.gensalt(12));
         return UserDAO.resetPassword(fullname, dob, username, email, hashedPassword);

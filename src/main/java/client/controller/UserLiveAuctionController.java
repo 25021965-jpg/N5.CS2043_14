@@ -1,8 +1,11 @@
 package client.controller;
 
-import client.manager.*;
+import client.manager.AuctionStateManager;
+import client.manager.AutoBidManager;
+import client.manager.ControllerRegistry;
 import client.network.ClientSocket;
 import client.network.response.ResponseHandler;
+import client.manager.UserSession;
 import client.util.NavigationUtils;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -18,17 +21,13 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import model.*;
 import model.Entity.User.User;
-import model.Bid;
 
 import java.math.BigDecimal;
 import java.net.URL;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 import java.util.logging.Logger;
 
 public class UserLiveAuctionController implements UserDataReceiver {
@@ -283,7 +282,7 @@ public class UserLiveAuctionController implements UserDataReceiver {
 
     private void deductVirtualBalance(BigDecimal amount) {
         if (virtualBalance != null && amount != null) {
-            BigDecimal diff = amount.subtract(myPendingBid);
+            BigDecimal diff = amount.subtract(myPendingBid != null ? myPendingBid : BigDecimal.ZERO);
             if (diff.compareTo(BigDecimal.ZERO) > 0) {
                 virtualBalance = virtualBalance.subtract(diff);
             }
@@ -332,7 +331,10 @@ public class UserLiveAuctionController implements UserDataReceiver {
             showError("You haven't joined any auction. Please refresh.");
             return;
         }
-
+        if (auctionId == null) {
+            showError("You haven't joined any auction. Please refresh and try again.");
+            return;
+        }
         if (client == null) {
             showError("Not connected to server");
             return;
@@ -418,6 +420,7 @@ public class UserLiveAuctionController implements UserDataReceiver {
         if (client != null) {
             client.sendLeave();
         }
+
         navigateToHome();
     }
 
@@ -444,24 +447,17 @@ public class UserLiveAuctionController implements UserDataReceiver {
         Platform.runLater(() -> {
             System.out.println("[LiveAuction] Received: " + msg);
 
+            String[] p = msg.split("\\|");
+
             // ==================== AUTO-BID RESPONSES ====================
-            if (msg.startsWith("AUTO_BID_SET")) {
-                autoBidStatusLabel.setText(
-                        "✅ Auto-bid active | Max: "
-                                + formatPrice(UserSession.getAutoBidMax())
-                );
-                return;
-            }
             if (msg.startsWith("AUTO_BID_MAX_REACHED")) {
                 autoBidActive = false;
                 AutoBidManager.disable();
-                Platform.runLater(() -> {
-                    autoBidToggleBtn.setText("Enable Auto-Bid");
-                    autoBidToggleBtn.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white;");
-                    autoBidStatusLabel.setText("⚠️ Max price reached. Auto-bid stopped.");
-                    autoBidMaxField.setDisable(false);
-                    showInfo("Auto-bid has reached your maximum price and was stopped.");
-                });
+                autoBidToggleBtn.setText("Enable Auto-Bid");
+                autoBidToggleBtn.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white;");
+                autoBidStatusLabel.setText("⚠️ Max price reached. Auto-bid stopped.");
+                autoBidMaxField.setDisable(false);
+                showInfo("Auto-bid has reached your maximum price and was stopped.");
                 return;
             }
 
@@ -609,6 +605,7 @@ public class UserLiveAuctionController implements UserDataReceiver {
                 return;
             }
 
+            // ==================== VIRTUAL BALANCE ====================
             if (msg.startsWith("VIRTUAL_BALANCE")) {
                 String[] parts = msg.split("\\|");
                 if (parts.length >= 2) {
@@ -664,27 +661,6 @@ public class UserLiveAuctionController implements UserDataReceiver {
                     }
                 }
 
-                if (currentUser != null
-                        && globalWinnerName != null
-                        && globalWinnerName.equals(currentUser.getUsername())) {
-
-                    AuctionStateManager.setParticipation(
-                            auctionId,
-                            ParticipationStatus.LEADING
-                    );
-
-                } else {
-                    ParticipationStatus current = AuctionStateManager.getParticipation(auctionId);
-
-                    if (current != ParticipationStatus.NOT_JOINED
-                            && current != ParticipationStatus.WON
-                            && current != ParticipationStatus.LOST
-                            && current != ParticipationStatus.LEADING) {  // ← thêm dòng này
-
-                        AuctionStateManager.setParticipation(auctionId, ParticipationStatus.OUTBID);
-                    }
-                }
-
                 if (client != null && auctionId != null) {
                     client.sendGetBidHistory(auctionId);
                 }
@@ -720,7 +696,7 @@ public class UserLiveAuctionController implements UserDataReceiver {
                     chartSeries.getData().clear();
                     bidCounter = 0;
                     List<Bid> chartOrder = new ArrayList<>(bidHistoryList);
-                    java.util.Collections.reverse(chartOrder);
+                    Collections.reverse(chartOrder);
                     for (Bid bid : chartOrder) {
                         addChartData(bidCounter++, bid.getAmount());
                     }
@@ -889,7 +865,7 @@ public class UserLiveAuctionController implements UserDataReceiver {
             chartSeries.getData().clear();
             bidCounter = 0;
             List<Bid> chartOrder = new ArrayList<>(bidHistoryList);
-            java.util.Collections.reverse(chartOrder);
+            Collections.reverse(chartOrder);
             for (Bid bid : chartOrder) {
                 addChartData(bidCounter++, bid.getAmount());
             }

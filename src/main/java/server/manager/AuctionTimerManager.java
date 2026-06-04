@@ -19,21 +19,19 @@ public class AuctionTimerManager {
 
     /**
      * Đặt (hoặc đặt lại) timer kết thúc auction.
-     * Nếu đã có timer cũ → hủy trước, rồi tạo mới.
+     * Dùng compute() để đảm bảo cancel + schedule là atomic, tránh race condition.
      */
     public static void scheduleEnd(String auctionId, long delayMillis, Runnable task) {
-        // Hủy timer cũ nếu có
-        ScheduledFuture<?> existing = timers.get(auctionId);
-        if (existing != null && !existing.isDone()) {
-            existing.cancel(false);
-            System.out.println("[AuctionTimerManager] Cancelled old timer for: " + auctionId);
-        }
-
-        // Tạo timer mới
-        ScheduledFuture<?> future = scheduler.schedule(task, delayMillis, TimeUnit.MILLISECONDS);
-        timers.put(auctionId, future);
-        System.out.println("[AuctionTimerManager] Scheduled end for: " + auctionId
-                + " in " + (delayMillis / 1000) + "s");
+        timers.compute(auctionId, (id, existing) -> {
+            if (existing != null && !existing.isDone()) {
+                existing.cancel(false);
+                System.out.println("[AuctionTimerManager] Cancelled old timer for: " + auctionId);
+            }
+            ScheduledFuture<?> future = scheduler.schedule(task, delayMillis, TimeUnit.MILLISECONDS);
+            System.out.println("[AuctionTimerManager] Scheduled end for: " + auctionId
+                    + " in " + (delayMillis / 1000) + "s");
+            return future;
+        });
     }
 
     public static void cancelTimer(String auctionId) {

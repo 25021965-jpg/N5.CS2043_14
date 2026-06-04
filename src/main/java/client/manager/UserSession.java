@@ -5,13 +5,13 @@ import model.Entity.User.User;
 import java.math.BigDecimal;
 
 public class UserSession {
-    private static User currentUser;
-    private static BigDecimal virtualBalance;
-    private static BigDecimal pendingBid;
-    private static boolean autoBidActive = false;
-    private static BigDecimal autoBidMax = null;
-    private static String autoBidAuctionId = null;
-    private static String autoBidUserId = null;
+    private static volatile User currentUser;
+    private static volatile BigDecimal virtualBalance;
+    private static volatile BigDecimal pendingBid;
+    private static volatile boolean autoBidActive = false;
+    private static volatile BigDecimal autoBidMax = null;
+    private static volatile String autoBidAuctionId = null;
+    private static volatile String autoBidUserId = null;
 
 
     public static User getCurrentUser() {

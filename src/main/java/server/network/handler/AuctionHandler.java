@@ -5,14 +5,15 @@ import model.Entity.Item.Item;
 import model.Entity.User.User;
 import server.dao.*;
 import server.manager.RoomManager;
+import server.manager.AuctionTimerManager;
 import server.service.AuctionService;
 import server.service.BidService;
-
 import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -20,7 +21,6 @@ public class AuctionHandler extends BaseHandler {
     private static final Logger LOGGER =
             Logger.getLogger(AuctionHandler.class.getName());
 
-    // ConcurrentHashMap.newKeySet() is thread-safe without extra synchronization
     private static final Set<String> scheduledAuctions =
             java.util.concurrent.ConcurrentHashMap.newKeySet();
 
@@ -47,16 +47,11 @@ public class AuctionHandler extends BaseHandler {
                 if (item.getImages() != null && !item.getImages().isEmpty()) {
                     allImgs = String.join(",", item.getImages());
                 }
-
                 String itemName = item.getName() != null
                         ? item.getName().replace(";", ",").replace("|", "-")
                         : "Unnamed";
-
                 String cleanDesc = item.getDescription() != null
-                        ? item.getDescription()
-                          .replace(";", ",")
-                          .replace("|", "-")
-                          .replace("\n", " ")
+                        ? item.getDescription().replace(";", ",").replace("|", "-").replace("\n", " ")
                         : "";
 
                 sb.append("|")
@@ -102,10 +97,7 @@ public class AuctionHandler extends BaseHandler {
         RoomManager.addClient(auctionId, writer);
 
         if (auction.getEndTime() != null && scheduledAuctions.add(auctionId)) {
-            long delay = java.time.Duration.between(
-                    LocalDateTime.now(), auction.getEndTime()
-            ).toMillis();
-
+            long delay = java.time.Duration.between(LocalDateTime.now(), auction.getEndTime()).toMillis();
             if (delay > 0) {
                 final String finalAuctionId = auctionId;
                 server.manager.AuctionTimerManager.scheduleEnd(auctionId, delay, () -> {
@@ -113,14 +105,66 @@ public class AuctionHandler extends BaseHandler {
                         Auction ended = AuctionService.getAuctionById(finalAuctionId);
                         if (ended == null) return;
 
-                        if (ended.getEndTime() != null
-                                && LocalDateTime.now().isBefore(ended.getEndTime())) {
+                        if (ended.getEndTime() != null && LocalDateTime.now().isBefore(ended.getEndTime())) {
                             System.out.println("[AuctionHandler] Timer fired early (anti-snipe extended), skipping.");
                             scheduledAuctions.remove(finalAuctionId);
                             return;
                         }
 
-                        endAuction(finalAuctionId, ended);
+                        List<model.Bid> bids = server.dao.BidDAO.getBidsByAuctionId(finalAuctionId);
+                        model.Bid winningBid = bids.isEmpty() ? null : bids.getFirst();
+
+                        if (winningBid != null && winningBid.getBidder() != null) {
+                            User winner = winningBid.getBidder();
+                            User seller = ended.getSeller();
+                            BigDecimal finalPrice = winningBid.getAmount();
+                            String itemName = ended.getItem() != null ? ended.getItem().getName() : "item";
+
+                            User winnerFromDB = UserDAO.getUserById(winner.getUser_id());
+                            User sellerFromDB = UserDAO.getUserById(seller.getUser_id());
+                            if (winnerFromDB == null || sellerFromDB == null) return;
+
+                            BigDecimal newWinnerReal = winnerFromDB.getBalance().subtract(finalPrice);
+                            if (newWinnerReal.compareTo(BigDecimal.ZERO) < 0) {
+                                System.out.println("[AuctionHandler] Winner insufficient real balance!");
+                                return;
+                            }
+                            UserDAO.updateBalance(winner.getUser_id(), newWinnerReal);
+                            UserDAO.updateVirtualBalance(winner.getUser_id(), newWinnerReal);
+                            TransactionDAO.addTransaction(winner.getUser_id(), seller.getUser_id(),
+                                    finalPrice, "WIN_BID", "Won auction: " + itemName);
+                            RoomManager.broadcastToRoomAll(finalAuctionId,
+                                    "WINNER_BALANCE|" + newWinnerReal + "|" + winner.getUser_id());
+
+                            BigDecimal newSellerReal = sellerFromDB.getBalance().add(finalPrice);
+                            UserDAO.updateBalance(seller.getUser_id(), newSellerReal);
+                            UserDAO.updateVirtualBalance(seller.getUser_id(), newSellerReal);
+                            TransactionDAO.addTransaction(seller.getUser_id(), winner.getUser_id(),
+                                    finalPrice, "SOLD", "Sold item: " + itemName);
+                            RoomManager.broadcastToRoomAll(finalAuctionId,
+                                    "SELLER_BALANCE|" + newSellerReal + "|" + seller.getUser_id());
+                            RoomManager.broadcastToRoomAll(finalAuctionId,
+                                    "YOU_WON|" + finalPrice + "|" + winner.getUsername());
+
+                            // Hoàn virtual balance cho người thua
+                            java.util.Set<String> refunded = new java.util.HashSet<>();
+                            refunded.add(winner.getUser_id());
+                            for (model.Bid bid : bids) {
+                                String loserId = bid.getBidder().getUser_id();
+                                if (refunded.contains(loserId)) continue;
+                                BigDecimal loserMax = server.dao.BidDAO.getUserMaxBid(finalAuctionId, loserId);
+                                if (loserMax != null && loserMax.compareTo(BigDecimal.ZERO) > 0) {
+                                    UserDAO.addVirtualBalance(loserId, loserMax);
+                                    System.out.println("[AuctionHandler] Refunded virtual balance "
+                                            + loserMax + " to loser " + loserId);
+                                }
+                                refunded.add(loserId);
+                            }
+                        }
+
+                        RoomManager.broadcastToRoomAll(finalAuctionId, "AUCTION_ENDED");
+                        ended.setStatus(AuctionStatus.ENDED);
+                        AuctionDAO.updateAuctionStatus(finalAuctionId, "ENDED");
 
                     } catch (Exception e) {
                         LOGGER.log(Level.SEVERE, "[AuctionHandler] Error ending auction", e);
@@ -168,33 +212,20 @@ public class AuctionHandler extends BaseHandler {
                 String[] parts = result.split("\\|");
                 if (parts.length >= 2) {
                     String newPrice = parts[1];
-
-                    // Get actual leader from DB
-                    Bid highestBid = BidDAO.getHighestBid(auctionId);
-                    String leaderId = "";
-                    String leaderName = "";
-                    if (highestBid != null && highestBid.getBidder() != null) {
-                        leaderId = highestBid.getBidder().getUser_id();
-                        leaderName = highestBid.getBidder().getUsername();
-                    }
-
                     String broadcastMsg = "UPDATE_PRICE|" + auctionId + "|" + newPrice + "|"
-                            + leaderName + "|"
+                            + currentUser.getUsername() + "|"
                             + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
-                            + "|" + leaderId;
+                            + "|" + currentUser.getUser_id();
                     RoomManager.broadcastToRoomAll(auctionId, broadcastMsg);
 
-                    // Anti-snipe: broadcast TIME_EXTENDED and reschedule timer
+                    // Anti-snipe: broadcast TIME_EXTENDED và reschedule timer
                     if (parts.length >= 4 && "EXTENDED".equals(parts[2])) {
                         RoomManager.broadcastToRoomAll(auctionId,
                                 "TIME_EXTENDED|" + auctionId + "|" + parts[3]);
 
                         try {
                             LocalDateTime newEndTime = LocalDateTime.parse(parts[3]);
-                            long newDelay = java.time.Duration.between(
-                                    LocalDateTime.now(), newEndTime
-                            ).toMillis();
-
+                            long newDelay = java.time.Duration.between(LocalDateTime.now(), newEndTime).toMillis();
                             if (newDelay > 0) {
                                 final String finalAuctionId = auctionId;
                                 server.manager.AuctionTimerManager.scheduleEnd(finalAuctionId, newDelay, () -> {
@@ -202,14 +233,63 @@ public class AuctionHandler extends BaseHandler {
                                         Auction ended = AuctionService.getAuctionById(finalAuctionId);
                                         if (ended == null) return;
 
-                                        if (ended.getEndTime() != null
-                                                && LocalDateTime.now().isBefore(ended.getEndTime())) {
+                                        if (ended.getEndTime() != null && LocalDateTime.now().isBefore(ended.getEndTime())) {
                                             System.out.println("[AuctionHandler] Timer fired early (anti-snipe extended), skipping.");
                                             scheduledAuctions.remove(finalAuctionId);
                                             return;
                                         }
 
-                                        endAuction(finalAuctionId, ended);
+                                        List<model.Bid> bids = server.dao.BidDAO.getBidsByAuctionId(finalAuctionId);
+                                        model.Bid winningBid = bids.isEmpty() ? null : bids.getFirst();
+
+                                        if (winningBid != null && winningBid.getBidder() != null) {
+                                            User winner = winningBid.getBidder();
+                                            User seller = ended.getSeller();
+                                            BigDecimal finalPrice = winningBid.getAmount();
+                                            String itemName = ended.getItem() != null ? ended.getItem().getName() : "item";
+
+                                            User winnerFromDB = UserDAO.getUserById(winner.getUser_id());
+                                            User sellerFromDB = UserDAO.getUserById(seller.getUser_id());
+                                            if (winnerFromDB == null || sellerFromDB == null) return;
+
+                                            BigDecimal newWinnerReal = winnerFromDB.getBalance().subtract(finalPrice);
+                                            if (newWinnerReal.compareTo(BigDecimal.ZERO) < 0) {
+                                                System.out.println("[AuctionHandler] Winner insufficient real balance!");
+                                                return;
+                                            }
+                                            UserDAO.updateBalance(winner.getUser_id(), newWinnerReal);
+                                            UserDAO.updateVirtualBalance(winner.getUser_id(), newWinnerReal);
+                                            TransactionDAO.addTransaction(winner.getUser_id(), seller.getUser_id(),
+                                                    finalPrice, "WIN_BID", "Won auction: " + itemName);
+                                            RoomManager.broadcastToRoomAll(finalAuctionId,
+                                                    "WINNER_BALANCE|" + newWinnerReal + "|" + winner.getUser_id());
+
+                                            BigDecimal newSellerReal = sellerFromDB.getBalance().add(finalPrice);
+                                            UserDAO.updateBalance(seller.getUser_id(), newSellerReal);
+                                            UserDAO.updateVirtualBalance(seller.getUser_id(), newSellerReal);
+                                            TransactionDAO.addTransaction(seller.getUser_id(), winner.getUser_id(),
+                                                    finalPrice, "SOLD", "Sold item: " + itemName);
+                                            RoomManager.broadcastToRoomAll(finalAuctionId,
+                                                    "SELLER_BALANCE|" + newSellerReal + "|" + seller.getUser_id());
+                                            RoomManager.broadcastToRoomAll(finalAuctionId,
+                                                    "YOU_WON|" + finalPrice + "|" + winner.getUsername());
+
+                                            java.util.Set<String> refunded = new java.util.HashSet<>();
+                                            refunded.add(winner.getUser_id());
+                                            for (model.Bid bid : bids) {
+                                                String loserId = bid.getBidder().getUser_id();
+                                                if (refunded.contains(loserId)) continue;
+                                                BigDecimal loserMax = server.dao.BidDAO.getUserMaxBid(finalAuctionId, loserId);
+                                                if (loserMax != null && loserMax.compareTo(BigDecimal.ZERO) > 0) {
+                                                    UserDAO.addVirtualBalance(loserId, loserMax);
+                                                }
+                                                refunded.add(loserId);
+                                            }
+                                        }
+
+                                        RoomManager.broadcastToRoomAll(finalAuctionId, "AUCTION_ENDED");
+                                        ended.setStatus(AuctionStatus.ENDED);
+                                        AuctionDAO.updateAuctionStatus(finalAuctionId, "ENDED");
 
                                     } catch (Exception e) {
                                         LOGGER.log(Level.SEVERE, "[AuctionHandler] Error ending auction after extend", e);
@@ -292,14 +372,6 @@ public class AuctionHandler extends BaseHandler {
             Item item = a.getItem();
             String image = (item.getImages() != null && !item.getImages().isEmpty())
                     ? String.join(",", item.getImages()) : "";
-
-            // Get current leader from DB (added in File 2)
-            String leaderId = "";
-            Bid highestBid = BidDAO.getHighestBid(a.getAuction_id());
-            if (highestBid != null && highestBid.getBidder() != null) {
-                leaderId = highestBid.getBidder().getUser_id();
-            }
-
             sb.append("|")
                     .append(a.getAuction_id()).append(";")
                     .append(item.getItem_id()).append(";")
@@ -312,9 +384,7 @@ public class AuctionHandler extends BaseHandler {
                     .append(item.getCategory()).append(";")
                     .append(item.getDescription()).append(";")
                     .append(a.getStatus()).append(";")
-                    .append(a.getSeller() != null ? a.getSeller().getUser_id() : "")
-                    .append(";")
-                    .append(leaderId);
+                    .append(a.getSeller() != null ? a.getSeller().getUser_id() : "");
         }
         return sb.toString();
     }
@@ -379,10 +449,6 @@ public class AuctionHandler extends BaseHandler {
 
     // ==================== PRIVATE HELPERS ====================
 
-    /**
-     * Shared auction-end logic used by both the initial timer and
-     * any rescheduled anti-snipe timers.
-     */
     private void endAuction(String auctionId, Auction ended) {
         List<model.Bid> bids = server.dao.BidDAO.getBidsByAuctionId(auctionId);
         model.Bid winningBid = bids.isEmpty() ? null : bids.getFirst();

@@ -57,10 +57,7 @@ public class UserHomePageController extends BaseController {
     public void initialize() {
         System.out.println("Home Page Loaded");
         ControllerRegistry.register(UserHomePageController.class, this);
-        ControllerRegistry.register(
-                UserHomePageController.class,
-                this
-        );        Platform.runLater(() -> {
+        Platform.runLater(() -> {
             if (itemGrid != null && itemGrid.getScene() != null) {
                 ResponseHandler.setMainStage(
                         (Stage) itemGrid.getScene().getWindow()

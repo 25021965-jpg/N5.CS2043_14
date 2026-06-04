@@ -29,7 +29,11 @@ public class AuctionService {
             String startTime,
             String endTime
     ) {
-        // 1. đổi role
+        // 1. Log qua polymorphism — seller và item là kiểu cha (User/Item),
+        //    getSummary()/getItemDetails() được dispatch đến đúng subclass tại runtime.
+        System.out.println("[AuctionService] Seller: " + seller.getSummary());
+        System.out.println("[AuctionService] Item:   " + item.getItemDetails());
+
         if (seller.getRole() == Role.BIDDER) {
             System.out.println("→ User " + seller.getUsername() + " upgraded to SELLER");
         }
@@ -50,7 +54,7 @@ public class AuctionService {
             auction.setStartTime(LocalDateTime.parse(startTime));
             auction.setEndTime(LocalDateTime.parse(endTime));
         } catch (Exception e) {
-            throw new RuntimeException("Invalid date format. Use yyyy-MM-ddTHH:mm:ss (Ex: 2023-12-31T23:59:59)");
+            throw new IllegalArgumentException("Invalid date format. Use yyyy-MM-ddTHH:mm:ss (Ex: 2023-12-31T23:59:59)");
         }
 
         // 4. Lưu vào DB
@@ -65,7 +69,6 @@ public class AuctionService {
         return AuctionDAO.findAll();
     }
 
-    // 🔥 SỬA METHOD NÀY - THÊM CACHE
     public static Auction getAuctionById(String id) {
         // Kiểm tra cache trước
         Auction cached = auctionCache.get(id);

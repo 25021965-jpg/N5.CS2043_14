@@ -38,6 +38,17 @@ public enum ResponseType {
     AUCTION_STATES_SUCCESS,
     AUCTION_STATES_FAILED,
 
+    // ================= LIVE AUCTION EVENTS =================
+    YOU_WON,
+    AUCTION_ENDED,
+    TIME_EXTENDED,
+
+    VIRTUAL_BALANCE,
+    VIRTUAL_BALANCE_UPDATED,
+
+    WINNER_BALANCE,
+    SELLER_BALANCE,
+
     // ================= USER FAVOURITE =================
     LIST_FAVOURITES_SUCCESS,
     LIST_FAVOURITES_EMPTY,
@@ -108,28 +119,21 @@ public enum ResponseType {
     PAY_AUCTION_SUCCESS,
     PAY_AUCTION_FAILED,
 
-    TIME_EXTENDED,
-
     // ================= AUTO BID =================
     AUTO_BID_SET,
     AUTO_BID_CANCELLED,
     AUTO_BID_MAX_REACHED;
+
     public static ResponseType from(String msg) {
-        if (msg == null || msg.isBlank()) {
-            return null;
-        }
+        if (msg == null || msg.isBlank()) return null;
 
         try {
-            String key =
-                    msg.split("\\|")[0]
-                            .trim()
-                            .toUpperCase(Locale.ROOT);
-
+            String key = msg.split("\\|")[0]
+                    .trim()
+                    .toUpperCase(Locale.ROOT);
             return ResponseType.valueOf(key);
-
-        } catch (Exception e) {
-            System.err.println("Unknown Response Type: " + msg);
-
+        } catch (IllegalArgumentException e) {
+            System.err.println("[ResponseType] Unknown type: " + msg.split("\\|")[0]);
             return null;
         }
     }

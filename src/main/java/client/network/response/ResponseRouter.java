@@ -31,17 +31,10 @@ public class ResponseRouter {
         }
 
         if (raw.startsWith("YOU_WON")) {
+            // Set WON state trực tiếp, không cần controller
             String[] parts = raw.split("\\|");
-            String auctionId = parts.length > 1 ? parts[1] : null;
-            String winnerName = parts.length > 3 ? parts[3] : null;
-            User currentUser = UserSession.getCurrentUser();
-
-            if (auctionId != null && currentUser != null && winnerName != null
-                    && winnerName.equals(currentUser.getUsername())) {
-                AuctionStateManager.setParticipation(auctionId, ParticipationStatus.WON);
-                AuctionStateManager.setPayment(auctionId, model.PaymentStatus.PAID);
-            }
-
+            // YOU_WON|auctionId|finalPrice|winnerUsername (tuỳ format server)
+            // Cần biết auctionId → xem format server gửi
             Platform.runLater(() -> {
                 UserLiveAuctionController ctrl =
                         ControllerRegistry.get(UserLiveAuctionController.class);
@@ -214,22 +207,11 @@ public class ResponseRouter {
             case TRANSACTIONS_LIST ->
                     BalanceHandler.transactions(data);
 
-            // ===== PAYMENT =====
-
-            case PAY_AUCTION_SUCCESS ->
-                    client.network.response.handler.PaymentHandler.paySuccess(data);
-
-            case PAY_AUCTION_FAILED ->
-                    client.network.response.handler.PaymentHandler.payFailed(data);
-
 
             // ===== ITEM =====
 
             case ITEM_LIST_SUCCESS ->
                     AuctionHandler.items(data);
-
-            case AUCTION_DETAIL ->
-                    AuctionHandler.auctionDetail(data);
 
             case ITEM_LIST_EMPTY ->
                     AuctionHandler.itemsEmpty();

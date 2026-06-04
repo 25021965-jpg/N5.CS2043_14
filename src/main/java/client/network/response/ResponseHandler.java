@@ -18,34 +18,6 @@ public class ResponseHandler {
 
     public static void handle(String rawMessage) {
         if (rawMessage == null || rawMessage.isBlank()) return;
-
-        // ===== FAST PATH LIVE AUCTION =====
-        if (isLiveAuctionMessage(rawMessage)) {
-            if (liveAuctionListener != null) {
-                liveAuctionListener.accept(rawMessage);
-            }
-            return;
-        }
         ResponseRouter.route(rawMessage, mainStage);
     }
-
-    private static boolean isLiveAuctionMessage(String msg) {
-        if (msg.startsWith("UPDATE_PRICE")) {
-            System.out.println(" [ResponseHandler] UPDATE_PRICE detected, listener=" + (liveAuctionListener != null ? "OK" : "NULL"));
-        }
-        return msg.startsWith("UPDATE_PRICE")
-                || msg.startsWith("JOIN_SUCCESS")
-                || msg.startsWith("JOIN_FAILED")
-                || msg.startsWith("BID_FAILED")
-                || msg.startsWith("BID_HISTORY_SUCCESS")
-                || msg.startsWith("BID_HISTORY_EMPTY")
-                || msg.startsWith("AUCTION_ENDED")
-                || msg.startsWith("YOU_WON")
-                || msg.startsWith("VIRTUAL_BALANCE")
-                || msg.startsWith("WINNER_BALANCE")
-                || msg.startsWith("SELLER_BALANCE")
-                || msg.startsWith("AUTO_BID_SET")
-                || msg.startsWith("AUTO_BID_CANCELLED")
-                || msg.startsWith("AUTO_BID_MAX_REACHED")
-                || msg.startsWith("TIME_EXTENDED");    }
 }

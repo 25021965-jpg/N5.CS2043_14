@@ -60,7 +60,7 @@ public class ClientHandler implements Runnable {
             }
 
         } catch (Exception e) {
-            System.out.println("Client disconnected.");
+            LOGGER.log(Level.WARNING, e.getMessage());
         } finally {
             closeConnection();
         }
@@ -135,8 +135,8 @@ public class ClientHandler implements Runnable {
 
         try {
 
-            if (currentAuctionId != null) {
-                RoomManager.removeClient(currentAuctionId, writer);
+            if (writer != null) {
+                RoomManager.removeClientFromAllRooms(writer);
             }
 
             if (reader != null)

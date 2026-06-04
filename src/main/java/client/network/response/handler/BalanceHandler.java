@@ -58,4 +58,20 @@ public class BalanceHandler {
             userLiveAuctionController.updateBalance(balance);
         }
     }
+
+    public static void virtualBalanceUpdated(String payload) {
+        try {
+            BigDecimal balance = new BigDecimal(payload);
+
+            UserLiveAuctionController controller =
+                    ControllerRegistry.get(UserLiveAuctionController.class);
+
+            if (controller != null) {
+                controller.updateBalance(balance);
+            }
+
+        } catch (Exception e) {
+            AlertUtils.error("Invalid virtual balance data.");
+        }
+    }
 }
