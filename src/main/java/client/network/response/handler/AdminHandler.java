@@ -7,6 +7,7 @@ import client.controller.AdminManageProductController;
 import client.manager.ControllerRegistry;
 import client.network.response.parser.ItemParser;
 import client.util.AlertUtils;
+import client.util.NavigationUtils;
 import client.util.ToastUtils;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -147,6 +148,11 @@ public class AdminHandler {
         if (ControllerRegistry.get(AdminManageProductController.class) != null) {
             ControllerRegistry.get(AdminManageProductController.class)
                     .handleReloadProducts();
+        }
+        try {
+            NavigationUtils.switchScene(stage, "/fxml/adminManageProduct-view.fxml", "Manage Products");
+        } catch (Exception e) {
+            // ignore if navigation fails
         }
     }
 

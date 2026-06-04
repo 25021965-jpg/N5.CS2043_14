@@ -3,6 +3,7 @@ package client.controller;
 import client.manager.*;
 import client.util.AlertUtils;
 import client.util.TextUtils;
+import client.manager.ControllerRegistry;
 
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -23,8 +24,10 @@ import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 
 import model.*;
+import server.service.AuctionService;
 
 import model.Entity.User.User;
+import model.Entity.User.Role;
 
 import java.io.IOException;
 import java.net.URL;
@@ -54,6 +57,10 @@ public class ItemViewController extends BaseController
     @FXML private ImageView imgItem;
     @FXML private StackPane imageContainer;
 
+    @FXML private Button btnApproveAuction;
+    @FXML private Button btnCancelAuction;
+    @FXML private Button btnBack;
+
     @FXML private Button btnJoinAuction;
     @FXML private Button btnFavourite;
 
@@ -63,6 +70,7 @@ public class ItemViewController extends BaseController
     @FXML
     public void initialize() {
         System.out.println("Item View Loaded");
+        ControllerRegistry.register(ItemViewController.class, this);
         setupImageView();
     }
 
@@ -99,10 +107,24 @@ public class ItemViewController extends BaseController
         setupLabels();
 
         setupSellerUI();     // hide first
+        setupAdminUI();
         setupJoinButton();   // style only if visible
 
         updateStatusBadge();
         showImage(0);
+    }
+
+    // helper to load auction by id (used by admin product controller)
+    public void loadAuction(String auctionId) {
+        if (auctionId == null || auctionId.isBlank()) return;
+
+        Auction a = server.service.AuctionService.getAuctionById(auctionId);
+        if (a == null) {
+            AlertUtils.error("Auction not found: " + auctionId);
+            return;
+        }
+
+        setAuctionData(a);
     }
 
     @Override
@@ -275,6 +297,53 @@ public class ItemViewController extends BaseController
         }
     }
 
+    private void setupAdminUI() {
+        User user = UserSession.getCurrentUser();
+        boolean isAdmin = user != null && user.getRole() == Role.ADMIN;
+
+        if (!isAdmin) {
+            if (btnApproveAuction != null) {
+                btnApproveAuction.setVisible(false);
+                btnApproveAuction.setManaged(false);
+            }
+            if (btnCancelAuction != null) {
+                btnCancelAuction.setVisible(false);
+                btnCancelAuction.setManaged(false);
+            }
+            if (btnBack != null) {
+                btnBack.setVisible(true);
+                btnBack.setManaged(true);
+            }
+            return;
+        }
+
+        if (btnJoinAuction != null) {
+            btnJoinAuction.setVisible(false);
+            btnJoinAuction.setManaged(false);
+        }
+
+        if (btnFavourite != null) {
+            btnFavourite.setVisible(false);
+            btnFavourite.setManaged(false);
+        }
+
+        boolean canApprove = auction != null && !auction.isCancelled() && !auction.isApproved();
+        boolean canCancel = auction != null && !auction.isCancelled() && auction.getStatus() != AuctionStatus.ENDED;
+
+        if (btnApproveAuction != null) {
+            btnApproveAuction.setVisible(canApprove);
+            btnApproveAuction.setManaged(canApprove);
+        }
+        if (btnCancelAuction != null) {
+            btnCancelAuction.setVisible(canCancel);
+            btnCancelAuction.setManaged(canCancel);
+        }
+        if (btnBack != null) {
+            btnBack.setVisible(false);
+            btnBack.setManaged(false);
+        }
+    }
+
     // ==================== IMAGE ====================
     private void showImage(int index) {
         List<String> images = auction.getItem().getImages();
@@ -378,6 +447,36 @@ public class ItemViewController extends BaseController
 
         } catch (IOException e) {
             AlertUtils.error("Cannot join auction");
+        }
+    }
+
+    @FXML
+    private void handleApproveAuction(ActionEvent event) {
+        if (auction == null || client == null) return;
+        if (auction.isApproved() || auction.isCancelled()) return;
+
+        boolean confirmed = AlertUtils.confirm(
+                "Approve Auction",
+                "Approve this auction: " + auction.getItem().getName() + "?"
+        );
+
+        if (confirmed) {
+            client.sendRequest("APPROVE_AUCTION|" + auction.getAuction_id());
+        }
+    }
+
+    @FXML
+    private void handleCancelAuction(ActionEvent event) {
+        if (auction == null || client == null) return;
+        if (auction.isCancelled()) return;
+
+        boolean confirmed = AlertUtils.confirm(
+                "Cancel Auction",
+                "Cancel this auction: " + auction.getItem().getName() + "?"
+        );
+
+        if (confirmed) {
+            client.sendRequest("CANCEL_AUCTION|" + auction.getAuction_id());
         }
     }
 

@@ -213,6 +213,9 @@ public class ResponseRouter {
             case ITEM_LIST_SUCCESS ->
                     AuctionHandler.items(data);
 
+            case AUCTION_DETAIL ->
+                    AuctionHandler.auctionDetail(data);
+
             case ITEM_LIST_EMPTY ->
                     AuctionHandler.itemsEmpty();
 

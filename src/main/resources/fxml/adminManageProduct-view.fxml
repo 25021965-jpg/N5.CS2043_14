@@ -84,7 +84,7 @@
             <!-- TABLE -->
             <VBox spacing="15" style="-fx-background-color: #1f1f1f; -fx-background-radius: 20; -fx-padding: 20;" VBox.vgrow="ALWAYS">
 
-                <TableView fx:id="productTable" style="-fx-background-color: #1f1f1f; -fx-control-inner-background: #1f1f1f; -fx-table-cell-border-color: transparent; -fx-text-background-color: white;" VBox.vgrow="ALWAYS">
+                <TableView fx:id="productTable" onMouseClicked="#handleProductTableClick" style="-fx-background-color: #1f1f1f; -fx-control-inner-background: #1f1f1f; -fx-table-cell-border-color: transparent; -fx-text-background-color: white;" VBox.vgrow="ALWAYS">
                     <columns>
                         <TableColumn fx:id="productIdCol" minWidth="120" prefWidth="140" text="ID" />
                         <TableColumn fx:id="productNameCol" prefWidth="250" text="PRODUCT NAME" />
@@ -97,12 +97,9 @@
                 <!-- ACTION BUTTONS -->
                 <HBox alignment="CENTER_RIGHT" spacing="15">
 
-                    <Button fx:id="btnApprove" onAction="#handleApprove" prefHeight="45" prefWidth="180" style="-fx-background-color: #43a047; -fx-text-fill: white; -fx-font-size: 14; -fx-font-weight: bold; -fx-background-radius: 14;" text="APPROVE PRODUCT" visible="false" />
-
                     <Button onAction="#handleUpdateProduct" prefHeight="45" prefWidth="180" style="                                 -fx-background-color: #d4af37;                                 -fx-text-fill: white;                                 -fx-font-size: 14;                                 -fx-font-weight: bold;                                 -fx-background-radius: 14;                                 -fx-cursor: hand;                             " text="UPDATE PRODUCT" />
 
                     <Button onAction="#handleDeleteProduct" prefHeight="45" prefWidth="180" style="                                 -fx-background-color: #ff5252;                                 -fx-text-fill: white;                                 -fx-font-size: 14;                                 -fx-font-weight: bold;                                 -fx-background-radius: 14;                                 -fx-cursor: hand;                             " text="DELETE PRODUCT" />
-
 
                 </HBox>
 

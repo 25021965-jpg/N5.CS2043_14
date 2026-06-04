@@ -4,11 +4,14 @@ import client.manager.ControllerRegistry;
 import client.network.ClientSocket;
 import client.util.AlertUtils;
 import client.util.NavigationUtils;
+import client.controller.ItemViewController;
+import client.manager.UserSession;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 
 public class AdminManageProductController {
@@ -25,7 +28,6 @@ public class AdminManageProductController {
     @FXML private TableColumn<String[], String> sellerCol;
     @FXML private TableColumn<String[], String> statusCol;
     @FXML private TextField searchProductField;
-    @FXML private Button btnApprove;
 
     private static AdminManageProductController instance;
 
@@ -72,12 +74,6 @@ public class AdminManageProductController {
     @FXML
     public void handleReloadProducts() {
         showingPending = false;
-
-        if (btnApprove != null) {
-            btnApprove.setVisible(false);
-            btnApprove.setManaged(false);
-        }
-
         if (ClientSocket.getInstance() != null) {
             ClientSocket.getInstance().sendRequest("LIST_ITEMS");
         }
@@ -93,34 +89,39 @@ public class AdminManageProductController {
         }
 
         showingPending = true;
-
-        if (btnApprove != null) {
-            btnApprove.setVisible(true);
-            btnApprove.setManaged(true);
-        }
-
         ClientSocket.getInstance().sendRequest("LIST_PENDING_AUCTIONS");
     }
 
-    // ================= APPROVE =================
+    // ================= OPEN SELECTED PRODUCT =================
     @FXML
-    public void handleApprove() {
+    public void handleProductTableClick(MouseEvent event) {
+        if (event.getClickCount() != 2) {
+            return;
+        }
+        openSelectedProduct();
+    }
+
+    private void openSelectedProduct() {
         String[] selected = productTable.getSelectionModel().getSelectedItem();
 
         if (selected == null) {
-            AlertUtils.error("Please select an auction to approve!");
             return;
         }
 
-        boolean confirmed = AlertUtils.confirm(
-                "Approve Auction",
-                "Approve this auction: " + selected[1] + "?"
-        );
-
-        if (confirmed) {
-            ClientSocket.getInstance()
-                    .sendRequest("APPROVE_AUCTION|" + selected[0]);
+        if (!showingPending) {
+            AlertUtils.warning(
+                "Preview only",
+                "Switch to Pending Approvals to open auction details."
+            );
+            return;
         }
+
+        String auctionId = selected[0];
+        Stage stage = (Stage) productTable.getScene().getWindow();
+
+        // Load auction details via server (request auction data then open detail)
+        ClientSocket.getInstance().sendRequest("GET_AUCTION|" + auctionId);
+        // The response handler should open the item view when data arrives
     }
 
     // ================= DELETE =================

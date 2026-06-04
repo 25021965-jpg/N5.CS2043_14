@@ -1,6 +1,7 @@
 package server.network.handler;
 
 import model.*;
+import model.Entity.Item.Item;
 import model.Entity.User.Role;
 import model.Entity.User.User;
 import server.dao.*;
@@ -316,6 +317,48 @@ public class AdminHandler extends BaseHandler {
                     ).append(";")
                     .append("PENDING_APPROVAL");
         }
+
+        return sb.toString();
+    }
+
+    // ==================== GET AUCTION DETAIL ====================
+
+    public String handleGetAuction(String[] data) {
+        if (!isAdmin())
+            return "ERROR|Permission denied";
+
+        if (data.length < 2) return "ERROR|Missing auction id";
+
+        String auctionId = data[1];
+        Auction a = AuctionDAO.findById(auctionId);
+        if (a == null) return "ERROR|Not found";
+
+        // Serialize single auction using same format as LIST
+        Item item = a.getItem();
+
+        String allImgs = "NO_IMAGE";
+        if (item != null && item.getImages() != null && !item.getImages().isEmpty()) {
+            allImgs = String.join(",", item.getImages());
+        }
+
+        String itemName = item != null && item.getName() != null ? item.getName().replace(";", ",").replace("|", "-") : "Unnamed";
+        String cleanDesc = item != null && item.getDescription() != null ? item.getDescription().replace(";", ",").replace("|", "-").replace("\n", " ") : "";
+
+        StringBuilder sb = new StringBuilder("AUCTION_DETAIL");
+
+        sb.append("|")
+                .append(a.getAuction_id()).append(";")
+                .append(item != null ? item.getItem_id() : "").append(";")
+                .append(itemName).append(";")
+                .append(a.getCurrentPrice()).append(";")
+                .append(a.getMinIncrement()).append(";")
+                .append(allImgs).append(";")
+                .append(a.getStartTime()).append(";")
+                .append(a.getEndTime()).append(";")
+                .append(item != null ? item.getCategory() : "").append(";")
+                .append(cleanDesc).append(";")
+                .append(a.getStatus()).append(";")
+                .append(a.getSeller() != null ? a.getSeller().getUser_id() : "");
 
         return sb.toString();
     }

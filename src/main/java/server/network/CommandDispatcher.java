@@ -76,6 +76,7 @@ public class CommandDispatcher {
             case RESUME_AUCTION -> adminHandler.handleResumeAuction(data);
             case CANCEL_AUCTION -> adminHandler.handleCancelAuction(data);
             case APPROVE_AUCTION -> adminHandler.handleApproveAuction(data);
+            case GET_AUCTION -> adminHandler.handleGetAuction(data);
             case LIST_PENDING_AUCTIONS -> adminHandler.handleListPendingAuctions();
             default -> "ERROR|Unsupported command";
         };
