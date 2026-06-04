@@ -265,8 +265,8 @@ Có thể mở **nhiều cửa sổ Client** đồng thời để kiểm thử �
 
 | Tài nguyên | Link |
 |---|---|
-| 📄 Báo cáo PDF | https://docs.google.com/document/d/198ZvjwKY7Sg04Dk-Dp2sEKL49jsDMLhHyk0JIA2gqUM/edit?tab=t.0
-| 🎬 Video demo | https://docs.google.com/videos/d/1qPXQ2ZzdNhWElzpjfuAcX_yHlvpYwT6w9sZbpVDRJjg/edit?scene=id.g59002b2b_0_2#scene=id.g59002b2b_0_2
+| 📄 Báo cáo PDF |([PDF](https://drive.google.com/file/d/1leS7vCn9OS9lQ_eiMxi_8PTG-98CVV6x/view?usp=drive_link))
+| 🎬 Video demo |([Video](https://docs.google.com/videos/d/1qPXQ2ZzdNhWElzpjfuAcX_yHlvpYwT6w9sZbpVDRJjg/edit?scene=id.g59002b2b_0_2#scene=id.g59002b2b_0_2)
 
 ---
 
