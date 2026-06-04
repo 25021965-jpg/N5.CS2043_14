@@ -1,0 +1,16 @@
+/* Đổi màu chữ của mục đang hiển thị (trong cái hộp) */
+.combo-box .list-cell {
+    -fx-text-fill: white !important;
+}
+
+/* Đổi màu chữ của các mục trong danh sách khi bấm xổ xuống */
+.combo-box-popup .list-view .list-cell {
+    -fx-text-fill: white;
+    -fx-background-color: #262626;
+}
+
+/* Hiệu ứng khi chọn (hover) vào danh sách */
+.combo-box-popup .list-view .list-cell:hover {
+    -fx-background-color: #d4af37;
+    -fx-text-fill: black;
+}

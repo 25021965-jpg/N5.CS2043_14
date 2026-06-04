@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.effect.DropShadow?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.paint.Color?>
+<?import javafx.scene.text.Font?>
+
+<VBox
+        fx:controller="client.controller.ItemCardController"
+        xmlns="http://javafx.com/javafx/25"
+        xmlns:fx="http://javafx.com/fxml/1"
+
+        alignment="TOP_CENTER"
+        prefWidth="260"
+        prefHeight="400"
+        spacing="10"
+
+        onMouseClicked="#handleCardClick"
+
+        style="
+            -fx-background-color:#1a1a1a;
+            -fx-background-radius:20;
+            -fx-border-radius:20;
+            -fx-border-color:#d4af37;
+            -fx-border-width:1.5;
+            -fx-cursor:hand;
+        ">
+
+   <effect>
+      <DropShadow
+              blurType="GAUSSIAN"
+              radius="9.5"
+              width="20"
+              height="20">
+
+         <color>
+            <Color opacity="0.5"/>
+         </color>
+
+      </DropShadow>
+   </effect>
+
+
+   <!-- IMAGE -->
+
+   <StackPane
+           prefWidth="245"
+           prefHeight="185"
+
+           style="
+                 -fx-background-color:#1a1a1a;
+                 -fx-background-radius:20;
+                 -fx-border-radius:20;
+                 -fx-clip-to-padding: true;
+             ">
+
+      <VBox.margin>
+         <Insets top="10" left="10" right="10"/>
+      </VBox.margin>
+
+      <ImageView
+              fx:id="imgProduct"
+              fitWidth="240"
+              fitHeight="180"
+              preserveRatio="true"
+              pickOnBounds="true">
+      </ImageView>
+
+   </StackPane>
+
+
+   <!-- INFO -->
+
+   <VBox
+           alignment="CENTER_LEFT"
+           spacing="5">
+
+      <padding>
+         <Insets left="15" right="15"/>
+      </padding>
+
+      <!-- NAME -->
+
+      <Label
+              fx:id="lblName"
+              text="Product Name"
+              style="-fx-text-fill: linear-gradient(from 0% 0% to 100% 0%, #f8e7b9, white);">
+         <font>
+            <Font
+                    name="Arial Bold"
+                    size="18"/>
+         </font>
+         <effect>
+            <DropShadow radius="4"/>
+         </effect>
+
+      </Label>
+
+
+      <!-- CURRENT PRICE -->
+
+      <Label
+              fx:id="lblCurrentPrice"
+              text="0.00 $"
+              textFill="WHITE"
+              wrapText="true"
+              maxWidth="230"
+              minHeight="-Infinity">
+
+         <font>
+            <Font
+                    name="System Bold"
+                    size="17"/>
+         </font>
+
+      </Label>
+
+
+      <!-- CATEGORY -->
+
+      <Label
+              fx:id="lblCategory"
+              text="Category: Item"
+              textFill="#d4af37">
+
+         <font>
+            <Font
+                    name="System Italic"
+                    size="13"/>
+         </font>
+
+      </Label>
+
+
+      <!-- STATUS -->
+
+      <Label
+              fx:id="lblStatus"
+              text="Status: ACTIVE"
+              textFill="#7CFC00">
+
+         <font>
+            <Font
+                    name="System Italic"
+                    size="13"/>
+         </font>
+
+      </Label>
+
+
+      <!-- STEP -->
+
+      <Label
+              fx:id="lblStep"
+              text="Step: 1"
+              textFill="#cbd5e1">
+
+         <font>
+            <Font
+                    name="System Italic"
+                    size="13"/>
+         </font>
+
+      </Label>
+
+
+      <!-- END TIME -->
+
+      <Label
+              fx:id="lblEndTime"
+              text="End at: --:-- --/--/----"
+              textFill="#ff6b6b">
+
+         <font>
+            <Font
+                    name="System Italic"
+                    size="13"/>
+         </font>
+
+      </Label>
+
+   </VBox>
+
+</VBox>

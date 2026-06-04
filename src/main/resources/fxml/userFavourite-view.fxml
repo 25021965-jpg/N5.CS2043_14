@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+
+<?import javafx.scene.layout.FlowPane?>
+<AnchorPane
+        prefHeight="850.0"
+        prefWidth="1100.0"
+        xmlns="http://javafx.com/javafx/26"
+        xmlns:fx="http://javafx.com/fxml/1"
+        fx:controller="client.controller.UserFavouriteController"
+
+        style="
+            -fx-background-color: #F8FAFC;
+            -fx-border-color: #D4AF37;
+            -fx-border-width: 6;
+        ">
+
+    <fx:include
+            source="userSidebar-view.fxml"
+
+            AnchorPane.topAnchor="0.0"
+            AnchorPane.bottomAnchor="0.0"
+            AnchorPane.leftAnchor="0.0"/>
+
+    <!-- PAGE TITLE -->
+    <Label
+            AnchorPane.topAnchor="30.0"
+            AnchorPane.leftAnchor="280.0"
+
+            text="Favourite Auctions"
+
+            style="
+                -fx-font-size: 32px;
+                -fx-font-weight: bold;
+                -fx-text-fill: #0F172A;
+            "/>
+
+    <!-- FILTER -->
+    <HBox
+            alignment="CENTER_LEFT"
+            spacing="15"
+            AnchorPane.topAnchor="95.0"
+            AnchorPane.leftAnchor="280.0"
+            AnchorPane.rightAnchor="40.0">
+
+        <!-- STATUS -->
+        <Label
+                text="Status"
+
+                style="
+                    -fx-font-size: 16px;
+                    -fx-font-family: 'Berlin Sans FB Demi Bold';
+                    -fx-font-weight: bold;
+                    -fx-text-fill: #334155;
+                "/>
+
+        <ComboBox
+                fx:id="statusFilterComboBox"
+
+                prefHeight="40"
+                prefWidth="220"
+
+                promptText="Select Status"
+
+                style="
+                    -fx-background-radius: 8;
+                    -fx-border-radius: 8;
+                    -fx-border-color: #D4AF37;
+                "/>
+
+        <!-- CATEGORY -->
+        <Label
+                text="Category"
+
+                style="
+                    -fx-font-size: 16px;
+                    -fx-font-family: 'Berlin Sans FB Demi Bold';
+                    -fx-font-weight: bold;
+                    -fx-text-fill: #334155;
+                "/>
+
+        <ComboBox
+                fx:id="categoryFilterComboBox"
+
+                prefHeight="40"
+                prefWidth="220"
+
+                promptText="Select Category"
+
+                style="
+                    -fx-background-radius: 8;
+                    -fx-border-radius: 8;
+                    -fx-border-color: #D4AF37;
+                "/>
+
+    </HBox>
+
+    <!-- FAVOURITE LIST -->
+    <ScrollPane
+            fx:id="scrollPane"
+            AnchorPane.topAnchor="155.0"
+            AnchorPane.leftAnchor="280.0"
+            AnchorPane.rightAnchor="0"
+            AnchorPane.bottomAnchor="10.0"
+
+            fitToWidth="true"
+
+            style="
+                -fx-background-color: transparent;
+                -fx-background: transparent;
+            ">
+
+        <FlowPane fx:id="favouriteListContainer"
+                  hgap="20"
+                  vgap="20">
+
+        </FlowPane>
+
+    </ScrollPane>
+
+</AnchorPane>

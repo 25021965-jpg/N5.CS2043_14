@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main, dev ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build and run tests
+        run: mvn test --no-transfer-progress -Dsurefire.failIfNoSpecifiedTests=false
+        env:
+          TIDB_HOST: ${{ secrets.TIDB_HOST }}
+          TIDB_USER: ${{ secrets.TIDB_USER }}
+          TIDB_PASS: ${{ secrets.TIDB_PASS }}
+          CLOUDINARY_NAME: ${{ secrets.CLOUDINARY_NAME }}
+          CLOUDINARY_KEY: ${{ secrets.CLOUDINARY_KEY }}
+          CLOUDINARY_SECRET: ${{ secrets.CLOUDINARY_SECRET }}

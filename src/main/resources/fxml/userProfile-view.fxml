@@ -1,0 +1,393 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane
+        prefHeight="720.0"
+        prefWidth="1080.0"
+        style="
+            -fx-background-color: #F8FAFC;
+            -fx-border-color: #D4AF37;
+            -fx-border-width: 6;
+        "
+        xmlns="http://javafx.com/javafx/26"
+        xmlns:fx="http://javafx.com/fxml/1"
+        fx:controller="client.controller.UserProfileController">
+
+    <fx:include
+            source="userSidebar-view.fxml"
+
+            AnchorPane.topAnchor="0.0"
+            AnchorPane.bottomAnchor="0.0"
+            AnchorPane.leftAnchor="0.0"/>
+
+    <!-- ================================================= -->
+    <!-- RIGHT CONTENT -->
+    <!-- ================================================= -->
+
+    <VBox
+            spacing="25"
+            AnchorPane.topAnchor="30.0"
+            AnchorPane.leftAnchor="280.0"
+            AnchorPane.rightAnchor="40.0">
+
+        <!-- TITLE -->
+
+        <Label
+                text="Information"
+                style="
+                    -fx-font-size: 32px;
+                    -fx-font-weight: bold;
+                    -fx-text-fill: #0F172A;
+                ">
+            <font>
+                <Font name="Berlin Sans FB Demi Bold" size="14.0"/>
+            </font>
+        </Label>
+
+        <!-- ================================================= -->
+        <!-- INFO GRID -->
+        <!-- ================================================= -->
+
+        <GridPane hgap="20" vgap="18">
+
+            <columnConstraints>
+                <ColumnConstraints minWidth="140"/>
+                <ColumnConstraints hgrow="ALWAYS"/>
+            </columnConstraints>
+
+            <rowConstraints>
+                <RowConstraints/>
+                <RowConstraints/>
+                <RowConstraints/>
+            </rowConstraints>
+
+            <!-- FULL NAME -->
+
+            <Label
+                    text="Full Name"
+                    GridPane.columnIndex="0"
+                    GridPane.rowIndex="0"
+                    style="
+                        -fx-font-size: 15px;
+                        -fx-font-weight: bold;
+                        -fx-text-fill: #334155;
+                    ">
+                <font>
+                    <Font name="Berlin Sans FB Demi Bold" size="14.0"/>
+                </font>
+            </Label>
+
+            <HBox
+                    prefHeight="50"
+                    maxWidth="1.7976931348623157E308"
+                    GridPane.columnIndex="1"
+                    GridPane.rowIndex="0"
+                    style="
+                        -fx-background-color: white;
+                        -fx-border-color: #D4AF37;
+                        -fx-border-width: 2;
+                        -fx-border-radius: 8;
+                        -fx-background-radius: 8;
+                        -fx-alignment: CENTER-LEFT;
+                        -fx-padding: 0 15 0 15;
+                    ">
+
+                <Label
+                        fx:id="fullNameLabel"
+                        text="Nguyen Van A"
+                        style="
+                            -fx-font-size: 15px;
+                            -fx-text-fill: #94A3B8;
+                        "/>
+
+            </HBox>
+
+            <!-- USERNAME -->
+
+            <Label
+                    text="Username"
+                    GridPane.columnIndex="0"
+                    GridPane.rowIndex="1"
+                    style="
+                        -fx-font-size: 15px;
+                        -fx-font-weight: bold;
+                        -fx-text-fill: #334155;
+                    ">
+                <font>
+                    <Font name="Berlin Sans FB Demi Bold" size="14.0"/>
+                </font>
+            </Label>
+
+            <HBox
+                    prefHeight="50"
+                    maxWidth="1.7976931348623157E308"
+                    GridPane.columnIndex="1"
+                    GridPane.rowIndex="1"
+                    style="
+                        -fx-background-color: white;
+                        -fx-border-color: #D4AF37;
+                        -fx-border-width: 2;
+                        -fx-border-radius: 8;
+                        -fx-background-radius: 8;
+                        -fx-alignment: CENTER-LEFT;
+                        -fx-padding: 0 15 0 15;
+                    ">
+
+                <Label
+                        fx:id="usernameLabel"
+                        text="user123"
+                        style="
+                            -fx-font-size: 15px;
+                            -fx-text-fill: #94A3B8;
+                        "/>
+
+                <Label
+                        text="   |   "
+                        style="
+                            -fx-text-fill: #CBD5E1;
+                            -fx-font-size: 15px;
+                        "/>
+
+                <Label
+                        fx:id="dobLabel"
+                        text="01/01/2000"
+                        style="
+                            -fx-font-size: 15px;
+                            -fx-text-fill: #94A3B8;
+                        "/>
+
+            </HBox>
+
+            <!-- EMAIL -->
+
+            <Label
+                    text="Email"
+                    GridPane.columnIndex="0"
+                    GridPane.rowIndex="2"
+                    style="
+                        -fx-font-size: 15px;
+                        -fx-font-weight: bold;
+                        -fx-text-fill: #334155;
+                    ">
+                <font>
+                    <Font name="Berlin Sans FB Demi Bold" size="14.0"/>
+                </font>
+            </Label>
+
+            <HBox
+                    prefHeight="50"
+                    maxWidth="1.7976931348623157E308"
+                    GridPane.columnIndex="1"
+                    GridPane.rowIndex="2"
+                    style="
+                        -fx-background-color: white;
+                        -fx-border-color: #D4AF37;
+                        -fx-border-width: 2;
+                        -fx-border-radius: 8;
+                        -fx-background-radius: 8;
+                        -fx-alignment: CENTER-LEFT;
+                        -fx-padding: 0 15 0 15;
+                    ">
+
+                <Label
+                        fx:id="emailLabel"
+                        text="example@gmail.com"
+                        style="
+                            -fx-font-size: 15px;
+                            -fx-text-fill: #94A3B8;
+                        "/>
+
+            </HBox>
+
+        </GridPane>
+
+        <!-- ================================================= -->
+        <!-- RESET PASSWORD -->
+        <!-- ================================================= -->
+
+        <VBox spacing="12">
+
+            <Label
+                    text="Reset Password"
+                    style="
+                        -fx-font-size: 18px;
+                        -fx-font-weight: bold;
+                        -fx-text-fill: #334155;
+                    ">
+                <font>
+                    <Font name="Berlin Sans FB Demi Bold" size="14.0"/>
+                </font>
+            </Label>
+
+            <!-- OLD PASSWORD -->
+
+            <HBox
+                    alignment="CENTER_LEFT"
+                    prefHeight="45"
+                    maxWidth="1.7976931348623157E308"
+                    spacing="5"
+                    style="
+                        -fx-background-color: white;
+                        -fx-border-color: #D4AF37;
+                        -fx-border-width: 2;
+                        -fx-border-radius: 8;
+                        -fx-background-radius: 8;
+                        -fx-padding: 0 8 0 8;
+                    ">
+
+                <PasswordField
+                        fx:id="oldPasswordField"
+                        prefWidth="340"
+                        promptText="Old Password"
+                        style="
+                            -fx-background-color: transparent;
+                            -fx-border-color: transparent;
+                        "/>
+
+                <TextField
+                        fx:id="oldPasswordTextField"
+                        visible="false"
+                        managed="false"
+                        prefWidth="340"
+                        promptText="Old Password"
+                        style="
+                            -fx-background-color: transparent;
+                            -fx-border-color: transparent;
+                        "/>
+
+                <Button
+                        fx:id="toggleOldBtn"
+                        text="👁"
+                        prefWidth="40"
+                        style="
+                            -fx-background-color: transparent;
+                            -fx-font-size: 16px;
+                            -fx-cursor: hand;
+                        "/>
+
+            </HBox>
+
+            <!-- NEW PASSWORD -->
+
+            <HBox
+                    alignment="CENTER_LEFT"
+                    prefHeight="45"
+                    maxWidth="1.7976931348623157E308"
+                    spacing="5"
+                    style="
+                        -fx-background-color: white;
+                        -fx-border-color: #D4AF37;
+                        -fx-border-width: 2;
+                        -fx-border-radius: 8;
+                        -fx-background-radius: 8;
+                        -fx-padding: 0 8 0 8;
+                    ">
+
+                <PasswordField
+                        fx:id="newPasswordField"
+                        prefWidth="340"
+                        promptText="New Password"
+                        style="
+                            -fx-background-color: transparent;
+                            -fx-border-color: transparent;
+                        "/>
+
+                <TextField
+                        fx:id="newPasswordTextField"
+                        visible="false"
+                        managed="false"
+                        prefWidth="340"
+                        promptText="New Password"
+                        style="
+                            -fx-background-color: transparent;
+                            -fx-border-color: transparent;
+                        "/>
+
+                <Button
+                        fx:id="toggleNewBtn"
+                        text="👁"
+                        prefWidth="40"
+                        style="
+                            -fx-background-color: transparent;
+                            -fx-font-size: 16px;
+                            -fx-cursor: hand;
+                        "/>
+
+            </HBox>
+
+            <!-- VERIFY PASSWORD -->
+
+            <HBox
+                    alignment="CENTER_LEFT"
+                    prefHeight="45"
+                    maxWidth="1.7976931348623157E308"
+                    spacing="5"
+                    style="
+                        -fx-background-color: white;
+                        -fx-border-color: #D4AF37;
+                        -fx-border-width: 2;
+                        -fx-border-radius: 8;
+                        -fx-background-radius: 8;
+                        -fx-padding: 0 8 0 8;
+                    ">
+
+                <PasswordField
+                        fx:id="verifyNewPasswordField"
+                        prefWidth="340"
+                        promptText="Confirm Password"
+                        style="
+                            -fx-background-color: transparent;
+                            -fx-border-color: transparent;
+                        "/>
+
+                <TextField
+                        fx:id="verifyNewPasswordTextField"
+                        visible="false"
+                        managed="false"
+                        prefWidth="340"
+                        promptText="Confirm Password"
+                        style="
+                            -fx-background-color: transparent;
+                            -fx-border-color: transparent;
+                        "/>
+
+                <Button
+                        fx:id="toggleVerifyBtn"
+                        text="👁"
+                        prefWidth="40"
+                        style="
+                            -fx-background-color: transparent;
+                            -fx-font-size: 16px;
+                            -fx-cursor: hand;
+                        "/>
+
+            </HBox>
+
+        </VBox>
+
+        <!-- RESET BUTTON -->
+        <HBox alignment="CENTER_RIGHT">
+
+            <Button
+                    text="Reset Password"
+                    onAction="#resetPassword"
+
+                    prefWidth="160"
+                    prefHeight="40"
+
+                    style="
+                -fx-background-color: #D4AF37;
+                -fx-text-fill: white;
+                -fx-font-size: 15px;
+                -fx-font-weight: bold;
+                -fx-background-radius: 8;
+            "/>
+
+        </HBox>
+
+    </VBox>
+
+</AnchorPane>

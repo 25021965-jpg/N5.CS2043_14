@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<BorderPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="850.0" prefWidth="1100.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controller.UserHomePageController">
+
+    <!-- TOP BAR -->
+    <top>
+        <HBox alignment="CENTER_LEFT" prefHeight="100.0" spacing="10.0" style="-fx-background-color: white; -fx-border-color: black; -fx-border-width: 5;" BorderPane.alignment="CENTER">
+            <ImageView fitHeight="109.0"
+                       fitWidth="144.0"
+                       pickOnBounds="true"
+                       preserveRatio="true">
+
+                <HBox.margin>
+                    <Insets left="32.0" />
+                </HBox.margin>
+
+                <Image url="@../image/main2.jpg" />
+            </ImageView>
+
+            <TextField fx:id="txtSearch" maxWidth="1.7976931348623157E308" prefHeight="43.0" prefWidth="330.0" promptText="Search item..." HBox.hgrow="ALWAYS">
+                <HBox.margin>
+                    <Insets left="40.0" />
+                </HBox.margin>
+            </TextField>
+
+            <Button mnemonicParsing="false" onAction="#handleSearch" prefHeight="42.0" prefWidth="47.0" style="-fx-background-color: #d4af37;" text="🔎" />
+
+            <Button fx:id="btnReload" mnemonicParsing="false" onAction="#handleReload" prefHeight="42.0" prefWidth="90.0" style="-fx-background-color: #d4af37; -fx-text-fill: black;" text="Reload" />
+            <Region HBox.hgrow="ALWAYS" />
+
+            <Button mnemonicParsing="false" onAction="#handleCreateAuction" prefHeight="45.0" prefWidth="170.0" style="-fx-background-color: #d4af37;" text="Create Auction">
+
+                <font>
+                    <Font name="Berlin Sans FB Demi Bold" size="16.0" />
+                </font>
+
+                <HBox.margin>
+                    <Insets left="25.0" />
+                </HBox.margin>
+
+            </Button>
+
+            <!-- ACCOUNT MENU -->
+            <MenuButton mnemonicParsing="false" prefHeight="45.0" prefWidth="180.0" style="-fx-background-color: #d4af37;                                -fx-alignment: CENTER;" text="Account Center" textAlignment="RIGHT">
+
+                <HBox.margin>
+                    <Insets right="30.0" />
+                </HBox.margin>
+
+                <items>
+
+                    <!-- PROFILE -->
+                    <MenuItem mnemonicParsing="false" onAction="#openProfile" text="Profile" />
+
+                    <!-- HISTORY -->
+                    <MenuItem mnemonicParsing="false" onAction="#openHistory" text="Auction History" />
+
+                    <!-- CREATED AUCTIONS -->
+                    <MenuItem mnemonicParsing="false" onAction="#openCreatedAuctions" text="Created Auctions" />
+
+                    <!-- FAVOURITE -->
+                    <MenuItem mnemonicParsing="false" onAction="#openFavourite" text="Favourite" />
+
+                    <!-- BALANCE -->
+                    <MenuItem mnemonicParsing="false" onAction="#openBalance" text="Account Balance" />
+
+                    <!-- LOGOUT -->
+                    <MenuItem  mnemonicParsing="false" onAction="#handleLogout" text="Log Out" />
+
+                    <!-- DELETE -->
+                    <MenuItem mnemonicParsing="false" onAction="#handleDeleteAccount" text="DELETE ACCOUNT" />
+
+                </items>
+
+                <font>
+                    <Font name="Berlin Sans FB Demi Bold" size="15.0" />
+                </font>
+
+            </MenuButton>
+
+        </HBox>
+    </top>
+
+    <!-- LEFT CATEGORY PANEL -->
+    <left>
+        <VBox alignment="TOP_CENTER" prefWidth="180" spacing="15.0" style="-fx-background-color: black;">
+
+            <!-- TITLE -->
+            <Label text="CATEGORY" textFill="WHITE">
+                <font>
+                    <Font name="Berlin Sans FB Demi Bold" size="22.0" />
+                </font>
+                <VBox.margin>
+                    <Insets top="30.0" />
+                </VBox.margin>
+            </Label>
+
+            <Separator prefWidth="140.0" />
+
+            <!-- CATEGORY BUTTONS -->
+            <Button fx:id="btnAll" mnemonicParsing="false" onAction="#showAll" prefHeight="45.0" prefWidth="140.0" style="-fx-background-color: #d4af37;" text="All">
+
+                <font>
+                    <Font name="Berlin Sans FB Demi Bold" size="14.0" />
+                </font>
+
+            </Button>
+
+            <Button fx:id="btnAccessories" mnemonicParsing="false" onAction="#showAccessories" prefHeight="45.0" prefWidth="140.0" style="-fx-background-color: #d4af37;" text="Accessories">
+
+                <font>
+                    <Font name="Berlin Sans FB Demi Bold" size="14.0" />
+                </font>
+
+            </Button>
+
+            <Button fx:id="btnCollectibles" mnemonicParsing="false" onAction="#showCollectibles" prefHeight="45.0" prefWidth="140.0" style="-fx-background-color: #d4af37;" text="Collectibles">
+
+                <font>
+                    <Font name="Berlin Sans FB Demi Bold" size="14.0" />
+                </font>
+
+            </Button>
+
+            <Button fx:id="btnElectronics" mnemonicParsing="false" onAction="#showElectronics" prefHeight="45.0" prefWidth="140.0" style="-fx-background-color: #d4af37;" text="Electronics">
+
+                <font>
+                    <Font name="Berlin Sans FB Demi Bold" size="14.0" />
+                </font>
+
+            </Button>
+
+            <Button fx:id="btnFashion" mnemonicParsing="false" onAction="#showFashion" prefHeight="45.0" prefWidth="140.0" style="-fx-background-color: #d4af37;" text="Fashion">
+
+                <font>
+                    <Font name="Berlin Sans FB Demi Bold" size="14.0" />
+                </font>
+
+            </Button>
+
+            <Button fx:id="btnHomeAppliances" mnemonicParsing="false" onAction="#showHomeAppliances" prefHeight="45.0" prefWidth="140.0" style="-fx-background-color: #d4af37;" text="Home Appliances">
+
+                <font>
+                    <Font name="Berlin Sans FB Demi Bold" size="14.0" />
+                </font>
+
+            </Button>
+
+            <Button fx:id="btnVehicles" mnemonicParsing="false" onAction="#showVehicles" prefHeight="45.0" prefWidth="140.0" style="-fx-background-color: #d4af37;" text="Vehicles">
+
+                <font>
+                    <Font name="Berlin Sans FB Demi Bold" size="14.0" />
+                </font>
+
+            </Button>
+
+            <Button fx:id="btnOther" mnemonicParsing="false" onAction="#showOther" prefHeight="45.0" prefWidth="140.0" style="-fx-background-color: #d4af37;" text="Other">
+
+                <font>
+                    <Font name="Berlin Sans FB Demi Bold" size="14.0" />
+                </font>
+
+            </Button>
+
+            <Separator prefWidth="140.0" style="-fx-background-color: #334155;" />
+
+            <Label text="STATUS" textFill="WHITE">
+                <font>
+                    <Font name="Berlin Sans FB Demi Bold" size="18.0" />
+                </font>
+            </Label>
+
+            <!-- STATUS DROPDOWN (FIXED) -->
+            <MenuButton prefHeight="45.0" prefWidth="140.0" style="-fx-background-color: #d4af37; -fx-text-fill: white;" text="Select Status">
+
+                <items>
+                    <MenuItem onAction="#showAllStatus" text="All Status" />
+                    <MenuItem onAction="#showActive" text="Active" />
+                    <MenuItem onAction="#showEnded" text="Ended" />
+                    <MenuItem onAction="#showUpcoming" text="Upcoming" />
+                </items>
+
+                <font>
+                    <Font name="Berlin Sans FB Demi Bold" size="15.0" />
+                </font>
+
+            </MenuButton>
+
+        </VBox>
+    </left>
+
+    <!-- CENTER -->
+    <center>
+        <ScrollPane fitToWidth="true" style="-fx-background-color: black; -fx-background: white;">
+
+            <VBox alignment="TOP_CENTER">
+
+                <GridPane fx:id="itemGrid" alignment="TOP_CENTER" hgap="30.0" style="-fx-background-color: white;" vgap="30.0">
+
+                    <columnConstraints>
+                        <ColumnConstraints prefWidth="290.0" />
+                        <ColumnConstraints prefWidth="290.0" />
+                        <ColumnConstraints prefWidth="290.0" />
+                    </columnConstraints>
+
+                    <padding>
+                        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+                    </padding>
+
+                </GridPane>
+
+            </VBox>
+        </ScrollPane>
+    </center>
+
+</BorderPane>

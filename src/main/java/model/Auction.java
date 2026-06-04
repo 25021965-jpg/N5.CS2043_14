@@ -1,0 +1,157 @@
+package model;
+
+import model.Entity.Item.Item;
+import model.Entity.User.User;
+
+import java.io.Serializable;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+public class Auction implements Serializable {
+
+    private String auction_id;
+    private String seller_Id;
+
+    private Item item;
+    private User seller;
+
+    private BigDecimal startingPrice;
+    private BigDecimal currentPrice;
+    private BigDecimal minIncrement;
+    private BigDecimal floorPrice;
+
+    private LocalDateTime startTime;
+    private LocalDateTime endTime;
+
+    private boolean is_cancelled;
+    private boolean is_approved;
+    private boolean is_ended;
+
+    private List<Bid> bids = new ArrayList<>();
+
+    private int extendCount = 0;
+
+    private String currentLeaderId;
+
+    public String getCurrentLeaderId() {
+        return currentLeaderId;
+    }
+
+    public void setCurrentLeaderId(String currentLeaderId) {
+        this.currentLeaderId = currentLeaderId;
+    }
+
+    public Auction() {}
+
+
+    // Status
+
+    public AuctionStatus getStatus() {
+
+        if (is_cancelled)
+            return AuctionStatus.CANCELLED;
+
+        if (!is_approved)
+            return AuctionStatus.PENDING_APPROVAL;
+
+        if (is_ended)
+            return AuctionStatus.ENDED;
+
+        LocalDateTime now =
+                LocalDateTime.now();
+
+        if (
+                startTime != null &&
+                        now.isBefore(startTime)
+        ) {
+            return AuctionStatus.UPCOMING;
+        }
+
+        if (
+                endTime != null &&
+                        now.isAfter(endTime)
+        ) {
+            return AuctionStatus.ENDED;
+        }
+
+        return AuctionStatus.ACTIVE;
+    }
+
+
+    public void setStatus(AuctionStatus status) {
+        is_cancelled = status == AuctionStatus.CANCELLED;
+        is_approved = status != AuctionStatus.PENDING_APPROVAL;
+        is_ended     = status == AuctionStatus.ENDED;
+    }
+
+
+    // Bid
+    public void addBid(Bid bid) {
+        if (bid == null)
+            return;
+        bids.add(bid);
+        currentPrice = bid.getAmount();
+    }
+
+
+    public Bid getHighestBid() {
+        return bids.isEmpty()
+                ? null
+                : bids.get(
+                bids.size() - 1
+        );
+    }
+
+
+
+    // Getter / Setter
+
+    public String getAuction_id() { return auction_id; }
+    public void setAuction_id(String auction_id) { this.auction_id = auction_id; }
+
+    public String getSeller_Id() { return seller_Id; }
+    public void setSeller_Id(String seller_Id) { this.seller_Id = seller_Id; }
+
+    public Item getItem() { return item; }
+    public void setItem(Item item) { this.item = item; }
+
+    public User getSeller() { return seller; }
+    public void setSeller(User seller) { this.seller = seller; }
+
+    public BigDecimal getStartingPrice() { return startingPrice; }
+    public void setStartingPrice(BigDecimal startingPrice) { this.startingPrice = startingPrice; }
+
+    public BigDecimal getCurrentPrice() { return currentPrice; }
+    public void setCurrentPrice(BigDecimal currentPrice) { this.currentPrice = currentPrice; }
+
+    public BigDecimal getMinIncrement() { return minIncrement; }
+    public void setMinIncrement(BigDecimal minIncrement) { this.minIncrement = minIncrement; }
+
+    public BigDecimal getFloorPrice() { return floorPrice; }
+    public void setFloorPrice(BigDecimal floorPrice) { this.floorPrice = floorPrice; }
+
+    public LocalDateTime getStartTime() { return startTime; }
+    public void setStartTime(LocalDateTime startTime) { this.startTime = startTime; }
+
+    public LocalDateTime getEndTime() { return endTime; }
+    public void setEndTime(LocalDateTime endTime) { this.endTime = endTime; }
+
+    public boolean isCancelled() { return is_cancelled; }
+    public void setCancelled(boolean cancelled) { is_cancelled = cancelled; }
+
+    public boolean isApproved() { return is_approved; }
+    public void setApproved(boolean approved) { is_approved = approved; }
+
+    public List<Bid> getBids() { return bids; }
+    public void setBids(List<Bid> bids) {
+        if (bids == null) {
+            throw new IllegalArgumentException("Bids list cannot be null");
+        }
+        this.bids = new ArrayList<>(bids);
+    }
+    public int getExtendCount() { return extendCount; }
+    public void setExtendCount(int extendCount) { this.extendCount = extendCount; }
+
+}

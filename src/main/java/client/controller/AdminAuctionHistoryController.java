@@ -1,0 +1,121 @@
+package client.controller;
+
+import client.manager.ControllerRegistry;
+import client.network.ClientSocket;
+import client.util.NavigationUtils;
+import javafx.application.Platform;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.fxml.FXML;
+import javafx.scene.control.*;
+import javafx.stage.Stage;
+
+public class AdminAuctionHistoryController {
+
+
+    private final ObservableList<String[]> historyList = FXCollections.observableArrayList();
+
+    @FXML private TableView<String[]> auctionHistoryTable;
+    @FXML private TableColumn<String[], String> auctionIdCol;
+    @FXML private TableColumn<String[], String> itemNameCol;
+    @FXML private TableColumn<String[], String> winnerCol;
+    @FXML private TableColumn<String[], String> finalBidCol;
+    @FXML private TableColumn<String[], String> endDateCol;
+    @FXML private TextField searchAuctionField;
+
+    private Stage getStage() {return NavigationUtils.getCurrentStage();}
+
+    @FXML
+    public void initialize() {
+        ControllerRegistry.register(
+                AdminAuctionHistoryController.class,
+                this
+        );
+        auctionIdCol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue()[0]));
+        itemNameCol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue()[1]));
+        winnerCol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue()[2]));
+        finalBidCol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue()[3]));
+        endDateCol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue()[4]));
+
+        auctionHistoryTable.setItems(historyList);
+
+        searchAuctionField.textProperty().addListener((obs, old, val) -> filterHistory(val));
+
+        //style
+        auctionIdCol.prefWidthProperty().bind(
+                auctionHistoryTable.widthProperty().multiply(0.12));
+
+        itemNameCol.prefWidthProperty().bind(
+                auctionHistoryTable.widthProperty().multiply(0.30));
+
+        winnerCol.prefWidthProperty().bind(
+                auctionHistoryTable.widthProperty().multiply(0.22));
+
+        finalBidCol.prefWidthProperty().bind(
+                auctionHistoryTable.widthProperty().multiply(0.18));
+
+        endDateCol.prefWidthProperty().bind(
+                auctionHistoryTable.widthProperty().multiply(0.18));
+
+        handleReloadAuctionHistory();
+    }
+
+    @FXML
+    public void handleReloadAuctionHistory() {
+        if (ClientSocket.getInstance() != null)
+            ClientSocket.getInstance().sendRequest("LIST_AUCTION_HISTORY");
+    }
+
+    // Được gọi từ ResponseHandler
+    public void updateHistory(ObservableList<String[]> data) {
+        Platform.runLater(() -> historyList.setAll(data));
+    }
+
+    public void loadHistory(String data) {
+        ObservableList<String[]> list =
+                FXCollections.observableArrayList();
+
+        if (data != null && !data.isEmpty()) {
+            for (String token : data.split("\\|")) {
+                String[] fields =
+                        token.split(";", -1);
+
+                if (fields.length >= 5) {
+                    list.add(fields);
+                }
+            }
+        }
+
+        updateHistory(list);
+    }
+
+    private void filterHistory(String keyword) {
+        if (keyword == null || keyword.isEmpty()) {
+            auctionHistoryTable.setItems(historyList);
+            return;
+        }
+        auctionHistoryTable.setItems(historyList.filtered(row ->
+                row[1].toLowerCase().contains(keyword.toLowerCase()) ||
+                        row[2].toLowerCase().contains(keyword.toLowerCase())
+        ));
+    }
+
+    // Navigation
+    @FXML public void handleManageUsers() {
+        NavigationUtils.switchScene(getStage(), "/fxml/adminManageUser-view.fxml", "Admin");
+    }
+    @FXML public void handleManageProducts() {
+        NavigationUtils.switchScene(getStage(), "/fxml/adminManageProduct-view.fxml", "Manage Products");
+    }
+    @FXML public void handleManageAuctions() {
+        NavigationUtils.switchScene(getStage(), "/fxml/adminManageAuction-view.fxml", "Manage Auctions");
+    }
+    @FXML public void handleLogout() {
+        if (ClientSocket.getInstance() != null) ClientSocket.getInstance().sendLogout();
+        NavigationUtils.switchScene(
+                getStage(),
+                "/fxml/login-view.fxml", "Login"
+        );
+    }
+}

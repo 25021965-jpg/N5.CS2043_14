@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane
+        prefHeight="850.0"
+        prefWidth="1100.0"
+        xmlns="http://javafx.com/javafx/25"
+        xmlns:fx="http://javafx.com/fxml/1"
+        fx:controller="client.controller.UserAccountBalanceController"
+        style="
+            -fx-background-color: #F8FAFC;
+            -fx-border-color: #D4AF37;
+            -fx-border-width: 6;
+        ">
+
+    <fx:include
+            source="userSidebar-view.fxml"
+
+            AnchorPane.topAnchor="0.0"
+            AnchorPane.bottomAnchor="0.0"
+            AnchorPane.leftAnchor="0.0"/>
+
+    <!-- PAGE TITLE -->
+
+    <Label
+            AnchorPane.topAnchor="30.0"
+            AnchorPane.leftAnchor="300.0"
+            text="Balance"
+
+            style="
+                -fx-font-size: 32px;
+                -fx-font-family: 'Berlin Sans FB Demi Bold';
+                -fx-font-weight: bold;
+                -fx-text-fill: #0F172A;
+            ">
+
+        <font>
+            <Font
+                    name="Berlin Sans FB Demi Bold"
+                    size="32.0"/>
+        </font>
+
+    </Label>
+
+    <!-- BALANCE CARD -->
+
+    <VBox
+            AnchorPane.topAnchor="90.0"
+            AnchorPane.leftAnchor="280.0"
+            AnchorPane.rightAnchor="40.0"
+            spacing="10"
+
+            style="
+                -fx-background-color: white;
+                -fx-background-radius: 20;
+                -fx-border-radius: 20;
+                -fx-border-color: #D4AF37;
+                -fx-border-width: 2;
+                -fx-padding: 25;
+            ">
+
+        <Label
+                text="Current Balance"
+                style="
+                    -fx-text-fill: #64748B;
+                    -fx-font-size: 18px;
+                "/>
+
+        <Label
+                fx:id="balanceLabel"
+                text="0 USD"
+
+                style="
+                    -fx-text-fill: #16A34A;
+                    -fx-font-size: 42px;
+                    -fx-font-weight: bold;
+                "/>
+
+    </VBox>
+
+    <!-- ACTION AREA -->
+
+    <HBox
+            spacing="25"
+            alignment="CENTER"
+            AnchorPane.topAnchor="270.0"
+            AnchorPane.leftAnchor="280.0"
+            AnchorPane.rightAnchor="40.0">
+
+        <!-- DEPOSIT -->
+
+        <VBox
+                maxWidth="380.0"
+                spacing="18"
+                alignment="CENTER"
+                style="
+                    -fx-background-color: white;
+                    -fx-background-radius: 18;
+                    -fx-border-radius: 18;
+                    -fx-border-color: #D4AF37;
+                    -fx-border-width: 2;
+                    -fx-padding: 25;
+                ">
+
+            <Label
+                    text="Deposit Money"
+
+                    style="
+                        -fx-font-size: 24px;
+                        -fx-font-weight: bold;
+                        -fx-text-fill: #0F172A;
+                    "/>
+
+            <TextField
+                    fx:id="depositField"
+                    prefHeight="45"
+                    promptText="Enter amount"
+
+                    style="
+                        -fx-background-radius: 10;
+                        -fx-border-radius: 10;
+                        -fx-border-color: #CBD5E1;
+                        -fx-font-size: 15px;
+                    "/>
+
+            <Button
+                    text="Deposit"
+                    onAction="#handleDeposit"
+                    VBox.vgrow="NEVER"
+                    maxWidth="1.7976931348623157E308"
+                    prefHeight="45"
+                    prefWidth="300"
+
+                    style="
+                        -fx-background-color: #16A34A;
+                        -fx-text-fill: white;
+                        -fx-font-size: 15px;
+                        -fx-font-weight: bold;
+                        -fx-background-radius: 10;
+                    "/>
+
+        </VBox>
+
+        <!-- WITHDRAW -->
+
+        <VBox
+                maxWidth="1.7976931348623157E308"
+                spacing="18"
+                alignment="CENTER"
+                style="
+                    -fx-background-color: white;
+                    -fx-background-radius: 18;
+                    -fx-border-radius: 18;
+                    -fx-border-color: #D4AF37;
+                    -fx-border-width: 2;
+                    -fx-padding: 25;
+                ">
+
+            <Label
+                    text="Withdraw Money"
+
+                    style="
+                        -fx-font-size: 24px;
+                        -fx-font-weight: bold;
+                        -fx-text-fill: #0F172A;
+                    "/>
+
+            <TextField
+                    fx:id="withdrawField"
+                    prefHeight="45"
+                    promptText="Enter amount"
+
+                    style="
+                        -fx-background-radius: 10;
+                        -fx-border-radius: 10;
+                        -fx-border-color: #CBD5E1;
+                        -fx-font-size: 15px;
+                    "/>
+
+            <Button
+                    text="Withdraw"
+                    onAction="#handleWithdraw"
+                    VBox.vgrow="NEVER"
+                    maxWidth="1.7976931348623157E308"
+                    prefHeight="45"
+                    prefWidth="300"
+
+                    style="
+                        -fx-background-color: #EF4444;
+                        -fx-text-fill: white;
+                        -fx-font-size: 15px;
+                        -fx-font-weight: bold;
+                        -fx-background-radius: 10;
+                    "/>
+
+        </VBox>
+
+    </HBox>
+
+    <!-- TRANSACTION HISTORY -->
+
+    <HBox
+            AnchorPane.topAnchor="520.0"
+            AnchorPane.leftAnchor="300.0"
+            AnchorPane.rightAnchor="40.0"
+            alignment="CENTER_LEFT">
+
+        <Label
+                text="Transaction History"
+
+                style="
+                    -fx-font-size: 26px;
+                    -fx-font-family: 'Berlin Sans FB Demi Bold';
+                    -fx-font-weight: bold;
+                    -fx-text-fill: #0F172A;
+                "/>
+
+        <Region HBox.hgrow="ALWAYS"/>
+
+        <ComboBox
+                fx:id="filterBox"
+                prefWidth="180"
+                promptText="Filter"
+
+                style="-fx-background-radius:8;"/>
+
+    </HBox>
+
+    <ScrollPane
+            AnchorPane.topAnchor="565.0"
+            AnchorPane.leftAnchor="300.0"
+            AnchorPane.rightAnchor="40.0"
+            AnchorPane.bottomAnchor="30.0"
+            fitToWidth="true">
+
+        <VBox
+                fx:id="transactionContainer"
+                spacing="15"
+                style="-fx-padding: 5;"/>
+
+    </ScrollPane>
+
+</AnchorPane>
