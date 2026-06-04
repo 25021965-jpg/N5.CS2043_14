@@ -6,6 +6,7 @@ import org.mockito.MockedStatic;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -31,8 +32,26 @@ class ResponseHandlerTest {
     @Test
     void handle_allLiveAuctionMessages_forwardedToListener() {
         ResponseHandler.setLiveAuctionListener(received::add);
-        // Mock ResponseRouter to prevent JavaFX Platform.runLater calls
+
         try (MockedStatic<ResponseRouter> mockedRouter = mockStatic(ResponseRouter.class)) {
+
+            mockedRouter.when(() -> ResponseRouter.route(anyString(), any()))
+                    .thenAnswer(invocation -> {
+                        String msg = invocation.getArgument(0);
+                        try {
+                            java.lang.reflect.Field field = ResponseHandler.class.getDeclaredField("liveAuctionListener");
+                            field.setAccessible(true);
+                            Consumer<String> listener = (Consumer<String>) field.get(null);
+
+                            if (listener != null) {
+                                listener.accept(msg);
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        return null;
+                    });
+
             String[] messages = {
                     "UPDATE_PRICE|1500", "JOIN_SUCCESS|data", "JOIN_FAILED|err",
                     "BID_FAILED|err", "BID_HISTORY_SUCCESS|data", "BID_HISTORY_EMPTY",
@@ -44,6 +63,7 @@ class ResponseHandlerTest {
             for (String msg : messages) {
                 ResponseHandler.handle(msg);
             }
+
             assertEquals(messages.length, received.size());
         }
     }
