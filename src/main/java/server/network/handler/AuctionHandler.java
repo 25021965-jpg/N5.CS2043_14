@@ -406,7 +406,8 @@ public class AuctionHandler extends BaseHandler {
             UserDAO.updateBalance(winner.getUser_id(), newWinnerReal);
             UserDAO.updateVirtualBalance(winner.getUser_id(), newWinnerReal);
             TransactionDAO.addTransaction(winner.getUser_id(), seller.getUser_id(),
-                    finalPrice, "WIN_BID", "Won auction: " + itemName);
+                    finalPrice, "WIN_BID",
+                    "Won auction \"" + itemName + "\" from " + seller.getUsername());
             RoomManager.broadcastToRoomAll(auctionId,
                     "WINNER_BALANCE|" + newWinnerReal + "|" + winner.getUser_id());
 
@@ -415,7 +416,8 @@ public class AuctionHandler extends BaseHandler {
             UserDAO.updateBalance(seller.getUser_id(), newSellerReal);
             UserDAO.updateVirtualBalance(seller.getUser_id(), newSellerReal);
             TransactionDAO.addTransaction(seller.getUser_id(), winner.getUser_id(),
-                    finalPrice, "SOLD", "Sold item: " + itemName);
+                    finalPrice, "SOLD",
+                    "Sold item \"" + itemName + "\" to " + winner.getUsername());
             RoomManager.broadcastToRoomAll(auctionId,
                     "SELLER_BALANCE|" + newSellerReal + "|" + seller.getUser_id());
             RoomManager.broadcastToRoomAll(auctionId,

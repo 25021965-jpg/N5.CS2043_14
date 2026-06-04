@@ -564,7 +564,7 @@ public class UserLiveAuctionController implements UserDataReceiver {
                         bid.setTimeString(bidTime);
                         bid.setUsername(bidderUsername);
                         bid.setAmount(currentPrice);
-                        bid.setAmountString(String.format("%,.0f", currentPrice) + " USD");
+                        bid.setAmountString(String.format("%,.2f", currentPrice) + " USD");
                         bid.setStatus("LEADING");
                         bidHistoryList.addFirst(bid);
 
@@ -897,7 +897,7 @@ public class UserLiveAuctionController implements UserDataReceiver {
                     bid.setUsername(parts[0]);
                     BigDecimal amount = new BigDecimal(parts[1]);
                     bid.setAmount(amount);
-                    bid.setAmountString(String.format("%,.0f", amount) + " USD");
+                    bid.setAmountString(String.format("%,.2f", amount) + " USD");
                     bid.setTimeString(parts[2]);
                     history.add(bid);
                 }
@@ -984,7 +984,7 @@ public class UserLiveAuctionController implements UserDataReceiver {
 
     private String formatPrice(BigDecimal price) {
         if (price == null) return "0 USD";
-        return String.format("%,.0f USD", price);
+        return String.format("%,.2f USD", price);
     }
 
     public void updateBalance(BigDecimal newBalance) {
@@ -1015,9 +1015,14 @@ public class UserLiveAuctionController implements UserDataReceiver {
 
     private void showInfo(String message) {
         Platform.runLater(() -> {
-            Label info = new Label("ℹ️ " + message);
-            info.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white; " +
+            Label info = new Label("✅ " + message);
+            info.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; " +
                     "-fx-padding: 10 20; -fx-background-radius: 8; -fx-font-size: 14;");
+
+            // Đặt ở góc phải dưới
+            info.setTranslateX(centerPanel.getWidth() - 220);
+            info.setTranslateY(centerPanel.getHeight() - 60);
+
             centerPanel.getChildren().add(info);
             new Timer(true).schedule(new TimerTask() {
                 @Override

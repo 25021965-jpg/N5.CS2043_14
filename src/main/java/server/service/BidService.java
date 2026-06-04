@@ -128,7 +128,7 @@ public class BidService {
 
         if (secondsLeft >= 0 && secondsLeft < ANTI_SNIPE_WINDOW_SECONDS) {
             auction.setExtendCount(auction.getExtendCount() + 1);
-            AuctionDAO.updateExtendCount(auction.getAuction_id(), auction.getExtendCount()); // ← thêm dòng này
+            AuctionDAO.updateExtendCount(auction.getAuction_id(), auction.getExtendCount());
             LocalDateTime newEndTime = endTime.plusSeconds(ANTI_SNIPE_EXTEND_SECONDS);
             System.out.println("Anti-snipe triggered! newEndTime=" + newEndTime);
             return newEndTime;

@@ -16,10 +16,6 @@ import java.net.Socket;
 import java.util.logging.Logger;
 
 public class ClientSocket {
-
-    private static final String HOST = "26.175.50.93";
-    private static final int PORT = 9999;
-
     private static final Logger LOGGER =
             Logger.getLogger(ClientSocket.class.getName());
 
@@ -62,8 +58,8 @@ public class ClientSocket {
 
     private void connect() throws Exception {
         if (socket == null || socket.isClosed()) {
-
-            socket = new Socket(HOST, PORT);
+            socket =
+                    new Socket("localhost", 9999);
 
             in =
                     new BufferedReader(
@@ -79,10 +75,7 @@ public class ClientSocket {
                     );
 
             System.out.println(
-                    "Connected to "
-                            + HOST
-                            + ":"
-                            + PORT
+                    "Connected to localhost:9999"
             );
         }
     }
@@ -107,9 +100,7 @@ public class ClientSocket {
                             System.out.println(
                                     "FROM SERVER: "
                                             + msg
-                            );
-
-                            ResponseHandler.handle(msg);
+                            );ResponseHandler.handle(msg);
                             // Chỉ notify listeners với message KHÔNG phải live auction
                             if (!isNonBroadcastMessage(msg)) {
                                 notifyListeners(msg);
@@ -207,8 +198,7 @@ public class ClientSocket {
             String fn,
             String un,
             String em,
-            String pw,
-            String dob
+            String pw,String dob
     ) {
 
         send(
@@ -328,9 +318,7 @@ public class ClientSocket {
 
     public void close() {
         try {
-            listening = false;
-
-            if (in != null)
+            listening = false;if (in != null)
                 in.close();
 
             if (out != null)

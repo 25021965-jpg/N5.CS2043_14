@@ -393,6 +393,10 @@ public class UserAccountBalanceController extends BaseController implements User
                     case "WITHDRAW" ->
                             "Withdraw Successfully";
 
+                    case "WIN_BID" -> "Won Auction - Payment";
+
+                    case "SOLD" -> "Sold Item - Received";
+
                     case "TRANSFER_OUT" ->
                             "Paid to " + desc;
 
@@ -434,23 +438,13 @@ public class UserAccountBalanceController extends BaseController implements User
             String amount
     ) {
 
-        boolean positive =
-                type.equals("DEPOSIT")
-                        || type.equals("TRANSFER_IN");
+        // SOLD là cộng tiền (xanh), WIN_BID là trừ tiền (đỏ)
+        boolean positive = type.equals("DEPOSIT") || type.equals("SOLD");
 
-        Label label =
-                new Label(
-                        (positive ? "+ " : "- ")
-                                + amount
-                                + " USD"
-                );
-
-        label.setStyle(
-                positive
-                        ? "-fx-text-fill:#16A34A; -fx-font-size:18px; -fx-font-weight:bold;"
-                        : "-fx-text-fill:#EF4444; -fx-font-size:18px; -fx-font-weight:bold;"
-        );
-
+        Label label = new Label((positive ? "+ " : "- ") + amount + " USD");
+        label.setStyle(positive
+                ? "-fx-text-fill:#16A34A; -fx-font-size:18px; -fx-font-weight:bold;"
+                : "-fx-text-fill:#EF4444; -fx-font-size:18px; -fx-font-weight:bold;");
         return label;
     }
 }
