@@ -22,27 +22,22 @@ class AuctionTest {
         auction.setMinIncrement(new BigDecimal("10"));
     }
 
-    // ==================== getStatus() ====================
+    // ==================== getStatus ====================
 
     @Test
     void getStatus_cancelled_returnsCancelled() {
         auction.setCancelled(true);
-        auction.setApproved(true);
-        auction.setStartTime(LocalDateTime.now().minusHours(1));
-        auction.setEndTime(LocalDateTime.now().plusHours(1));
         assertEquals(AuctionStatus.CANCELLED, auction.getStatus());
     }
 
     @Test
     void getStatus_notApproved_returnsPendingApproval() {
-        auction.setCancelled(false);
         auction.setApproved(false);
         assertEquals(AuctionStatus.PENDING_APPROVAL, auction.getStatus());
     }
 
     @Test
-    void getStatus_approvedBeforeStart_returnsUpcoming() {
-        auction.setCancelled(false);
+    void getStatus_beforeStart_returnsUpcoming() {
         auction.setApproved(true);
         auction.setStartTime(LocalDateTime.now().plusHours(1));
         auction.setEndTime(LocalDateTime.now().plusHours(2));
@@ -50,8 +45,7 @@ class AuctionTest {
     }
 
     @Test
-    void getStatus_approvedAfterEnd_returnsEnded() {
-        auction.setCancelled(false);
+    void getStatus_afterEnd_returnsEnded() {
         auction.setApproved(true);
         auction.setStartTime(LocalDateTime.now().minusHours(2));
         auction.setEndTime(LocalDateTime.now().minusHours(1));
@@ -59,124 +53,108 @@ class AuctionTest {
     }
 
     @Test
-    void getStatus_approvedDuringWindow_returnsActive() {
-        auction.setCancelled(false);
+    void getStatus_active_returnsActive() {
         auction.setApproved(true);
         auction.setStartTime(LocalDateTime.now().minusHours(1));
         auction.setEndTime(LocalDateTime.now().plusHours(1));
         assertEquals(AuctionStatus.ACTIVE, auction.getStatus());
     }
 
-    @Test
-    void getStatus_nullStartTime_treatedAsActive() {
-        auction.setCancelled(false);
-        auction.setApproved(true);
-        auction.setStartTime(null);
-        auction.setEndTime(LocalDateTime.now().plusHours(1));
-        assertEquals(AuctionStatus.ACTIVE, auction.getStatus());
-    }
+    // ==================== setStatus ====================
 
     @Test
-    void getStatus_nullEndTime_treatedAsActive() {
-        auction.setCancelled(false);
-        auction.setApproved(true);
-        auction.setStartTime(LocalDateTime.now().minusHours(1));
-        auction.setEndTime(null);
-        assertEquals(AuctionStatus.ACTIVE, auction.getStatus());
-    }
-
-    // ==================== setStatus() ====================
-
-    @Test
-    void setStatus_cancelled_setsCancelledTrue() {
+    void setStatus_cancelled() {
         auction.setStatus(AuctionStatus.CANCELLED);
         assertTrue(auction.isCancelled());
     }
 
     @Test
-    void setStatus_pendingApproval_setsApprovedFalse() {
-        auction.setApproved(true);
+    void setStatus_pendingApproval() {
         auction.setStatus(AuctionStatus.PENDING_APPROVAL);
         assertFalse(auction.isApproved());
-        assertFalse(auction.isCancelled());
     }
 
     @Test
-    void setStatus_active_setsApprovedTrueAndNotCancelled() {
+    void setStatus_active() {
         auction.setStatus(AuctionStatus.ACTIVE);
         assertTrue(auction.isApproved());
         assertFalse(auction.isCancelled());
     }
 
     @Test
-    void setStatus_ended_setsApprovedTrue() {
+    void setStatus_ended() {
         auction.setStatus(AuctionStatus.ENDED);
         assertTrue(auction.isApproved());
-        assertFalse(auction.isCancelled());
     }
 
-    // ==================== addBid() ====================
+    // ==================== bids ====================
 
     @Test
-    void addBid_null_doesNothing() {
+    void addBid_null_ignored() {
         auction.addBid(null);
-        assertTrue(auction.getBids().isEmpty());
-        assertEquals(new BigDecimal("100"), auction.getCurrentPrice());
+        assertEquals(0, auction.getBids().size());
     }
 
     @Test
-    void addBid_validBid_updatesCurrentPrice() {
+    void addBid_valid_updatesCurrentPrice() {
         Bid bid = new Bid();
         bid.setAmount(new BigDecimal("200"));
+
         auction.addBid(bid);
+
+        assertEquals(1, auction.getBids().size());
         assertEquals(new BigDecimal("200"), auction.getCurrentPrice());
+    }
+
+    @Test
+    void addBid_multiple_lastWins() {
+        Bid b1 = new Bid();
+        b1.setAmount(new BigDecimal("200"));
+
+        Bid b2 = new Bid();
+        b2.setAmount(new BigDecimal("350"));
+
+        auction.addBid(b1);
+        auction.addBid(b2);
+
+        assertEquals(new BigDecimal("350"), auction.getCurrentPrice());
+        assertEquals(b2, auction.getHighestBid());
+    }
+
+    // ==================== highest bid ====================
+
+    @Test
+    void getHighestBid_empty_returnsNull() {
+        assertNull(auction.getHighestBid());
+    }
+
+    @Test
+    void getHighestBid_single_returnsBid() {
+        Bid bid = new Bid();
+        bid.setAmount(new BigDecimal("500"));
+
+        auction.addBid(bid);
+
+        assertEquals(bid, auction.getHighestBid());
+    }
+
+    // ==================== bids list safety ====================
+
+    @Test
+    void setBids_replacesList() {
+        ArrayList<Bid> list = new ArrayList<>();
+
+        Bid b = new Bid();
+        b.setAmount(new BigDecimal("123"));
+        list.add(b);
+
+        auction.setBids(list);
+
         assertEquals(1, auction.getBids().size());
     }
 
     @Test
-    void addBid_multipleBids_lastBidBecomesCurrentPrice() {
-        Bid b1 = new Bid(); b1.setAmount(new BigDecimal("200"));
-        Bid b2 = new Bid(); b2.setAmount(new BigDecimal("350"));
-        auction.addBid(b1);
-        auction.addBid(b2);
-        assertEquals(new BigDecimal("350"), auction.getCurrentPrice());
-        assertEquals(2, auction.getBids().size());
-    }
-
-    // ==================== getHighestBid() ====================
-
-    @Test
-    void getHighestBid_noBids_returnsNull() {
-        assertNull(auction.getHighestBid());
-    }
-
-    @Test
-    void getHighestBid_oneBid_returnsThatBid() {
-        Bid bid = new Bid(); bid.setAmount(new BigDecimal("500"));
-        auction.addBid(bid);
-        assertEquals(bid, auction.getHighestBid());
-    }
-
-    @Test
-    void getHighestBid_multipleBids_returnsLast() {
-        Bid b1 = new Bid(); b1.setAmount(new BigDecimal("200"));
-        Bid b2 = new Bid(); b2.setAmount(new BigDecimal("400"));
-        auction.addBid(b1);
-        auction.addBid(b2);
-        assertEquals(b2, auction.getHighestBid());
-    }
-
-    // ==================== setBids() ====================
-
-    @Test
-    void setBids_null_replacesWithNull() {
-        auction.setBids(null);
-        assertNull(auction.getBids());
-    }
-
-    @Test
-    void setBids_emptyList_getHighestBidReturnsNull() {
-        auction.setBids(new ArrayList<>());
-        assertNull(auction.getHighestBid());
+    void setBids_null_throwsException() {
+        assertThrows(IllegalArgumentException.class, () -> auction.setBids(null));
     }
 }

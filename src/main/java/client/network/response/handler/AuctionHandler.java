@@ -3,6 +3,8 @@ package client.network.response.handler;
 import client.controller.*;
 import client.controller.AdminManageProductController;
 
+import client.manager.AuctionHistoryManager;
+import client.manager.AuctionStateManager;
 import client.manager.ControllerRegistry;
 import client.network.ClientSocket;
 import client.network.response.parser.AuctionParser;
@@ -19,6 +21,7 @@ import javafx.collections.ObservableList;
 import javafx.stage.Stage;
 
 import model.Bid;
+import model.ParticipationStatus;
 
 public class AuctionHandler {
 
@@ -58,7 +61,30 @@ public class AuctionHandler {
 
     // ===== JOINED AUCTIONS =====
     public static void joinedAuctions(String data) {
-        UserAuctionHistoryController ctrl = ControllerRegistry.get(UserAuctionHistoryController.class);
+
+        var auctions = AuctionParser.parseList(data);
+
+        AuctionHistoryManager.addAuctions(auctions);
+
+        for (var auction : auctions) {
+
+            ParticipationStatus current =
+                    AuctionStateManager.getParticipation(
+                            auction.getAuction_id()
+                    );
+
+            if (current == ParticipationStatus.NOT_JOINED
+                    || current == ParticipationStatus.LEFT) {
+
+                AuctionStateManager.setParticipation(
+                        auction.getAuction_id(),
+                        ParticipationStatus.JOINED
+                );
+            }
+        }
+
+        UserAuctionHistoryController ctrl =
+                ControllerRegistry.get(UserAuctionHistoryController.class);
 
         if (ctrl != null) {
             ctrl.renderHistory(
@@ -68,17 +94,15 @@ public class AuctionHandler {
     }
 
     public static void joinedAuctionsEmpty() {
-        UserAuctionHistoryController ctrl = ControllerRegistry.get(UserAuctionHistoryController.class);
-        if (ctrl != null) {
+        UserAuctionHistoryController ctrl =
+                ControllerRegistry.get(UserAuctionHistoryController.class);
 
-            ctrl.renderHistory(
-                    "LIST_JOINED_AUCTIONS_EMPTY"
-            );
+        if (ctrl != null) {
+            ctrl.renderHistory("LIST_JOINED_AUCTIONS_EMPTY");
         }
     }
 
     // ===== CREATED AUCTIONS =====
-
     public static void CreatedAuctions(String data) {
         System.out.println("RAW CREATED AUCTIONS: " + data);
         UserCreatedAuctionsController ctrl = ControllerRegistry.get(UserCreatedAuctionsController.class);
@@ -121,42 +145,48 @@ public class AuctionHandler {
     }
 
     public static void bidHistoryEmpty() {
-
         UserLiveAuctionController ctrl =
                 UserLiveAuctionController.getInstance();
-
         if (ctrl != null) {
-
-            ctrl.loadBidHistory(
-                    FXCollections.observableArrayList()
-            );
+            ctrl.loadBidHistory(FXCollections.observableArrayList());
         }
     }
 
     // ===== LIVE UPDATE =====
-
     public static void updatePrice(String raw) {
-
         UserLiveAuctionController ctrl =
                 UserLiveAuctionController.getInstance();
-
         if (ctrl != null) {
-
             ctrl.handleServerMessage(raw);
         }
     }
 
     // ===== JOIN AUCTION =====
+    public static void joinSuccess(String data) {
+        String[] parts = data.split("\\|");
+        if (parts.length > 0) {
+            String auctionId = parts[0];
+            ParticipationStatus current =
+                    AuctionStateManager.getParticipation(auctionId);
+            System.out.println(
+                    "JOIN_SUCCESS current status = "
+                            + AuctionStateManager.getParticipation(auctionId)
+            );
 
-    public static void joinSuccess(
-            String data
-    ) {
+            // Trong đoạn else của JOIN_SUCCESS, thêm check:
+            if (current != ParticipationStatus.NOT_JOINED
+                    && current != ParticipationStatus.WON
+                    && current != ParticipationStatus.LOST
+                    && current != ParticipationStatus.LEADING) { // ← thêm dòng này
+
+                AuctionStateManager.setParticipation(auctionId, ParticipationStatus.OUTBID);
+            }
+        }
 
         UserLiveAuctionController ctrl =
                 UserLiveAuctionController.getInstance();
 
         if (ctrl != null) {
-
             ctrl.handleServerMessage(
                     "JOIN_SUCCESS|" + data
             );
@@ -175,28 +205,21 @@ public class AuctionHandler {
     // ===== ITEMS =====
 
     public static void items(String data) {
-
         AdminManageProductController ctrl =
                 AdminManageProductController.getInstance();
-
         if (ctrl != null) {
-
             ObservableList<String[]> items =
                     FXCollections.observableArrayList(
                             ItemParser.parse(data, 5)
                     );
-
             ctrl.updateProducts(items);
         }
     }
 
     public static void itemsEmpty() {
-
         AdminManageProductController ctrl =
                 AdminManageProductController.getInstance();
-
         if (ctrl != null) {
-
             ctrl.updateProducts(
                     FXCollections.observableArrayList()
             );
@@ -204,34 +227,23 @@ public class AuctionHandler {
     }
 
     // ===== DELETE ITEM =====
-
     public static void deleteSuccess(Stage stage) {
-
         ToastUtils.show(
                 stage,
                 "Deleted!"
         );
-
         AdminManageProductController ctrl =
                 AdminManageProductController.getInstance();
-
         if (ctrl != null) {
-
             ctrl.handleReloadProducts();
         }
     }
 
-    public static void deleteFailed(
-            String data
-    ) {
-
-        AlertUtils.error(
-                "Delete failed: " + data
-        );
+    public static void deleteFailed(String data) {
+        AlertUtils.error("Delete failed: " + data);
     }
 
     // ===== UPDATE ITEM =====
-
     public static void updateSuccess(Stage stage) {
         ToastUtils.show(
                 stage,
@@ -248,5 +260,27 @@ public class AuctionHandler {
 
     public static void updateFailed(String data) {
         AlertUtils.error("Update failed: " + data);
+    }
+
+    public static void auctionStates(String data) {
+        String[] auctions = data.split("\\|");
+
+        for (int i = 0; i < auctions.length; i++) {
+            String[] parts = auctions[i].split(";");
+
+            if (parts.length < 2) continue;
+
+            String auctionId = parts[0];
+            ParticipationStatus status = ParticipationStatus.valueOf(parts[1]);
+
+            // THÊM: không override WON/LOST
+            ParticipationStatus current = AuctionStateManager.getParticipation(auctionId);
+            if (current == ParticipationStatus.WON
+                    || current == ParticipationStatus.LOST) {
+                continue;
+            }
+
+            AuctionStateManager.setParticipation(auctionId, status);
+        }
     }
 }

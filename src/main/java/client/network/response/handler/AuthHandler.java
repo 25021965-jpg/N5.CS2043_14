@@ -4,6 +4,7 @@ import client.controller.UserHomePageController;
 import client.controller.LoginController;
 import client.manager.ControllerRegistry;
 import client.manager.UserSession;
+import client.network.ClientSocket;
 import client.network.response.parser.UserParser;
 import client.util.AlertUtils;
 import client.util.NavigationUtils;
@@ -14,24 +15,34 @@ import model.Entity.User.Role;
 import model.Entity.User.User;
 
 public class AuthHandler {
-
     public static void loginSuccess(String data, Stage stage) {
         User user = UserParser.parse(data);
         UserSession.setCurrentUser(user);
-
         if (user == null) return;
-
         ToastUtils.show(stage, "Welcome " + user.getFullname() + "!");
 
         if (user.getRole() == Role.ADMIN) {
-            NavigationUtils.switchScene(stage, "/fxml/adminManageUser-view.fxml", "Admin Dashboard");
+            NavigationUtils.switchScene(
+                    stage,
+                    "/fxml/adminManageUser-view.fxml",
+                    "Admin Dashboard"
+            );
         } else {
-            NavigationUtils.switchScene(stage, "/fxml/userHomePage-view.fxml", "Home");
+            NavigationUtils.switchScene(
+                    stage,
+                    "/fxml/userHomePage-view.fxml",
+                    "Home"
+            );
 
             Platform.runLater(() -> {
-                UserHomePageController ctrl = ControllerRegistry.get(UserHomePageController.class);
+                UserHomePageController ctrl =
+                        ControllerRegistry.get(
+                                UserHomePageController.class
+                        );
 
-                if (ctrl != null) ctrl.setUser(user);
+                if (ctrl != null) {
+                    ctrl.setUser(user);
+                }
             });
         }
     }

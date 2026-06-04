@@ -1,10 +1,8 @@
 package client.controller;
 
-import client.manager.AutoBidManager;
-import client.manager.ControllerRegistry;
+import client.manager.*;
 import client.network.ClientSocket;
 import client.network.response.ResponseHandler;
-import client.manager.UserSession;
 import client.util.NavigationUtils;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -20,6 +18,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import model.*;
 import model.Entity.User.User;
+import model.Bid;
 
 import java.math.BigDecimal;
 import java.net.URL;
@@ -35,6 +34,8 @@ import java.util.logging.Logger;
 public class UserLiveAuctionController implements UserDataReceiver {
     private static final Logger LOGGER =
             Logger.getLogger(UserLiveAuctionController.class.getName());
+    public static String getGlobalAuctionId() { return globalAuctionId; }
+    public static String getGlobalWinnerName() { return globalWinnerName; }
 
     // ==================== FXML COMPONENTS ====================
     @FXML private Label currentTimeLabel;
@@ -331,10 +332,7 @@ public class UserLiveAuctionController implements UserDataReceiver {
             showError("You haven't joined any auction. Please refresh.");
             return;
         }
-        if (auctionId == null) {
-            showError("You haven't joined any auction. Please refresh and try again.");
-            return;
-        }
+
         if (client == null) {
             showError("Not connected to server");
             return;
@@ -420,7 +418,6 @@ public class UserLiveAuctionController implements UserDataReceiver {
         if (client != null) {
             client.sendLeave();
         }
-
         navigateToHome();
     }
 
@@ -475,18 +472,63 @@ public class UserLiveAuctionController implements UserDataReceiver {
 
             // ==================== UPDATE PRICE ====================
             if (msg.startsWith("UPDATE_PRICE")) {
+
                 String[] parts = msg.split("\\|");
+
                 if (parts.length >= 5) {
+
                     String newPrice = parts[2];
-                    String bidder = parts[3];
+                    String bidderUsername = parts[3];
                     String bidTime = parts[4];
                     String winnerId = parts.length >= 6 ? parts[5] : null;
+
+                    System.out.println("winnerId = " + winnerId);
+
+                    if (currentUser != null) {
+                        System.out.println("myUserId = " + currentUser.getUser_id());
+                        System.out.println("myUsername = " + currentUser.getUsername());
+                    }
+
+                    ParticipationStatus currentStatus =
+                            AuctionStateManager.getParticipation(auctionId);
+
+                    System.out.println(
+                            "UPDATE_PRICE -> auction="
+                                    + auctionId
+                                    + " winnerId="
+                                    + winnerId
+                                    + " currentStatus="
+                                    + AuctionStateManager.getParticipation(auctionId)
+                    );
+
+
+                    if (currentUser != null && winnerId != null) {
+
+                        if (winnerId.equals(currentUser.getUser_id())) {
+
+                            AuctionStateManager.setParticipation(
+                                    auctionId,
+                                    ParticipationStatus.LEADING
+                            );
+
+                        } else if (
+                                currentStatus == ParticipationStatus.JOINED
+                                        || currentStatus == ParticipationStatus.LEADING
+                                        || currentStatus == ParticipationStatus.OUTBID
+                        ) {
+
+                            AuctionStateManager.setParticipation(
+                                    auctionId,
+                                    ParticipationStatus.OUTBID
+                            );
+                        }
+                    }
 
                     boolean isDuplicate = false;
                     if (!bidHistoryList.isEmpty()) {
                         Bid lastBid = bidHistoryList.getFirst();
                         if (lastBid.getTimeString().equals(bidTime)
-                                && lastBid.getUsername().equals(bidder)
+                                && lastBid.getUsername().equals(bidderUsername)
                                 && lastBid.getAmount().compareTo(new BigDecimal(newPrice)) == 0) {
                             isDuplicate = true;
                             System.out.println("Duplicate bid ignored: " + bidTime);
@@ -496,10 +538,10 @@ public class UserLiveAuctionController implements UserDataReceiver {
                     currentPrice = new BigDecimal(newPrice);
                     currentPriceLabel.setText(formatPrice(currentPrice));
                     stepPriceLabel.setText(formatPrice(stepPrice));
-                    currentWinnerLabel.setText(bidder);
+                    currentWinnerLabel.setText(bidderUsername);
                     winnerTimeLabel.setText(bidTime);
 
-                    globalWinnerName = bidder;
+                    globalWinnerName = bidderUsername;
                     globalWinnerTime = bidTime;
 
                     if (myPendingBid != null && myPendingBid.compareTo(BigDecimal.ZERO) > 0
@@ -508,7 +550,7 @@ public class UserLiveAuctionController implements UserDataReceiver {
                         refundVirtualBalance();
                     }
 
-                    if (currentUser != null && bidder.equals(currentUser.getUsername())) {
+                    if (currentUser != null && bidderUsername.equals(currentUser.getUsername())) {
                         if (pendingBidAmount != null && pendingBidAmount.compareTo(BigDecimal.ZERO) > 0) {
                             deductVirtualBalance(pendingBidAmount);
                             pendingBidAmount = null;
@@ -520,7 +562,7 @@ public class UserLiveAuctionController implements UserDataReceiver {
 
                         Bid bid = new Bid();
                         bid.setTimeString(bidTime);
-                        bid.setUsername(bidder);
+                        bid.setUsername(bidderUsername);
                         bid.setAmount(currentPrice);
                         bid.setAmountString(String.format("%,.0f", currentPrice) + " USD");
                         bid.setStatus("LEADING");
@@ -593,6 +635,27 @@ public class UserLiveAuctionController implements UserDataReceiver {
                         currentWinnerLabel.setText(globalWinnerName);
                         winnerTimeLabel.setText(globalWinnerTime);
                         System.out.println("Restored winner: " + globalWinnerName + " at " + globalWinnerTime);
+                    }
+                }
+
+                if (currentUser != null
+                        && globalWinnerName != null
+                        && globalWinnerName.equals(currentUser.getUsername())) {
+
+                    AuctionStateManager.setParticipation(
+                            auctionId,
+                            ParticipationStatus.LEADING
+                    );
+
+                } else {
+                    ParticipationStatus current = AuctionStateManager.getParticipation(auctionId);
+
+                    if (current != ParticipationStatus.NOT_JOINED
+                            && current != ParticipationStatus.WON
+                            && current != ParticipationStatus.LOST
+                            && current != ParticipationStatus.LEADING) {  // ← thêm dòng này
+
+                        AuctionStateManager.setParticipation(auctionId, ParticipationStatus.OUTBID);
                     }
                 }
 
@@ -695,6 +758,22 @@ public class UserLiveAuctionController implements UserDataReceiver {
                 addStepBtn.setDisable(true);
                 maxBidBtn.setDisable(true);
                 showInfo("Auction has ended!");
+                if (currentUser != null
+                        && globalWinnerName != null
+                        && globalWinnerName.equals(currentUser.getUsername())) {
+
+                    AuctionStateManager.setParticipation(
+                            auctionId,
+                            ParticipationStatus.WON
+                    );
+
+                } else {
+
+                    AuctionStateManager.setParticipation(
+                            auctionId,
+                            ParticipationStatus.LOST
+                    );
+                }
                 return;
             }
 
@@ -780,6 +859,20 @@ public class UserLiveAuctionController implements UserDataReceiver {
 
             for (int i = 0; i < bidHistoryList.size(); i++) {
                 bidHistoryList.get(i).setStatus(i == 0 ? "LEADING" : "OUTBID");
+            }
+
+            // Cuối loadBidHistory, sau vòng for set status:
+            if (!bidHistoryList.isEmpty() && currentUser != null) {
+                Bid top = bidHistoryList.get(0);
+                if (top.getUsername().equals(currentUser.getUsername())) {
+                    AuctionStateManager.setParticipation(auctionId, ParticipationStatus.LEADING);
+                } else {
+                    boolean userHasBid = bidHistoryList.stream()
+                            .anyMatch(b -> b.getUsername().equals(currentUser.getUsername()));
+                    if (userHasBid) {
+                        AuctionStateManager.setParticipation(auctionId, ParticipationStatus.OUTBID);
+                    }
+                }
             }
 
             bidHistoryTable.refresh();
@@ -1034,5 +1127,16 @@ public class UserLiveAuctionController implements UserDataReceiver {
                 }
             }, 1000);
         });
+    }
+
+    public static void resetGlobalState() {
+        globalBidHistory.clear();
+        globalBidCounter = 0;
+        globalCurrentPrice = BigDecimal.ZERO;
+        globalWinnerName = null;
+        globalWinnerTime = null;
+        globalUserId = null;
+        globalAuctionId = null;
+        instance = null;
     }
 }

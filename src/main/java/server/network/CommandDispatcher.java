@@ -29,7 +29,6 @@ public class CommandDispatcher {
         return switch (cmd) {
 
             // ================= AUTH =================
-
             case LOGIN -> authHandler.handleLogin(data);
             case REGISTER -> authHandler.handleRegister(data);
             case FORGOT_PASSWORD -> authHandler.handleForgotPassword(data);
@@ -47,6 +46,7 @@ public class CommandDispatcher {
             case LIST_JOINED_AUCTIONS -> auctionHandler.handleListJoinedAuctions();
             case SET_AUTO_BID -> auctionHandler.handleSetAutoBid(data);
             case CANCEL_AUTO_BID -> auctionHandler.handleCancelAutoBid(data);
+            case LOAD_AUCTION_STATES -> auctionHandler.handleLoadAuctionStates();
 
             // ================= FAVOURITE =================
 

@@ -1,5 +1,8 @@
 package client.controller;
 
+import client.manager.AuctionHistoryManager;
+import client.manager.AuctionStateManager;
+import client.manager.FavouriteManager;
 import client.manager.UserSession;
 import client.network.ClientSocket;
 import client.util.AlertUtils;
@@ -158,6 +161,12 @@ public class UserSidebarController {
 
         if (socket != null) {
             socket.logout();
+            AuctionStateManager.clearAll();
+            AuctionHistoryManager.clearAll();
+            FavouriteManager.clear();
+            UserLiveAuctionController.resetGlobalState();
+
+            UserSession.setCurrentUser(null);
         }
 
         UserSession.setCurrentUser(null);

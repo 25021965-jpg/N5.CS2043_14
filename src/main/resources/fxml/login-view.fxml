@@ -113,7 +113,7 @@
       <Hyperlink
               fx:id="forgotPasswordLink"
               text="Forgot password?"
-              onAction="#goforgotPass"
+              onAction="#goToForgotPass"
               onMouseEntered="#underlineLink"
               onMouseExited="#removeUnderlineLink"
               style="-fx-text-fill: #D4AF37;

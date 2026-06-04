@@ -39,7 +39,6 @@ public class LoginController extends BaseController {
     private final ClientSocket client = ClientSocket.getInstance();
 
     // ==================== INITIALIZE ====================
-
     @FXML
     public void initialize() {
         System.out.println("LoginController initialized");
@@ -168,7 +167,7 @@ public class LoginController extends BaseController {
     }
 
     @FXML
-    private void goforgotPass(ActionEvent event) {
+    private void goToForgotPass(ActionEvent event) {
         switchScene(
                 event,
                 "/fxml/forgotPass-view.fxml",

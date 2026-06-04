@@ -24,7 +24,7 @@ public class AuctionCardFactory {
 
             // IMPORTANT: bind controller + id
             root.getProperties().put("controller", controller);
-            root.setUserData(auction.getAuction_id());
+            root.setUserData(auction.getSeller());
 
             controller.setClient(client);
             controller.setData(auction);

@@ -37,7 +37,7 @@ class FavouriteManagerTest {
     void addFavourite_sameItemTwice_onlyStoredOnce() {
         FavouriteManager.addFavourite("item-1");
         FavouriteManager.addFavourite("item-1");
-        assertEquals(1, FavouriteManager.favouriteItemIds.size());
+        assertEquals(1, FavouriteManager.getFavouriteItemIds().size());
     }
 
     // ==================== removeFavourite ====================
@@ -61,7 +61,7 @@ class FavouriteManagerTest {
         FavouriteManager.addFavourite("item-1");
         FavouriteManager.addFavourite("item-2");
         FavouriteManager.clear();
-        assertTrue(FavouriteManager.favouriteItemIds.isEmpty());
+        assertTrue(FavouriteManager.getFavouriteItemIds().isEmpty());
     }
 
     // ==================== loadFromResponse ====================
@@ -70,14 +70,14 @@ class FavouriteManagerTest {
     void loadFromResponse_null_clearsSet() {
         FavouriteManager.addFavourite("item-old");
         FavouriteManager.loadFromResponse(null);
-        assertTrue(FavouriteManager.favouriteItemIds.isEmpty());
+        assertTrue(FavouriteManager.getFavouriteItemIds().isEmpty());
     }
 
     @Test
     void loadFromResponse_blank_clearsSet() {
         FavouriteManager.addFavourite("item-old");
         FavouriteManager.loadFromResponse("   ");
-        assertTrue(FavouriteManager.favouriteItemIds.isEmpty());
+        assertTrue(FavouriteManager.getFavouriteItemIds().isEmpty());
     }
 
     @Test

@@ -1,9 +1,6 @@
 package client.controller;
 
-import client.manager.ControllerRegistry;
-import client.manager.FavouriteManager;
-import client.manager.UserSession;
-import client.manager.ViewCache;
+import client.manager.*;
 import client.network.ClientSocket;
 import client.network.response.ResponseHandler;
 import client.util.AlertUtils;
@@ -97,6 +94,21 @@ public class UserHomePageController extends BaseController {
     public void setUser(User user) {
         UserSession.setCurrentUser(user);
     }
+    private boolean extraDataLoaded = false;
+
+    private void loadExtraDataOnce() {
+        if (extraDataLoaded) {
+            return;
+        }
+
+        extraDataLoaded = true;
+        FavouriteManager.loadFavourite(client);
+        client.sendRequest(
+                "LIST_JOINED_AUCTIONS|" +
+                        UserSession.getCurrentUser().getUser_id()
+        );
+        client.sendRequest("LOAD_AUCTION_STATES");
+    }
 
     public void updateAuctionList(List<Auction> auctions) {
         if (!Platform.isFxApplicationThread()) {
@@ -108,9 +120,11 @@ public class UserHomePageController extends BaseController {
         if (isSameData(auctionList, auctions)) {
             return;
         }
+
         auctionList.clear();
         auctionList.addAll(auctions);
         applyFilters();
+        loadExtraDataOnce();
     }
 
     private boolean isSameData(
@@ -268,11 +282,7 @@ public class UserHomePageController extends BaseController {
         refreshGrid(filtered);
     }
 
-    private boolean matchesSearch(
-            Auction auction,
-            String keyword
-    ) {
-
+    private boolean matchesSearch(Auction auction, String keyword) {
         if (auction == null
                 || auction.getItem() == null
                 || auction.getItem().getName() == null) {
@@ -302,16 +312,18 @@ public class UserHomePageController extends BaseController {
             return fav1 ? -1 : 1;
         }
 
-        boolean active1 =
-                a1.getStatus().name().equals("ACTIVE");
+        int priority1 = getPriority(a1);
+        int priority2 = getPriority(a2);
 
-        boolean active2 =
-                a2.getStatus().name().equals("ACTIVE");
+        return Integer.compare(priority1, priority2);
+    }
 
-        if (active1 != active2) {
-            return active1 ? -1 : 1;
-        }
-        return 0;
+    private int getPriority(Auction auction) {
+        return switch (auction.getStatus()) {
+            case ACTIVE -> 0;
+            case UPCOMING -> 1;
+            default -> 2;
+        };
     }
 
     private boolean matchesCategory(Auction auction) {
@@ -447,6 +459,10 @@ public class UserHomePageController extends BaseController {
         }
         ViewCache.clear();
         UserSession.setCurrentUser(null);
+        AuctionStateManager.clearAll();
+        FavouriteManager.clear();
+        AuctionHistoryManager.clearAll();
+        UserLiveAuctionController.resetGlobalState();
         navigate(
                 getStage(event),
                 "/fxml/login-view.fxml",

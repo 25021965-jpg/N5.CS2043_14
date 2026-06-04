@@ -34,6 +34,7 @@
                     left="30"
                     top="20"/>
          </padding>
+
          <Label
                  fx:id="lblName"
                  text="Item Information"
@@ -44,6 +45,7 @@
                        size="34.0"/>
             </font>
          </Label>
+
       </VBox>
    </top>
 
@@ -71,12 +73,12 @@
                  maxHeight="500"
                  maxWidth="500"
                  style="
-        -fx-background-color: #1F1F1F;
-        -fx-background-radius: 18;
-        -fx-border-radius: 18;
-        -fx-border-color: #D4AF37;
-        -fx-border-width: 2;
-    ">
+                     -fx-background-color: #1F1F1F;
+                     -fx-background-radius: 18;
+                     -fx-border-radius: 18;
+                     -fx-border-color: #D4AF37;
+                     -fx-border-width: 2;
+                 ">
 
             <ImageView
                     fx:id="imgItem"
@@ -90,16 +92,14 @@
                     text="❮"
                     StackPane.alignment="CENTER_LEFT"
                     style="
-                            -fx-background-color: rgba(0,0,0,0.5);
-                            -fx-text-fill: white;
-                            -fx-background-radius: 50;
-                            -fx-cursor: hand;
-                        ">
-
+                        -fx-background-color: rgba(0,0,0,0.5);
+                        -fx-text-fill: white;
+                        -fx-background-radius: 50;
+                        -fx-cursor: hand;
+                    ">
                <StackPane.margin>
                   <Insets left="10"/>
                </StackPane.margin>
-
             </Button>
 
             <!-- NEXT -->
@@ -110,16 +110,16 @@
                     text="❯"
                     StackPane.alignment="CENTER_RIGHT"
                     style="
-                            -fx-background-color: rgba(0,0,0,0.5);
-                            -fx-text-fill: white;
-                            -fx-background-radius: 50;
-                            -fx-cursor: hand;
-                        ">
-
+                        -fx-background-color: rgba(0,0,0,0.5);
+                        -fx-text-fill: white;
+                        -fx-background-radius: 50;
+                        -fx-cursor: hand;
+                    ">
                <StackPane.margin>
                   <Insets right="10"/>
                </StackPane.margin>
             </Button>
+
          </StackPane>
       </VBox>
    </left>
@@ -127,15 +127,17 @@
    <!-- ================= CENTER ================= -->
    <center>
       <VBox alignment="CENTER">
+
          <Region VBox.vgrow="ALWAYS"/>
+
          <VBox spacing="22">
 
             <!-- DESCRIPTION -->
-            <VBox spacing="22"
-            >
+            <VBox spacing="12">
 
-               <Label text="DESCRIPTION"
-                      textFill="#D4AF37">
+               <Label
+                       text="DESCRIPTION"
+                       textFill="#D4AF37">
                   <font>
                      <Font name="Arial Bold" size="18"/>
                   </font>
@@ -151,16 +153,17 @@
                        wrapText="true"
                        VBox.vgrow="ALWAYS"
                        style="
-                            -fx-control-inner-background: #1F1F1F;
-                            -fx-text-fill: white;
-                            -fx-font-size: 14px;
-                            -fx-background-radius: 12;
-                            -fx-border-radius: 12;
-                            -fx-border-color: #333333;
-                            -fx-background-insets: 0;
-                        "/>
+                           -fx-control-inner-background: #1F1F1F;
+                           -fx-text-fill: white;
+                           -fx-font-size: 14px;
+                           -fx-background-radius: 12;
+                           -fx-border-radius: 12;
+                           -fx-border-color: #333333;
+                           -fx-background-insets: 0;
+                       "/>
 
             </VBox>
+
             <padding>
                <Insets
                        top="20"
@@ -170,18 +173,16 @@
             </padding>
 
             <!-- AUCTION INFO -->
-
-            <VBox spacing="18"
-                  prefWidth="700"
-                  maxWidth="Infinity"
-                  style="
+            <VBox
+                    prefWidth="700"
+                    maxWidth="Infinity"
+                    style="
                         -fx-background-color: #1A1A1A;
                         -fx-background-radius: 16;
                         -fx-border-radius: 16;
                         -fx-border-color: #2C2C2C;
                     ">
 
-               <!-- content -->
                <padding>
                   <Insets
                           top="20"
@@ -190,61 +191,83 @@
                           left="40"/>
                </padding>
 
+               <!-- TITLE -->
                <Label
                        text="AUCTION INFORMATION"
                        textFill="#D4AF37">
-
                   <font>
-                     <Font
-                             name="Arial Bold"
-                             size="18"/>
+                     <Font name="Arial Bold" size="18"/>
                   </font>
-
+                  <VBox.margin>
+                     <Insets bottom="12"/>
+                  </VBox.margin>
                </Label>
 
-               <Label
-                       fx:id="lblCurrentPrice"
-                       text="Current Price:"
-                       textFill="WHITE">
+               <!-- ALL INFO ROWS — same font, same spacing -->
+               <VBox spacing="14" alignment="CENTER_LEFT">
 
-                  <font>
-                     <Font size="16"/>
-                  </font>
+                  <!-- STATUS BADGE -->
+                  <Label
+                          fx:id="lblStatusBadge"
+                          text="Status: Leading"
+                          textFill="white">
+                     <font>
+                        <Font size="17"/>
+                     </font>
+                  </Label>
 
-               </Label>
+                  <!-- PAYMENT STATUS -->
+                  <Label
+                          fx:id="lblPaymentStatus"
+                          text="Status: Unpaid"
+                          visible="false"
+                          managed="false">
+                     <font>
+                        <Font size="16"/>
+                     </font>
+                  </Label>
 
-               <Label
-                       fx:id="lblStep"
-                       text="Min Increment:"
-                       textFill="WHITE">
+                  <!-- CURRENT PRICE -->
+                  <Label
+                          fx:id="lblCurrentPrice"
+                          text="Current Price:"
+                          textFill="WHITE">
+                     <font>
+                        <Font size="16"/>
+                     </font>
+                  </Label>
 
-                  <font>
-                     <Font size="16"/>
-                  </font>
+                  <!-- MIN INCREMENT -->
+                  <Label
+                          fx:id="lblStep"
+                          text="Min Increment:"
+                          textFill="WHITE">
+                     <font>
+                        <Font size="16"/>
+                     </font>
+                  </Label>
 
-               </Label>
+                  <!-- START TIME -->
+                  <Label
+                          fx:id="lblStart"
+                          text="Start Time:"
+                          textFill="WHITE">
+                     <font>
+                        <Font size="16"/>
+                     </font>
+                  </Label>
 
-               <Label
-                       fx:id="lblStart"
-                       text="Start Time:"
-                       textFill="WHITE">
+                  <!-- END TIME -->
+                  <Label
+                          fx:id="lblEnd"
+                          text="End Time:"
+                          textFill="WHITE">
+                     <font>
+                        <Font size="16"/>
+                     </font>
+                  </Label>
 
-                  <font>
-                     <Font size="16"/>
-                  </font>
-
-               </Label>
-
-               <Label
-                       fx:id="lblEnd"
-                       text="End Time:"
-                       textFill="WHITE">
-
-                  <font>
-                     <Font size="16"/>
-                  </font>
-
-               </Label>
+               </VBox>
 
             </VBox>
 
@@ -256,19 +279,17 @@
    </center>
 
    <!-- ================= BOTTOM ================= -->
-
    <bottom>
-
       <HBox
               alignment="CENTER"
               minHeight="90"
               prefHeight="90"
               spacing="20"
               style="
-                    -fx-background-color: #1A1A1A;
-                    -fx-border-color: #2C2C2C;
-                    -fx-border-width: 2 0 0 0;
-                ">
+                  -fx-background-color: #1A1A1A;
+                  -fx-border-color: #2C2C2C;
+                  -fx-border-width: 2 0 0 0;
+              ">
 
          <padding>
             <Insets
@@ -283,27 +304,24 @@
                  minWidth="140"
                  text="BACK"
                  style="
-                        -fx-background-color: transparent;
-                        -fx-text-fill: #D4AF37;
-                        -fx-border-color: #D4AF37;
-                        -fx-border-width: 2;
-                        -fx-border-radius: 12;
-                        -fx-background-radius: 12;
-                        -fx-cursor: hand;
-                    ">
-
+                     -fx-background-color: transparent;
+                     -fx-text-fill: #D4AF37;
+                     -fx-border-color: #D4AF37;
+                     -fx-border-width: 2;
+                     -fx-border-radius: 12;
+                     -fx-background-radius: 12;
+                     -fx-cursor: hand;
+                 ">
             <font>
                <Font
                        name="Berlin Sans FB Demi Bold"
                        size="15"/>
             </font>
-
          </Button>
 
          <Region HBox.hgrow="ALWAYS"/>
 
          <!-- FAVOURITE -->
-
          <Button
                  fx:id="btnFavourite"
                  onAction="#handleAddToFavourite"
@@ -311,25 +329,22 @@
                  prefWidth="210"
                  text="Add to favourite"
                  style="
-                        -fx-background-color: transparent;
-                        -fx-text-fill: #D4AF37;
-                        -fx-border-color: #D4AF37;
-                        -fx-border-width: 2;
-                        -fx-border-radius: 12;
-                        -fx-background-radius: 12;
-                        -fx-cursor: hand;
-                    ">
-
+                     -fx-background-color: transparent;
+                     -fx-text-fill: #D4AF37;
+                     -fx-border-color: #D4AF37;
+                     -fx-border-width: 2;
+                     -fx-border-radius: 12;
+                     -fx-background-radius: 12;
+                     -fx-cursor: hand;
+                 ">
             <font>
                <Font
                        name="Berlin Sans FB Demi Bold"
                        size="15"/>
             </font>
-
          </Button>
 
          <!-- JOIN -->
-
          <Button
                  fx:id="btnJoinAuction"
                  onAction="#handleJoinAuction"
@@ -337,21 +352,21 @@
                  minWidth="180"
                  text="JOIN AUCTION"
                  style="
-                        -fx-background-color: #D4AF37;
-                        -fx-text-fill: black;
-                        -fx-font-weight: bold;
-                        -fx-background-radius: 12;
-                        -fx-font-size: 15px;
-                        -fx-cursor: hand;
-                    ">
-
+                     -fx-background-color: #D4AF37;
+                     -fx-text-fill: black;
+                     -fx-font-weight: bold;
+                     -fx-background-radius: 12;
+                     -fx-font-size: 15px;
+                     -fx-cursor: hand;
+                 ">
             <font>
                <Font
                        name="Berlin Sans FB Demi Bold"
                        size="15"/>
             </font>
-
          </Button>
+
       </HBox>
    </bottom>
+
 </BorderPane>

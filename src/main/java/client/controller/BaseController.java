@@ -86,16 +86,13 @@ public abstract class BaseController
     }
 
     // ==================== TEXT ====================
-
     protected String safeTrim(String text) {
-
         return text == null
                 ? ""
                 : text.trim();
     }
 
     // ==================== UI THREAD ====================
-
     protected void runUI(Runnable action) {
         if (action == null) {
             return;
@@ -105,6 +102,11 @@ public abstract class BaseController
         } else {
             javafx.application.Platform.runLater(action);
         }
+    }
+
+    // cleanup hook
+    public void onDestroy() {
+        // default: do nothing
     }
 }
 

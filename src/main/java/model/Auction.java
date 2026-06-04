@@ -33,7 +33,15 @@ public class Auction implements Serializable {
 
     private int extendCount = 0;
 
+    private String currentLeaderId;
 
+    public String getCurrentLeaderId() {
+        return currentLeaderId;
+    }
+
+    public void setCurrentLeaderId(String currentLeaderId) {
+        this.currentLeaderId = currentLeaderId;
+    }
 
     public Auction() {}
 
@@ -80,16 +88,11 @@ public class Auction implements Serializable {
 
 
     // Bid
-
     public void addBid(Bid bid) {
-
         if (bid == null)
             return;
-
         bids.add(bid);
-
-        currentPrice =
-                bid.getAmount();
+        currentPrice = bid.getAmount();
     }
 
 

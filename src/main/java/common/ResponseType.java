@@ -35,6 +35,9 @@ public enum ResponseType {
     BID_HISTORY_SUCCESS,
     BID_HISTORY_EMPTY,
 
+    AUCTION_STATES_SUCCESS,
+    AUCTION_STATES_FAILED,
+
     // ================= USER FAVOURITE =================
     LIST_FAVOURITES_SUCCESS,
     LIST_FAVOURITES_EMPTY,

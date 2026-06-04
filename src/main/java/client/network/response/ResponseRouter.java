@@ -1,12 +1,16 @@
 package client.network.response;
 
 import client.controller.UserLiveAuctionController;
+import client.manager.AuctionStateManager;
 import client.manager.ControllerRegistry;
+import client.manager.UserSession;
 import client.network.response.handler.*;
 import client.util.AlertUtils;
 import common.ResponseType;
 import javafx.application.Platform;
 import javafx.stage.Stage;
+import model.ParticipationStatus;
+import model.Entity.User.User;
 
 public class ResponseRouter {
 
@@ -26,19 +30,43 @@ public class ResponseRouter {
             return;
         }
 
-        // THÊM XỬ LÝ YOU_WON
         if (raw.startsWith("YOU_WON")) {
-            Platform.runLater(() -> ControllerRegistry.get(UserLiveAuctionController.class).handleServerMessage(raw));
+            // Set WON state trực tiếp, không cần controller
+            String[] parts = raw.split("\\|");
+            // YOU_WON|auctionId|finalPrice|winnerUsername (tuỳ format server)
+            // Cần biết auctionId → xem format server gửi
+            Platform.runLater(() -> {
+                UserLiveAuctionController ctrl =
+                        ControllerRegistry.get(UserLiveAuctionController.class);
+                if (ctrl != null) ctrl.handleServerMessage(raw);
+            });
             return;
         }
 
-        // THÊM XỬ LÝ AUCTION_ENDED
+        // Trong ResponseRouter
         if (raw.startsWith("AUCTION_ENDED")) {
-            Platform.runLater(() -> ControllerRegistry.get(UserLiveAuctionController.class).handleServerMessage(raw));
+            Platform.runLater(() -> {
+                // Set state dựa vào globalAuctionId và globalWinnerName
+                String auctionId = UserLiveAuctionController.getGlobalAuctionId();
+                String winnerName = UserLiveAuctionController.getGlobalWinnerName();
+                User currentUser = UserSession.getCurrentUser();
+
+                if (auctionId != null && currentUser != null && winnerName != null) {
+                    ParticipationStatus status =
+                            winnerName.equals(currentUser.getUsername())
+                                    ? ParticipationStatus.WON
+                                    : ParticipationStatus.LOST;
+                    AuctionStateManager.setParticipation(auctionId, status);
+                }
+
+                UserLiveAuctionController ctrl =
+                        ControllerRegistry.get(UserLiveAuctionController.class);
+                if (ctrl != null) ctrl.handleServerMessage(raw);
+            });
             return;
         }
 
-        // THÊM XỬ LÝ TIME_EXTENDED  ← thêm vào đây
+        // THÊM XỬ LÝ TIME_EXTENDED
         if (raw.startsWith("TIME_EXTENDED")) {
             Platform.runLater(() -> ControllerRegistry.get(UserLiveAuctionController.class).handleServerMessage(raw));
             return;
@@ -261,6 +289,11 @@ public class ResponseRouter {
 
             case CANCEL_AUCTION_FAILED ->
                     AdminHandler.cancelFailed(data);
+
+            case AUCTION_STATES_SUCCESS ->
+                    AuctionHandler.auctionStates(data);
+            case AUCTION_STATES_FAILED ->
+                    System.out.println("Load auction states failed");
 
 
             // ===== SYSTEM =====

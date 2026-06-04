@@ -16,6 +16,7 @@ public enum Command {
     BID,
     GET_BID_HISTORY,
     GET_VIRTUAL_BALANCE,
+    LOAD_AUCTION_STATES,
 
     // ================= USER PROFILE =================
     GET_PROFILE,
