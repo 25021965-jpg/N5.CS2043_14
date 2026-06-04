@@ -112,6 +112,25 @@ public class AuthHandler extends BaseHandler {
         return "LOGOUT_SUCCESS";
     }
 
+    // ==================== DELETE ACCOUNT ====================
+
+    public String handleDeleteAccount(String[] data) {
+
+        if (currentUser == null) return "DELETE_USER_FAILED|Not logged in";
+
+        String userId = currentUser.getUser_id();
+
+        boolean ok = server.dao.UserDAO.deleteUser(userId);
+
+        if (ok) {
+            // After deletion, clear currentUser reference
+            currentUser = null;
+            return "DELETE_USER_SUCCESS";
+        } else {
+            return "DELETE_USER_FAILED|Database error";
+        }
+    }
+
     // ==================== CREATE AUCTION ====================
 
     public String handleCreate(String[] data) {

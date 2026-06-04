@@ -28,6 +28,9 @@ public enum Command {
     // PAYMENT
     PAY_AUCTION,
 
+    // DELETE OWN ACCOUNT
+    DELETE_ACCOUNT,
+
     // ================= USER FAVOURITE =================
     ADD_FAVOURITE,
     REMOVE_FAVOURITE,

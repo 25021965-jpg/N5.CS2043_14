@@ -127,6 +127,8 @@ public class ResponseRouter {
 
             case LOGIN_SUCCESS ->
                     AuthHandler.loginSuccess(data, stage);
+            case LOGOUT_SUCCESS ->
+                    client.network.response.handler.AuthHandler.logoutSuccess(stage);
 
             case LOGIN_FAILED ->
                     AuthHandler.loginFailed();

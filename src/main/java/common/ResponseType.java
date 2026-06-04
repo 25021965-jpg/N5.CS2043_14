@@ -7,6 +7,7 @@ public enum ResponseType {
     // ================= AUTH =================
     LOGIN_SUCCESS,
     LOGIN_FAILED,
+    LOGOUT_SUCCESS,
 
     REGISTER_SUCCESS,
     REGISTER_FAILED,

@@ -315,6 +315,10 @@ public class ClientSocket {
         sendMessage("PAY_AUCTION|" + auctionId);
     }
 
+    public void sendDeleteAccount(String userId) {
+        sendMessage("DELETE_ACCOUNT|" + userId);
+    }
+
     // CONNECTION
     public void logout() {
         send(Command.LOGOUT);

@@ -66,6 +66,7 @@ public class CommandDispatcher {
 
             case LIST_USERS -> adminHandler.handleListUsers();
             case DELETE_USER -> adminHandler.handleDeleteUser(data);
+            case DELETE_ACCOUNT -> authHandler.handleDeleteAccount(data);
             case UPDATE_USER_ROLE -> adminHandler.handleUpdateUserRole(data);
             case LIST_ITEMS -> adminHandler.handleListItems();
             case DELETE_ITEM -> adminHandler.handleDeleteItem(data);
