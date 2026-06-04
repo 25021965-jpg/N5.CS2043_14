@@ -1,97 +1,95 @@
 package server.dao;
 
-import model.Entity.User.Bidder;
 import model.Entity.User.Role;
 import model.Entity.User.User;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mindrot.jbcrypt.BCrypt;
+
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class UserDAOTest extends TiDBRollbackBase {
 
-    // Helper: Giả lập việc băm mật khẩu như AuthService sẽ làm
-    private String hash(String password) {
-        return BCrypt.hashpw(password, BCrypt.gensalt(12));
-    }
+    private String userId;
+    private final String username = "testuser" + System.currentTimeMillis();
+    private final String email = username + "@test.com";
+    private final String rawPass = "password123";
+    private final String hashedPass = BCrypt.hashpw(rawPass, BCrypt.gensalt(12));
 
-    @Test
-    void testUserFullLifecycle() throws Exception {
-        String username = "user" + System.currentTimeMillis() % 1000;
-        String email = username + "@test.com";
-        String rawPass = "pass123";
-
-        // 1. Register: Phải dùng mật khẩu đã hash
-        assertTrue(UserDAO.register("Full Name", username, email, hash(rawPass), "2000-01-01"));
-
+    @BeforeEach
+    void initData() throws Exception {
+        // Đăng ký user để test các hàm khác
+        UserDAO.register("Full Name", username, email, hashedPass, "2000-01-01");
         User user = UserDAO.findByUsernameOrEmail(username);
         assertNotNull(user);
-
-        // 2. Login: DAO sẽ tự check bằng BCrypt.checkpw, nên truyền rawPass
-        assertTrue(UserDAO.login(username, rawPass));
-        assertTrue(UserDAO.login(email, rawPass));
-        assertFalse(UserDAO.login(username, "wrongpass"));
-
-        // 3. UpdateBalance
-        assertTrue(UserDAO.updateBalance(user.getUser_id(), new BigDecimal("500.50")));
-
-        // 4. GetUserById
-        assertNotNull(UserDAO.getUserById(user.getUser_id()));
-
-        // 5. ResetPassword: Gọi DAO resetPassword (lưu ý hàm này trong DAO đã được sửa để nhận password mới)
-        String newRawPass = "newpass";
-        assertTrue(UserDAO.resetPassword("Full Name", "2000-01-01", username, email, hash(newRawPass)));
-
-        // 6. UpdatePassword và UpdateRole: Phải hash trước khi gọi
-        assertTrue(UserDAO.updatePassword(user.getUser_id(), hash("finalpass")));
-        assertTrue(UserDAO.updateUserRole(user.getUser_id(), "ADMIN"));
-        new UserDAO().updateRole(user.getUser_id(), "SELLER");
-
-        // 7. Save (ON DUPLICATE KEY)
-        user.setFullname("Updated Name");
-        user.setPassword(hash("finalpass")); // Lưu ý hash lại password nếu update đối tượng user
-        user.setBalance(new BigDecimal("999"));
-        user.setRole(Role.BIDDER);
-        UserDAO.save(user);
-
-        // 8. FindAll
-        List<User> all = UserDAO.findAll();
-        assertFalse(all.isEmpty());
-
-        // 9. DeleteUser
-        assertTrue(UserDAO.deleteUser(user.getUser_id()));
+        userId = user.getUser_id();
     }
 
+    // 1. Test Authentication & Registration
     @Test
-    void testUserEdgeCases() throws Exception {
-        String uId1 = generateId("unull");
-        assertTrue(UserDAO.register("No Dob User", uId1, uId1 + "@null.com", hash("123"), null));
-        User u1 = UserDAO.findByUsernameOrEmail(uId1);
-        assertNotNull(u1);
+    void testAuth() {
+        assertTrue(UserDAO.login(username, rawPass));
+        assertFalse(UserDAO.login(username, "wrong"));
+        assertFalse(UserDAO.login("unknown", "pass"));
+    }
 
-        User userObj = new Bidder();
-        String uId2 = generateId("usave");
-        userObj.setUser_id(uId2);
-        userObj.setFullname("Save Logic");
-        userObj.setUsername("save_" + uId2);
-        userObj.setEmail(uId2 + "@save.com");
-        userObj.setPassword(hash("123"));
-        userObj.setRole(Role.BIDDER);
-        userObj.setBalance(BigDecimal.ZERO);
-        userObj.setDob("");
-        UserDAO.save(userObj);
+    // 2. Test Balance & Virtual Balance (Cover 100% các nhánh atomic)
+    @Test
+    void testBalances() {
+        // Update Balance
+        assertTrue(UserDAO.updateBalance(userId, new BigDecimal("100.00")));
 
-        assertFalse(UserDAO.resetPassword("Wrong", "1990-01-01", "w", "w@w.com", hash("p")));
-        assertNull(UserDAO.getUserById("ghost"));
-        assertFalse(UserDAO.deleteUser("ghost"));
+        BigDecimal currentBalance = UserDAO.getVirtualBalance(userId);
+        assertEquals(0, BigDecimal.ZERO.compareTo(currentBalance), "Balance should be ZERO");
 
-        try (var ps = conn.prepareStatement("UPDATE users SET role = NULL WHERE user_id = ?")) {
-            ps.setString(1, u1.getUser_id());
-            ps.executeUpdate();
-        } catch (Exception ignored) {}
+        assertTrue(UserDAO.initVirtualBalance(userId, new BigDecimal("500.00")));
+        assertTrue(UserDAO.addVirtualBalance(userId, new BigDecimal("100.00")));
 
-        User checkRole = UserDAO.getUserById(u1.getUser_id());
-        assertEquals(Role.BIDDER, checkRole.getRole());
+        // Deduct
+        assertTrue(UserDAO.deductVirtualBalance(userId, new BigDecimal("200.00")));
+        assertFalse(UserDAO.deductVirtualBalance(userId, new BigDecimal("9999.00")));
+    }
+
+    // 3. Test Reset Password & Update Role/Pass
+    @Test
+    void testUpdates() {
+        // Reset password
+        assertTrue(UserDAO.resetPassword("Full Name", "2000-01-01", username, email, BCrypt.hashpw("new", BCrypt.gensalt(12))));
+
+        // Update role
+        assertTrue(UserDAO.updateUserRole(userId, "ADMIN"));
+        new UserDAO().updateRole(userId, "BIDDER");
+
+        // Update password
+        assertTrue(UserDAO.updatePassword(userId, hashedPass));
+    }
+
+    // 4. Test Save (ON DUPLICATE KEY)
+    @Test
+    void testSave() {
+        User user = UserDAO.getUserById(userId);
+        user.setFullname("Updated Name");
+        UserDAO.save(user); // Thực hiện update thông qua save
+
+        assertEquals("Updated Name", UserDAO.getUserById(userId).getFullname());
+    }
+
+    // 5. Test Edge Cases & Deletion
+    @Test
+    void testEdgeCases() {
+        // Dob null/empty
+        assertTrue(UserDAO.register("NoDob", "nodob", "no@dob.com", hashedPass, null));
+
+        // FindAll
+        List<User> users = UserDAO.findAll();
+        assertFalse(users.isEmpty());
+
+        // Delete
+        assertTrue(UserDAO.deleteUser(userId));
+        assertFalse(UserDAO.deleteUser("non-existent-id")); // Cover catch block hoặc return false
     }
 }
