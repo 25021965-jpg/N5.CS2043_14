@@ -99,10 +99,10 @@ class AuthServiceTest {
     void resetPassword_success_returnsTrue() {
         try (MockedStatic<UserDAO> userDao = Mockito.mockStatic(UserDAO.class)) {
             userDao.when(() -> UserDAO.resetPassword(
-                            "Alice",
-                            "1990-01-01",
-                            "alice",
-                            "alice@example.com",
+                            Mockito.eq("Alice"),
+                            Mockito.eq("1990-01-01"),
+                            Mockito.eq("alice"),
+                            Mockito.eq("alice@example.com"),
                             Mockito.anyString()))
                     .thenReturn(true);
 
@@ -114,10 +114,10 @@ class AuthServiceTest {
     void resetPassword_failure_returnsFalse() {
         try (MockedStatic<UserDAO> userDao = Mockito.mockStatic(UserDAO.class)) {
             userDao.when(() -> UserDAO.resetPassword(
-                            "Alice",
-                            "1990-01-01",
-                            "alice",
-                            "alice@example.com",
+                            Mockito.eq("Alice"),
+                            Mockito.eq("1990-01-01"),
+                            Mockito.eq("alice"),
+                            Mockito.eq("alice@example.com"),
                             Mockito.anyString()))
                     .thenReturn(false);
 

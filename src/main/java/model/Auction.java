@@ -145,8 +145,12 @@ public class Auction implements Serializable {
     public void setApproved(boolean approved) { is_approved = approved; }
 
     public List<Bid> getBids() { return bids; }
-    public void setBids(List<Bid> bids) { this.bids = bids; }
-
+    public void setBids(List<Bid> bids) {
+        if (bids == null) {
+            throw new IllegalArgumentException("Bids list cannot be null");
+        }
+        this.bids = new ArrayList<>(bids);
+    }
     public int getExtendCount() { return extendCount; }
     public void setExtendCount(int extendCount) { this.extendCount = extendCount; }
 

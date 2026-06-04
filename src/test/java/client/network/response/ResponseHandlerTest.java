@@ -31,24 +31,29 @@ class ResponseHandlerTest {
     @Test
     void handle_allLiveAuctionMessages_forwardedToListener() {
         ResponseHandler.setLiveAuctionListener(received::add);
-        String[] messages = {
-                "UPDATE_PRICE|1500", "JOIN_SUCCESS|data", "JOIN_FAILED|err",
-                "BID_FAILED|err", "BID_HISTORY_SUCCESS|data", "BID_HISTORY_EMPTY",
-                "AUCTION_ENDED|id", "YOU_WON|100", "VIRTUAL_BALANCE|1000",
-                "WINNER_BALANCE|500", "SELLER_BALANCE|2000", "AUTO_BID_SET|true",
-                "AUTO_BID_CANCELLED|true", "AUTO_BID_MAX_REACHED|true"
-        };
+        // Mock ResponseRouter to prevent JavaFX Platform.runLater calls
+        try (MockedStatic<ResponseRouter> mockedRouter = mockStatic(ResponseRouter.class)) {
+            String[] messages = {
+                    "UPDATE_PRICE|1500", "JOIN_SUCCESS|data", "JOIN_FAILED|err",
+                    "BID_FAILED|err", "BID_HISTORY_SUCCESS|data", "BID_HISTORY_EMPTY",
+                    "AUCTION_ENDED|id", "YOU_WON|100", "VIRTUAL_BALANCE|1000",
+                    "WINNER_BALANCE|500", "SELLER_BALANCE|2000", "AUTO_BID_SET|true",
+                    "AUTO_BID_CANCELLED|true", "AUTO_BID_MAX_REACHED|true"
+            };
 
-        for (String msg : messages) {
-            ResponseHandler.handle(msg);
+            for (String msg : messages) {
+                ResponseHandler.handle(msg);
+            }
+            assertEquals(messages.length, received.size());
         }
-        assertEquals(messages.length, received.size());
     }
 
     @Test
     void handle_liveMessageWithNullListener_doesNotCrash() {
         ResponseHandler.setLiveAuctionListener(null);
-        assertDoesNotThrow(() -> ResponseHandler.handle("UPDATE_PRICE|999"));
+        try (MockedStatic<ResponseRouter> mockedRouter = mockStatic(ResponseRouter.class)) {
+            assertDoesNotThrow(() -> ResponseHandler.handle("UPDATE_PRICE|999"));
+        }
     }
 
     @Test
