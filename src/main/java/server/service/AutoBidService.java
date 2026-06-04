@@ -7,6 +7,7 @@ import model.Bid;
 import model.Entity.User.User;
 import server.dao.BidDAO;
 import server.dao.UserDAO;
+import server.manager.RoomManager;
 
 import java.math.BigDecimal;
 import java.util.Map;
@@ -54,7 +55,19 @@ public class AutoBidService {
             // Đang leading → không bid thêm
             return "AUTO_BID_SET";
         }
-        return triggerAutoBid(auction, user.getUser_id());
+        String result = triggerAutoBid(auction, user.getUser_id());
+        // Broadcast TIME_EXTENDED nếu anti-snipe kích hoạt ngay khi enable
+            if (result != null && result.contains("EXTENDED")) {
+                String[] parts = result.split("\\|");
+                if (parts.length >= 4) {
+                          RoomManager.broadcastToRoomAll(
+                                  auction.getAuction_id(),
+                                    "TIME_EXTENDED|" + auction.getAuction_id() + "|" + parts[3]
+                          );
+                }
+            }
+            return result;
+
     }
     /** Hủy auto-bid */
     public static String cancelAutoBid(String auctionId, String userId) {
@@ -138,6 +151,15 @@ public class AutoBidService {
                     .format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss"))
                     + "|" + userId;
             server.manager.RoomManager.broadcastToRoomAll(auction.getAuction_id(), broadcastMsg);
+
+            // Nếu anti-snipe đã extend, broadcast TIME_EXTENDED cho client
+            String[] resultParts = result.split("\\|");
+            if (resultParts.length >= 4 && resultParts[2].equals("EXTENDED")) {
+                String newEndTime = resultParts[3];
+                server.manager.RoomManager.broadcastToRoomAll(
+                        auction.getAuction_id(),
+                        "TIME_EXTENDED|" + auction.getAuction_id() + "|" + newEndTime);
+            }
         }
         return result;
     }

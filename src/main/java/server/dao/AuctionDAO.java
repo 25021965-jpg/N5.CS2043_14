@@ -34,6 +34,7 @@ public class AuctionDAO {
 
         if (start != null) auction.setStartTime(start.toLocalDateTime());
         if (end != null) auction.setEndTime(end.toLocalDateTime());
+        auction.setExtendCount(rs.getInt("extend_count"));
 
         User seller = new Bidder();
         seller.setUser_id(rs.getString("seller_id"));
@@ -566,6 +567,18 @@ public class AuctionDAO {
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
             LOGGER.severe("✕ updateEndTime Error: " + e.getMessage());
+            return false;
+        }
+    }
+    public static boolean updateExtendCount(String auctionId, int extendCount) {
+        String sql = "UPDATE auctions SET extend_count = ? WHERE auction_id = ?";
+        try (Connection conn = DatabaseService.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, extendCount);
+            ps.setString(2, auctionId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            LOGGER.severe("updateExtendCount Error: " + e.getMessage());
             return false;
         }
     }

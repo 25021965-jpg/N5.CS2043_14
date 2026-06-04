@@ -25,56 +25,32 @@ public class AuctionHandler extends BaseHandler {
     public AuctionHandler(User currentUser,
                           PrintWriter writer,
                           String currentAuctionId) {
-
         super(currentUser, writer, currentAuctionId);
     }
 
     // ==================== LIST ====================
 
     public String handleList() {
-
         List<Auction> auctions = AuctionService.getAllAuctions();
-
-        if (auctions.isEmpty()) {
-            return "LIST_EMPTY";
-        }
+        if (auctions.isEmpty()) return "LIST_EMPTY";
 
         StringBuilder sb = new StringBuilder("LIST_SUCCESS");
-
         for (Auction a : auctions) {
-
-            if (a == null || !a.isApproved())
-                continue;
-
+            if (a == null || !a.isApproved()) continue;
             try {
-
                 Item item = a.getItem();
-
-                if (item == null)
-                    continue;
+                if (item == null) continue;
 
                 String allImgs = "NO_IMAGE";
-
-                if (item.getImages() != null &&
-                        !item.getImages().isEmpty()) {
-
+                if (item.getImages() != null && !item.getImages().isEmpty()) {
                     allImgs = String.join(",", item.getImages());
                 }
-
-                String itemName =
-                        item.getName() != null
-                                ? item.getName()
-                                  .replace(";", ",")
-                                  .replace("|", "-")
-                                : "Unnamed";
-
-                String cleanDesc =
-                        item.getDescription() != null
-                                ? item.getDescription()
-                                  .replace(";", ",")
-                                  .replace("|", "-")
-                                  .replace("\n", " ")
-                                : "";
+                String itemName = item.getName() != null
+                        ? item.getName().replace(";", ",").replace("|", "-")
+                        : "Unnamed";
+                String cleanDesc = item.getDescription() != null
+                        ? item.getDescription().replace(";", ",").replace("|", "-").replace("\n", " ")
+                        : "";
 
                 sb.append("|")
                         .append(a.getAuction_id()).append(";")
@@ -88,62 +64,38 @@ public class AuctionHandler extends BaseHandler {
                         .append(item.getCategory()).append(";")
                         .append(cleanDesc).append(";")
                         .append(a.getStatus()).append(";")
-                        .append(a.getSeller() != null
-                                ? a.getSeller().getUser_id()
-                                : "");
-
+                        .append(a.getSeller() != null ? a.getSeller().getUser_id() : "");
             } catch (Exception e) {
                 LOGGER.log(Level.SEVERE, "Unexpected error", e);
             }
         }
-
         return sb.toString();
     }
 
     // ==================== JOIN ====================
 
     public String handleJoin(String[] data) {
-
-        if (data.length < 2)
-            return "JOIN_FAILED|Invalid auction ID";
+        if (data.length < 2) return "JOIN_FAILED|Invalid auction ID";
 
         String auctionId = data[1];
-
-        Auction auction =
-                AuctionService.getAuctionById(auctionId);
-
-        if (auction == null) {
-            return "JOIN_FAILED|Auction not found";
-        }
+        Auction auction = AuctionService.getAuctionById(auctionId);
+        if (auction == null) return "JOIN_FAILED|Auction not found";
 
         AuctionStatus status = auction.getStatus();
         if (status != AuctionStatus.ACTIVE) {
-            return "JOIN_FAILED|Auction is " + status +
-                    " (cannot join)";
+            return "JOIN_FAILED|Auction is " + status + " (cannot join)";
         }
 
-        if (currentUser != null
-                && auction.getSeller() != null
-                && auction.getSeller()
-                .getUser_id()
-                .equals(currentUser.getUser_id())) {
-
+        if (currentUser != null && auction.getSeller() != null
+                && auction.getSeller().getUser_id().equals(currentUser.getUser_id())) {
             return "JOIN_FAILED|You cannot join your own auction";
         }
 
         this.currentAuctionId = auctionId;
+        RoomManager.addClient(auctionId, writer);
 
-        RoomManager.addClient(
-                auctionId,
-                writer
-        );
-
-        if (auction.getEndTime() != null
-                && scheduledAuctions.add(auctionId)) {   // atomic: add trả về false nếu đã có
-            long delay = java.time.Duration.between(
-                    LocalDateTime.now(), auction.getEndTime()
-            ).toMillis();
-
+        if (auction.getEndTime() != null && scheduledAuctions.add(auctionId)) {
+            long delay = java.time.Duration.between(LocalDateTime.now(), auction.getEndTime()).toMillis();
             if (delay > 0) {
                 final String finalAuctionId = auctionId;
                 server.manager.AuctionTimerManager.scheduleEnd(auctionId, delay, () -> {
@@ -151,12 +103,18 @@ public class AuctionHandler extends BaseHandler {
                         Auction ended = AuctionService.getAuctionById(finalAuctionId);
                         if (ended == null) return;
 
+                        if (ended.getEndTime() != null && LocalDateTime.now().isBefore(ended.getEndTime())) {
+                            System.out.println("[AuctionHandler] Timer fired early (anti-snipe extended), skipping.");
+                            scheduledAuctions.remove(finalAuctionId);
+                            return;
+                        }
+
                         List<model.Bid> bids = server.dao.BidDAO.getBidsByAuctionId(finalAuctionId);
                         model.Bid winningBid = bids.isEmpty() ? null : bids.getFirst();
 
                         if (winningBid != null && winningBid.getBidder() != null) {
-                            User winner   = winningBid.getBidder();
-                            User seller   = ended.getSeller();
+                            User winner = winningBid.getBidder();
+                            User seller = ended.getSeller();
                             BigDecimal finalPrice = winningBid.getAmount();
                             String itemName = ended.getItem() != null ? ended.getItem().getName() : "item";
 
@@ -164,7 +122,6 @@ public class AuctionHandler extends BaseHandler {
                             User sellerFromDB = UserDAO.getUserById(seller.getUser_id());
                             if (winnerFromDB == null || sellerFromDB == null) return;
 
-                            // Trừ real balance winner
                             BigDecimal newWinnerReal = winnerFromDB.getBalance().subtract(finalPrice);
                             if (newWinnerReal.compareTo(BigDecimal.ZERO) < 0) {
                                 System.out.println("[AuctionHandler] Winner insufficient real balance!");
@@ -176,47 +133,7 @@ public class AuctionHandler extends BaseHandler {
                                     finalPrice, "WIN_BID", "Won auction: " + itemName);
                             RoomManager.broadcastToRoomAll(finalAuctionId,
                                     "WINNER_BALANCE|" + newWinnerReal + "|" + winner.getUser_id());
-                                        // ==================== XỬ LÝ WINNER ====================
-                                        // Virtual balance của winner đã bị trừ dần trong quá trình bid
-                                        // Bây giờ trừ REAL balance của winner (tiền thật)
-                                        BigDecimal winnerRealBalance = winnerFromDB.getBalance();
-                                        BigDecimal newWinnerRealBalance = winnerRealBalance.subtract(finalPrice);
 
-                                        if (newWinnerRealBalance.compareTo(BigDecimal.ZERO) < 0) {
-                                            System.out.println("[AuctionHandler] Winner doesn't have enough real balance!");
-                                            return;
-                                        }
-
-                                        // Cập nhật real balance
-                                        UserDAO.updateBalance(winner.getUser_id(), newWinnerRealBalance);
-
-                                        // Cập nhật virtual balance = real balance mới (vì tiền đã trừ thật)
-                                        UserDAO.updateVirtualBalance(winner.getUser_id(), newWinnerRealBalance);
-
-                                        // Ghi transaction cho winner
-                                        TransactionDAO.addTransaction(
-                                                winner.getUser_id(),
-                                                seller.getUser_id(),
-                                                finalPrice,
-                                                "WIN_BID",
-                                                "Won auction: " + itemName + " from " + seller.getUsername()
-                                        );
-                                        System.out.println("[AuctionHandler] Winner " + winner.getUsername() +
-                                                " real balance deducted: " + finalPrice +
-                                                ", new real balance: " + newWinnerRealBalance);
-
-                                        // Broadcast cập nhật balance cho winner
-                                        RoomManager.broadcastToRoomAll(finalAuctionId,
-                                                "WINNER_BALANCE|" + newWinnerRealBalance + "|" + winner.getUser_id());
-
-                                        // ==================== XỬ LÝ SELLER ====================
-                                        // Seller: cộng tiền thắng bid vào real balance
-                                        BigDecimal sellerRealBalance = sellerFromDB.getBalance();
-                                        BigDecimal newSellerBalance = sellerRealBalance.add(finalPrice);
-                                        UserDAO.updateBalance(seller.getUser_id(), newSellerBalance);
-                                        UserDAO.updateVirtualBalance(seller.getUser_id(), newSellerBalance);
-
-                            // Cộng tiền seller
                             BigDecimal newSellerReal = sellerFromDB.getBalance().add(finalPrice);
                             UserDAO.updateBalance(seller.getUser_id(), newSellerReal);
                             UserDAO.updateVirtualBalance(seller.getUser_id(), newSellerReal);
@@ -227,7 +144,7 @@ public class AuctionHandler extends BaseHandler {
                             RoomManager.broadcastToRoomAll(finalAuctionId,
                                     "YOU_WON|" + finalPrice + "|" + winner.getUsername());
 
-                            // ===== FIX: Hoàn virtual balance cho người THUA =====
+                            // Hoàn virtual balance cho người thua
                             java.util.Set<String> refunded = new java.util.HashSet<>();
                             refunded.add(winner.getUser_id());
                             for (model.Bid bid : bids) {
@@ -241,28 +158,7 @@ public class AuctionHandler extends BaseHandler {
                                 }
                                 refunded.add(loserId);
                             }
-                            // =====================================================
                         }
-                                        // Ghi transaction cho seller
-                                        TransactionDAO.addTransaction(
-                                                seller.getUser_id(),
-                                                winner.getUser_id(),
-                                                finalPrice,
-                                                "SOLD",
-                                                "Sold item: " + itemName+ " to " + winner.getUsername()
-                                        );
-                                        System.out.println("[AuctionHandler] Seller " + seller.getUsername() +
-                                                " received: " + finalPrice +
-                                                ", new balance: " + newSellerBalance);
-
-                                        // Broadcast cập nhật balance cho seller
-                                        RoomManager.broadcastToRoomAll(finalAuctionId,
-                                                "SELLER_BALANCE|" + newSellerBalance + "|" + seller.getUser_id());
-
-                                        // Broadcast kết quả thắng cuộc
-                                        RoomManager.broadcastToRoomAll(finalAuctionId,
-                                                "YOU_WON|" + finalPrice + "|" + winner.getUsername());
-                                    }
 
                         RoomManager.broadcastToRoomAll(finalAuctionId, "AUCTION_ENDED");
                         ended.setStatus(AuctionStatus.ENDED);
@@ -281,85 +177,131 @@ public class AuctionHandler extends BaseHandler {
                 + auction.getCurrentPrice() + "|"
                 + auction.getMinIncrement() + "|"
                 + auction.getEndTime();
-
     }
 
     // ==================== LEAVE ====================
 
     public String handleLeave() {
-
         if (currentAuctionId != null) {
-
-            RoomManager.removeClient(
-                    currentAuctionId,
-                    writer
-            );
-
+            RoomManager.removeClient(currentAuctionId, writer);
             currentAuctionId = null;
         }
-
         return "LEAVE_SUCCESS";
     }
 
     // ==================== BID ====================
 
     public String handleBid(String[] data) {
-
-        if (currentUser == null)
-            return "ERROR|Unauthorized";
-
-        if (currentAuctionId == null)
-            return "ERROR|You haven't joined any auction";
+        if (currentUser == null) return "ERROR|Unauthorized";
+        if (currentAuctionId == null) return "ERROR|You haven't joined any auction";
 
         try {
-
             String auctionId = data[1];
+            BigDecimal amount = new BigDecimal(data[2]);
 
-            BigDecimal amount =
-                    new BigDecimal(data[2]);
+            if (!auctionId.equals(currentAuctionId)) return "ERROR|You are not in this room";
 
-            if (!auctionId.equals(currentAuctionId)) {
-                return "ERROR|You are not in this room";
-            }
+            Auction auction = AuctionService.getAuctionById(auctionId);
+            if (auction == null) return "ERROR|Auction not found";
 
-            Auction auction =
-                    AuctionService.getAuctionById(auctionId);
-
-            if (auction == null)
-                return "ERROR|Auction not found";
-
-            String result =
-                    BidService.placeBid(
-                            currentUser,
-                            auction,
-                            amount
-                    );
+            String result = BidService.placeBid(currentUser, auction, amount);
 
             if (result.startsWith("BID_SUCCESS")) {
-
                 String[] parts = result.split("\\|");
-
                 if (parts.length >= 2) {
-
                     String newPrice = parts[1];
+                    String broadcastMsg = "UPDATE_PRICE|" + auctionId + "|" + newPrice + "|"
+                            + currentUser.getUsername() + "|"
+                            + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+                            + "|" + currentUser.getUser_id();
+                    RoomManager.broadcastToRoomAll(auctionId, broadcastMsg);
 
-                    String broadcastMsg =
-                            "UPDATE_PRICE|"
-                                    + auctionId + "|"
-                                    + newPrice + "|"
-                                    + currentUser.getUsername() + "|"
-                                    + LocalDateTime.now().format(
-                                    DateTimeFormatter.ofPattern("HH:mm:ss")
-                            )+ "|"
-                                    + currentUser.getUser_id();
+                    // Anti-snipe: broadcast TIME_EXTENDED và reschedule timer
+                    if (parts.length >= 4 && "EXTENDED".equals(parts[2])) {
+                        RoomManager.broadcastToRoomAll(auctionId,
+                                "TIME_EXTENDED|" + auctionId + "|" + parts[3]);
 
-                    RoomManager.broadcastToRoomAll(
-                            auctionId,
-                            broadcastMsg
-                    );
+                        try {
+                            LocalDateTime newEndTime = LocalDateTime.parse(parts[3]);
+                            long newDelay = java.time.Duration.between(LocalDateTime.now(), newEndTime).toMillis();
+                            if (newDelay > 0) {
+                                final String finalAuctionId = auctionId;
+                                server.manager.AuctionTimerManager.scheduleEnd(finalAuctionId, newDelay, () -> {
+                                    try {
+                                        Auction ended = AuctionService.getAuctionById(finalAuctionId);
+                                        if (ended == null) return;
+
+                                        if (ended.getEndTime() != null && LocalDateTime.now().isBefore(ended.getEndTime())) {
+                                            System.out.println("[AuctionHandler] Timer fired early (anti-snipe extended), skipping.");
+                                            scheduledAuctions.remove(finalAuctionId);
+                                            return;
+                                        }
+
+                                        List<model.Bid> bids = server.dao.BidDAO.getBidsByAuctionId(finalAuctionId);
+                                        model.Bid winningBid = bids.isEmpty() ? null : bids.getFirst();
+
+                                        if (winningBid != null && winningBid.getBidder() != null) {
+                                            User winner = winningBid.getBidder();
+                                            User seller = ended.getSeller();
+                                            BigDecimal finalPrice = winningBid.getAmount();
+                                            String itemName = ended.getItem() != null ? ended.getItem().getName() : "item";
+
+                                            User winnerFromDB = UserDAO.getUserById(winner.getUser_id());
+                                            User sellerFromDB = UserDAO.getUserById(seller.getUser_id());
+                                            if (winnerFromDB == null || sellerFromDB == null) return;
+
+                                            BigDecimal newWinnerReal = winnerFromDB.getBalance().subtract(finalPrice);
+                                            if (newWinnerReal.compareTo(BigDecimal.ZERO) < 0) {
+                                                System.out.println("[AuctionHandler] Winner insufficient real balance!");
+                                                return;
+                                            }
+                                            UserDAO.updateBalance(winner.getUser_id(), newWinnerReal);
+                                            UserDAO.updateVirtualBalance(winner.getUser_id(), newWinnerReal);
+                                            TransactionDAO.addTransaction(winner.getUser_id(), seller.getUser_id(),
+                                                    finalPrice, "WIN_BID", "Won auction: " + itemName);
+                                            RoomManager.broadcastToRoomAll(finalAuctionId,
+                                                    "WINNER_BALANCE|" + newWinnerReal + "|" + winner.getUser_id());
+
+                                            BigDecimal newSellerReal = sellerFromDB.getBalance().add(finalPrice);
+                                            UserDAO.updateBalance(seller.getUser_id(), newSellerReal);
+                                            UserDAO.updateVirtualBalance(seller.getUser_id(), newSellerReal);
+                                            TransactionDAO.addTransaction(seller.getUser_id(), winner.getUser_id(),
+                                                    finalPrice, "SOLD", "Sold item: " + itemName);
+                                            RoomManager.broadcastToRoomAll(finalAuctionId,
+                                                    "SELLER_BALANCE|" + newSellerReal + "|" + seller.getUser_id());
+                                            RoomManager.broadcastToRoomAll(finalAuctionId,
+                                                    "YOU_WON|" + finalPrice + "|" + winner.getUsername());
+
+                                            java.util.Set<String> refunded = new java.util.HashSet<>();
+                                            refunded.add(winner.getUser_id());
+                                            for (model.Bid bid : bids) {
+                                                String loserId = bid.getBidder().getUser_id();
+                                                if (refunded.contains(loserId)) continue;
+                                                BigDecimal loserMax = server.dao.BidDAO.getUserMaxBid(finalAuctionId, loserId);
+                                                if (loserMax != null && loserMax.compareTo(BigDecimal.ZERO) > 0) {
+                                                    UserDAO.addVirtualBalance(loserId, loserMax);
+                                                }
+                                                refunded.add(loserId);
+                                            }
+                                        }
+
+                                        RoomManager.broadcastToRoomAll(finalAuctionId, "AUCTION_ENDED");
+                                        ended.setStatus(AuctionStatus.ENDED);
+                                        AuctionDAO.updateAuctionStatus(finalAuctionId, "ENDED");
+
+                                    } catch (Exception e) {
+                                        LOGGER.log(Level.SEVERE, "[AuctionHandler] Error ending auction after extend", e);
+                                    } finally {
+                                        scheduledAuctions.remove(finalAuctionId);
+                                    }
+                                });
+                            }
+                        } catch (Exception e) {
+                            LOGGER.log(Level.SEVERE, "[AuctionHandler] Failed to reschedule timer", e);
+                        }
+                    }
                 }
             }
-
             return result;
 
         } catch (Exception e) {
@@ -370,65 +312,34 @@ public class AuctionHandler extends BaseHandler {
     // ==================== BID HISTORY ====================
 
     public String handleGetBidHistory(String[] data) {
+        if (data.length < 2) return "BID_HISTORY_FAILED|Invalid auction ID";
 
-        if (data.length < 2)
-            return "BID_HISTORY_FAILED|Invalid auction ID";
+        List<Bid> history = AuctionDAO.getBidHistory(data[1]);
+        if (history.isEmpty()) return "BID_HISTORY_EMPTY";
 
-        List<Bid> history =
-                AuctionDAO.getBidHistory(data[1]);
-
-        if (history.isEmpty()) {
-            return "BID_HISTORY_EMPTY";
-        }
-
-        StringBuilder sb =
-                new StringBuilder("BID_HISTORY_SUCCESS");
-
+        StringBuilder sb = new StringBuilder("BID_HISTORY_SUCCESS");
         for (Bid bid : history) {
-
             sb.append("|")
                     .append(bid.getUsername()).append(";")
                     .append(bid.getAmount()).append(";")
-                    .append(
-                            bid.getTime().format(
-                                    DateTimeFormatter.ofPattern("HH:mm:ss")
-                            )
-                    );
+                    .append(bid.getTime().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
         }
-
         return sb.toString();
     }
 
     // ==================== CREATED AUCTIONS ====================
 
     public String handleListCreatedAuctions() {
+        if (currentUser == null) return "LIST_CREATED_AUCTIONS_EMPTY";
 
-        if (currentUser == null) {
-            return "LIST_CREATED_AUCTIONS_EMPTY";
-        }
+        List<Auction> auctions = AuctionDAO.findBySeller(currentUser.getUser_id());
+        if (auctions.isEmpty()) return "LIST_CREATED_AUCTIONS_EMPTY";
 
-        List<Auction> auctions =
-                AuctionDAO.findBySeller(
-                        currentUser.getUser_id()
-                );
-
-        if (auctions.isEmpty()) {
-            return "LIST_CREATED_AUCTIONS_EMPTY";
-        }
-
-        StringBuilder sb =
-                new StringBuilder("LIST_CREATED_AUCTIONS_SUCCESS");
-
+        StringBuilder sb = new StringBuilder("LIST_CREATED_AUCTIONS_SUCCESS");
         for (Auction a : auctions) {
-
             Item item = a.getItem();
-
-            String image =
-                    (item.getImages() != null
-                            && !item.getImages().isEmpty())
-                            ? String.join(",", item.getImages())
-                            : "";
-
+            String image = (item.getImages() != null && !item.getImages().isEmpty())
+                    ? String.join(",", item.getImages()) : "";
             sb.append("|")
                     .append(a.getAuction_id()).append(";")
                     .append(item.getItem_id()).append(";")
@@ -443,40 +354,22 @@ public class AuctionHandler extends BaseHandler {
                     .append(a.getStatus()).append(";")
                     .append(currentUser.getUser_id());
         }
-
         return sb.toString();
     }
 
     // ==================== JOINED AUCTIONS ====================
 
     public String handleListJoinedAuctions() {
+        if (currentUser == null) return "LIST_JOINED_AUCTIONS_EMPTY";
 
-        if (currentUser == null) {
-            return "LIST_JOINED_AUCTIONS_EMPTY";
-        }
+        List<Auction> auctions = AuctionDAO.findJoinedAuctions(currentUser.getUser_id());
+        if (auctions.isEmpty()) return "LIST_JOINED_AUCTIONS_EMPTY";
 
-        List<Auction> auctions =
-                AuctionDAO.findJoinedAuctions(
-                        currentUser.getUser_id()
-                );
-
-        if (auctions.isEmpty()) {
-            return "LIST_JOINED_AUCTIONS_EMPTY";
-        }
-
-        StringBuilder sb =
-                new StringBuilder("LIST_JOINED_AUCTIONS_SUCCESS");
-
+        StringBuilder sb = new StringBuilder("LIST_JOINED_AUCTIONS_SUCCESS");
         for (Auction a : auctions) {
-
             Item item = a.getItem();
-
-            String image =
-                    (item.getImages() != null
-                            && !item.getImages().isEmpty())
-                            ? String.join(",", item.getImages())
-                            : "";
-
+            String image = (item.getImages() != null && !item.getImages().isEmpty())
+                    ? String.join(",", item.getImages()) : "";
             sb.append("|")
                     .append(a.getAuction_id()).append(";")
                     .append(item.getItem_id()).append(";")
@@ -489,13 +382,11 @@ public class AuctionHandler extends BaseHandler {
                     .append(item.getCategory()).append(";")
                     .append(item.getDescription()).append(";")
                     .append(a.getStatus()).append(";")
-                    .append(a.getSeller() != null
-                            ? a.getSeller().getUser_id()
-                            : "");
+                    .append(a.getSeller() != null ? a.getSeller().getUser_id() : "");
         }
-
         return sb.toString();
     }
+
     public String handleSetAutoBid(String[] data) {
         BidHandler bidHandler = new BidHandler(currentUser, writer, currentAuctionId);
         return bidHandler.setAutoBid(data);

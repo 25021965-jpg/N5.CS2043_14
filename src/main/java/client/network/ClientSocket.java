@@ -151,6 +151,10 @@ public class ClientSocket {
                 || msg.startsWith("VIRTUAL_BALANCE")
                 || msg.startsWith("WINNER_BALANCE")
                 || msg.startsWith("SELLER_BALANCE")
+                || msg.startsWith("TIME_EXTENDED")
+                || msg.startsWith("AUTO_BID_SET")
+                || msg.startsWith("AUTO_BID_CANCELLED")
+                || msg.startsWith("AUTO_BID_MAX_REACHED")
                 || msg.startsWith("ERROR");
     }
     // ================= SEND =================

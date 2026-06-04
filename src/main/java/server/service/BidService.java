@@ -11,9 +11,8 @@ import server.exception.InvalidBidException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-
 public class BidService {
-    public static final int ANTI_SNIPE_WINDOW_SECONDS = 10;
+    public static final int ANTI_SNIPE_WINDOW_SECONDS = 60;
     public static final int ANTI_SNIPE_EXTEND_SECONDS = 60;
     public static final int ANTI_SNIPE_MAX_EXTENDS = 5;
 
@@ -87,25 +86,15 @@ public class BidService {
                     if (newEndTime != null) {
                         AuctionDAO.updateEndTime(auction.getAuction_id(), newEndTime);
                         auction.setEndTime(newEndTime);
-                        // Reschedule timer theo endTime mới
-                        long newDelay = java.time.Duration.between(
-                                LocalDateTime.now(), newEndTime).toMillis();
-                        if (newDelay > 0) {
-                            server.manager.AuctionTimerManager.scheduleEnd(
-                                    auction.getAuction_id(), newDelay,
-                                    () -> {} // task thật đã nằm ở AuctionHandler — timer ở đây chỉ để override timer cũ
-                            );
-                            // Broadcast endTime mới cho client
-                            server.manager.RoomManager.broadcastToRoomAll(
-                                    auction.getAuction_id(),
-                                    "AUCTION_EXTENDED|" + newEndTime);
-                        }
                         System.out.println("Anti-snipe! Extended to: " + newEndTime);
                         return "BID_SUCCESS|" + amount + "|EXTENDED|" + newEndTime;
                     }
 
                     System.out.println("✓ Bid placed: " + bidder.getUsername() + " bid " + amount);
-                    return "BID_SUCCESS|" + amount;
+                    long dbg = auction.getEndTime() != null
+                            ? java.time.Duration.between(LocalDateTime.now(), auction.getEndTime()).toSeconds()
+                            : -999;
+                    return "BID_SUCCESS|" + amount + "|DBG=" + dbg + "|end=" + auction.getEndTime();
                 } else {
                     return "ERROR|Database error during bidding";
                 }
@@ -139,6 +128,7 @@ public class BidService {
 
         if (secondsLeft >= 0 && secondsLeft < ANTI_SNIPE_WINDOW_SECONDS) {
             auction.setExtendCount(auction.getExtendCount() + 1);
+            AuctionDAO.updateExtendCount(auction.getAuction_id(), auction.getExtendCount()); // ← thêm dòng này
             LocalDateTime newEndTime = endTime.plusSeconds(ANTI_SNIPE_EXTEND_SECONDS);
             System.out.println("Anti-snipe triggered! newEndTime=" + newEndTime);
             return newEndTime;

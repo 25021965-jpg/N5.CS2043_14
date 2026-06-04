@@ -448,6 +448,13 @@ public class UserLiveAuctionController implements UserDataReceiver {
             System.out.println("[LiveAuction] Received: " + msg);
 
             // ==================== AUTO-BID RESPONSES ====================
+            if (msg.startsWith("AUTO_BID_SET")) {
+                autoBidStatusLabel.setText(
+                        "✅ Auto-bid active | Max: "
+                                + formatPrice(UserSession.getAutoBidMax())
+                );
+                return;
+            }
             if (msg.startsWith("AUTO_BID_MAX_REACHED")) {
                 autoBidActive = false;
                 AutoBidManager.disable();

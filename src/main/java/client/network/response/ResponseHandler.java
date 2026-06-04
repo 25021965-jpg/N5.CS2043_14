@@ -46,6 +46,6 @@ public class ResponseHandler {
                 || msg.startsWith("SELLER_BALANCE")
                 || msg.startsWith("AUTO_BID_SET")
                 || msg.startsWith("AUTO_BID_CANCELLED")
-                || msg.startsWith("AUTO_BID_MAX_REACHED");
-    }
+                || msg.startsWith("AUTO_BID_MAX_REACHED")
+                || msg.startsWith("TIME_EXTENDED");    }
 }
