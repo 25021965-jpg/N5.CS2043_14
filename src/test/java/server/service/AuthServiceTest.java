@@ -3,92 +3,125 @@ package server.service;
 import model.Entity.User.Bidder;
 import model.Entity.User.Role;
 import model.Entity.User.User;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+import server.dao.UserDAO;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class AuthServiceTest {
 
-    @BeforeEach
-    void setUp() {
-        AuthService.logout("test-session-1");
-        AuthService.logout("test-session-2");
-        AuthService.logout("no-such-session");
-    }
-
-    private User makeUser(String id, String username) {
+    private User makeUser(String passwordHash) {
         User u = new Bidder();
-        u.setUser_id(id);
-        u.setUsername(username);
+        u.setUser_id("u1");
+        u.setUsername("alice");
         u.setRole(Role.BIDDER);
+        u.setPassword(passwordHash);
         return u;
     }
 
-    // ==================== addSession + getUser ====================
-
     @Test
-    void addSession_thenGetUser_returnsCorrectUser() {
-        User user = makeUser("u1", "alice");
-        AuthService.addSession("test-session-1", user);
-        User found = AuthService.getUser("test-session-1");
-        assertNotNull(found);
-        assertEquals("alice", found.getUsername());
+    void login_validCredentials_returnsUser() {
+        String password = "password123";
+        User user = makeUser(org.mindrot.jbcrypt.BCrypt.hashpw(password, org.mindrot.jbcrypt.BCrypt.gensalt(12)));
+
+        try (MockedStatic<UserDAO> userDao = Mockito.mockStatic(UserDAO.class)) {
+            userDao.when(() -> UserDAO.findByUsernameOrEmail("alice"))
+                    .thenReturn(user);
+
+            User result = AuthService.login("alice", password);
+            assertNotNull(result);
+            assertEquals("alice", result.getUsername());
+        }
     }
 
     @Test
-    void getUser_unknownSession_returnsNull() {
-        assertNull(AuthService.getUser("nonexistent-session-xyz"));
+    void login_invalidPassword_returnsNull() {
+        User user = makeUser(org.mindrot.jbcrypt.BCrypt.hashpw("password123", org.mindrot.jbcrypt.BCrypt.gensalt(12)));
+
+        try (MockedStatic<UserDAO> userDao = Mockito.mockStatic(UserDAO.class)) {
+            userDao.when(() -> UserDAO.findByUsernameOrEmail("alice"))
+                    .thenReturn(user);
+
+            assertNull(AuthService.login("alice", "wrong-password"));
+        }
     }
 
     @Test
-    void getUser_afterLogout_returnsNull() {
-        AuthService.addSession("test-session-1", makeUser("u1", "alice"));
-        AuthService.logout("test-session-1");
-        assertNull(AuthService.getUser("test-session-1"));
-    }
+    void login_unknownUser_returnsNull() {
+        try (MockedStatic<UserDAO> userDao = Mockito.mockStatic(UserDAO.class)) {
+            userDao.when(() -> UserDAO.findByUsernameOrEmail("missing"))
+                    .thenReturn(null);
 
-    // ==================== logout ====================
-
-    @Test
-    void logout_nonExistentSession_noException() {
-        assertDoesNotThrow(() -> AuthService.logout("no-such-session"));
+            assertNull(AuthService.login("missing", "password"));
+        }
     }
 
     @Test
-    void logout_existingSession_removed() {
-        AuthService.addSession("test-session-1", makeUser("u1", "bob"));
-        AuthService.logout("test-session-1");
-        assertNull(AuthService.getUser("test-session-1"));
-    }
+    void register_existingUsername_returnsNull() {
+        User existing = makeUser("pwd");
 
-    // ==================== Multiple sessions ====================
+        try (MockedStatic<UserDAO> userDao = Mockito.mockStatic(UserDAO.class)) {
+            userDao.when(() -> UserDAO.findByUsernameOrEmail("alice"))
+                    .thenReturn(existing);
+            userDao.when(() -> UserDAO.findByUsernameOrEmail("alice@example.com"))
+                    .thenReturn(existing);
 
-    @Test
-    void multipleSessions_independentOfEachOther() {
-        AuthService.addSession("test-session-1", makeUser("u1", "alice"));
-        AuthService.addSession("test-session-2", makeUser("u2", "bob"));
-
-        assertEquals("alice", AuthService.getUser("test-session-1").getUsername());
-        assertEquals("bob", AuthService.getUser("test-session-2").getUsername());
-
-        AuthService.logout("test-session-1");
-
-        assertNull(AuthService.getUser("test-session-1"));
-        assertNotNull(AuthService.getUser("test-session-2"));
-
-        AuthService.logout("test-session-2");
+            assertNull(AuthService.register("Alice", "alice", "alice@example.com", "password123", "1990-01-01"));
+        }
     }
 
     @Test
-    void addSession_overwrite_updatesSession() {
-        User user1 = makeUser("u1", "alice");
-        User user2 = makeUser("u2", "bob");
+    void register_newUser_succeeds() {
+        User saved = makeUser("pwdhash");
 
-        AuthService.addSession("test-session-1", user1);
-        AuthService.addSession("test-session-1", user2); // overwrite
+        try (MockedStatic<UserDAO> userDao = Mockito.mockStatic(UserDAO.class)) {
+            userDao.when(() -> UserDAO.findByUsernameOrEmail("alice"))
+                    .thenReturn(null, saved);
+            userDao.when(() -> UserDAO.findByUsernameOrEmail("alice@example.com"))
+                    .thenReturn(null);
+            userDao.when(() -> UserDAO.register(
+                            Mockito.anyString(),
+                            Mockito.eq("alice"),
+                            Mockito.eq("alice@example.com"),
+                            Mockito.anyString(),
+                            Mockito.eq("1990-01-01")))
+                    .thenReturn(true);
 
-        assertEquals("bob", AuthService.getUser("test-session-1").getUsername());
-        AuthService.logout("test-session-1");
+            User result = AuthService.register("Alice", "alice", "alice@example.com", "password123", "1990-01-01");
+            assertNotNull(result);
+            assertEquals("alice", result.getUsername());
+        }
+    }
+
+    @Test
+    void resetPassword_success_returnsTrue() {
+        try (MockedStatic<UserDAO> userDao = Mockito.mockStatic(UserDAO.class)) {
+            userDao.when(() -> UserDAO.resetPassword(
+                            "Alice",
+                            "1990-01-01",
+                            "alice",
+                            "alice@example.com",
+                            Mockito.anyString()))
+                    .thenReturn(true);
+
+            assertTrue(AuthService.resetPassword("Alice", "1990-01-01", "alice", "alice@example.com", "newpass"));
+        }
+    }
+
+    @Test
+    void resetPassword_failure_returnsFalse() {
+        try (MockedStatic<UserDAO> userDao = Mockito.mockStatic(UserDAO.class)) {
+            userDao.when(() -> UserDAO.resetPassword(
+                            "Alice",
+                            "1990-01-01",
+                            "alice",
+                            "alice@example.com",
+                            Mockito.anyString()))
+                    .thenReturn(false);
+
+            assertFalse(AuthService.resetPassword("Alice", "1990-01-01", "alice", "alice@example.com", "newpass"));
+        }
     }
 }

@@ -228,7 +228,7 @@ class BidServiceTest {
 
         try (MockedStatic<UserDAO> userDao = Mockito.mockStatic(UserDAO.class);
              MockedStatic<BidDAO> bidDao = Mockito.mockStatic(BidDAO.class);
-             MockedStatic<AuctionDAO> auctionDao = Mockito.mockStatic(AuctionDAO.class)) {
+             MockedStatic<AuctionDAO> ignored = Mockito.mockStatic(AuctionDAO.class)) {
 
             userDao.when(() -> UserDAO.getVirtualBalance("user-1"))
                     .thenReturn(new BigDecimal("600"));

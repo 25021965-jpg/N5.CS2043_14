@@ -102,10 +102,6 @@ public class UserAuctionHistoryController extends BaseController implements User
         client.sendMessage("LIST_JOINED_AUCTIONS");
     }
 
-    public void reloadHistory() {
-        loadHistory();
-    }
-
     // ==================== FILTER SETUP ====================
 
     private void setupStatusFilter() {

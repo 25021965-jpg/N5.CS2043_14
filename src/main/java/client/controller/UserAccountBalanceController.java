@@ -4,22 +4,18 @@ import client.manager.ControllerRegistry;
 import client.manager.UserSession;
 import client.network.ClientSocket;
 import client.util.AlertUtils;
+import client.util.BalanceTransactionHelper;
 import client.util.TextUtils;
 
 import client.util.ToastUtils;
 import javafx.fxml.FXML;
-import javafx.geometry.Pos;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.application.Platform;
 
-import model.*;
-import model.Entity.Item.*;
 import model.Entity.User.*;
 
 import java.math.BigDecimal;
@@ -107,7 +103,8 @@ public class UserAccountBalanceController extends BaseController implements User
         if (msg == null) return;
 
         if (msg.startsWith("TRANSACTIONS_LIST")) {
-            System.out.println("TRANSACTIONS_LIST detected");            String data = msg.substring("TRANSACTIONS_LIST|".length());
+            System.out.println("TRANSACTIONS_LIST detected");
+            String data = msg.substring("TRANSACTIONS_LIST|".length());
             System.out.println("Data: " + data);
             updateTransactionList(data);
             return;
@@ -146,13 +143,6 @@ public class UserAccountBalanceController extends BaseController implements User
                         ? parts[1]
                         : "Transaction failed.";
         AlertUtils.error(errorMessage);
-    }
-
-    private void handleTransactionList(String msg) {
-        System.out.println("handleTransactionList received: " + msg);
-        String data = msg.substring("TRANSACTIONS_LIST|".length());
-        System.out.println("data after substring: '" + data + "'");
-        updateTransactionList(data);
     }
 
     // ==================== DEPOSIT ====================
@@ -268,6 +258,7 @@ public class UserAccountBalanceController extends BaseController implements User
         if (client == null) client = ClientSocket.getInstance();
 
         // Luôn đảm bảo listener đúng
+        assert client != null;
         client.addListener("AccountBalance", this::handleServerMessage);
 
         System.out.println("loadTransactions: sending request for user " + currentUser.getUser_id());
@@ -303,9 +294,9 @@ public class UserAccountBalanceController extends BaseController implements User
                         String time   = parts[2];
                         String desc   = parts[3];
 
-                        if (!shouldDisplay(type)) continue;
+                                if (!BalanceTransactionHelper.shouldDisplay(filterBox.getValue(), type)) continue;
 
-                        HBox card = createTransactionCard(type, amount, time, desc);
+                        HBox card = BalanceTransactionHelper.createTransactionCard(type, amount, time, desc);
                         transactionContainer.getChildren().add(card);
                         hasAny = true;
                     }
@@ -328,123 +319,9 @@ public class UserAccountBalanceController extends BaseController implements User
 
     // ==================== FILTER ====================
 
-    private boolean shouldDisplay(String type) {
-        String selected = filterBox.getValue();
-        System.out.println(" shouldDisplay: selected=" + selected + ", type=" + type);
-
-        if (selected == null || selected.equals("All")) {
-            return true;
-        }
-
-        boolean result = switch (selected) {
-            case "Deposit" -> type.equals("DEPOSIT");
-            case "Withdraw" -> type.equals("WITHDRAW");
-            case "Paid" -> type.equals("TRANSFER_OUT") || type.equals("WIN_BID");
-            case "Received" -> type.equals("TRANSFER_IN") || type.equals("SOLD");
-            default -> true;
-        };
-        System.out.println(" shouldDisplay result: " + result);
-        return result;
-    }
-
     // ==================== CARD ====================
-
-    private HBox createTransactionCard(String type, String amount, String time, String desc) {
-        try {
-            HBox card = new HBox(20);
-            card.setAlignment(Pos.CENTER_LEFT);
-            card.setStyle("-fx-background-color:white; -fx-background-radius:12; -fx-border-radius:12; -fx-border-color:#E2E8F0; -fx-padding:15;");
-
-            VBox left = new VBox(5);
-            Label title = createTitleLabel(type, desc);
-            Label timeLabel = createTimeLabel(time);
-            left.getChildren().addAll(title, timeLabel);
-
-            Region spacer = new Region();
-            HBox.setHgrow(spacer, Priority.ALWAYS);
-
-            Label amountLabel = createAmountLabel(type, amount);
-
-            card.getChildren().addAll(left, spacer, amountLabel);
-            return card;
-        } catch (Exception e) {
-            LOGGER.log(
-                    Level.SEVERE,
-                    "Failed to create transaction card",
-                    e
-            );
-            return new HBox(new Label("Error loading transaction"));
-        }
-    }
 
     // ==================== LABELS ====================
 
-    private Label createTitleLabel(
-            String type,
-            String desc
-    ) {
-        String titleText;
-
-        switch (type) {
-            case "DEPOSIT":
-            titleText = "Deposit Successful";
-            break;
-            case "WITHDRAW":
-            titleText = "Withdraw Successful";
-            break;
-            case "TRANSFER_OUT":
-            case "WIN_BID":
-            titleText = "Paid to " + desc;
-            break;
-            case "TRANSFER_IN":
-            case "SOLD":
-            titleText = "Received from " + desc;
-            break;
-            default:
-            titleText = type;
-        }
-
-        Label label = new Label(titleText);
-        label.setStyle(
-            "-fx-font-size:16px; -fx-font-weight:bold; -fx-text-fill:#0F172A;"
-        );
-
-        return label;
-    }
-
-    private Label createTimeLabel(
-            String time
-    ) {
-
-        Label label =
-                new Label(time);
-
-        label.setStyle("""
-                -fx-text-fill:#64748B;
-                -fx-font-size:13px;
-                """);
-
-        return label;
-    }
-
-    private Label createAmountLabel(
-            String type,
-            String amount
-    ) {
-        boolean positive = "DEPOSIT".equals(type) || "TRANSFER_IN".equals(type) || "SOLD".equals(type);
-
-        String formatted = amount;
-        try {
-            java.math.BigDecimal v = new java.math.BigDecimal(amount);
-            String f = TextUtils.formatCurrency(v);
-            if (f != null && !f.isBlank()) formatted = f;
-        } catch (Exception ignored) {}
-
-        Label label = new Label((positive ? "+ " : "- ") + formatted);
-        label.setStyle(positive
-            ? "-fx-text-fill:#16A34A; -fx-font-size:18px; -fx-font-weight:bold;"
-            : "-fx-text-fill:#EF4444; -fx-font-size:18px; -fx-font-weight:bold;");
-        return label;
-    }
 }
 
