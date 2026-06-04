@@ -75,23 +75,13 @@ public class AutoBidService {
     public static void onNewBid(Auction auction, String winnerUserId) {
         String auctionId = auction.getAuction_id();
 
-        for (Map.Entry<String, AutoBidConfig> entry : autoBids.entrySet()) {
-            AutoBidConfig config = entry.getValue();
-
-            // Chỉ xử lý auto-bid của auction này
-            if (!config.getAuctionId().equals(auctionId)) continue;
-
-            // Bỏ qua nếu người này chính là người vừa bid (winnerUserId)
-            // hoặc đang dẫn đầu auction (tức là bid cao nhất trong DB)
-            // Bỏ qua nếu người này vừa bid hoặc đang dẫn đầu
-            if (config.getUserId().equals(winnerUserId)) continue;
-            if (isLeading(auction, config.getUserId())) continue;
-
-            // Bỏ qua nếu đã tắt
-            if (!config.isActive()) continue;
-
-            triggerAutoBid(auction, config.getUserId());
-        }
+        autoBids.values().stream()
+                .filter(c -> c.getAuctionId().equals(auctionId))
+                .filter(c -> !c.getUserId().equals(winnerUserId))
+                .filter(c -> !isLeading(auction, c.getUserId()))
+                .filter(AutoBidConfig::isActive)
+                .sorted(java.util.Comparator.comparingLong(AutoBidConfig::getRegisteredAt)) // ưu tiên bấm trước
+                .forEach(c -> triggerAutoBid(auction, c.getUserId()));
     }
 
     /** Thực hiện auto-bid cho một user cụ thể */
@@ -140,6 +130,15 @@ public class AutoBidService {
         String result = BidService.placeBid(bidder, auction, bidAmount,true);
         System.out.println("[AutoBid] Triggered: user=" + userId
                 + ", amount=" + bidAmount + ", result=" + result);
+        if (result.startsWith("BID_SUCCESS")) {
+            String broadcastMsg = "UPDATE_PRICE|" + auction.getAuction_id()
+                    + "|" + bidAmount
+                    + "|[AutoBid]"
+                    + "|" + java.time.LocalDateTime.now()
+                    .format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss"))
+                    + "|" + userId;
+            server.manager.RoomManager.broadcastToRoomAll(auction.getAuction_id(), broadcastMsg);
+        }
         return result;
     }
 

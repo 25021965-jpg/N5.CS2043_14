@@ -7,7 +7,6 @@ import server.dao.*;
 import server.manager.RoomManager;
 import server.service.AuctionService;
 import server.service.BidService;
-
 import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -21,7 +20,7 @@ public class AuctionHandler extends BaseHandler {
             Logger.getLogger(AuctionHandler.class.getName());
 
     private static final Set<String> scheduledAuctions =
-            java.util.Collections.synchronizedSet(new HashSet<>());
+            java.util.concurrent.ConcurrentHashMap.newKeySet();
 
     public AuctionHandler(User currentUser,
                           PrintWriter writer,
@@ -140,122 +139,82 @@ public class AuctionHandler extends BaseHandler {
         );
 
         if (auction.getEndTime() != null
-                && !scheduledAuctions.contains(auctionId)) {
-            scheduledAuctions.add(auctionId);
+                && scheduledAuctions.add(auctionId)) {   // atomic: add trả về false nếu đã có
             long delay = java.time.Duration.between(
                     LocalDateTime.now(), auction.getEndTime()
             ).toMillis();
 
             if (delay > 0) {
                 final String finalAuctionId = auctionId;
-                new java.util.Timer(true).schedule(
-                        new java.util.TimerTask() {
-                            @Override
-                            public void run() {
-                                try {
-                                    Auction ended = AuctionService.getAuctionById(finalAuctionId);
-                                    if (ended == null) return;
+                server.manager.AuctionTimerManager.scheduleEnd(auctionId, delay, () -> {
+                    try {
+                        Auction ended = AuctionService.getAuctionById(finalAuctionId);
+                        if (ended == null) return;
 
-                                    // Lấy danh sách bid của auction
-                                    List<model.Bid> bids = server.dao.BidDAO.getBidsByAuctionId(finalAuctionId);
+                        List<model.Bid> bids = server.dao.BidDAO.getBidsByAuctionId(finalAuctionId);
+                        model.Bid winningBid = bids.isEmpty() ? null : bids.getFirst();
 
-                                    // Xác định winner và final price
-                                    model.Bid winningBid = null;
-                                    BigDecimal finalPrice = ended.getCurrentPrice();
+                        if (winningBid != null && winningBid.getBidder() != null) {
+                            User winner   = winningBid.getBidder();
+                            User seller   = ended.getSeller();
+                            BigDecimal finalPrice = winningBid.getAmount();
+                            String itemName = ended.getItem() != null ? ended.getItem().getName() : "item";
 
-                                    if (!bids.isEmpty()) {
-                                        winningBid = bids.getFirst(); // Bid cao nhất
-                                        finalPrice = winningBid.getAmount();
-                                    }
+                            User winnerFromDB = UserDAO.getUserById(winner.getUser_id());
+                            User sellerFromDB = UserDAO.getUserById(seller.getUser_id());
+                            if (winnerFromDB == null || sellerFromDB == null) return;
 
-                                    // Nếu có winner (có người đặt giá)
-                                    if (winningBid != null && winningBid.getBidder() != null) {
-                                        User winner = winningBid.getBidder();
-                                        User seller = ended.getSeller();
-                                        String itemName = ended.getItem() != null ? ended.getItem().getName() : "item";
-
-                                        //  Lấy balance thật từ DB
-                                        // Lấy thông tin từ DB
-                                        User winnerFromDB = UserDAO.getUserById(winner.getUser_id());
-                                        User sellerFromDB = UserDAO.getUserById(seller.getUser_id());
-                                        if (winnerFromDB == null || sellerFromDB == null) return;
-
-                                        // ==================== XỬ LÝ WINNER ====================
-                                        // Virtual balance của winner đã bị trừ dần trong quá trình bid
-                                        // Bây giờ trừ REAL balance của winner (tiền thật)
-                                        BigDecimal winnerRealBalance = winnerFromDB.getBalance();
-                                        BigDecimal newWinnerRealBalance = winnerRealBalance.subtract(finalPrice);
-
-                                        if (newWinnerRealBalance.compareTo(BigDecimal.ZERO) < 0) {
-                                            System.out.println("[AuctionHandler] Winner doesn't have enough real balance!");
-                                            return;
-                                        }
-
-                                        // Cập nhật real balance
-                                        UserDAO.updateBalance(winner.getUser_id(), newWinnerRealBalance);
-
-                                        // Cập nhật virtual balance = real balance mới (vì tiền đã trừ thật)
-                                        UserDAO.updateVirtualBalance(winner.getUser_id(), newWinnerRealBalance);
-
-                                        // Ghi transaction cho winner
-                                        TransactionDAO.addTransaction(
-                                                winner.getUser_id(),
-                                                seller.getUser_id(),
-                                                finalPrice,
-                                                "WIN_BID",
-                                                "Won auction: " + itemName
-                                        );
-                                        System.out.println("[AuctionHandler] Winner " + winner.getUsername() +
-                                                " real balance deducted: " + finalPrice +
-                                                ", new real balance: " + newWinnerRealBalance);
-
-                                        // Broadcast cập nhật balance cho winner
-                                        RoomManager.broadcastToRoomAll(finalAuctionId,
-                                                "WINNER_BALANCE|" + newWinnerRealBalance + "|" + winner.getUser_id());
-
-                                        // ==================== XỬ LÝ SELLER ====================
-                                        // Seller: cộng tiền thắng bid vào real balance
-                                        BigDecimal sellerRealBalance = sellerFromDB.getBalance();
-                                        BigDecimal newSellerBalance = sellerRealBalance.add(finalPrice);
-                                        UserDAO.updateBalance(seller.getUser_id(), newSellerBalance);
-                                        UserDAO.updateVirtualBalance(seller.getUser_id(), newSellerBalance);
-
-                                        // Ghi transaction cho seller
-                                        TransactionDAO.addTransaction(
-                                                seller.getUser_id(),
-                                                winner.getUser_id(),
-                                                finalPrice,
-                                                "SOLD",
-                                                "Sold item: " + itemName
-                                        );
-                                        System.out.println("[AuctionHandler] Seller " + seller.getUsername() +
-                                                " received: " + finalPrice +
-                                                ", new balance: " + newSellerBalance);
-
-                                        // Broadcast cập nhật balance cho seller
-                                        RoomManager.broadcastToRoomAll(finalAuctionId,
-                                                "SELLER_BALANCE|" + newSellerBalance + "|" + seller.getUser_id());
-
-                                        // Broadcast kết quả thắng cuộc
-                                        RoomManager.broadcastToRoomAll(finalAuctionId,
-                                                "YOU_WON|" + finalPrice + "|" + winner.getUsername());
-                                    }
-
-                                    // Broadcast AUCTION_ENDED cho tất cả
-                                    RoomManager.broadcastToRoomAll(finalAuctionId, "AUCTION_ENDED");
-
-                                    // Cập nhật status auction thành ENDED
-                                    ended.setStatus(AuctionStatus.ENDED);
-                                    AuctionDAO.updateAuctionStatus(finalAuctionId, "ENDED");
-
-                                } catch (Exception e) {
-                                    LOGGER.severe("[AuctionHandler] Error ending auction: " + e.getMessage());
-                                    LOGGER.log(Level.SEVERE, "Unexpected error", e);
-                                } finally {
-                                    scheduledAuctions.remove(finalAuctionId);
-                                }
+                            // Trừ real balance winner
+                            BigDecimal newWinnerReal = winnerFromDB.getBalance().subtract(finalPrice);
+                            if (newWinnerReal.compareTo(BigDecimal.ZERO) < 0) {
+                                System.out.println("[AuctionHandler] Winner insufficient real balance!");
+                                return;
                             }
-                        }, delay);
+                            UserDAO.updateBalance(winner.getUser_id(), newWinnerReal);
+                            UserDAO.updateVirtualBalance(winner.getUser_id(), newWinnerReal);
+                            TransactionDAO.addTransaction(winner.getUser_id(), seller.getUser_id(),
+                                    finalPrice, "WIN_BID", "Won auction: " + itemName);
+                            RoomManager.broadcastToRoomAll(finalAuctionId,
+                                    "WINNER_BALANCE|" + newWinnerReal + "|" + winner.getUser_id());
+
+                            // Cộng tiền seller
+                            BigDecimal newSellerReal = sellerFromDB.getBalance().add(finalPrice);
+                            UserDAO.updateBalance(seller.getUser_id(), newSellerReal);
+                            UserDAO.updateVirtualBalance(seller.getUser_id(), newSellerReal);
+                            TransactionDAO.addTransaction(seller.getUser_id(), winner.getUser_id(),
+                                    finalPrice, "SOLD", "Sold item: " + itemName);
+                            RoomManager.broadcastToRoomAll(finalAuctionId,
+                                    "SELLER_BALANCE|" + newSellerReal + "|" + seller.getUser_id());
+                            RoomManager.broadcastToRoomAll(finalAuctionId,
+                                    "YOU_WON|" + finalPrice + "|" + winner.getUsername());
+
+                            // ===== FIX: Hoàn virtual balance cho người THUA =====
+                            java.util.Set<String> refunded = new java.util.HashSet<>();
+                            refunded.add(winner.getUser_id());
+                            for (model.Bid bid : bids) {
+                                String loserId = bid.getBidder().getUser_id();
+                                if (refunded.contains(loserId)) continue;
+                                BigDecimal loserMax = server.dao.BidDAO.getUserMaxBid(finalAuctionId, loserId);
+                                if (loserMax != null && loserMax.compareTo(BigDecimal.ZERO) > 0) {
+                                    UserDAO.addVirtualBalance(loserId, loserMax);
+                                    System.out.println("[AuctionHandler] Refunded virtual balance "
+                                            + loserMax + " to loser " + loserId);
+                                }
+                                refunded.add(loserId);
+                            }
+                            // =====================================================
+                        }
+
+                        RoomManager.broadcastToRoomAll(finalAuctionId, "AUCTION_ENDED");
+                        ended.setStatus(AuctionStatus.ENDED);
+                        AuctionDAO.updateAuctionStatus(finalAuctionId, "ENDED");
+
+                    } catch (Exception e) {
+                        LOGGER.log(Level.SEVERE, "[AuctionHandler] Error ending auction", e);
+                    } finally {
+                        scheduledAuctions.remove(finalAuctionId);
+                    }
+                });
             }
         }
 

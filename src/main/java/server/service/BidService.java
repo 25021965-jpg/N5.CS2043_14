@@ -87,6 +87,19 @@ public class BidService {
                     if (newEndTime != null) {
                         AuctionDAO.updateEndTime(auction.getAuction_id(), newEndTime);
                         auction.setEndTime(newEndTime);
+                        // Reschedule timer theo endTime mới
+                        long newDelay = java.time.Duration.between(
+                                LocalDateTime.now(), newEndTime).toMillis();
+                        if (newDelay > 0) {
+                            server.manager.AuctionTimerManager.scheduleEnd(
+                                    auction.getAuction_id(), newDelay,
+                                    () -> {} // task thật đã nằm ở AuctionHandler — timer ở đây chỉ để override timer cũ
+                            );
+                            // Broadcast endTime mới cho client
+                            server.manager.RoomManager.broadcastToRoomAll(
+                                    auction.getAuction_id(),
+                                    "AUCTION_EXTENDED|" + newEndTime);
+                        }
                         System.out.println("Anti-snipe! Extended to: " + newEndTime);
                         return "BID_SUCCESS|" + amount + "|EXTENDED|" + newEndTime;
                     }
