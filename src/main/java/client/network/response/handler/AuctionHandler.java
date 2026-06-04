@@ -21,6 +21,8 @@ import javafx.collections.ObservableList;
 import javafx.stage.Stage;
 
 import model.Bid;
+import model.Auction;
+import client.manager.UserSession;
 import model.ParticipationStatus;
 
 public class AuctionHandler {
@@ -213,6 +215,40 @@ public class AuctionHandler {
                             ItemParser.parse(data, 5)
                     );
             ctrl.updateProducts(items);
+        }
+    }
+
+    public static void auctionDetail(String data) {
+        // data: single token with fields matching AuctionParser.parseList format
+        try {
+            var list = AuctionParser.parseList(data);
+            if (list == null || list.isEmpty()) return;
+
+            Auction auction = list.get(0);
+
+            // open item view on JavaFX thread
+            javafx.application.Platform.runLater(() -> {
+                try {
+                    Stage stage = NavigationUtils.getMainStage();
+                    if (stage == null) stage = NavigationUtils.getCurrentStage();
+
+                    client.controller.ItemViewController ctrl = NavigationUtils.switchSceneAndGetController(
+                            stage,
+                            "/fxml/item-view.fxml",
+                            "Item Detail"
+                    );
+
+                    ctrl.setClient(ClientSocket.getInstance());
+                    ctrl.setUser(UserSession.getCurrentUser());
+                    ctrl.setAuctionData(auction);
+
+                } catch (Exception e) {
+                    System.err.println("Failed to open auction detail: " + e.getMessage());
+                }
+            });
+
+        } catch (Exception e) {
+            System.err.println("Failed to parse auction detail: " + e.getMessage());
         }
     }
 

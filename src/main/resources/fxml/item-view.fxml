@@ -297,12 +297,12 @@
                     right="30"/>
          </padding>
 
-         <!-- BACK -->
-         <Button
-                 onMouseClicked="#handleBack"
-                 prefHeight="45"
-                 minWidth="140"
-                 text="BACK"
+          <!-- BACK -->
+          <Button fx:id="btnBack"
+             onMouseClicked="#handleBack"
+             prefHeight="45"
+             minWidth="140"
+             text="BACK"
                  style="
                      -fx-background-color: transparent;
                      -fx-text-fill: #D4AF37;
@@ -365,6 +365,50 @@
                        size="15"/>
             </font>
          </Button>
+
+          <Button
+                fx:id="btnApproveAuction"
+                onAction="#handleApproveAuction"
+                prefHeight="45"
+                minWidth="180"
+                text="APPROVE"
+                visible="false"
+                style="
+                   -fx-background-color: #43a047;
+                   -fx-text-fill: white;
+                   -fx-font-weight: bold;
+                   -fx-background-radius: 12;
+                   -fx-font-size: 15px;
+                   -fx-cursor: hand;
+                ">
+             <font>
+               <Font
+                     name="Berlin Sans FB Demi Bold"
+                     size="15"/>
+             </font>
+          </Button>
+
+          <Button
+                fx:id="btnCancelAuction"
+                onAction="#handleCancelAuction"
+                prefHeight="45"
+                minWidth="180"
+                text="CANCEL"
+                visible="false"
+                style="
+                   -fx-background-color: #ff5252;
+                   -fx-text-fill: white;
+                   -fx-font-weight: bold;
+                   -fx-background-radius: 12;
+                   -fx-font-size: 15px;
+                   -fx-cursor: hand;
+                ">
+             <font>
+               <Font
+                     name="Berlin Sans FB Demi Bold"
+                     size="15"/>
+             </font>
+          </Button>
 
       </HBox>
    </bottom>

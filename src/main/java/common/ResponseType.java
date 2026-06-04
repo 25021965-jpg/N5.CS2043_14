@@ -102,6 +102,8 @@ public enum ResponseType {
     APPROVE_AUCTION_SUCCESS,
     APPROVE_AUCTION_FAILED,
 
+    AUCTION_DETAIL,
+
     TIME_EXTENDED,
 
     // ================= AUTO BID =================

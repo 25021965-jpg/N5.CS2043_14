@@ -16,10 +16,6 @@ import java.net.Socket;
 import java.util.logging.Logger;
 
 public class ClientSocket {
-
-    private static final String HOST = "26.175.50.93";
-    private static final int PORT = 9999;
-
     private static final Logger LOGGER =
             Logger.getLogger(ClientSocket.class.getName());
 
@@ -62,8 +58,8 @@ public class ClientSocket {
 
     private void connect() throws Exception {
         if (socket == null || socket.isClosed()) {
-
-            socket = new Socket(HOST, PORT);
+            socket =
+                    new Socket("localhost", 9999);
 
             in =
                     new BufferedReader(
@@ -79,10 +75,7 @@ public class ClientSocket {
                     );
 
             System.out.println(
-                    "Connected to "
-                            + HOST
-                            + ":"
-                            + PORT
+                    "Connected to localhost:9999"
             );
         }
     }

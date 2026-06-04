@@ -51,6 +51,7 @@ public enum Command {
     RESUME_AUCTION,
     CANCEL_AUCTION,
     APPROVE_AUCTION,
+    GET_AUCTION,
     LIST_PENDING_AUCTIONS,
 
     // ================= AUTO BID =================
