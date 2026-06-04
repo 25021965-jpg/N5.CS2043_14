@@ -2,6 +2,7 @@ package client.controller;
 
 import client.manager.*;
 import client.util.AlertUtils;
+import client.util.NavigationUtils;
 import client.util.TextUtils;
 import client.manager.ControllerRegistry;
 
@@ -118,19 +119,6 @@ public class ItemViewController extends BaseController
         updateStatusBadge();
         scheduleStartWatcher();
         showImage(0);
-    }
-
-    // helper to load auction by id (used by admin product controller)
-    public void loadAuction(String auctionId) {
-        if (auctionId == null || auctionId.isBlank()) return;
-
-        Auction a = server.service.AuctionService.getAuctionById(auctionId);
-        if (a == null) {
-            AlertUtils.error("Auction not found: " + auctionId);
-            return;
-        }
-
-        setAuctionData(a);
     }
 
     @Override
@@ -522,7 +510,7 @@ public class ItemViewController extends BaseController
     }
 
     @FXML
-    private void handleApproveAuction(ActionEvent event) {
+    private void handleApproveAuction() {
         if (auction == null || client == null) return;
         if (auction.isApproved() || auction.isCancelled()) return;
 
@@ -548,6 +536,16 @@ public class ItemViewController extends BaseController
 
         if (confirmed) {
             client.sendRequest("CANCEL_AUCTION|" + auction.getAuction_id());
+
+            try {
+                NavigationUtils.switchScene(
+                        getStage(event),
+                        "/fxml/adminManageProduct-view.fxml",
+                        "Manage Products"
+                );
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 

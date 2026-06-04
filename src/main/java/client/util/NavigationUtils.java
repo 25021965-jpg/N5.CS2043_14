@@ -102,7 +102,6 @@ public class NavigationUtils {
         }
     }
 
-    @SuppressWarnings("unchecked")
     public static <T> T switchSceneAndGetController(
             Stage stage,
             String fxmlPath,

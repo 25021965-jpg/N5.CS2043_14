@@ -110,9 +110,9 @@
 
                     <Button onAction="#handleResumeAuction" prefHeight="45" prefWidth="180" style="                                 -fx-background-color: #43a047;                                 -fx-text-fill: white;                                 -fx-font-size: 14;                                 -fx-font-weight: bold;                                 -fx-background-radius: 14;                             " text="RESUME AUCTION" />
 
-                    <Button onAction="#handleStopAuction" prefHeight="45" prefWidth="180" style="                                 -fx-background-color: #d4af37;                                 -fx-text-fill: white;                                 -fx-font-size: 14;                                 -fx-font-weight: bold;                                 -fx-background-radius: 14;                             " text="STOP AUCTION" />
+                    <Button onAction="#handleCancelAuction" prefHeight="45" prefWidth="180" style="                                 -fx-background-color: #d4af37;                                 -fx-text-fill: white;                                 -fx-font-size: 14;                                 -fx-font-weight: bold;                                 -fx-background-radius: 14;                             " text="CANCEL AUCTION" />
 
-                    <Button onAction="#handleCancelAuction" prefHeight="45" prefWidth="180" style="                                 -fx-background-color: #ff5252;                                 -fx-text-fill: white;                                 -fx-font-size: 14;                                 -fx-font-weight: bold;                                 -fx-background-radius: 14;                             " text="CANCEL AUCTION" />
+                    <Button onAction="#handleStopAuction" prefHeight="45" prefWidth="180" style="                                 -fx-background-color: #ff5252;                                 -fx-text-fill: white;                                 -fx-font-size: 14;                                 -fx-font-weight: bold;                                 -fx-background-radius: 14;                             " text="STOP AUCTION" />
 
                 </HBox>
 

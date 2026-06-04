@@ -98,7 +98,7 @@ public class AdminManageAuctionController {
         String[] selected = getSelectedAuction("Please select an auction to resume!");
         if (selected == null) return;
         if (!"CANCELLED".equals(selected[4])) {
-            AlertUtils.error("Only stopped auctions can be resumed!");
+            AlertUtils.error("Only cancelled auctions can be resumed!");
             return;
         }
 
@@ -118,7 +118,6 @@ public class AdminManageAuctionController {
                 "Cancel Auction",
                 "Cancel this auction: "
                         + selected[1]
-                        + "? This auction will not be able to resume."
         )) {
             ClientSocket.getInstance().sendRequest("CANCEL_AUCTION|" + selected[0]);
         }

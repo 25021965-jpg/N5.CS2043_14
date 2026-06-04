@@ -169,6 +169,7 @@ public class AdminManageProductController {
         dialog.setResultConverter(bt -> bt == ButtonType.OK ?
                 new String[]{nameField.getText(), descField.getText(), catField.getText()} : null);
 
+
         dialog.showAndWait().ifPresent(result -> {
             String cmd = "UPDATE_ITEM|" + selected[0] + "|" + result[0] + "|" + result[1] + "|" + result[2];
             ClientSocket.getInstance().sendRequest(cmd);
